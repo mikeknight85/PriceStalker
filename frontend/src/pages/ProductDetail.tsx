@@ -13,6 +13,7 @@ import {
   PriceHistory,
   NotificationSettings,
 } from '../api/client';
+import { formatPrice } from '../utils/formatPrice';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -160,15 +161,6 @@ export default function ProductDetail() {
     } finally {
       setIsSavingNotifications(false);
     }
-  };
-
-  const formatPrice = (price: number | string | null, currency: string | null) => {
-    if (price === null || price === undefined) return 'N/A';
-    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    if (isNaN(numPrice)) return 'N/A';
-    const currencySymbol =
-      currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'CHF' ? 'CHF ' : '$';
-    return `${currencySymbol}${numPrice.toFixed(2)}`;
   };
 
   if (isLoading) {

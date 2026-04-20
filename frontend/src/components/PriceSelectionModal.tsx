@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatPrice as formatPriceUtil } from '../utils/formatPrice';
 
 export interface PriceCandidate {
   price: number;
@@ -63,10 +64,7 @@ export default function PriceSelectionModal({
     }
   };
 
-  const formatPrice = (price: number, currency: string) => {
-    const symbol = currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'CHF' ? 'CHF ' : '$';
-    return `${symbol}${price.toFixed(2)}`;
-  };
+  const formatPrice = (price: number, currency: string) => formatPriceUtil(price, currency);
 
   const getConfidenceLabel = (confidence: number) => {
     if (confidence >= 0.8) return 'High';

@@ -3,32 +3,56 @@ export interface ParsedPrice {
   currency: string;
 }
 
-// Currency symbols and their codes
+// Currency symbols and their ISO codes
 const currencyMap: Record<string, string> = {
   '$': 'USD',
   '€': 'EUR',
   '£': 'GBP',
   '¥': 'JPY',
   '₹': 'INR',
+  '₩': 'KRW',
+  '₽': 'RUB',
+  '¢': 'USD',
   'Fr.': 'CHF',
   'CHF': 'CHF',
+  'R$': 'BRL',
+  'zł': 'PLN',
   'CAD': 'CAD',
   'AUD': 'AUD',
   'USD': 'USD',
   'EUR': 'EUR',
   'GBP': 'GBP',
+  'BRL': 'BRL',
+  'PLN': 'PLN',
+  'SEK': 'SEK',
+  'NOK': 'NOK',
+  'DKK': 'DKK',
+  'KRW': 'KRW',
+  'RUB': 'RUB',
+  'CNY': 'CNY',
 };
 
-// Patterns to match prices in text
+// Currencies that typically use comma as decimal separator
+const COMMA_DECIMAL_CURRENCIES = new Set([
+  'EUR', 'BRL', 'PLN', 'SEK', 'NOK', 'DKK', 'RUB',
+]);
+
+// Patterns to match prices in text. Order matters: more specific first.
 const pricePatterns = [
-  // $29.99 or $29,99 or $ 29.99
-  /(?<currency>[$€£¥₹])\s*(?<price>[\d,]+\.?\d*)/,
-  // CHF 29.99 or Fr. 29.99 (Swiss franc prefix)
-  /(?<currency>CHF|Fr\.)\s*(?<price>[\d,]+\.?\d*)/i,
-  // 29.99 USD or 29,99 EUR or 29.99 CHF
-  /(?<price>[\d,]+\.?\d*)\s*(?<currency>USD|EUR|GBP|CAD|AUD|JPY|INR|CHF)/i,
-  // Plain number with optional decimal (fallback)
-  /(?<price>\d{1,3}(?:[,.\s]?\d{3})*(?:[.,]\d{2})?)/,
+  // R$ (Brazilian Real) — check before bare $ because R$ contains $
+  /(?<currency>R\$)\s*(?<price>[\d.,']+)/,
+  // Single-char prefix symbols: $ € £ ¥ ₹ ₩ ₽
+  /(?<currency>[$€£¥₹₩₽])\s*(?<price>[\d.,']+)/,
+  // CHF / Fr. prefix (Swiss franc) with optional apostrophe thousands
+  /(?<currency>CHF|Fr\.)\s*(?<price>[\d.,']+)/i,
+  // zł prefix (Polish złoty) — sometimes appears before
+  /(?<currency>zł)\s*(?<price>[\d.,']+)/i,
+  // Suffix ISO code: 29.99 USD, 29,99 EUR, 1'234.56 CHF, R$ 5,00 BRL
+  /(?<price>[\d.,']+)\s*(?<currency>USD|EUR|GBP|CAD|AUD|JPY|INR|CHF|BRL|PLN|SEK|NOK|DKK|KRW|RUB|CNY)/i,
+  // Suffix zł — Polish numbers typically come before the symbol
+  /(?<price>[\d.,']+)\s*(?<currency>zł)/i,
+  // Plain number with optional decimal (fallback, assumed USD)
+  /(?<price>\d{1,3}(?:[,.\s]?\d{3})*(?:[.,]\d{1,2})?)/,
 ];
 
 export function parsePrice(text: string): ParsedPrice | null {
@@ -37,7 +61,7 @@ export function parsePrice(text: string): ParsedPrice | null {
   // Clean up the text
   const cleanText = text.trim().replace(/\s+/g, ' ');
 
-  // Reject monthly payment/financing prices (e.g., "$25/mo", "per month", "4 payments", etc.)
+  // Reject monthly payment/financing prices
   const lowerText = cleanText.toLowerCase();
   if (lowerText.includes('/mo') ||
       lowerText.includes('per month') ||
@@ -58,9 +82,9 @@ export function parsePrice(text: string): ParsedPrice | null {
       const currencySymbol = match.groups.currency || '$';
 
       if (priceStr) {
-        const price = normalizePrice(priceStr);
+        const currency = currencyMap[currencySymbol] || 'USD';
+        const price = normalizePrice(priceStr, currency);
         if (price !== null && price > 0) {
-          const currency = currencyMap[currencySymbol] || 'USD';
           return { price, currency };
         }
       }
@@ -68,9 +92,9 @@ export function parsePrice(text: string): ParsedPrice | null {
   }
 
   // Try to extract just a number as fallback
-  const numberMatch = cleanText.match(/[\d,]+\.?\d*/);
+  const numberMatch = cleanText.match(/[\d.,']+/);
   if (numberMatch) {
-    const price = normalizePrice(numberMatch[0]);
+    const price = normalizePrice(numberMatch[0], 'USD');
     if (price !== null && price > 0) {
       return { price, currency: 'USD' };
     }
@@ -79,22 +103,66 @@ export function parsePrice(text: string): ParsedPrice | null {
   return null;
 }
 
-function normalizePrice(priceStr: string): number | null {
+/**
+ * Normalize a price string to a JS number, handling US/European/Swiss formats.
+ *
+ * Separator conventions this must handle:
+ *   US:       1,234.56   comma=thousands, period=decimal
+ *   European: 1.234,56   period=thousands, comma=decimal
+ *   Swiss:    1'234.56   apostrophe=thousands, period=decimal
+ *   Ambiguous without decimals: "2.720" — could be 2720 (EUR/BRL thousands)
+ *                               or 2.720 (literal three-decimal). We use the
+ *                               currency hint: comma-decimal currencies treat
+ *                               "2.720" as 2720; everyone else keeps 2.720.
+ */
+function normalizePrice(priceStr: string, currency?: string): number | null {
   if (!priceStr) return null;
 
-  // Remove spaces
-  let normalized = priceStr.replace(/\s/g, '');
+  // Strip whitespace and Swiss apostrophe thousands separator
+  let normalized = priceStr.replace(/\s/g, '').replace(/'/g, '');
 
-  // Handle European format (1.234,56) vs US format (1,234.56)
-  const hasCommaDecimal = /,\d{2}$/.test(normalized);
-  const hasDotDecimal = /\.\d{2}$/.test(normalized);
+  const lastDot = normalized.lastIndexOf('.');
+  const lastComma = normalized.lastIndexOf(',');
+  const isCommaDecimalCurrency = currency ? COMMA_DECIMAL_CURRENCIES.has(currency) : false;
 
-  if (hasCommaDecimal && !hasDotDecimal) {
-    // European format: 1.234,56 -> 1234.56
-    normalized = normalized.replace(/\./g, '').replace(',', '.');
-  } else {
-    // US format or plain number: remove commas
-    normalized = normalized.replace(/,/g, '');
+  if (lastDot > -1 && lastComma > -1) {
+    // Both separators present — the LAST one is the decimal.
+    if (lastComma > lastDot) {
+      // European: 1.234,56 -> 1234.56
+      normalized = normalized.replace(/\./g, '').replace(',', '.');
+    } else {
+      // US: 1,234.56 -> 1234.56
+      normalized = normalized.replace(/,/g, '');
+    }
+  } else if (lastComma > -1) {
+    // Only comma
+    const afterComma = normalized.substring(lastComma + 1);
+    if (afterComma.length === 3 && /^\d{1,3}(,\d{3})+$/.test(normalized)) {
+      // US thousands without decimals: 1,234 -> 1234
+      normalized = normalized.replace(/,/g, '');
+    } else if (afterComma.length === 1 || afterComma.length === 2) {
+      // Decimal: 29,99 or 29,9 -> 29.99 / 29.9
+      normalized = normalized.replace(',', '.');
+    } else if (isCommaDecimalCurrency) {
+      // Ambiguous but currency suggests comma is decimal
+      normalized = normalized.replace(',', '.');
+    } else {
+      // Default: treat as US thousands
+      normalized = normalized.replace(/,/g, '');
+    }
+  } else if (lastDot > -1) {
+    // Only dot
+    const afterDot = normalized.substring(lastDot + 1);
+    if (afterDot.length === 3 && /^\d{1,3}(\.\d{3})+$/.test(normalized)) {
+      // Could be European thousands (2.720 -> 2720) or literal three-decimal.
+      // Prefer thousands interpretation for comma-decimal currencies.
+      if (isCommaDecimalCurrency) {
+        normalized = normalized.replace(/\./g, '');
+      }
+      // Else keep as-is: US would not commonly write a thousands separator
+      // without a decimal, so "2.720" most likely means 2.72 rounded.
+    }
+    // afterDot length 1 or 2 is just a regular decimal — leave alone.
   }
 
   const price = parseFloat(normalized);
@@ -105,9 +173,9 @@ export function extractPricesFromText(html: string): ParsedPrice[] {
   const prices: ParsedPrice[] = [];
   const seen = new Set<number>();
 
-  // Match all price-like patterns in the HTML
+  // Match all price-like patterns in the HTML. Order/alternatives mirror pricePatterns.
   const allMatches = html.matchAll(
-    /(?:[$€£¥₹])\s*[\d,]+\.?\d*|(?:CHF|Fr\.)\s*[\d,]+\.?\d*|[\d,]+\.?\d*\s*(?:USD|EUR|GBP|CAD|AUD|CHF)/gi
+    /R\$\s*[\d.,']+|[$€£¥₹₩₽]\s*[\d.,']+|(?:CHF|Fr\.)\s*[\d.,']+|zł\s*[\d.,']+|[\d.,']+\s*(?:USD|EUR|GBP|CAD|AUD|JPY|INR|CHF|BRL|PLN|SEK|NOK|DKK|KRW|RUB|CNY|zł)/gi
   );
 
   for (const match of allMatches) {
@@ -125,11 +193,11 @@ export function findMostLikelyPrice(prices: ParsedPrice[]): ParsedPrice | null {
   if (prices.length === 0) return null;
   if (prices.length === 1) return prices[0];
 
-  // Filter out very small prices (likely coupons, savings amounts, not actual product prices)
-  // Most real products cost at least $2-3, and coupon amounts are often $1-5
+  // Filter out very small prices (likely coupons, savings amounts, not actual product prices).
+  // Most real products cost at least $2-3; coupon amounts are often $1-5.
   const validPrices = prices.filter((p) => p.price >= 5);
 
-  // If no prices above $5, try with a lower threshold but above typical coupon amounts
+  // If no prices above 5, try with a lower threshold but above typical coupon amounts
   if (validPrices.length === 0) {
     const lowThresholdPrices = prices.filter((p) => p.price >= 2);
     if (lowThresholdPrices.length > 0) {
@@ -140,7 +208,7 @@ export function findMostLikelyPrice(prices: ParsedPrice[]): ParsedPrice | null {
     return prices[0];
   }
 
-  // Sort by price - the lowest valid price is often the sale/current price
+  // Sort by price — the lowest valid price is often the sale/current price
   validPrices.sort((a, b) => a.price - b.price);
 
   return validPrices[0];

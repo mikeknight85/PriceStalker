@@ -10,6 +10,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { PriceHistory } from '../api/client';
+import { formatPrice as formatPriceUtil } from '../utils/formatPrice';
 
 const getThemeColors = () => {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -58,9 +59,6 @@ export default function PriceChart({
     onRangeChange?.(days);
   };
 
-  const currencySymbol =
-    currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'CHF' ? 'CHF ' : '$';
-
   const chartData = prices.map((p) => ({
     date: new Date(p.recorded_at).getTime(),
     price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
@@ -78,10 +76,7 @@ export default function PriceChart({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const formatPrice = (value: number) => {
-    if (value === null || value === undefined || isNaN(value)) return 'N/A';
-    return `${currencySymbol}${value.toFixed(2)}`;
-  };
+  const formatPrice = (value: number) => formatPriceUtil(value, currency);
 
   if (prices.length === 0) {
     return (

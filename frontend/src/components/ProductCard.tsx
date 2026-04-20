@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Product } from '../api/client';
 import Sparkline from './Sparkline';
 import AIStatusBadge from './AIStatusBadge';
+import { formatPrice } from '../utils/formatPrice';
 
 interface ProductCardProps {
   product: Product;
@@ -77,15 +78,6 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
       setIsRefreshing(false);
     }
   };
-  const formatPrice = (price: number | string | null, currency: string | null) => {
-    if (price === null || price === undefined) return 'N/A';
-    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    if (isNaN(numPrice)) return 'N/A';
-    const currencySymbol =
-      currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'CHF' ? 'CHF ' : '$';
-    return `${currencySymbol}${numPrice.toFixed(2)}`;
-  };
-
   const formatPriceChange = (change: number | null | undefined) => {
     if (change === null || change === undefined) return null;
     const sign = change > 0 ? '+' : '';
