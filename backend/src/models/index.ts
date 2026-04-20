@@ -43,7 +43,7 @@ export interface NotificationSettings {
 export interface AISettings {
   ai_enabled: boolean;
   ai_verification_enabled: boolean;
-  ai_provider: 'anthropic' | 'openai' | 'ollama' | 'gemini' | 'groq' | null;
+  ai_provider: 'anthropic' | 'openai' | 'ollama' | 'gemini' | 'groq' | 'openrouter' | null;
   anthropic_api_key: string | null;
   anthropic_model: string | null;
   openai_api_key: string | null;
@@ -54,6 +54,8 @@ export interface AISettings {
   gemini_model: string | null;
   groq_api_key: string | null;
   groq_model: string | null;
+  openrouter_api_key: string | null;
+  openrouter_model: string | null;
 }
 
 export const userQueries = {
@@ -251,7 +253,7 @@ export const userQueries = {
       `SELECT ai_enabled, COALESCE(ai_verification_enabled, false) as ai_verification_enabled,
               ai_provider, anthropic_api_key, anthropic_model, openai_api_key, openai_model,
               ollama_base_url, ollama_model, gemini_api_key, gemini_model,
-              groq_api_key, groq_model
+              groq_api_key, groq_model, openrouter_api_key, openrouter_model
        FROM users WHERE id = $1`,
       [id]
     );
@@ -318,6 +320,14 @@ export const userQueries = {
       fields.push(`groq_model = $${paramIndex++}`);
       values.push(settings.groq_model);
     }
+    if (settings.openrouter_api_key !== undefined) {
+      fields.push(`openrouter_api_key = $${paramIndex++}`);
+      values.push(settings.openrouter_api_key);
+    }
+    if (settings.openrouter_model !== undefined) {
+      fields.push(`openrouter_model = $${paramIndex++}`);
+      values.push(settings.openrouter_model);
+    }
 
     if (fields.length === 0) return null;
 
@@ -327,7 +337,7 @@ export const userQueries = {
        RETURNING ai_enabled, COALESCE(ai_verification_enabled, false) as ai_verification_enabled,
                  ai_provider, anthropic_api_key, anthropic_model, openai_api_key, openai_model,
                  ollama_base_url, ollama_model, gemini_api_key, gemini_model,
-                 groq_api_key, groq_model`,
+                 groq_api_key, groq_model, openrouter_api_key, openrouter_model`,
       values
     );
     return result.rows[0] || null;

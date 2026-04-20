@@ -61,7 +61,7 @@ export default function Settings() {
   const [aiSettings, setAISettings] = useState<AISettings | null>(null);
   const [aiEnabled, setAIEnabled] = useState(false);
   const [aiVerificationEnabled, setAIVerificationEnabled] = useState(false);
-  const [aiProvider, setAIProvider] = useState<'anthropic' | 'openai' | 'ollama' | 'gemini' | 'groq'>('anthropic');
+  const [aiProvider, setAIProvider] = useState<'anthropic' | 'openai' | 'ollama' | 'gemini' | 'groq' | 'openrouter'>('anthropic');
   const [anthropicApiKey, setAnthropicApiKey] = useState('');
   const [anthropicModel, setAnthropicModel] = useState('');
   const [openaiApiKey, setOpenaiApiKey] = useState('');
@@ -76,6 +76,9 @@ export default function Settings() {
   const [groqApiKey, setGroqApiKey] = useState('');
   const [groqModel, setGroqModel] = useState('');
   const [isTestingGroq, setIsTestingGroq] = useState(false);
+  const [openRouterApiKey, setOpenRouterApiKey] = useState('');
+  const [openRouterModel, setOpenRouterModel] = useState('');
+  const [isTestingOpenRouter, setIsTestingOpenRouter] = useState(false);
   const [isSavingAI, setIsSavingAI] = useState(false);
   const [isTestingAI, setIsTestingAI] = useState(false);
   const [testUrl, setTestUrl] = useState('');
@@ -144,6 +147,8 @@ export default function Settings() {
       setGeminiModel(aiRes.data.gemini_model || '');
       setGroqApiKey(aiRes.data.groq_api_key || '');
       setGroqModel(aiRes.data.groq_model || '');
+      setOpenRouterApiKey(aiRes.data.openrouter_api_key || '');
+      setOpenRouterModel(aiRes.data.openrouter_model || '');
     } catch {
       setError('Failed to load settings');
     } finally {
@@ -473,6 +478,8 @@ export default function Settings() {
         gemini_model: aiProvider === 'gemini' ? geminiModel || null : undefined,
         groq_api_key: groqApiKey || undefined,
         groq_model: aiProvider === 'groq' ? groqModel || null : undefined,
+        openrouter_api_key: openRouterApiKey || undefined,
+        openrouter_model: aiProvider === 'openrouter' ? openRouterModel || null : undefined,
       });
       setAISettings(response.data);
       setAIVerificationEnabled(response.data.ai_verification_enabled ?? false);
@@ -480,10 +487,12 @@ export default function Settings() {
       setOpenaiModel(response.data.openai_model || '');
       setGeminiModel(response.data.gemini_model || '');
       setGroqModel(response.data.groq_model || '');
+      setOpenRouterModel(response.data.openrouter_model || '');
       setAnthropicApiKey('');
       setOpenaiApiKey('');
       setGeminiApiKey('');
       setGroqApiKey('');
+      setOpenRouterApiKey('');
       setSuccess('AI settings saved successfully');
     } catch {
       setError('Failed to save AI settings');
@@ -553,6 +562,27 @@ export default function Settings() {
       setError('Failed to connect to Groq. Check your API key.');
     } finally {
       setIsTestingGroq(false);
+    }
+  };
+
+  const handleTestOpenRouter = async () => {
+    clearMessages();
+    if (!openRouterApiKey) {
+      setError('Please enter your OpenRouter API key');
+      return;
+    }
+    setIsTestingOpenRouter(true);
+    try {
+      const response = await settingsApi.testOpenRouter(openRouterApiKey, openRouterModel || undefined);
+      if (response.data.success) {
+        setSuccess('Successfully connected to OpenRouter!');
+      } else {
+        setError(response.data.error || 'Failed to connect to OpenRouter');
+      }
+    } catch {
+      setError('Failed to connect to OpenRouter. Check your API key and model.');
+    } finally {
+      setIsTestingOpenRouter(false);
     }
   };
 
@@ -1697,6 +1727,7 @@ export default function Settings() {
                         <option value="openai">OpenAI (GPT)</option>
                         <option value="gemini">Google (Gemini)</option>
                         <option value="groq">Groq (Free Tier)</option>
+                        <option value="openrouter">OpenRouter (Aggregator)</option>
                         <option value="ollama">Ollama (Local)</option>
                       </select>
                     </div>
@@ -1978,6 +2009,64 @@ export default function Settings() {
                         </div>
                       </>
                     )}
+
+                    {aiProvider === 'openrouter' && (
+                      <>
+                        <div className="settings-form-group">
+                          <label>OpenRouter API Key</label>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ flex: 1 }}>
+                              <PasswordInput
+                                value={openRouterApiKey}
+                                onChange={(e) => setOpenRouterApiKey(e.target.value)}
+                                placeholder="sk-or-..."
+                              />
+                            </div>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={handleTestOpenRouter}
+                              disabled={isTestingOpenRouter || !openRouterApiKey}
+                              style={{ whiteSpace: 'nowrap' }}
+                            >
+                              {isTestingOpenRouter ? 'Testing...' : 'Test Key'}
+                            </button>
+                          </div>
+                          <p className="hint">
+                            Get your API key from{' '}
+                            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">
+                              openrouter.ai/keys
+                            </a>
+                          </p>
+                        </div>
+
+                        <div className="settings-form-group">
+                          <label>Model</label>
+                          <input
+                            type="text"
+                            value={openRouterModel}
+                            onChange={(e) => setOpenRouterModel(e.target.value)}
+                            placeholder="meta-llama/llama-3.1-8b-instruct:free"
+                            style={{
+                              width: '100%',
+                              padding: '0.625rem 0.75rem',
+                              border: '1px solid var(--border)',
+                              borderRadius: '0.375rem',
+                              background: 'var(--background)',
+                              color: 'var(--text)',
+                              fontSize: '0.875rem'
+                            }}
+                          />
+                          <p className="hint">
+                            Any model ID from{' '}
+                            <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer">
+                              openrouter.ai/models
+                            </a>
+                            . Free models have a <code>:free</code> suffix. Leave empty to default to Llama 3.1 8B (free).
+                            {aiSettings?.openrouter_model && ` (currently: ${aiSettings.openrouter_model})`}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -1992,7 +2081,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              {aiSettings?.ai_enabled && (aiSettings.anthropic_api_key || aiSettings.openai_api_key || (aiSettings.ollama_base_url && aiSettings.ollama_model) || aiSettings.gemini_api_key || aiSettings.groq_api_key) && (
+              {aiSettings?.ai_enabled && (aiSettings.anthropic_api_key || aiSettings.openai_api_key || (aiSettings.ollama_base_url && aiSettings.ollama_model) || aiSettings.gemini_api_key || aiSettings.groq_api_key || aiSettings.openrouter_api_key) && (
                 <div className="settings-section">
                   <div className="settings-section-header">
                     <span className="settings-section-icon">🧪</span>

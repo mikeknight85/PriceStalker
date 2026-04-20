@@ -140,6 +140,18 @@ BEGIN
   END IF;
 END $$;
 
+-- Migration: Add OpenRouter AI columns to users if they don't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'users' AND column_name = 'openrouter_api_key'
+  ) THEN
+    ALTER TABLE users ADD COLUMN openrouter_api_key VARCHAR(255);
+    ALTER TABLE users ADD COLUMN openrouter_model VARCHAR(255);
+  END IF;
+END $$;
+
 -- Index for faster price history queries
 CREATE INDEX IF NOT EXISTS idx_price_history_product_date
 ON price_history(product_id, recorded_at);

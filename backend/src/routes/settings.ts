@@ -341,6 +341,8 @@ router.get('/ai', async (req: AuthRequest, res: Response) => {
       gemini_model: settings.gemini_model || null,
       groq_api_key: settings.groq_api_key || null,
       groq_model: settings.groq_model || null,
+      openrouter_api_key: settings.openrouter_api_key || null,
+      openrouter_model: settings.openrouter_model || null,
     });
   } catch (error) {
     console.error('Error fetching AI settings:', error);
@@ -366,6 +368,8 @@ router.put('/ai', async (req: AuthRequest, res: Response) => {
       gemini_model,
       groq_api_key,
       groq_model,
+      openrouter_api_key,
+      openrouter_model,
     } = req.body;
 
     const settings = await userQueries.updateAISettings(userId, {
@@ -382,6 +386,8 @@ router.put('/ai', async (req: AuthRequest, res: Response) => {
       gemini_model,
       groq_api_key,
       groq_model,
+      openrouter_api_key,
+      openrouter_model,
     });
 
     if (!settings) {
@@ -403,6 +409,8 @@ router.put('/ai', async (req: AuthRequest, res: Response) => {
       gemini_model: settings.gemini_model || null,
       groq_api_key: settings.groq_api_key || null,
       groq_model: settings.groq_model || null,
+      openrouter_api_key: settings.openrouter_api_key || null,
+      openrouter_model: settings.openrouter_model || null,
       message: 'AI settings updated successfully',
     });
   } catch (error) {
@@ -564,6 +572,59 @@ router.post('/ai/test-groq', async (req: AuthRequest, res: Response) => {
     } else {
       res.status(500).json({
         error: `Failed to connect to Groq: ${errorMessage}`,
+        success: false,
+      });
+    }
+  }
+});
+
+// Test OpenRouter API key
+router.post('/ai/test-openrouter', async (req: AuthRequest, res: Response) => {
+  try {
+    const { api_key, model } = req.body;
+
+    if (!api_key) {
+      res.status(400).json({ error: 'API key is required' });
+      return;
+    }
+
+    const OpenAI = (await import('openai')).default;
+    const client = new OpenAI({
+      apiKey: api_key,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': 'https://github.com/mikeknight85/PriceStalker',
+        'X-Title': 'PriceStalker',
+      },
+    });
+
+    await client.chat.completions.create({
+      model: model || 'meta-llama/llama-3.1-8b-instruct:free',
+      max_tokens: 10,
+      messages: [{ role: 'user', content: 'Say "API key valid" in 3 words or less' }],
+    });
+
+    res.json({
+      success: true,
+      message: 'Successfully connected to OpenRouter',
+    });
+  } catch (error) {
+    console.error('Error testing OpenRouter connection:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    if (errorMessage.includes('401') || errorMessage.includes('invalid') || errorMessage.includes('API key')) {
+      res.status(400).json({
+        error: 'Invalid API key. Please check your OpenRouter API key.',
+        success: false,
+      });
+    } else if (errorMessage.includes('404') || errorMessage.includes('model')) {
+      res.status(400).json({
+        error: `Model not found on OpenRouter. Check the model ID.`,
+        success: false,
+      });
+    } else {
+      res.status(500).json({
+        error: `Failed to connect to OpenRouter: ${errorMessage}`,
         success: false,
       });
     }

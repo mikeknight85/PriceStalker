@@ -222,6 +222,19 @@ const DEFAULT_ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_OPENAI_MODEL = 'gpt-4.1-nano-2025-04-14';
 const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_OPENROUTER_MODEL = 'meta-llama/llama-3.1-8b-instruct:free';
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+
+function openRouterClient(apiKey: string): OpenAI {
+  return new OpenAI({
+    apiKey,
+    baseURL: OPENROUTER_BASE_URL,
+    defaultHeaders: {
+      'HTTP-Referer': 'https://github.com/mikeknight85/PriceStalker',
+      'X-Title': 'PriceStalker',
+    },
+  });
+}
 
 async function extractWithAnthropic(
   html: string,
@@ -374,6 +387,35 @@ async function extractWithGroq(
   const content = response.choices[0]?.message?.content;
   if (!content) {
     throw new Error('No response from Groq');
+  }
+
+  return parseAIResponse(content);
+}
+
+async function extractWithOpenRouter(
+  html: string,
+  apiKey: string,
+  model?: string | null
+): Promise<AIExtractionResult> {
+  const client = openRouterClient(apiKey);
+
+  const preparedHtml = prepareHtmlForAI(html);
+  const modelToUse = model || DEFAULT_OPENROUTER_MODEL;
+
+  const response = await client.chat.completions.create({
+    model: modelToUse,
+    max_tokens: 1024,
+    messages: [
+      {
+        role: 'user',
+        content: EXTRACTION_PROMPT + preparedHtml,
+      },
+    ],
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from OpenRouter');
   }
 
   return parseAIResponse(content);
@@ -534,6 +576,35 @@ async function verifyWithGroq(
   return parseVerificationResponse(content, scrapedPrice, currency);
 }
 
+async function verifyWithOpenRouter(
+  html: string,
+  scrapedPrice: number,
+  currency: string,
+  apiKey: string,
+  model?: string | null
+): Promise<AIVerificationResult> {
+  const client = openRouterClient(apiKey);
+
+  const preparedHtml = prepareHtmlForAI(html);
+  const prompt = VERIFICATION_PROMPT
+    .replace('$SCRAPED_PRICE$', scrapedPrice.toString())
+    .replace('$CURRENCY$', currency) + preparedHtml;
+  const modelToUse = model || DEFAULT_OPENROUTER_MODEL;
+
+  const response = await client.chat.completions.create({
+    model: modelToUse,
+    max_tokens: 512,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from OpenRouter');
+  }
+
+  return parseVerificationResponse(content, scrapedPrice, currency);
+}
+
 // Stock status verification functions (for variant products with anchor price)
 async function verifyStockStatusWithAnthropic(
   html: string,
@@ -684,6 +755,35 @@ async function verifyStockStatusWithGroq(
   const content = response.choices[0]?.message?.content;
   if (!content) {
     throw new Error('No response from Groq');
+  }
+
+  return parseStockStatusResponse(content);
+}
+
+async function verifyStockStatusWithOpenRouter(
+  html: string,
+  variantPrice: number,
+  currency: string,
+  apiKey: string,
+  model?: string | null
+): Promise<AIStockStatusResult> {
+  const client = openRouterClient(apiKey);
+
+  const preparedHtml = prepareHtmlForAI(html);
+  const prompt = STOCK_STATUS_PROMPT
+    .replace(/\$VARIANT_PRICE\$/g, variantPrice.toString())
+    .replace(/\$CURRENCY\$/g, currency) + preparedHtml;
+  const modelToUse = model || DEFAULT_OPENROUTER_MODEL;
+
+  const response = await client.chat.completions.create({
+    model: modelToUse,
+    max_tokens: 256,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from OpenRouter');
   }
 
   return parseStockStatusResponse(content);
@@ -904,6 +1004,8 @@ export async function extractWithAI(
     return extractWithGemini(html, settings.gemini_api_key, settings.gemini_model);
   } else if (settings.ai_provider === 'groq' && settings.groq_api_key) {
     return extractWithGroq(html, settings.groq_api_key, settings.groq_model);
+  } else if (settings.ai_provider === 'openrouter' && settings.openrouter_api_key) {
+    return extractWithOpenRouter(html, settings.openrouter_api_key, settings.openrouter_model);
   }
 
   throw new Error('No valid AI provider configured');
@@ -944,6 +1046,10 @@ export async function tryAIExtraction(
       const modelToUse = settings.groq_model || DEFAULT_GROQ_MODEL;
       console.log(`[AI] Using Groq (${modelToUse}) for ${url}`);
       return await extractWithGroq(html, settings.groq_api_key, settings.groq_model);
+    } else if (settings.ai_provider === 'openrouter' && settings.openrouter_api_key) {
+      const modelToUse = settings.openrouter_model || DEFAULT_OPENROUTER_MODEL;
+      console.log(`[AI] Using OpenRouter (${modelToUse}) for ${url}`);
+      return await extractWithOpenRouter(html, settings.openrouter_api_key, settings.openrouter_model);
     }
 
     return null;
@@ -990,6 +1096,10 @@ export async function tryAIVerification(
       const modelToUse = settings.groq_model || DEFAULT_GROQ_MODEL;
       console.log(`[AI Verify] Using Groq (${modelToUse}) to verify $${scrapedPrice} for ${url}`);
       return await verifyWithGroq(html, scrapedPrice, currency, settings.groq_api_key, settings.groq_model);
+    } else if (settings.ai_provider === 'openrouter' && settings.openrouter_api_key) {
+      const modelToUse = settings.openrouter_model || DEFAULT_OPENROUTER_MODEL;
+      console.log(`[AI Verify] Using OpenRouter (${modelToUse}) to verify $${scrapedPrice} for ${url}`);
+      return await verifyWithOpenRouter(html, scrapedPrice, currency, settings.openrouter_api_key, settings.openrouter_model);
     }
 
     console.log(`[AI Verify] Verification enabled but no provider configured`);
@@ -1037,6 +1147,10 @@ export async function tryAIStockStatusVerification(
       const modelToUse = settings.groq_model || DEFAULT_GROQ_MODEL;
       console.log(`[AI Stock] Using Groq (${modelToUse}) to verify stock status for $${variantPrice} variant at ${url}`);
       return await verifyStockStatusWithGroq(html, variantPrice, currency, settings.groq_api_key, settings.groq_model);
+    } else if (settings.ai_provider === 'openrouter' && settings.openrouter_api_key) {
+      const modelToUse = settings.openrouter_model || DEFAULT_OPENROUTER_MODEL;
+      console.log(`[AI Stock] Using OpenRouter (${modelToUse}) to verify stock status for $${variantPrice} variant at ${url}`);
+      return await verifyStockStatusWithOpenRouter(html, variantPrice, currency, settings.openrouter_api_key, settings.openrouter_model);
     }
 
     console.log(`[AI Stock] No AI provider configured for stock status verification`);
@@ -1237,6 +1351,36 @@ async function arbitrateWithGroq(
   return parseArbitrationResponse(content, candidates);
 }
 
+async function arbitrateWithOpenRouter(
+  html: string,
+  candidates: PriceCandidate[],
+  apiKey: string,
+  model?: string | null
+): Promise<AIArbitrationResult> {
+  const client = openRouterClient(apiKey);
+
+  const candidatesList = candidates.map((c, i) =>
+    `${i}. ${c.price} ${c.currency} (method: ${c.method}, context: ${c.context || 'none'})`
+  ).join('\n');
+
+  const preparedHtml = prepareHtmlForAI(html);
+  const prompt = ARBITRATION_PROMPT.replace('$CANDIDATES$', candidatesList) + preparedHtml;
+  const modelToUse = model || DEFAULT_OPENROUTER_MODEL;
+
+  const response = await client.chat.completions.create({
+    model: modelToUse,
+    max_tokens: 512,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from OpenRouter');
+  }
+
+  return parseArbitrationResponse(content, candidates);
+}
+
 function parseArbitrationResponse(
   responseText: string,
   candidates: PriceCandidate[]
@@ -1325,6 +1469,10 @@ export async function tryAIArbitration(
       const modelToUse = settings.groq_model || DEFAULT_GROQ_MODEL;
       console.log(`[AI Arbitrate] Using Groq (${modelToUse}) to arbitrate ${candidates.length} prices for ${url}`);
       return await arbitrateWithGroq(html, candidates, settings.groq_api_key, settings.groq_model);
+    } else if (settings.ai_provider === 'openrouter' && settings.openrouter_api_key) {
+      const modelToUse = settings.openrouter_model || DEFAULT_OPENROUTER_MODEL;
+      console.log(`[AI Arbitrate] Using OpenRouter (${modelToUse}) to arbitrate ${candidates.length} prices for ${url}`);
+      return await arbitrateWithOpenRouter(html, candidates, settings.openrouter_api_key, settings.openrouter_model);
     }
 
     console.log(`[AI Arbitrate] No provider configured`);

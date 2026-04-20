@@ -155,6 +155,12 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'notifications_cleared_at') THEN
           ALTER TABLE users ADD COLUMN notifications_cleared_at TIMESTAMP;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'openrouter_api_key') THEN
+          ALTER TABLE users ADD COLUMN openrouter_api_key TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'openrouter_model') THEN
+          ALTER TABLE users ADD COLUMN openrouter_model TEXT;
+        END IF;
       END $$;
     `);
 
