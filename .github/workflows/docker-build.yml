@@ -3,6 +3,8 @@ name: Build and Push Docker Images
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*.*.*'
     paths:
       - 'backend/**'
       - 'frontend/**'
@@ -71,6 +73,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha,prefix=
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Backend image
@@ -114,6 +118,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha,prefix=
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Frontend image

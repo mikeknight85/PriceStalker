@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pricestalker-v1.0.6';
+const CACHE_NAME = 'pricestalker-v1.1.0';
 const STATIC_ASSETS = [
   '/',
   '/icon.svg',

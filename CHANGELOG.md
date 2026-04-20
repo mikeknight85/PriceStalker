@@ -5,6 +5,66 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-20
+
+First PriceStalker release — a friendly fork of
+[clucraft/PriceGhost](https://github.com/clucraft/PriceGhost) (upstream last
+released 1.0.6 on 2026-01-26, now inactive). Rebranded, picks up pending
+upstream PRs, adds new AI providers, improves multi-currency handling, and
+tightens default security.
+
+### Added
+
+- **OpenRouter AI provider** — aggregator access to hundreds of models (free
+  tier included) via one API key. Freeform model ID, defaults to
+  `meta-llama/llama-3.1-8b-instruct:free`. Full support for extraction,
+  verification, stock status, and arbitration. Closes upstream #23.
+- **Groq AI provider** — merged from upstream [PR #27](https://github.com/clucraft/PriceGhost/pull/27)
+  by @f-liva. Supports Llama 3.3 70B, Llama 3.1 8B Instant, Mixtral 8x7B,
+  Gemma 2 9B. Closes upstream #26.
+- **Migration path from clucraft/PriceGhost** — env-overridable
+  `docker-compose.yml` (`POSTGRES_DB`, `DATABASE_URL`, `POSTGRES_VOLUME_NAME`,
+  `FRONTEND_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`). Existing users can
+  attach to their `priceghost` database and volume without data movement.
+  See `.env.example` for the override block.
+- **LICENSE file** (MIT) with attribution to the original author (clucraft)
+  and the fork (Michael Kessler). Upstream declared MIT in README only.
+
+### Changed
+
+- **Rebranded** from PriceGhost to PriceStalker across UI, docker
+  identifiers, package names, and assets.
+- **Base images** bumped from Node 20 to Node 22 LTS (fewer CVEs in base
+  layers, addresses part of upstream #31). Postgres stays on 16 to avoid
+  forcing `pg_upgrade` on existing volumes.
+- **Multi-currency parser** (`backend/src/utils/priceParser.ts`):
+  - Fixes the bug reported in upstream #24 where Brazilian Real format
+    `R$2.720,00` was parsed as `$2.72`.
+  - Added BRL (R$), PLN (zł), KRW (₩), RUB (₽), SEK, NOK, DKK, CNY
+    recognition.
+  - Swiss apostrophe thousands separator (`CHF 1'234.56`) is now handled.
+  - Number-format detection is currency-aware: `2.720` is 2720 for
+    comma-decimal currencies (EUR/BRL/PLN/…), 2.72 for others.
+- **Frontend price formatting** consolidated into
+  `frontend/src/utils/formatPrice.ts`. Replaced six duplicate implementations
+  across ProductCard, PriceChart, PriceSelectionModal, ProductDetail,
+  NotificationBell (which previously fell back to `$` for CHF), and
+  NotificationHistory.
+
+### Fixed
+
+- **Product-name truncation** for rows where the scraper returns titles
+  longer than 255 characters. Prevents Postgres `VARCHAR(255)` overflow on
+  insert. Merged from upstream [PR #18](https://github.com/clucraft/PriceGhost/pull/18)
+  by @ericdaugherty, closes upstream #17.
+
+### Security
+
+- **Removed default host port mappings** for postgres (5432) and backend
+  (3001). Nginx in the frontend container proxies `/api` internally via
+  docker networking, so there's no reason to expose these to the host.
+  Closes upstream #20.
+
 ## [1.0.6] - 2026-01-26
 
 ### Added
