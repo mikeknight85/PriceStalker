@@ -1,7 +1,7 @@
 {
-  "name": "priceghost-backend",
+  "name": "pricestalker-backend",
   "version": "1.0.6",
-  "description": "PriceGhost price tracking API",
+  "description": "PriceStalker price tracking API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

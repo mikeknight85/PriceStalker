@@ -147,8 +147,8 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
 
       <div className="auth-form-card">
         <div className="auth-form-header">
-          <img src="/icon.svg" alt="PriceGhost" className="auth-form-logo" />
-          <h1 className="auth-form-title">PriceGhost</h1>
+          <img src="/icon.svg" alt="PriceStalker" className="auth-form-logo" />
+          <h1 className="auth-form-title">PriceStalker</h1>
           <p className="auth-form-subtitle">
             {mode === 'login'
               ? 'Sign in to track prices'

@@ -1,4 +1,4 @@
--- PriceGhost Database Schema
+-- PriceStalker Database Schema
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

@@ -38,7 +38,7 @@
     </g>
   </g>
 
-  <!-- "PriceGhost" text - Price solid, Ghost with fade effect -->
-  <text x="215" y="78" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="700" fill="#1f2937">Price</text>
-  <text x="339" y="78" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="700" fill="url(#textFade)" filter="url(#glow)">Ghost</text>
+  <!-- "PriceStalker" text - Price solid, Stalker with fade effect -->
+  <text x="180" y="78" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="700" fill="#1f2937">Price</text>
+  <text x="304" y="78" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="700" fill="url(#textFade)" filter="url(#glow)">Stalker</text>
 </svg>

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to PriceGhost will be documented in this file.
+All notable changes to PriceStalker will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -126,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Puppeteer fallback for JavaScript-rendered prices** - Automatically uses headless browser when no price found in static HTML, fixing extraction for Magento, React, Vue, and other JS-heavy sites
 - **Pre-order/coming soon detection** - Products with future release dates, pre-order buttons, or "notify me" messaging are now correctly marked as out of stock
 - **AI availability verification** - AI now checks if products are actually purchasable, not just if the price is correct
-- **Official PriceGhost branding** - Custom ghost icon in navbar and login page
+- **Official PriceStalker branding** - Custom ghost icon in navbar and login page
 - **Ghostly text effect** - "Ghost" text in navbar has ethereal fade effect
 
 ### Fixed

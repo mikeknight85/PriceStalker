@@ -1052,10 +1052,10 @@ export default function Settings() {
               flexDirection: 'column',
               gap: '0.25rem',
             }}>
-              <span>PriceGhost v{versionInfo.version}</span>
+              <span>PriceStalker v{versionInfo.version}</span>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <a
-                  href="https://github.com/clucraft/PriceGhost/blob/main/CHANGELOG.md"
+                  href="https://github.com/mikeknight85/PriceStalker/blob/main/CHANGELOG.md"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: 'var(--primary)', textDecoration: 'none' }}
@@ -1064,7 +1064,7 @@ export default function Settings() {
                 </a>
                 <span>•</span>
                 <a
-                  href="https://github.com/clucraft/PriceGhost"
+                  href="https://github.com/mikeknight85/PriceStalker"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: 'var(--primary)', textDecoration: 'none' }}
@@ -1418,7 +1418,7 @@ export default function Settings() {
                     placeholder="my-price-alerts"
                   />
                   <p className="hint">
-                    Pick a unique topic name (e.g., priceghost-myname-123). Then subscribe to it in the{' '}
+                    Pick a unique topic name (e.g., pricestalker-myname-123). Then subscribe to it in the{' '}
                     <a href="https://ntfy.sh" target="_blank" rel="noopener noreferrer">ntfy app</a>.
                   </p>
                 </div>
@@ -1945,7 +1945,7 @@ export default function Settings() {
                   <h2 className="settings-section-title">System Settings</h2>
                 </div>
                 <p className="settings-section-description">
-                  Configure system-wide settings for PriceGhost.
+                  Configure system-wide settings for PriceStalker.
                 </p>
 
                 <div className="settings-toggle">

@@ -4,11 +4,11 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: priceghost-db
+    container_name: pricestalker-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: priceghost
+      POSTGRES_DB: pricestalker
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -23,10 +23,10 @@ services:
 
   # Backend API
   backend:
-    image: ghcr.io/clucraft/priceghost-backend:latest
-    container_name: priceghost-backend
+    image: ghcr.io/mikeknight85/pricestalker-backend:latest
+    container_name: pricestalker-backend
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/priceghost
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pricestalker
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production-use-strong-secret}
       PORT: 3001
       NODE_ENV: production
@@ -39,8 +39,8 @@ services:
 
   # Frontend
   frontend:
-    image: ghcr.io/clucraft/priceghost-frontend:latest
-    container_name: priceghost-frontend
+    image: ghcr.io/mikeknight85/pricestalker-frontend:latest
+    container_name: pricestalker-frontend
     ports:
       - "80:80"
     depends_on:

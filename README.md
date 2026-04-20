@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/header.svg" alt="PriceGhost" width="580">
+  <img src="assets/header.svg" alt="PriceStalker" width="580">
 </p>
 
 <p align="center">
@@ -15,11 +15,11 @@
 
 ## You Choose the Price. Always.
 
-**Unlike other price trackers that silently pick a price and hope it's right**, PriceGhost uses a multi-strategy extraction system with a unique **Price Voting Modal** that puts you in control.
+**Unlike other price trackers that silently pick a price and hope it's right**, PriceStalker uses a multi-strategy extraction system with a unique **Price Voting Modal** that puts you in control.
 
 ### How It Works
 
-When you add a product, PriceGhost runs **four independent extraction methods** in parallel:
+When you add a product, PriceStalker runs **four independent extraction methods** in parallel:
 
 | Method | How It Works | Reliability |
 |--------|--------------|-------------|
@@ -69,7 +69,7 @@ Built with Claude Opus 4.5.
 
 ## Strongly Recommended: Enable AI Features
 
-While PriceGhost includes multiple scraping strategies (JSON-LD, meta tags, CSS selectors, pattern matching, and headless browser), **we highly recommend enabling AI-powered features** for the best results.
+While PriceStalker includes multiple scraping strategies (JSON-LD, meta tags, CSS selectors, pattern matching, and headless browser), **we highly recommend enabling AI-powered features** for the best results.
 
 Modern e-commerce sites use increasingly complex layouts, dynamic pricing, and anti-scraping measures. AI can understand page context and reliably extract prices even from difficult sites.
 
@@ -145,7 +145,7 @@ The cost is minimal (fractions of a cent per API call with Claude Haiku/GPT-4o-m
 
 ## Supported Retailers
 
-PriceGhost has **site-specific scrapers** optimized for:
+PriceStalker has **site-specific scrapers** optimized for:
 
 | Retailer | Browser Rendering | Notes |
 |----------|-------------------|-------|
@@ -181,8 +181,8 @@ PriceGhost has **site-specific scrapers** optimized for:
 
 ```bash
 # Clone the repository
-git clone https://github.com/clucraft/PriceGhost.git
-cd PriceGhost
+git clone https://github.com/mikeknight85/PriceStalker.git
+cd PriceStalker
 
 # Start all services
 docker-compose up -d
@@ -198,11 +198,11 @@ Create a `.env` file or set these in your environment:
 # Database
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_secure_password
-POSTGRES_DB=priceghost
+POSTGRES_DB=pricestalker
 
 # Backend
 JWT_SECRET=your_jwt_secret_here
-DATABASE_URL=postgresql://postgres:password@db:5432/priceghost
+DATABASE_URL=postgresql://postgres:password@db:5432/pricestalker
 
 # Frontend (optional)
 VITE_API_URL=/api
@@ -255,7 +255,7 @@ npm run dev
 5. Use the toggle to enable/disable without losing your configuration
 
 #### ntfy.sh
-1. Choose a unique topic name (e.g., `priceghost-yourname`)
+1. Choose a unique topic name (e.g., `pricestalker-yourname`)
 2. Subscribe to your topic on your phone:
    - **Android**: Install [ntfy app](https://play.google.com/store/apps/details?id=io.heckel.ntfy) and subscribe to your topic
    - **iOS**: Install [ntfy app](https://apps.apple.com/app/ntfy/id1625396347) and subscribe to your topic
@@ -285,7 +285,7 @@ For dramatically improved compatibility with difficult sites:
 
 #### Recommended Models
 
-Based on testing, these models work best with PriceGhost:
+Based on testing, these models work best with PriceStalker:
 
 | Provider | Model | Notes |
 |----------|-------|-------|
@@ -356,7 +356,7 @@ The AI automatically activates when standard scraping fails to extract a price, 
 ## Project Structure
 
 ```
-PriceGhost/
+PriceStalker/
 ├── backend/
 │   └── src/
 │       ├── config/         # Database connection
@@ -391,10 +391,10 @@ MIT
 
 ## Star History
 
-<a href="https://star-history.com/#clucraft/PriceGhost&Date">
+<a href="https://star-history.com/#mikeknight85/PriceStalker&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=clucraft/PriceGhost&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=clucraft/PriceGhost&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=clucraft/PriceGhost&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
  </picture>
 </a>

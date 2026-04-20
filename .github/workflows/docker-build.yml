@@ -16,8 +16,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/priceghost-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/priceghost-frontend
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/pricestalker-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/pricestalker-frontend
 
 jobs:
   # Detect which paths changed
