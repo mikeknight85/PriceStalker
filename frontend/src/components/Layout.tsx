@@ -302,7 +302,7 @@ export default function Layout({ children }: LayoutProps) {
             <img src="/icon.svg" alt="" className="navbar-brand-icon" />
             <span className="navbar-brand-text">
               <span>Price</span>
-              <span className="navbar-brand-ghost">Ghost</span>
+              <span className="navbar-brand-ghost">Stalker</span>
             </span>
           </Link>
 
