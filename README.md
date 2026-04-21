@@ -3,398 +3,373 @@
 </p>
 
 <p align="center">
-  <strong>A self-hosted price tracking application that monitors product prices from any website.</strong><br>
-  Get notified when prices drop, hit your target price, or items come back in stock.
+  <strong>We stalk prices so you don't have to.</strong><br>
+  Self-hosted price tracking that watches product pages across the web and
+  tells you when a price drops, hits your target, or an out-of-stock item
+  comes back.
 </p>
 
 <p align="center">
-  <img width="1332" height="1108" alt="image" src="https://github.com/user-attachments/assets/6b75f889-06d7-41b3-bc0a-145b132109fd" />
+  <a href="https://github.com/mikeknight85/PriceStalker/releases"><img alt="Version" src="https://img.shields.io/github/v/release/mikeknight85/PriceStalker?color=6366f1"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-10b981"></a>
+  <a href="https://github.com/mikeknight85/PriceStalker/pkgs/container/pricestalker-backend"><img alt="GHCR" src="https://img.shields.io/badge/docker-ghcr.io-1f2937"></a>
 </p>
 
 ---
 
-## You Choose the Price. Always.
+## About this fork
 
-**Unlike other price trackers that silently pick a price and hope it's right**, PriceStalker uses a multi-strategy extraction system with a unique **Price Voting Modal** that puts you in control.
+PriceStalker is a friendly fork of
+[clucraft/PriceGhost](https://github.com/clucraft/PriceGhost), which has been
+inactive since early 2026. This fork carries forward the open community PRs,
+adds more AI providers (**Groq**, **OpenRouter**), fixes the multi-currency
+parser, tightens security defaults, and rebrands. Full credit to
+[@clucraft](https://github.com/clucraft) for the original work — upstream
+commits are preserved in this repo's history and the MIT license is intact.
 
-### How It Works
+**Already running PriceGhost?** See [Migrating from PriceGhost](#migrating-from-priceghost)
+— you can attach this fork to your existing database and volume without
+moving any data.
 
-When you add a product, PriceStalker runs **four independent extraction methods** in parallel:
+---
 
-| Method | How It Works | Reliability |
+## You choose the price. Always.
+
+Most price trackers silently pick a number off the page and hope for the best.
+PriceStalker runs **four independent extraction methods** in parallel and lets
+them vote:
+
+| Method | How it works | Reliability |
 |--------|--------------|-------------|
-| **JSON-LD** | Reads schema.org structured data embedded by the retailer | Highest |
-| **Site-Specific** | Custom-tuned scrapers for major retailers (Amazon, Best Buy, Walmart, etc.) | High |
-| **Generic CSS** | Intelligent CSS selectors that find price patterns | Medium |
-| **AI Analysis** | Claude/GPT/Ollama analyzes the page context | High |
+| **JSON-LD** | Reads `schema.org` structured data embedded by the retailer | Highest |
+| **Site-specific** | Custom-tuned scrapers for Amazon, Best Buy, Walmart, Target, Costco, eBay, Newegg, Home Depot, AliExpress, Magento 2 | High |
+| **Generic CSS** | Intelligent selectors that find price patterns on any site | Medium |
+| **AI analysis** | Claude / GPT / Gemini / Groq / OpenRouter / Ollama analyzes the page context | High |
 
-Each method "votes" on what it thinks the price is. If they agree, you're good to go. If they disagree, **you see all the candidates and make the final call**.
+When methods agree, you're set. When they disagree, the **Price Selection
+Modal** shows every candidate with confidence scores and context — you pick.
+No more accidentally tracking:
 
-### The Price Selection Modal
-
-<p align="center">
-  <em>Multiple prices found? No problem. You decide which one is correct.</em>
-</p>
-
-The modal shows you:
-- **Every price candidate** found by each extraction method
-- **Confidence scores** so you know which ones are most reliable
-- **Context** explaining where each price was found (e.g., "Structured Data", "Site Scraper", "AI Extraction")
-- **The product image and name** so you can verify you're tracking the right item
-
-This means:
-- No more accidentally tracking a "Save $200" discount amount instead of the actual price
-- No more confusion between monthly payment plans ($49/mo) and the real price ($1,999)
-- No more tracking bundle prices when you wanted the single item
-- **You always know exactly what price you're tracking**
-
-This feature doesn't exist in Keepa, CamelCamelCamel, Honey, or any other price tracker we've seen. They guess. You choose.
+- `Save $200` discount amounts instead of the actual price
+- `$49/mo` financing plans instead of the real $1,999 price
+- Bundle prices when you wanted the single item
+- A "suggested retail" strike-through instead of the live price
 
 ---
 
-## Built by AI. Built Right.
+## What's new in this fork
 
-This entire application was developed collaboratively with [Claude](https://claude.ai) (Anthropic's AI assistant) using [Claude Code](https://claude.ai/claude-code). Every feature, from database migrations to responsive UI components, was crafted through iterative conversation and careful code generation.
+| Version | Highlights |
+|---------|-----------|
+| **1.1.2** | New logo (ghost with binoculars). `/version.json` caching hardened. |
+| **1.1.1** | Fix version display stuck at 1.0.6 post-release. |
+| **1.1.0** | Rebrand to PriceStalker. **Groq** and **OpenRouter** AI providers. Multi-currency parser fixes (BRL, Swiss apostrophe, EUR thousands-only). Base image bumped to Node 22 LTS. Default insecure port mappings removed. Migration path from upstream PriceGhost. |
 
-**This is not "AI slop."** This is a fully functional, production-ready application with:
-- Proper error handling throughout
-- Clean, maintainable TypeScript codebase
-- Real security practices (JWT auth, bcrypt hashing, input validation)
-- Thoughtful UX with toast notifications, loading states, and responsive design
-- Comprehensive API with consistent patterns
-
-Built with Claude Opus 4.5.
-
----
-
-## Strongly Recommended: Enable AI Features
-
-While PriceStalker includes multiple scraping strategies (JSON-LD, meta tags, CSS selectors, pattern matching, and headless browser), **we highly recommend enabling AI-powered features** for the best results.
-
-Modern e-commerce sites use increasingly complex layouts, dynamic pricing, and anti-scraping measures. AI can understand page context and reliably extract prices even from difficult sites.
-
-### AI Extraction (Fallback)
-When standard scraping fails to find a price, AI extraction kicks in as a fallback.
-
-### AI Verification (Recommended)
-Verifies every scraped price to ensure accuracy. This catches issues like accidentally scraping a "savings" amount ($189.99 off) instead of the actual product price ($675.59).
-
-### AI Arbitration
-When multiple extraction methods disagree, AI can analyze all candidates and recommend the correct one - which you can then confirm or override in the Price Selection Modal.
-
-**To enable:**
-1. Get an API key from [Anthropic](https://console.anthropic.com) (Claude), [OpenAI](https://platform.openai.com), or install [Ollama](https://ollama.ai) locally (free)
-2. Go to Settings > AI Extraction
-3. Enable **AI Extraction** (fallback) and/or **AI Verification** (recommended)
-4. Select your provider and enter your API key (or Ollama URL)
-
-The cost is minimal (fractions of a cent per API call with Claude Haiku/GPT-4o-mini). Ollama is completely free but requires local compute.
+Full history in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
 ## Features
 
-### Multi-Strategy Price Extraction
-- **4 extraction methods** - JSON-LD, site-specific scrapers, generic CSS, and AI work together
-- **Price voting system** - Methods vote on the correct price; consensus = automatic, disagreement = you choose
-- **Price Selection Modal** - See all price candidates with confidence scores and context
-- **AI arbitration** - When methods disagree, AI helps recommend the right price
-- **Headless browser support** - Puppeteer with stealth mode for JavaScript-heavy sites (Best Buy, Target, Walmart, etc.)
+### Multi-strategy price extraction
+- Four independent extractors vote on the correct price
+- Price Selection Modal with candidates, confidence scores, and context
+- Puppeteer + stealth plugin for JavaScript-heavy sites (Best Buy, Target, Walmart)
+- AI arbitration when methods disagree
 
-### Price Tracking
-- **Universal scraping** - Works with virtually any e-commerce website
-- **AI-powered fallback** - Optional Claude, GPT, or Ollama (local) integration for difficult-to-scrape sites
-- **AI price verification** - Verify scraped prices with AI to catch extraction errors
-- **Price history charts** - Interactive visualization with customizable date ranges (7d, 30d, 90d, all time)
-- **7-day sparklines** - Quick price trend overview on the dashboard
-- **Configurable check intervals** - From 5 minutes to 24 hours per product
-- **Live countdown timers** - See exactly when each product will be checked next
-- **Progress bar visualization** - Animated gradient progress bars showing time until next check
+### Price tracking
+- Universal scraping across any e-commerce site (with AI fallback)
+- AI price verification catches `$189 off` scraped as `$189`
+- Interactive price history charts (7d / 30d / 90d / all time)
+- 7-day sparklines on the dashboard
+- Configurable check intervals (5 min to 24 h per product)
+- Live countdown timers + progress bars to the next check
+
+### Multi-currency (new in 1.1.0)
+- USD, EUR, GBP, CHF, CAD, AUD, JPY, INR, BRL, PLN, SEK, NOK, DKK, KRW, RUB, CNY
+- Currency-aware number parsing: `R$2.720,00` → 2720 BRL (not 2.72); `CHF 1'234.56` with Swiss apostrophe; `€1.234,56` with European thousands
+- Display formatter centralised — notifications, charts, tables all speak the same currency
 
 ### Notifications
-- **Price drop alerts** - Set a threshold (e.g., "notify when it drops $10+")
-- **Target price alerts** - Set your ideal price and get notified when reached
-- **Back-in-stock alerts** - Get notified when out-of-stock items become available
-- **Telegram** - Get alerts via Telegram bot
-- **Discord** - Send alerts to any Discord channel via webhooks
-- **Pushover** - Native Pushover support for mobile push notifications
-- **ntfy.sh** - Simple, no-account push notifications to any device
-- **Gotify** - Self-hosted push notifications via your own Gotify server
-- **Per-channel toggles** - Enable/disable each notification channel independently
-- **Test notifications** - Send test alerts to verify your setup
+Telegram · Discord · Pushover · ntfy.sh (self-hosted supported) · Gotify · per-channel toggles · test buttons for every provider.
 
-### Stock Tracking
-- **Out-of-stock detection** - Automatically detects when products are unavailable
-- **Visual indicators** - Clear badges showing stock status on dashboard and detail pages
-- **Stock change notifications** - Get notified when items come back in stock
+- **Price drop alerts** — set a CHF/USD/EUR threshold
+- **Target price alerts** — get notified when a specific price is reached
+- **Back-in-stock alerts** — know when out-of-stock items return
 
-### User Experience
-- **PWA Support** - Support for installing on mobile through "Add to Home Screen"
-- **Dark/Light mode** - Automatic system theme detection with manual toggle
-- **Toast notifications** - Visual feedback for all actions
-- **Responsive design** - Works on desktop and mobile
-- **Manual refresh** - Force an immediate price check with one click
-- **Price statistics** - See min, max, and average prices for each product
-- **Real-time countdowns** - Animated progress bars and timers for each product
+### Stock tracking
+Automatic out-of-stock detection, visual badges, stock-change history timeline per product, notifications when items come back.
 
-### User Management
-- **Multi-user support** - Each user has their own products and settings
-- **Admin panel** - Manage users, create accounts, toggle admin privileges
-- **Registration control** - Enable/disable public registration
-- **Profile management** - Update display name and change password
+### User experience
+PWA installable on mobile · dark/light/auto theme · responsive design · toast notifications · real-time countdowns · manual refresh · per-product pause.
 
-## Supported Retailers
+### User management
+Multi-user with per-user products and settings · admin panel · registration toggle · profile / password changes.
 
-PriceStalker has **site-specific scrapers** optimized for:
+---
 
-| Retailer | Browser Rendering | Notes |
-|----------|-------------------|-------|
-| Amazon (.com, .co.uk, .de, etc.) | No | Full support including deal prices |
-| Best Buy | Yes | Filters out financing/payment plans |
-| Walmart | Yes | Reads __NEXT_DATA__ for prices |
-| Target | Yes | Full support |
-| Costco | Yes | Full support |
-| eBay | No | Auction and Buy It Now prices |
-| Newegg | No | Handles combo deals correctly |
-| Home Depot | No | Full support |
-| AliExpress | No | Full support |
-| Magento 2 stores | No | Any store using Magento 2 |
+## AI providers
 
-**Any other site** works via generic extraction + AI fallback.
+Six providers supported. AI extraction kicks in when standard scrapers fail;
+AI verification catches bad extractions; AI arbitration breaks ties.
 
-## Tech Stack
+| Provider | Get a key | Recommended model | Cost |
+|----------|-----------|-------------------|------|
+| **Anthropic (Claude)** | [console.anthropic.com](https://console.anthropic.com) | Claude Haiku 4.5 ⭐ | ~$0.001 / check |
+| **OpenAI (GPT)** | [platform.openai.com](https://platform.openai.com/api-keys) | GPT-4.1 Nano | ~$0.001 / check |
+| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/apikey) | Gemini 2.5 Flash Lite | Free tier available |
+| **Groq** | [console.groq.com](https://console.groq.com/keys) | Llama 3.3 70B Versatile | **Free tier** |
+| **OpenRouter** | [openrouter.ai/keys](https://openrouter.ai/keys) | `meta-llama/llama-3.1-8b-instruct:free` | **Free tier**, paid for premium models |
+| **Ollama (local)** | [ollama.ai](https://ollama.ai) | `ollama pull qwen3` | **Free**, local compute |
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React 18, TypeScript, Vite |
-| **Backend** | Node.js, Express, TypeScript |
-| **Database** | PostgreSQL |
-| **Scraping** | Cheerio, Puppeteer (with stealth plugin) |
-| **AI Extraction** | Anthropic Claude (Haiku 4.5 recommended), OpenAI GPT, Ollama Qwen3 (optional but recommended) |
-| **Charts** | Recharts |
-| **Auth** | JWT + bcrypt |
-| **Scheduling** | node-cron |
+Enable in **Settings → AI Extraction**. Start with AI Verification — it's the
+highest-leverage single setting and catches the most embarrassing extraction
+errors.
 
-## Quick Start
+---
 
-### Docker (Recommended)
+## Supported retailers
+
+Site-specific scrapers (higher reliability than generic extraction):
+
+Amazon (all locales) · Best Buy · Walmart · Target · Costco · eBay · Newegg · Home Depot · AliExpress · Any Magento 2 store
+
+**Every other site** works via generic extraction + AI fallback. Tested
+extensively with European retailers (digitec.ch, galaxus.de, mediamarkt.*,
+etc.); they work via the AI path.
+
+---
+
+## Quick start
+
+### Docker (recommended)
 
 ```bash
-# Clone the repository
 git clone https://github.com/mikeknight85/PriceStalker.git
 cd PriceStalker
-
-# Start all services
+cp .env.example .env              # optional; defaults are sensible for a fresh install
 docker-compose up -d
-
-# Access at http://localhost:8089
 ```
 
-### Environment Variables
+Access at <http://localhost>. Create your first account, add a product URL, done.
 
-Create a `.env` file or set these in your environment:
+### Migrating from PriceGhost
+
+If you're running [clucraft/PriceGhost](https://github.com/clucraft/PriceGhost)
+and want to switch without losing data, set these env vars in `.env`:
 
 ```env
-# Database
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_secure_password
-POSTGRES_DB=pricestalker
-
-# Backend
-JWT_SECRET=your_jwt_secret_here
-DATABASE_URL=postgresql://postgres:password@db:5432/pricestalker
-
-# Frontend (optional)
-VITE_API_URL=/api
+POSTGRES_DB=priceghost
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/priceghost
+POSTGRES_VOLUME_NAME=priceghost_postgres_data
 ```
 
-## Development Setup
+Then swap your image references from `ghcr.io/clucraft/priceghost-*` to
+`ghcr.io/mikeknight85/pricestalker-*`. The schema is forward-compatible —
+missing columns (e.g. `groq_api_key`, `openrouter_api_key`) are added
+automatically on first boot.
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
+See [.env.example](.env.example) for all available overrides.
 
-### Backend
+### Pinning to a specific version
+
+`ghcr.io/mikeknight85/pricestalker-backend:latest` tracks main. Pin to a
+specific release for stability:
+
+```yaml
+image: ghcr.io/mikeknight85/pricestalker-backend:1.1.2
+image: ghcr.io/mikeknight85/pricestalker-frontend:1.1.2
+```
+
+Major.minor tags (e.g. `:1.1`) also auto-move to the latest patch in that line.
+
+---
+
+## Development setup
+
+Requires Node.js 22+ and PostgreSQL 14+.
 
 ```bash
+# Backend
 cd backend
 npm install
-npm run db:init  # Initialize database schema
-npm run dev
-```
+npm run db:init                   # initialize database schema
+npm run dev                       # watch mode
 
-### Frontend
-
-```bash
+# Frontend (in another terminal)
 cd frontend
 npm install
 npm run dev
 ```
 
+---
+
 ## Configuration
 
-### Notification Setup
+### Notifications
 
-#### Telegram
+<details><summary><b>Telegram</b></summary>
+
 1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
 2. Get your Chat ID from [@userinfobot](https://t.me/userinfobot)
-3. Enter both in Settings > Notifications
-4. Use the toggle to enable/disable without losing your configuration
+3. Enter both in Settings → Notifications
+</details>
 
-#### Discord
-1. In your Discord server: Server Settings > Integrations > Webhooks
-2. Create a new webhook and copy the URL
-3. Enter the URL in Settings > Notifications
-4. Use the toggle to enable/disable without losing your configuration
+<details><summary><b>Discord</b></summary>
 
-#### Pushover
+1. Server Settings → Integrations → Webhooks → New Webhook
+2. Copy the URL, paste it in Settings → Notifications
+</details>
+
+<details><summary><b>Pushover</b></summary>
+
 1. Create an account at [pushover.net](https://pushover.net)
-2. Note your User Key from the dashboard
-3. Create an application at [pushover.net/apps](https://pushover.net/apps/build) to get an API Token
-4. Enter both in Settings > Notifications
-5. Use the toggle to enable/disable without losing your configuration
+2. Note your User Key, create an application at [pushover.net/apps](https://pushover.net/apps/build) to get an API Token
+3. Enter both in Settings → Notifications
+</details>
 
-#### ntfy.sh
-1. Choose a unique topic name (e.g., `pricestalker-yourname`)
-2. Subscribe to your topic on your phone:
-   - **Android**: Install [ntfy app](https://play.google.com/store/apps/details?id=io.heckel.ntfy) and subscribe to your topic
-   - **iOS**: Install [ntfy app](https://apps.apple.com/app/ntfy/id1625396347) and subscribe to your topic
-   - **Web**: Visit `https://ntfy.sh/your-topic-name`
-3. Enter your topic name in Settings > Notifications
-4. No account or API key needed - it just works!
+<details><summary><b>ntfy.sh</b></summary>
 
-#### Gotify (Self-Hosted)
-1. Set up a [Gotify server](https://gotify.net/docs/install) on your own infrastructure
+1. Pick a unique topic (e.g. `pricestalker-yourname-abc123`)
+2. Subscribe on your phone via the [ntfy app](https://ntfy.sh/app) or <https://ntfy.sh/your-topic-name>
+3. Enter the topic in Settings → Notifications. Self-hosted ntfy is also supported — set the server URL + optional username/password.
+</details>
+
+<details><summary><b>Gotify (self-hosted)</b></summary>
+
+1. Deploy [Gotify](https://gotify.net/docs/install)
 2. Create an application in Gotify to get an App Token
-3. Enter your Gotify server URL and App Token in Settings > Notifications
-4. Use "Test Connection" to verify before saving
+3. Enter server URL + App Token in Settings → Notifications; use "Test Connection" before saving.
+</details>
 
-### AI Extraction Setup (Highly Recommended)
+### AI
 
-For dramatically improved compatibility with difficult sites:
+Any of the six providers listed above. Recommended bootstrap:
 
-1. Go to Settings > AI Extraction
-2. Enable AI-powered extraction
-3. Choose your provider:
-   - **Anthropic (Claude)** - Get key from [console.anthropic.com](https://console.anthropic.com)
-   - **OpenAI (GPT)** - Get key from [platform.openai.com](https://platform.openai.com/api-keys)
-   - **Ollama (Local)** - Free, runs locally. Install from [ollama.ai](https://ollama.ai)
-4. Enter your API key (or Ollama server URL for local)
-5. Select your preferred model
-6. Use "Test Extraction" to verify it works
+1. Start with **Groq** or **OpenRouter** — free tiers, no credit card to start
+2. For production quality, **Claude Haiku 4.5** via Anthropic
+3. For zero-cost + offline, **Ollama** with `qwen3` locally
 
-#### Recommended Models
+---
 
-Based on testing, these models work best with PriceStalker:
+## Tech stack
 
-| Provider | Model | Notes |
-|----------|-------|-------|
-| **Anthropic** | Claude Haiku 4.5 | ⭐ Best overall - fast, accurate, cheap (~$0.001/check) |
-| **Ollama** | Qwen3 (any size) | ⭐ Best free option - run `ollama pull qwen3` |
-| OpenAI | GPT-4.1 Nano | Good alternative to Haiku |
+| Layer | Tech |
+|-------|------|
+| Frontend | React 18, TypeScript, Vite, Recharts |
+| Backend | Node.js 22, Express, TypeScript |
+| Database | PostgreSQL 16 |
+| Scraping | Cheerio, Puppeteer (stealth plugin) |
+| AI | Anthropic, OpenAI, Google Gemini, Groq, OpenRouter, Ollama |
+| Auth | JWT + bcrypt |
+| Scheduling | node-cron |
+| Deploy | Docker Compose / Docker Swarm |
 
-**Note for Ollama users**: Qwen3 works well for price extraction and verification. Other models (llama3, mistral, deepseek) may struggle with structured JSON output or have thinking mode issues.
+---
 
-The AI automatically activates when standard scraping fails to extract a price, providing a reliable fallback.
+## API reference
 
-## API Reference
+Base URL: `/api`. All endpoints require `Authorization: Bearer <jwt>` except `/auth/*`.
 
-### Authentication
+<details><summary><b>Authentication</b></summary>
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/login` | Login, returns JWT |
-| GET | `/api/auth/registration-status` | Check if registration is enabled |
+| `POST` | `/auth/register` | Create account |
+| `POST` | `/auth/login` | Login, returns JWT |
+| `GET` | `/auth/registration-status` | Check if registration is enabled |
+</details>
 
-### Products
+<details><summary><b>Products</b></summary>
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/products` | List all tracked products |
-| POST | `/api/products` | Add product by URL |
-| GET | `/api/products/:id` | Get product details + stats |
-| PUT | `/api/products/:id` | Update settings/notifications |
-| DELETE | `/api/products/:id` | Stop tracking product |
+| `GET` | `/products` | List tracked products |
+| `POST` | `/products` | Add product by URL |
+| `GET` | `/products/:id` | Product details + stats |
+| `PUT` | `/products/:id` | Update settings/notifications |
+| `DELETE` | `/products/:id` | Stop tracking |
+| `GET` | `/products/:id/prices` | Price history |
+| `POST` | `/products/:id/refresh` | Force immediate check |
+</details>
 
-### Prices
+<details><summary><b>Settings</b></summary>
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/products/:id/prices` | Get price history |
-| POST | `/api/products/:id/refresh` | Force immediate price check |
+| `GET`/`PUT` | `/settings/notifications` | Notification config |
+| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify}` | Send a test notification |
+| `POST` | `/settings/notifications/test-gotify` | Test Gotify connection before saving |
+| `GET`/`PUT` | `/settings/ai` | AI extraction settings |
+| `POST` | `/settings/ai/test` | Test AI extraction on a URL |
+| `POST` | `/settings/ai/test-{ollama,gemini,groq,openrouter}` | Test a specific AI provider connection |
+</details>
 
-### Settings
+<details><summary><b>Profile & Admin</b></summary>
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/settings/notifications` | Get notification config |
-| PUT | `/api/settings/notifications` | Update notification settings |
-| POST | `/api/settings/notifications/test/telegram` | Send test Telegram notification |
-| POST | `/api/settings/notifications/test/discord` | Send test Discord notification |
-| POST | `/api/settings/notifications/test/pushover` | Send test Pushover notification |
-| POST | `/api/settings/notifications/test/ntfy` | Send test ntfy notification |
-| POST | `/api/settings/notifications/test/gotify` | Send test Gotify notification |
-| POST | `/api/settings/notifications/test-gotify` | Test Gotify connection before saving |
-| GET | `/api/settings/ai` | Get AI extraction settings |
-| PUT | `/api/settings/ai` | Update AI settings |
-| POST | `/api/settings/ai/test` | Test AI extraction on a URL |
+| `GET`/`PUT` | `/profile` | Get / update user profile |
+| `PUT` | `/profile/password` | Change password |
+| `GET`/`POST` | `/admin/users` | List / create users (admin only) |
+| `DELETE` | `/admin/users/:id` | Delete user |
+| `PUT` | `/admin/users/:id/admin` | Toggle admin status |
+| `GET`/`PUT` | `/admin/settings` | System settings |
+</details>
 
-### Profile
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/profile` | Get user profile |
-| PUT | `/api/profile` | Update profile |
-| PUT | `/api/profile/password` | Change password |
+---
 
-### Admin
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/users` | List all users |
-| POST | `/api/admin/users` | Create user |
-| DELETE | `/api/admin/users/:id` | Delete user |
-| PUT | `/api/admin/users/:id/admin` | Toggle admin status |
-| GET | `/api/admin/settings` | Get system settings |
-| PUT | `/api/admin/settings` | Update system settings |
-
-## Project Structure
+## Project structure
 
 ```
 PriceStalker/
 ├── backend/
 │   └── src/
-│       ├── config/         # Database connection
+│       ├── config/         # Database connection, init
 │       ├── middleware/     # JWT authentication
 │       ├── models/         # Database queries
 │       ├── routes/         # API endpoints
-│       ├── services/       # Scraper, AI extractor, scheduler, notifications
-│       └── utils/          # Price parsing utilities
+│       ├── services/       # Scraper, AI extractors, scheduler, notifications
+│       └── utils/          # Currency-aware price parser
 ├── frontend/
 │   └── src/
-│       ├── api/            # Axios client
-│       ├── components/     # Reusable components (including PriceSelectionModal)
+│       ├── api/            # Axios client + types
+│       ├── components/     # Reusable UI (PriceSelectionModal, PriceChart, …)
 │       ├── context/        # Auth & Toast contexts
-│       ├── hooks/          # Custom hooks
-│       └── pages/          # Page components
+│       └── pages/          # Route-level screens
+├── database/
+│   └── init.sql            # Schema + idempotent column migrations
+├── .env.example            # Including the PriceGhost migration block
 └── docker-compose.yml
 ```
 
-## Rate Limiting & Best Practices
+---
 
-To avoid getting blocked by retailers:
+## Rate limiting & retailer etiquette
 
-- **Staggered checking** - Products are checked at randomized intervals with ±5 minute jitter
-- **Request delays** - 2-5 second random delay between checking different products
-- **Reasonable intervals** - Default 1 hour; use longer intervals if tracking many products
-- **Browser headers** - Requests use standard browser User-Agent strings
-- **5-minute warning** - UI warns when selecting aggressive check intervals
+Don't get banned:
+
+- **Staggered checks** — products are scheduled with ±5 min jitter
+- **Request delays** — 2–5 s random delay between different products
+- **Reasonable intervals** — default 1 h; go longer if you track many items
+- **Browser-like headers** — standard User-Agent strings, not a scraper fingerprint
+- **UI warning** when intervals get aggressive (< 5 min)
+
+---
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE). Original copyright to @clucraft (PriceGhost),
+additional changes copyright to contributors to this fork.
 
-## Star History
+---
+
+## Star history
 
 <a href="https://star-history.com/#mikeknight85/PriceStalker&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
- </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
+  </picture>
 </a>
