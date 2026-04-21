@@ -5,6 +5,17 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-04-21
+
+### Fixed
+
+- **Version display in UI** stuck at `v1.0.6` after the 1.1.0 release. Two
+  `version.json` files existed in the repo: the one at repo root (unused)
+  was bumped, the one actually read at runtime
+  (`frontend/public/version.json`) was not. The unused root file has been
+  removed; `frontend/public/version.json` is now the single source of truth
+  for the UI-displayed version.
+
 ## [1.1.0] - 2026-04-20
 
 First PriceStalker release — a friendly fork of
