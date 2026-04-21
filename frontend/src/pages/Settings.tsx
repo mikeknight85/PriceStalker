@@ -96,8 +96,9 @@ export default function Settings() {
 
   useEffect(() => {
     fetchInitialData();
-    // Fetch version info
-    fetch('/version.json')
+    // Fetch version info — bypass any caches so an upgrade is visible on reload,
+    // not stuck at whatever was cached when the tab first loaded.
+    fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => setVersionInfo(data))
       .catch(() => {}); // Silently fail if version.json not found
