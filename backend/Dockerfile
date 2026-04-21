@@ -1,5 +1,7 @@
-# Build stage
-FROM node:22-slim AS builder
+# Build stage — BUILDPLATFORM pins the builder to the runner's native arch.
+# tsc produces .js which is arch-agnostic, so there's no reason to run the
+# compilation under QEMU when targeting arm64.
+FROM --platform=$BUILDPLATFORM node:22-slim AS builder
 
 WORKDIR /app
 
