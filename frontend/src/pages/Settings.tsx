@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import PasswordInput from '../components/PasswordInput';
 import {
@@ -22,8 +22,21 @@ interface VersionInfo {
   releaseDate: string;
 }
 
+const VALID_SECTIONS: SettingsSection[] = ['profile', 'notifications', 'ai', 'auth', 'admin'];
+
 export default function Settings() {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+  const location = useLocation();
+  // Deep-link support — e.g. /settings?section=auth jumps straight to the
+  // Authentication panel. Used by the SsoComplete error page to land the
+  // admin on the exact toggle they need to flip.
+  const initialSection = (() => {
+    const fromQuery = new URLSearchParams(location.search).get('section');
+    if (fromQuery && VALID_SECTIONS.includes(fromQuery as SettingsSection)) {
+      return fromQuery as SettingsSection;
+    }
+    return 'profile';
+  })();
+  const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');

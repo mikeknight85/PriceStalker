@@ -43,6 +43,11 @@ export default function SsoComplete() {
       });
   }, [completeOidcLogin, navigate]);
 
+  // Specific-error detection lets us surface a one-click deep link to the
+  // exact admin toggle rather than making the admin hunt for it.
+  const needsEmailVerifiedFix =
+    !!error && error.toLowerCase().includes('email_verified');
+
   return (
     <div
       style={{
@@ -73,9 +78,19 @@ export default function SsoComplete() {
           <>
             <h1 style={{ marginBottom: '0.5rem' }}>Sign-in failed</h1>
             <p style={{ color: 'var(--danger)', marginBottom: '1.5rem' }}>{error}</p>
-            <Link to="/login" className="btn btn-primary">
-              Back to login
-            </Link>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {needsEmailVerifiedFix && (
+                <Link to="/settings?section=auth" className="btn btn-primary">
+                  Open Authentication settings
+                </Link>
+              )}
+              <Link
+                to="/login"
+                className={needsEmailVerifiedFix ? 'btn btn-secondary' : 'btn btn-primary'}
+              >
+                Back to login
+              </Link>
+            </div>
           </>
         ) : (
           <>
