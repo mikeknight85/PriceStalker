@@ -5,6 +5,15 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-04-21
+
+### Changed
+
+- **Clickable product image and name on the dashboard** — both now
+  navigate to the product details page, matching the behavior of the
+  "View" button. Hover cursor + subtle highlight on the name signal
+  they're interactive. The View button is kept for discoverability.
+
 ## [1.2.0] - 2026-04-21
 
 ### Added

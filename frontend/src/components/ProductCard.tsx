@@ -153,6 +153,12 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
           object-fit: contain;
           background: #f8fafc;
           flex-shrink: 0;
+          cursor: pointer;
+          transition: opacity 0.15s;
+        }
+
+        .product-thumbnail:hover {
+          opacity: 0.85;
         }
 
         [data-theme="dark"] .product-thumbnail {
@@ -168,6 +174,12 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
           align-items: center;
           justify-content: center;
           color: var(--text-muted);
+          cursor: pointer;
+          transition: opacity 0.15s;
+        }
+
+        .product-thumbnail-placeholder:hover {
+          opacity: 0.85;
           font-size: 1.5rem;
           flex-shrink: 0;
         }
@@ -179,6 +191,14 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
         .product-info {
           flex: 1;
           min-width: 0;
+        }
+
+        .product-name a:hover {
+          color: var(--primary);
+        }
+
+        .product-name a {
+          transition: color 0.15s;
         }
 
         .product-name {
@@ -469,18 +489,31 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
         />
       )}
 
-      {product.image_url ? (
-        <img
-          src={product.image_url}
-          alt={product.name || 'Product'}
-          className="product-thumbnail"
-        />
-      ) : (
-        <div className="product-thumbnail-placeholder">📦</div>
-      )}
+      <Link
+        to={`/product/${product.id}`}
+        aria-label={`View details for ${product.name || 'product'}`}
+        style={{ display: 'contents', cursor: 'pointer' }}
+      >
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.name || 'Product'}
+            className="product-thumbnail"
+          />
+        ) : (
+          <div className="product-thumbnail-placeholder">📦</div>
+        )}
+      </Link>
 
       <div className="product-info">
-        <h3 className="product-name">{product.name || 'Unknown Product'}</h3>
+        <h3 className="product-name">
+          <Link
+            to={`/product/${product.id}`}
+            style={{ color: 'inherit', textDecoration: 'none' }}
+          >
+            {product.name || 'Unknown Product'}
+          </Link>
+        </h3>
         <p className="product-source">{truncateUrl(product.url)}</p>
         {(product.price_drop_threshold || product.target_price || product.notify_back_in_stock) && (
           <div className="product-notifications">
