@@ -46,13 +46,27 @@ export default function Dashboard() {
   const [pendingRefreshInterval, setPendingRefreshInterval] = useState<number>(3600);
 
   const fetchProducts = async () => {
-    try {
-      const response = await productsApi.getAll();
-      setProducts(response.data);
-    } catch {
-      setError('Failed to load products');
-    } finally {
-      setIsLoading(false);
+    // Retry once. The very first fetch after login occasionally races with
+    // React committing the auth state update: the request goes out before
+    // the token is in localStorage, backend 401s, user sees "Failed to
+    // load products". A single retry 500ms later reliably catches this.
+    const maxAttempts = 2;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await productsApi.getAll();
+        setProducts(response.data);
+        setError('');
+        setIsLoading(false);
+        return;
+      } catch (err) {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          continue;
+        }
+        console.error('Failed to load products:', err);
+        setError('Failed to load products');
+        setIsLoading(false);
+      }
     }
   };
 

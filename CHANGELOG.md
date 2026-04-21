@@ -5,6 +5,18 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-04-21
+
+### Fixed
+
+- **"Failed to load products" banner right after login** — the Dashboard's
+  initial product fetch occasionally raced with React committing the auth
+  state update, causing a failed request that a page refresh would then
+  succeed on. `fetchProducts` now retries once after 500 ms, which
+  reliably catches the race. The real error is also logged to
+  `console.error` so any remaining case can be diagnosed from the
+  browser console.
+
 ## [1.1.2] - 2026-04-21
 
 ### Changed
