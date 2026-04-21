@@ -85,7 +85,7 @@ export default function SsoComplete() {
                 </Link>
               )}
               <Link
-                to="/login"
+                to="/login?local=1"
                 className={needsEmailVerifiedFix ? 'btn btn-secondary' : 'btn btn-primary'}
               >
                 Back to login

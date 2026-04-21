@@ -48,6 +48,20 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const localFormVisible = !hideLocalFormByDefault || showLocalForm;
   const providerLabel = oidcConfig?.oidc_provider_name || 'SSO';
 
+  // In OIDC-only policy mode the login page is just a 'Sign in' button.
+  // Skip the click and bounce straight to the IdP. Escape hatches:
+  //   - /login?local=1  forces the form to render (break-glass admin sign-in)
+  //   - /login?local=1  is also what the 'Back to login' link on an SSO
+  //     error page uses, so an admin who just lost SSO access can still
+  //     reach the local form without being redirected into the broken flow.
+  useEffect(() => {
+    if (!oidcConfig || mode !== 'login') return;
+    if (!oidcConfig.oidc_enabled || oidcConfig.policy !== 'oidc') return;
+    const search = new URLSearchParams(window.location.search);
+    if (search.get('local') === '1') return;
+    window.location.href = '/api/auth/oidc/start';
+  }, [oidcConfig, mode]);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
