@@ -69,6 +69,14 @@ router.put('/password', async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    // OIDC-only users never had a password and can't change one here.
+    if (!user.password_hash) {
+      res.status(400).json({
+        error: 'This account signs in via SSO. Password changes happen in your identity provider.',
+      });
+      return;
+    }
+
     const isValidPassword = await bcrypt.compare(current_password, user.password_hash);
     if (!isValidPassword) {
       res.status(401).json({ error: 'Current password is incorrect' });

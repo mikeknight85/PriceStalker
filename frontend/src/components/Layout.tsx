@@ -61,7 +61,10 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    // ?local=1 prevents the auto-redirect-to-IdP in oidc-only policy mode;
+    // we just logged out, getting bounced straight back in would be surprising.
+    // Harmless in local / both modes (the query param is ignored).
+    navigate('/login?local=1');
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { authApi } from '../api/client';
+import { authApi, oidcApi, OidcPublicConfig } from '../api/client';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -14,6 +14,11 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+  const [oidcConfig, setOidcConfig] = useState<OidcPublicConfig | null>(null);
+  // In 'oidc' policy mode the local form is hidden behind a break-glass
+  // link so accidental admin-password leaks aren't staring everyone in the
+  // face. Click reveals the form (admins only expected to use it).
+  const [showLocalForm, setShowLocalForm] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
     return (saved as 'light' | 'dark') || 'light';
@@ -25,11 +30,37 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
   }, [theme]);
 
   useEffect(() => {
-    // Check if registration is enabled
     authApi.getRegistrationStatus()
       .then(res => setRegistrationEnabled(res.data.registration_enabled))
-      .catch(() => setRegistrationEnabled(true)); // Default to true on error
+      .catch(() => setRegistrationEnabled(true));
+
+    // Fetch OIDC public config. 404 means SSO is disabled on this server —
+    // fall back to 'local' so the UI renders exactly like before SSO existed.
+    oidcApi.getPublicConfig()
+      .then(res => setOidcConfig(res.data))
+      .catch(() => setOidcConfig({ policy: 'local', oidc_enabled: false, oidc_provider_name: null }));
   }, []);
+
+  // Derived UI flags
+  const showOidcButton = !!oidcConfig?.oidc_enabled && oidcConfig.policy !== 'local' && mode === 'login';
+  const oidcOnly = oidcConfig?.oidc_enabled === true && oidcConfig.policy === 'oidc';
+  const hideLocalFormByDefault = oidcOnly && mode === 'login';
+  const localFormVisible = !hideLocalFormByDefault || showLocalForm;
+  const providerLabel = oidcConfig?.oidc_provider_name || 'SSO';
+
+  // In OIDC-only policy mode the login page is just a 'Sign in' button.
+  // Skip the click and bounce straight to the IdP. Escape hatches:
+  //   - /login?local=1  forces the form to render (break-glass admin sign-in)
+  //   - /login?local=1  is also what the 'Back to login' link on an SSO
+  //     error page uses, so an admin who just lost SSO access can still
+  //     reach the local form without being redirected into the broken flow.
+  useEffect(() => {
+    if (!oidcConfig || mode !== 'login') return;
+    if (!oidcConfig.oidc_enabled || oidcConfig.policy !== 'oidc') return;
+    const search = new URLSearchParams(window.location.search);
+    if (search.get('local') === '1') return;
+    window.location.href = '/api/auth/oidc/start';
+  }, [oidcConfig, mode]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
@@ -158,6 +189,54 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
 
         {error && <div className="alert alert-error">{error}</div>}
 
+        {showOidcButton && (
+          <>
+            <a
+              href="/api/auth/oidc/start"
+              className="btn btn-primary"
+              style={{ width: '100%', marginBottom: '1rem', textAlign: 'center', textDecoration: 'none' }}
+            >
+              Sign in with {providerLabel}
+            </a>
+            {!hideLocalFormByDefault && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  margin: '1rem 0',
+                  color: 'var(--muted)',
+                  fontSize: '0.875rem',
+                }}
+              >
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                or
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+            )}
+          </>
+        )}
+
+        {hideLocalFormByDefault && !showLocalForm && (
+          <div className="auth-form-footer" style={{ marginTop: '1rem' }}>
+            <button
+              type="button"
+              onClick={() => setShowLocalForm(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--muted)',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                textDecoration: 'underline',
+              }}
+            >
+              Admin sign-in with password
+            </button>
+          </div>
+        )}
+
+        {localFormVisible && (
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -215,8 +294,9 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
             )}
           </button>
         </form>
+        )}
 
-        {mode === 'login' && registrationEnabled && (
+        {mode === 'login' && registrationEnabled && oidcConfig?.policy !== 'oidc' && (
           <div className="auth-form-footer">
             Don't have an account? <Link to="/register">Sign up</Link>
           </div>

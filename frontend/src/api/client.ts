@@ -43,6 +43,21 @@ export const authApi = {
     api.get<{ registration_enabled: boolean }>('/auth/registration-status'),
 };
 
+// OIDC public config — used by the login page to decide what to render.
+// Returns 404 when SSO is disabled at the server level; the caller treats
+// that as 'no SSO available' and renders the local form only.
+export type AuthPolicy = 'local' | 'oidc' | 'both';
+
+export interface OidcPublicConfig {
+  policy: AuthPolicy;
+  oidc_enabled: boolean;
+  oidc_provider_name: string | null;
+}
+
+export const oidcApi = {
+  getPublicConfig: () => api.get<OidcPublicConfig>('/auth/oidc/config/public'),
+};
+
 // Products API
 export type StockStatus = 'in_stock' | 'out_of_stock' | 'unknown';
 export type AIStatus = 'verified' | 'corrected' | null;
@@ -422,6 +437,48 @@ export const adminApi = {
 
   updateSettings: (data: { registration_enabled?: boolean }) =>
     api.put<SystemSettings>('/admin/settings', data),
+};
+
+// Admin auth config — used by the Settings → Authentication panel
+export interface AuthConfigAdminView {
+  policy: AuthPolicy;
+  oidc_enabled: boolean;
+  oidc_provider_name: string | null;
+  oidc_issuer_url: string | null;
+  oidc_client_id: string | null;
+  has_client_secret: boolean;
+  oidc_scopes: string;
+  oidc_jit_enabled: boolean;
+  oidc_require_email_verified: boolean;
+  updated_at: string;
+}
+
+export interface AuthConfigUpdate {
+  policy?: AuthPolicy;
+  oidc_enabled?: boolean;
+  oidc_provider_name?: string | null;
+  oidc_issuer_url?: string | null;
+  oidc_client_id?: string | null;
+  oidc_client_secret?: string | null; // undefined = unchanged, "" = clear
+  oidc_scopes?: string;
+  oidc_jit_enabled?: boolean;
+  oidc_require_email_verified?: boolean;
+}
+
+export interface DiscoveryTestResult {
+  ok: boolean;
+  error?: string;
+  issuer?: string;
+  authorization_endpoint?: string;
+  token_endpoint?: string;
+  jwks_uri?: string;
+}
+
+export const adminAuthApi = {
+  get: () => api.get<AuthConfigAdminView>('/admin/auth'),
+  update: (data: AuthConfigUpdate) => api.put<AuthConfigAdminView>('/admin/auth', data),
+  testDiscovery: (issuer_url: string) =>
+    api.post<DiscoveryTestResult>('/admin/auth/test-discovery', { issuer_url }),
 };
 
 export default api;
