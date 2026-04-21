@@ -5,6 +5,25 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-04-21
+
+### Changed
+
+- **New logo** — ghost with binoculars. Replaces the upstream price-tag-wielding
+  ghost. Each lens has a tiny `$` inside, keeping the price-tracking metaphor
+  but putting the stalker identity front and center. Affects
+  `frontend/public/icon.svg` (PWA/favicon/navbar) and `assets/header.svg`
+  (README wordmark).
+
+### Fixed
+
+- **Harden /version.json against browser/SW caching** so a release is visible
+  on a normal reload instead of needing a hard-refresh or SW unregister:
+  - `frontend/src/pages/Settings.tsx` fetch now uses `{cache: 'no-store'}`
+    and a cache-busting timestamp query.
+  - `frontend/nginx.conf` serves `/version.json` with explicit
+    `Cache-Control: no-store, no-cache, must-revalidate` headers.
+
 ## [1.1.1] - 2026-04-21
 
 ### Fixed
