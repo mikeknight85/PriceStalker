@@ -234,6 +234,37 @@ Same sequence, just with their own IdP. The feature flag and the `local` default
 - **openid-client ESM vs CommonJS** — noted above; pinning v5.x.
 - **Single-process flow state** — noted above; in-process Map works for one replica. If we ever scale horizontally, migrate to Redis/DB.
 
+## Future work (post-v1.2.0)
+
+Items deliberately out of scope for the initial release, roughly in priority
+order:
+
+- **Single Logout (SLO)** — when the admin logs out of the IdP, PriceStalker
+  should invalidate their JWT too. Today the two sessions are decoupled: an
+  IdP logout doesn't reach into PriceStalker's localStorage. Implementation
+  path: back-channel logout endpoint at `/api/auth/oidc/backchannel-logout`,
+  session-ID tracking in JWTs, a server-side session store (probably a new
+  `user_sessions` table — the in-memory flow-state Map won't cut it for this),
+  and Authentik/other IdP configuration. Target: **v1.3.0**.
+- **Silent auth (prompt=none)** — in `both` policy mode, attempt a background
+  OIDC auth on page load to discover if the user already has an IdP session.
+  If yes, auto-sign-in; if no, show the regular login page. Complementary to
+  SLO — together they make the SSO feel truly seamless.
+- **Shorter JWT lifetime for OIDC users** — 7 days is fine for local users;
+  OIDC users could plausibly have shorter JWTs (e.g. 8h) to tighten the gap
+  until SLO lands. Simple to implement, worth doing if v1.3.0 slips.
+- **Group → role mapping from provider claims** — map an IdP group (e.g.
+  `pricestalker-admins`) to the `is_admin` flag so admin privileges survive
+  JIT without manual promotion. Requires a new admin UI for the mapping rules.
+- **Multiple simultaneous providers** — schema already leaves room (per-user
+  `oidc_issuer`). Admin UI only supports one for v1.2.0.
+- **Email change handling** — if an OIDC user's email changes in the IdP,
+  currently we don't update PriceStalker's record. Needs a "refresh from
+  provider on sign-in" pass that updates (name, email) from the latest claims.
+- **PKCE-only / public client support** — we require a client secret today.
+  Public-client flows (no secret) would let purely frontend or mobile
+  deployments work.
+
 ## Rejected alternatives
 
 - **Trusted header SSO** (e.g. rely on Traefik/Authentik's `X-Forwarded-User`). Simpler but non-portable — only works for deployers who have Authentik / similar in front. Rejected because the goal is "anyone can deploy this".

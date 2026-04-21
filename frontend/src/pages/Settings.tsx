@@ -2243,13 +2243,52 @@ export default function Settings() {
               <div className="settings-section">
                 <div className="settings-section-header">
                   <span className="settings-section-icon">🔐</span>
-                  <h2 className="settings-section-title">Authentication</h2>
+                  <h2 className="settings-section-title">
+                    Authentication
+                    <span
+                      style={{
+                        marginLeft: '0.75rem',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '999px',
+                        background: 'rgba(251, 146, 60, 0.15)',
+                        color: '#ea580c',
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.05em',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      BETA
+                    </span>
+                  </h2>
                 </div>
                 <p className="settings-section-description">
                   Configure how users sign in. Local email/password is always available;
                   OIDC can be enabled for single sign-on against Authentik, Keycloak, Google,
                   or any other compliant provider.
                 </p>
+                <div
+                  className="alert"
+                  style={{
+                    background: 'rgba(251, 146, 60, 0.1)',
+                    color: '#9a3412',
+                    marginBottom: '1.5rem',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <strong>Beta.</strong> OIDC integration is new in v1.2.0. The flow works
+                  end-to-end but hasn't been battle-tested across every provider yet.
+                  Known limitation: logging out of your IdP does not automatically log you
+                  out of PriceStalker (Single Logout arrives in v1.3.0). Report issues at{' '}
+                  <a
+                    href="https://github.com/mikeknight85/PriceStalker/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    github.com/mikeknight85/PriceStalker/issues
+                  </a>
+                  .
+                </div>
 
                 <div className="settings-form-group">
                   <label>Sign-in policy</label>

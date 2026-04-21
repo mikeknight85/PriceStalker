@@ -5,6 +5,51 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-21
+
+### Added
+
+- **Single Sign-On via OIDC (BETA)** — PriceStalker can now act as an OIDC
+  Relying Party against any compliant provider (Authentik, Keycloak,
+  Google, Okta, Auth0, …) using the Authorization Code + PKCE flow. Full
+  design doc at [`docs/SSO_DESIGN.md`](docs/SSO_DESIGN.md).
+
+  **Feature-flagged off by default** — set `ENABLE_SSO=true` on the
+  backend + configure a provider in Settings → Authentication before any
+  user-visible change. Existing deployments upgrading from 1.1.x see no
+  difference until they opt in.
+
+  **Admin policy options** (Settings → Authentication):
+  - `local` — current behavior, OIDC UI hidden
+  - `both` — local form + "Sign in with X" button, user picks
+  - `oidc` — SSO-only with auto-redirect; break-glass admin fallback via
+    `/login?local=1` so a misconfigured IdP can never lock you out
+
+  **Admin toggles**:
+  - JIT provisioning — auto-create PriceStalker accounts from first OIDC
+    sign-in (default on)
+  - Require verified email — enforce `email_verified=true` in ID token or
+    userinfo (default on; admins running self-hosted IdPs like Authentik
+    can disable it so they don't have to customize their scope mappings)
+  - Test discovery — one-click validation of an issuer URL before saving
+
+  **Identity resolution**: matches by stable `(oidc_issuer, oidc_subject)`
+  first, falls back to email-linking against existing local accounts, JIT-
+  creates if neither matches. First user in the DB is auto-promoted to
+  admin (same rule as local registration).
+
+  **Known limitation** (BETA): logging out of the IdP does not log you
+  out of PriceStalker. Single Logout (SLO) is on the v1.3.0 roadmap. Use
+  PriceStalker's own logout button for now.
+
+### Changed
+
+- Refactored `adminMiddleware` from `routes/admin.ts` into its own
+  `middleware/admin.ts` so it can be reused by the new admin-auth routes.
+- `users.password_hash` is now nullable (OIDC-provisioned users never had
+  one). Attempting to change a password on an SSO account returns a
+  clear error directing you to your IdP instead.
+
 ## [1.1.3] - 2026-04-21
 
 ### Fixed
