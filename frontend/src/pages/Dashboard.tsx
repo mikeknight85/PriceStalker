@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
@@ -666,6 +667,27 @@ export default function Dashboard() {
           font-weight: 600;
         }
 
+        .summary-card-list-link {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+          color: inherit;
+          text-decoration: none;
+          border-radius: 0.25rem;
+          padding: 0.125rem 0.25rem;
+          margin: 0 -0.25rem;
+          transition: background 0.15s;
+        }
+
+        .summary-card-list-link:hover {
+          background: var(--hover, rgba(0, 0, 0, 0.04));
+        }
+
+        [data-theme="dark"] .summary-card-list-link:hover {
+          background: rgba(255, 255, 255, 0.06);
+        }
+
         .bulk-action-bar {
           position: fixed;
           bottom: 1.5rem;
@@ -802,10 +824,16 @@ export default function Dashboard() {
               <ul className="summary-card-list">
                 {dashboardSummary.biggestDrops.map(p => (
                   <li key={p.id}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>
-                      {p.name?.slice(0, 20) || 'Unknown'}
-                    </span>
-                    <span className="drop">{p.price_change_7d?.toFixed(1)}%</span>
+                    <Link
+                      to={`/product/${p.id}`}
+                      className="summary-card-list-link"
+                      title={p.name || 'Unknown'}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>
+                        {p.name?.slice(0, 20) || 'Unknown'}
+                      </span>
+                      <span className="drop">{p.price_change_7d?.toFixed(1)}%</span>
+                    </Link>
                   </li>
                 ))}
               </ul>

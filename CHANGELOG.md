@@ -5,6 +5,14 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-04-21
+
+### Changed
+
+- **Biggest Drops (7d) dashboard card items are now clickable** — each entry
+  navigates to its product detail page. Same UX principle as the main product
+  cards got in 1.2.1: the card is the link, not just a named button.
+
 ## [1.2.1] - 2026-04-21
 
 ### Changed
