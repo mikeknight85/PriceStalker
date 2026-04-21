@@ -109,6 +109,7 @@ export default function Settings() {
   const [oidcClientSecretClear, setOidcClientSecretClear] = useState(false);
   const [oidcScopes, setOidcScopes] = useState('openid profile email');
   const [oidcJitEnabled, setOidcJitEnabled] = useState(true);
+  const [oidcRequireEmailVerified, setOidcRequireEmailVerified] = useState(true);
   const [isSavingAuth, setIsSavingAuth] = useState(false);
   const [isTestingDiscovery, setIsTestingDiscovery] = useState(false);
   const [discoveryResult, setDiscoveryResult] = useState<string | null>(null);
@@ -211,6 +212,7 @@ export default function Settings() {
           setOidcClientId(res.data.oidc_client_id || '');
           setOidcScopes(res.data.oidc_scopes);
           setOidcJitEnabled(res.data.oidc_jit_enabled);
+          setOidcRequireEmailVerified(res.data.oidc_require_email_verified);
           setOidcClientSecret('');
           setOidcClientSecretClear(false);
           setDiscoveryResult(null);
@@ -259,6 +261,7 @@ export default function Settings() {
           : undefined,
         oidc_scopes: oidcScopes,
         oidc_jit_enabled: oidcJitEnabled,
+        oidc_require_email_verified: oidcRequireEmailVerified,
       };
       const { data } = await adminAuthApi.update(payload);
       setAuthConfig(data);
@@ -2270,11 +2273,25 @@ export default function Settings() {
                   <div className="settings-toggle-label">
                     <span className="settings-toggle-title">JIT provisioning</span>
                     <span className="settings-toggle-description">
-                      Auto-create a PriceStalker account the first time someone signs in via OIDC. Email verification is required either way.
+                      Auto-create a PriceStalker account the first time someone signs in via OIDC.
                     </span>
                   </div>
                   <label className="switch">
                     <input type="checkbox" checked={oidcJitEnabled} onChange={(e) => setOidcJitEnabled(e.target.checked)} />
+                    <span className="slider" />
+                  </label>
+                </div>
+
+                <div className="settings-toggle">
+                  <div className="settings-toggle-label">
+                    <span className="settings-toggle-title">Require verified email from provider</span>
+                    <span className="settings-toggle-description">
+                      Only allow sign-in when the IdP asserts <code>email_verified=true</code> in the ID token or userinfo.
+                      Safe for public IdPs (Google, Microsoft). Disable for self-hosted IdPs that don't emit this claim by default (Authentik, Keycloak).
+                    </span>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={oidcRequireEmailVerified} onChange={(e) => setOidcRequireEmailVerified(e.target.checked)} />
                     <span className="slider" />
                   </label>
                 </div>

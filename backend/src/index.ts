@@ -208,9 +208,20 @@ async function runMigrations() {
         oidc_client_secret TEXT,
         oidc_scopes TEXT NOT NULL DEFAULT 'openid profile email',
         oidc_jit_enabled BOOLEAN NOT NULL DEFAULT true,
+        oidc_require_email_verified BOOLEAN NOT NULL DEFAULT true,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
       INSERT INTO auth_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+      -- idempotent add for existing rows
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'auth_config' AND column_name = 'oidc_require_email_verified'
+        ) THEN
+          ALTER TABLE auth_config ADD COLUMN oidc_require_email_verified BOOLEAN NOT NULL DEFAULT true;
+        END IF;
+      END $$;
     `);
 
     // Create stock_status_history table if it doesn't exist

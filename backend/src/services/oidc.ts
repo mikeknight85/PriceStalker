@@ -176,6 +176,7 @@ export async function completeFlow(
   params: URLSearchParams,
   state: string,
 ): Promise<OidcClaims> {
+  const cfg = await authConfigQueries.get();
   const client = await getOidcClient();
 
   const stored = consumeFlowState(state);
@@ -221,9 +222,13 @@ export async function completeFlow(
   if (!email) {
     throw new Error('Provider did not return an email claim — cannot log in.');
   }
-  if (!emailVerified) {
+  // Toggle lets admins accept claims from IdPs that don't emit email_verified
+  // (Authentik's default scope mapping, Keycloak without explicit mapper,
+  // etc.). Default in auth_config is true, so the strict behavior is still
+  // the out-of-the-box behavior.
+  if (cfg.oidc_require_email_verified && !emailVerified) {
     throw new Error(
-      'Provider did not assert email_verified. Refusing to auto-link or create an account.',
+      'Provider did not assert email_verified. Admin can disable this check in Settings → Authentication.',
     );
   }
 

@@ -11,6 +11,7 @@ export interface AuthConfig {
   oidc_client_secret: string | null;
   oidc_scopes: string;
   oidc_jit_enabled: boolean;
+  oidc_require_email_verified: boolean;
   updated_at: Date;
 }
 
@@ -37,6 +38,7 @@ export interface AuthConfigUpdate {
   oidc_client_secret?: string | null;
   oidc_scopes?: string;
   oidc_jit_enabled?: boolean;
+  oidc_require_email_verified?: boolean;
 }
 
 export const authConfigQueries = {
@@ -44,7 +46,7 @@ export const authConfigQueries = {
     const result = await pool.query(
       `SELECT policy, oidc_enabled, oidc_provider_name, oidc_issuer_url,
               oidc_client_id, oidc_client_secret, oidc_scopes, oidc_jit_enabled,
-              updated_at
+              oidc_require_email_verified, updated_at
        FROM auth_config WHERE id = 1`,
     );
     // The startup migration ensures a row with id=1 always exists.
@@ -62,6 +64,7 @@ export const authConfigQueries = {
       has_client_secret: cfg.oidc_client_secret !== null && cfg.oidc_client_secret !== '',
       oidc_scopes: cfg.oidc_scopes,
       oidc_jit_enabled: cfg.oidc_jit_enabled,
+      oidc_require_email_verified: cfg.oidc_require_email_verified,
       updated_at: cfg.updated_at.toISOString(),
     };
   },
@@ -94,6 +97,7 @@ export const authConfigQueries = {
     maybePush('oidc_client_secret', changes.oidc_client_secret);
     maybePush('oidc_scopes', changes.oidc_scopes);
     maybePush('oidc_jit_enabled', changes.oidc_jit_enabled);
+    maybePush('oidc_require_email_verified', changes.oidc_require_email_verified);
 
     if (fields.length === 0) {
       return authConfigQueries.get();
@@ -105,7 +109,7 @@ export const authConfigQueries = {
       `UPDATE auth_config SET ${fields.join(', ')} WHERE id = 1
        RETURNING policy, oidc_enabled, oidc_provider_name, oidc_issuer_url,
                  oidc_client_id, oidc_client_secret, oidc_scopes, oidc_jit_enabled,
-                 updated_at`,
+                 oidc_require_email_verified, updated_at`,
       values,
     );
     return result.rows[0];

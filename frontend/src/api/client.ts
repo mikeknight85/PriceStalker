@@ -449,6 +449,7 @@ export interface AuthConfigAdminView {
   has_client_secret: boolean;
   oidc_scopes: string;
   oidc_jit_enabled: boolean;
+  oidc_require_email_verified: boolean;
   updated_at: string;
 }
 
@@ -461,6 +462,7 @@ export interface AuthConfigUpdate {
   oidc_client_secret?: string | null; // undefined = unchanged, "" = clear
   oidc_scopes?: string;
   oidc_jit_enabled?: boolean;
+  oidc_require_email_verified?: boolean;
 }
 
 export interface DiscoveryTestResult {

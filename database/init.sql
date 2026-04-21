@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS auth_config (
   oidc_client_secret TEXT,
   oidc_scopes TEXT NOT NULL DEFAULT 'openid profile email',
   oidc_jit_enabled BOOLEAN NOT NULL DEFAULT true,
+  oidc_require_email_verified BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 INSERT INTO auth_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
