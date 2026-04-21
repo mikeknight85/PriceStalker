@@ -22,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^3.0.3",
     "openai": "^4.47.0",
+    "openid-client": "^5.7.0",
     "pg": "^8.11.3",
     "puppeteer": "^22.0.0",
     "puppeteer-extra": "^3.3.6",

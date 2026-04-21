@@ -1,31 +1,13 @@
-import { Router, Response, NextFunction } from 'express';
+import { Router, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
+import { adminMiddleware } from '../middleware/admin';
 import { userQueries, systemSettingsQueries } from '../models';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication + admin
 router.use(authMiddleware);
-
-// Admin middleware - checks if user is admin
-const adminMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const userId = req.userId!;
-    const user = await userQueries.findById(userId);
-
-    if (!user || !user.is_admin) {
-      res.status(403).json({ error: 'Admin access required' });
-      return;
-    }
-
-    next();
-  } catch (error) {
-    console.error('Admin middleware error:', error);
-    res.status(500).json({ error: 'Failed to verify admin status' });
-  }
-};
-
 router.use(adminMiddleware);
 
 // Get all users

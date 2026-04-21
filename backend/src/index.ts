@@ -8,6 +8,7 @@ import priceRoutes from './routes/prices';
 import settingsRoutes from './routes/settings';
 import profileRoutes from './routes/profile';
 import adminRoutes from './routes/admin';
+import adminAuthRoutes from './routes/admin-auth';
 import notificationRoutes from './routes/notifications';
 import { startScheduler } from './services/scheduler';
 import pool from './config/database';
@@ -167,7 +168,48 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'openrouter_model') THEN
           ALTER TABLE users ADD COLUMN openrouter_model TEXT;
         END IF;
+        -- SSO / OIDC columns (v1.2.0)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'auth_provider') THEN
+          ALTER TABLE users ADD COLUMN auth_provider VARCHAR(20) NOT NULL DEFAULT 'local';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'oidc_subject') THEN
+          ALTER TABLE users ADD COLUMN oidc_subject TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'oidc_issuer') THEN
+          ALTER TABLE users ADD COLUMN oidc_issuer TEXT;
+        END IF;
+        -- OIDC-provisioned users have no password; allow NULL
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'password_hash' AND is_nullable = 'NO'
+        ) THEN
+          ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+        END IF;
       END $$;
+    `);
+
+    // Unique index on (oidc_issuer, oidc_subject) for fast identity lookup
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS users_oidc_sub_idx
+      ON users(oidc_issuer, oidc_subject)
+      WHERE oidc_subject IS NOT NULL;
+    `);
+
+    // auth_config singleton table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS auth_config (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        policy VARCHAR(20) NOT NULL DEFAULT 'local',
+        oidc_enabled BOOLEAN NOT NULL DEFAULT false,
+        oidc_provider_name TEXT,
+        oidc_issuer_url TEXT,
+        oidc_client_id TEXT,
+        oidc_client_secret TEXT,
+        oidc_scopes TEXT NOT NULL DEFAULT 'openid profile email',
+        oidc_jit_enabled BOOLEAN NOT NULL DEFAULT true,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO auth_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
     `);
 
     // Create stock_status_history table if it doesn't exist
@@ -283,6 +325,7 @@ app.use('/api/products', priceRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Error handling middleware

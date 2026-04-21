@@ -152,6 +152,44 @@ BEGIN
   END IF;
 END $$;
 
+-- Migration: SSO / OIDC support (v1.2.0)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'auth_provider') THEN
+    ALTER TABLE users ADD COLUMN auth_provider VARCHAR(20) NOT NULL DEFAULT 'local';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'oidc_subject') THEN
+    ALTER TABLE users ADD COLUMN oidc_subject TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'oidc_issuer') THEN
+    ALTER TABLE users ADD COLUMN oidc_issuer TEXT;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'users' AND column_name = 'password_hash' AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+  END IF;
+END $$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_oidc_sub_idx
+  ON users(oidc_issuer, oidc_subject)
+  WHERE oidc_subject IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS auth_config (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  policy VARCHAR(20) NOT NULL DEFAULT 'local',
+  oidc_enabled BOOLEAN NOT NULL DEFAULT false,
+  oidc_provider_name TEXT,
+  oidc_issuer_url TEXT,
+  oidc_client_id TEXT,
+  oidc_client_secret TEXT,
+  oidc_scopes TEXT NOT NULL DEFAULT 'openid profile email',
+  oidc_jit_enabled BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO auth_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
 -- Index for faster price history queries
 CREATE INDEX IF NOT EXISTS idx_price_history_product_date
 ON price_history(product_id, recorded_at);
