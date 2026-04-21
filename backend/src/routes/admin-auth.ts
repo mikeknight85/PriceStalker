@@ -6,6 +6,7 @@ import {
   AuthPolicy,
   AuthConfigUpdate,
 } from '../models/auth-config';
+import { invalidateOidcClient } from '../services/oidc';
 
 const router = Router();
 
@@ -61,6 +62,9 @@ router.put('/', async (req: AuthRequest, res: Response) => {
     }
 
     await authConfigQueries.update(changes);
+    // Any change might have rotated issuer/client/secret — force a fresh
+    // openid-client discovery on the next flow.
+    invalidateOidcClient();
     const updated = await authConfigQueries.getAdminView();
     res.json(updated);
   } catch (error) {

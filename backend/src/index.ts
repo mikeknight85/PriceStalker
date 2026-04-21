@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth';
+import oidcRoutes from './routes/oidc';
 import productRoutes from './routes/products';
 import priceRoutes from './routes/prices';
 import settingsRoutes from './routes/settings';
@@ -320,6 +321,7 @@ app.get('/health', (_, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/oidc', oidcRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/products', priceRoutes);
 app.use('/api/settings', settingsRoutes);

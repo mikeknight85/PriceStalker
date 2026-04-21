@@ -1,16 +1,21 @@
 import pool from '../config/database';
 
 // User types and queries
+export type AuthProvider = 'local' | 'oidc';
+
 export interface User {
   id: number;
   email: string;
-  password_hash: string;
+  password_hash: string | null; // null for OIDC-only users
   name: string | null;
   is_admin: boolean;
   telegram_bot_token: string | null;
   telegram_chat_id: string | null;
   discord_webhook_url: string | null;
   created_at: Date;
+  auth_provider: AuthProvider;
+  oidc_subject: string | null;
+  oidc_issuer: string | null;
 }
 
 export interface UserProfile {
@@ -77,10 +82,56 @@ export const userQueries = {
 
   create: async (email: string, passwordHash: string): Promise<User> => {
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *',
+      `INSERT INTO users (email, password_hash, auth_provider)
+       VALUES ($1, $2, 'local') RETURNING *`,
       [email, passwordHash]
     );
     return result.rows[0];
+  },
+
+  // JIT-provision a user from an OIDC identity claim set. password_hash stays
+  // NULL (they'll only ever sign in via the same provider). If name is the
+  // empty string or undefined, store NULL.
+  createOidc: async (params: {
+    email: string;
+    name: string | null;
+    issuer: string;
+    subject: string;
+  }): Promise<User> => {
+    const result = await pool.query(
+      `INSERT INTO users (email, name, auth_provider, oidc_issuer, oidc_subject)
+       VALUES ($1, $2, 'oidc', $3, $4) RETURNING *`,
+      [params.email, params.name || null, params.issuer, params.subject]
+    );
+    return result.rows[0];
+  },
+
+  findByOidcSubject: async (issuer: string, subject: string): Promise<User | null> => {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE oidc_issuer = $1 AND oidc_subject = $2',
+      [issuer, subject]
+    );
+    return result.rows[0] || null;
+  },
+
+  // Link an existing local user to an OIDC identity without changing their
+  // auth_provider. This preserves the break-glass capability — they can still
+  // sign in with a password if needed.
+  linkOidcIdentity: async (
+    userId: number,
+    issuer: string,
+    subject: string,
+  ): Promise<boolean> => {
+    const result = await pool.query(
+      `UPDATE users SET oidc_issuer = $1, oidc_subject = $2 WHERE id = $3`,
+      [issuer, subject, userId]
+    );
+    return (result.rowCount ?? 0) > 0;
+  },
+
+  count: async (): Promise<number> => {
+    const result = await pool.query('SELECT COUNT(*)::int AS count FROM users');
+    return result.rows[0]?.count ?? 0;
   },
 
   getNotificationSettings: async (id: number): Promise<NotificationSettings | null> => {

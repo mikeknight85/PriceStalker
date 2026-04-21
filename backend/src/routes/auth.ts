@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { userQueries, systemSettingsQueries } from '../models';
+import { authConfigQueries } from '../models/auth-config';
 import { generateToken } from '../middleware/auth';
 
 const router = Router();
@@ -20,6 +21,15 @@ router.get('/registration-status', async (_req: Request, res: Response) => {
 router.post('/register', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+
+    // If the instance is in OIDC-only mode, public local registration is
+    // disabled — users come in via the IdP + JIT provisioning. Local
+    // registration remains open in `local` and `both` policy modes.
+    const authConfig = await authConfigQueries.get();
+    if (authConfig.policy === 'oidc') {
+      res.status(403).json({ error: 'Local registration is disabled on this instance (OIDC only)' });
+      return;
+    }
 
     // Check if registration is enabled
     const registrationEnabled = await systemSettingsQueries.get('registration_enabled');
@@ -94,9 +104,24 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
+    // OIDC users have no password. Don't leak which accounts are which —
+    // same generic error as a wrong password.
+    if (!user.password_hash) {
+      res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
+
+    // In OIDC-only mode, only admins with a password can sign in via the local
+    // form (break-glass). Everyone else is directed to use SSO.
+    const authConfig = await authConfigQueries.get();
+    if (authConfig.policy === 'oidc' && !user.is_admin) {
+      res.status(403).json({ error: 'Local login is disabled. Please sign in via SSO.' });
       return;
     }
 
