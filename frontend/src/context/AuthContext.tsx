@@ -5,7 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from 'react';
-import { authApi } from '../api/client';
+import { authApi, profileApi } from '../api/client';
 
 interface User {
   id: number;
@@ -18,6 +18,10 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
+  // Called by the /auth/sso-complete page once the OIDC callback has
+  // returned us a JWT via URL hash fragment. We stash the token and then
+  // hit /profile to learn which user it belongs to.
+  completeOidcLogin: (token: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -61,6 +65,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   };
 
+  const completeOidcLogin = async (token: string) => {
+    // Token must be in localStorage before the profile fetch so the axios
+    // interceptor attaches it.
+    localStorage.setItem('token', token);
+    const { data: profile } = await profileApi.get();
+    const userData: User = {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -68,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, register, completeOidcLogin, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

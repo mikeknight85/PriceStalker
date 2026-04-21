@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import SsoComplete from './pages/SsoComplete';
 import Dashboard from './pages/Dashboard';
 import ProductDetail from './pages/ProductDetail';
 import Settings from './pages/Settings';
@@ -120,6 +121,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/auth/sso-complete" element={<SsoComplete />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -43,6 +43,21 @@ export const authApi = {
     api.get<{ registration_enabled: boolean }>('/auth/registration-status'),
 };
 
+// OIDC public config — used by the login page to decide what to render.
+// Returns 404 when SSO is disabled at the server level; the caller treats
+// that as 'no SSO available' and renders the local form only.
+export type AuthPolicy = 'local' | 'oidc' | 'both';
+
+export interface OidcPublicConfig {
+  policy: AuthPolicy;
+  oidc_enabled: boolean;
+  oidc_provider_name: string | null;
+}
+
+export const oidcApi = {
+  getPublicConfig: () => api.get<OidcPublicConfig>('/auth/oidc/config/public'),
+};
+
 // Products API
 export type StockStatus = 'in_stock' | 'out_of_stock' | 'unknown';
 export type AIStatus = 'verified' | 'corrected' | null;
