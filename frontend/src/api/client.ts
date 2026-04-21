@@ -439,4 +439,44 @@ export const adminApi = {
     api.put<SystemSettings>('/admin/settings', data),
 };
 
+// Admin auth config — used by the Settings → Authentication panel
+export interface AuthConfigAdminView {
+  policy: AuthPolicy;
+  oidc_enabled: boolean;
+  oidc_provider_name: string | null;
+  oidc_issuer_url: string | null;
+  oidc_client_id: string | null;
+  has_client_secret: boolean;
+  oidc_scopes: string;
+  oidc_jit_enabled: boolean;
+  updated_at: string;
+}
+
+export interface AuthConfigUpdate {
+  policy?: AuthPolicy;
+  oidc_enabled?: boolean;
+  oidc_provider_name?: string | null;
+  oidc_issuer_url?: string | null;
+  oidc_client_id?: string | null;
+  oidc_client_secret?: string | null; // undefined = unchanged, "" = clear
+  oidc_scopes?: string;
+  oidc_jit_enabled?: boolean;
+}
+
+export interface DiscoveryTestResult {
+  ok: boolean;
+  error?: string;
+  issuer?: string;
+  authorization_endpoint?: string;
+  token_endpoint?: string;
+  jwks_uri?: string;
+}
+
+export const adminAuthApi = {
+  get: () => api.get<AuthConfigAdminView>('/admin/auth'),
+  update: (data: AuthConfigUpdate) => api.put<AuthConfigAdminView>('/admin/auth', data),
+  testDiscovery: (issuer_url: string) =>
+    api.post<DiscoveryTestResult>('/admin/auth/test-discovery', { issuer_url }),
+};
+
 export default api;

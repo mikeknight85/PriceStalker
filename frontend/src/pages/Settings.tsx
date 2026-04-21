@@ -6,13 +6,16 @@ import {
   settingsApi,
   profileApi,
   adminApi,
+  adminAuthApi,
   NotificationSettings,
   AISettings,
   UserProfile,
   SystemSettings,
+  AuthConfigAdminView,
+  AuthPolicy,
 } from '../api/client';
 
-type SettingsSection = 'profile' | 'notifications' | 'ai' | 'admin';
+type SettingsSection = 'profile' | 'notifications' | 'ai' | 'auth' | 'admin';
 
 interface VersionInfo {
   version: string;
@@ -93,6 +96,22 @@ export default function Settings() {
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState<'user' | 'admin'>('user');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
+
+  // Auth config (Settings → Authentication, admin only)
+  const [authConfig, setAuthConfig] = useState<AuthConfigAdminView | null>(null);
+  const [authPolicy, setAuthPolicy] = useState<AuthPolicy>('local');
+  const [oidcEnabled, setOidcEnabled] = useState(false);
+  const [oidcProviderName, setOidcProviderName] = useState('');
+  const [oidcIssuerUrl, setOidcIssuerUrl] = useState('');
+  const [oidcClientId, setOidcClientId] = useState('');
+  // Empty = unchanged. User types a new value to rotate; clear explicitly to remove.
+  const [oidcClientSecret, setOidcClientSecret] = useState('');
+  const [oidcClientSecretClear, setOidcClientSecretClear] = useState(false);
+  const [oidcScopes, setOidcScopes] = useState('openid profile email');
+  const [oidcJitEnabled, setOidcJitEnabled] = useState(true);
+  const [isSavingAuth, setIsSavingAuth] = useState(false);
+  const [isTestingDiscovery, setIsTestingDiscovery] = useState(false);
+  const [discoveryResult, setDiscoveryResult] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInitialData();
@@ -179,6 +198,81 @@ export default function Settings() {
       fetchAdminData();
     }
   }, [activeSection, profile]);
+
+  useEffect(() => {
+    if (activeSection === 'auth' && profile?.is_admin && !authConfig) {
+      adminAuthApi.get()
+        .then((res) => {
+          setAuthConfig(res.data);
+          setAuthPolicy(res.data.policy);
+          setOidcEnabled(res.data.oidc_enabled);
+          setOidcProviderName(res.data.oidc_provider_name || '');
+          setOidcIssuerUrl(res.data.oidc_issuer_url || '');
+          setOidcClientId(res.data.oidc_client_id || '');
+          setOidcScopes(res.data.oidc_scopes);
+          setOidcJitEnabled(res.data.oidc_jit_enabled);
+          setOidcClientSecret('');
+          setOidcClientSecretClear(false);
+          setDiscoveryResult(null);
+        })
+        .catch(() => setError('Failed to load auth config'));
+    }
+  }, [activeSection, profile, authConfig]);
+
+  const handleTestDiscovery = async () => {
+    clearMessages();
+    if (!oidcIssuerUrl) {
+      setError('Enter an issuer URL first');
+      return;
+    }
+    setIsTestingDiscovery(true);
+    setDiscoveryResult(null);
+    try {
+      const { data } = await adminAuthApi.testDiscovery(oidcIssuerUrl);
+      if (data.ok) {
+        setDiscoveryResult(`OK — issuer: ${data.issuer}`);
+      } else {
+        setError(data.error || 'Discovery failed');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Discovery failed';
+      setError(message);
+    } finally {
+      setIsTestingDiscovery(false);
+    }
+  };
+
+  const handleSaveAuth = async () => {
+    clearMessages();
+    setIsSavingAuth(true);
+    try {
+      const payload = {
+        policy: authPolicy,
+        oidc_enabled: oidcEnabled,
+        oidc_provider_name: oidcProviderName || null,
+        oidc_issuer_url: oidcIssuerUrl || null,
+        oidc_client_id: oidcClientId || null,
+        oidc_client_secret: oidcClientSecretClear
+          ? null
+          : oidcClientSecret
+          ? oidcClientSecret
+          : undefined,
+        oidc_scopes: oidcScopes,
+        oidc_jit_enabled: oidcJitEnabled,
+      };
+      const { data } = await adminAuthApi.update(payload);
+      setAuthConfig(data);
+      setOidcClientSecret('');
+      setOidcClientSecretClear(false);
+      setSuccess('Authentication settings saved');
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const axiosError = err as any;
+      setError(axiosError.response?.data?.error || 'Failed to save auth settings');
+    } finally {
+      setIsSavingAuth(false);
+    }
+  };
 
   const clearMessages = () => {
     setError('');
@@ -1088,6 +1182,18 @@ export default function Settings() {
               </svg>
               AI Extraction
             </button>
+            {profile?.is_admin && (
+              <button
+                className={`settings-nav-item ${activeSection === 'auth' ? 'active' : ''}`}
+                onClick={() => { setActiveSection('auth'); clearMessages(); }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Authentication
+              </button>
+            )}
             {profile?.is_admin && (
               <button
                 className={`settings-nav-item ${activeSection === 'admin' ? 'active' : ''}`}
@@ -2113,6 +2219,171 @@ export default function Settings() {
                   </div>
                 </div>
               )}
+            </>
+          )}
+
+          {activeSection === 'auth' && profile?.is_admin && (
+            <>
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-icon">🔐</span>
+                  <h2 className="settings-section-title">Authentication</h2>
+                </div>
+                <p className="settings-section-description">
+                  Configure how users sign in. Local email/password is always available;
+                  OIDC can be enabled for single sign-on against Authentik, Keycloak, Google,
+                  or any other compliant provider.
+                </p>
+
+                <div className="settings-form-group">
+                  <label>Sign-in policy</label>
+                  <select
+                    value={authPolicy}
+                    onChange={(e) => setAuthPolicy(e.target.value as AuthPolicy)}
+                    style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border)', borderRadius: '0.375rem', background: 'var(--background)', color: 'var(--text)', fontSize: '0.875rem' }}
+                  >
+                    <option value="local">Local only (email + password)</option>
+                    <option value="both">Both (local and SSO)</option>
+                    <option value="oidc">SSO only (admins keep password break-glass)</option>
+                  </select>
+                  <p className="hint">
+                    {authPolicy === 'oidc' && 'Admins with a local password can still sign in via the break-glass link on the login page. Regular users must use SSO.'}
+                    {authPolicy === 'both' && 'Login page shows both the SSO button and the local form.'}
+                    {authPolicy === 'local' && 'SSO is hidden from the login page. OIDC settings below are saved but not used until you flip this to Both or SSO only.'}
+                  </p>
+                </div>
+
+                <div className="settings-toggle">
+                  <div className="settings-toggle-label">
+                    <span className="settings-toggle-title">OIDC enabled</span>
+                    <span className="settings-toggle-description">
+                      When off, all OIDC endpoints are inactive even if the server has ENABLE_SSO=true.
+                    </span>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={oidcEnabled} onChange={(e) => setOidcEnabled(e.target.checked)} />
+                    <span className="slider" />
+                  </label>
+                </div>
+
+                <div className="settings-toggle">
+                  <div className="settings-toggle-label">
+                    <span className="settings-toggle-title">JIT provisioning</span>
+                    <span className="settings-toggle-description">
+                      Auto-create a PriceStalker account the first time someone signs in via OIDC. Email verification is required either way.
+                    </span>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={oidcJitEnabled} onChange={(e) => setOidcJitEnabled(e.target.checked)} />
+                    <span className="slider" />
+                  </label>
+                </div>
+
+                <div className="settings-form-group">
+                  <label>Provider display name</label>
+                  <input
+                    type="text"
+                    value={oidcProviderName}
+                    onChange={(e) => setOidcProviderName(e.target.value)}
+                    placeholder="Authentik"
+                  />
+                  <p className="hint">Shown on the login page as "Sign in with {oidcProviderName || 'SSO'}".</p>
+                </div>
+
+                <div className="settings-form-group">
+                  <label>Issuer URL</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="url"
+                      style={{ flex: 1 }}
+                      value={oidcIssuerUrl}
+                      onChange={(e) => setOidcIssuerUrl(e.target.value)}
+                      placeholder="https://auth.example.com/application/o/pricestalker/"
+                    />
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleTestDiscovery}
+                      disabled={isTestingDiscovery || !oidcIssuerUrl}
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      {isTestingDiscovery ? 'Testing...' : 'Test discovery'}
+                    </button>
+                  </div>
+                  <p className="hint">
+                    Base URL of the OIDC provider. We append <code>/.well-known/openid-configuration</code> automatically.
+                    {discoveryResult && <span style={{ color: 'var(--success, #10b981)', marginLeft: 8 }}>{discoveryResult}</span>}
+                  </p>
+                </div>
+
+                <div className="settings-form-group">
+                  <label>Client ID</label>
+                  <input
+                    type="text"
+                    value={oidcClientId}
+                    onChange={(e) => setOidcClientId(e.target.value)}
+                    placeholder="pricestalker"
+                  />
+                </div>
+
+                <div className="settings-form-group">
+                  <label>Client secret {authConfig?.has_client_secret && '(set)'}</label>
+                  {oidcClientSecretClear ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <em style={{ color: 'var(--muted)' }}>Will be cleared on save.</em>
+                      <button className="btn btn-secondary" onClick={() => setOidcClientSecretClear(false)}>
+                        Undo
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <PasswordInput
+                          value={oidcClientSecret}
+                          onChange={(e) => setOidcClientSecret(e.target.value)}
+                          placeholder={authConfig?.has_client_secret ? '••••••• (leave empty to keep existing)' : ''}
+                        />
+                      </div>
+                      {authConfig?.has_client_secret && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => { setOidcClientSecret(''); setOidcClientSecretClear(true); }}
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <p className="hint">Never returned by the API. Leave empty to keep the existing value.</p>
+                </div>
+
+                <div className="settings-form-group">
+                  <label>Scopes</label>
+                  <input
+                    type="text"
+                    value={oidcScopes}
+                    onChange={(e) => setOidcScopes(e.target.value)}
+                    placeholder="openid profile email"
+                  />
+                  <p className="hint">Space-separated. <code>openid</code> is required. <code>email</code> is required for JIT / email-linking.</p>
+                </div>
+
+                <div className="settings-form-actions">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveAuth}
+                    disabled={isSavingAuth}
+                  >
+                    {isSavingAuth ? 'Saving...' : 'Save Authentication Settings'}
+                  </button>
+                </div>
+
+                {authPolicy === 'oidc' && (
+                  <div className="alert" style={{ marginTop: '1rem', background: 'var(--warning-bg, #fef3c7)', color: 'var(--warning-text, #92400e)' }}>
+                    <strong>Heads up:</strong> you're about to require SSO for all non-admin users. Make sure at least one admin has a local password set (break-glass) before saving, or you may lock yourself out if the IdP is misconfigured.
+                  </div>
+                )}
+              </div>
             </>
           )}
 
