@@ -5,6 +5,18 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-04-21
+
+### Changed
+
+- **Multi-arch Docker images (amd64 + arm64)** — CI now publishes
+  `ghcr.io/mikeknight85/pricestalker-{backend,frontend}` as manifest lists
+  covering both `linux/amd64` and `linux/arm64`. Docker clients pick the
+  right variant automatically; no change for existing x86 deployments.
+  Unlocks native runs on Apple Silicon, Raspberry Pi, AWS Graviton, etc.
+  Merged from upstream [clucraft/PriceGhost#34](https://github.com/clucraft/PriceGhost/pull/34)
+  by [@soile1991](https://github.com/soile1991).
+
 ## [1.2.2] - 2026-04-21
 
 ### Changed
