@@ -50,27 +50,39 @@ export default function ProductDetail() {
   const productId = parseInt(id || '0', 10);
 
   const fetchData = async (days?: number) => {
-    try {
-      const [productRes, pricesRes] = await Promise.all([
-        productsApi.getById(productId),
-        pricesApi.getHistory(productId, days),
-      ]);
-      setProduct(productRes.data);
-      setPrices(pricesRes.data.prices);
-      // Initialize notification form fields from product data
-      if (productRes.data.price_drop_threshold !== null && productRes.data.price_drop_threshold !== undefined) {
-        setPriceDropThreshold(productRes.data.price_drop_threshold.toString());
+    // Retry once — same pattern as Dashboard.fetchProducts (v1.1.3). An
+    // occasional transient failure on first load shouldn't require the user
+    // to manually refresh.
+    const maxAttempts = 2;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const [productRes, pricesRes] = await Promise.all([
+          productsApi.getById(productId),
+          pricesApi.getHistory(productId, days),
+        ]);
+        setProduct(productRes.data);
+        setPrices(pricesRes.data.prices);
+        setError('');
+        if (productRes.data.price_drop_threshold !== null && productRes.data.price_drop_threshold !== undefined) {
+          setPriceDropThreshold(productRes.data.price_drop_threshold.toString());
+        }
+        if (productRes.data.target_price !== null && productRes.data.target_price !== undefined) {
+          setTargetPrice(productRes.data.target_price.toString());
+        }
+        setNotifyBackInStock(productRes.data.notify_back_in_stock || false);
+        setAiVerificationDisabled(productRes.data.ai_verification_disabled || false);
+        setAiExtractionDisabled(productRes.data.ai_extraction_disabled || false);
+        setIsLoading(false);
+        return;
+      } catch (err) {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          continue;
+        }
+        console.error('Failed to load product details:', err);
+        setError('Failed to load product details');
+        setIsLoading(false);
       }
-      if (productRes.data.target_price !== null && productRes.data.target_price !== undefined) {
-        setTargetPrice(productRes.data.target_price.toString());
-      }
-      setNotifyBackInStock(productRes.data.notify_back_in_stock || false);
-      setAiVerificationDisabled(productRes.data.ai_verification_disabled || false);
-      setAiExtractionDisabled(productRes.data.ai_extraction_disabled || false);
-    } catch {
-      setError('Failed to load product details');
-    } finally {
-      setIsLoading(false);
     }
   };
 
