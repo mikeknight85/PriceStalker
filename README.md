@@ -15,6 +15,12 @@
   <a href="https://github.com/mikeknight85/PriceStalker/pkgs/container/pricestalker-backend"><img alt="GHCR" src="https://img.shields.io/badge/docker-ghcr.io-1f2937"></a>
 </p>
 
+<p align="center">
+  <img src="assets/screenshots/Home.png" alt="Dashboard" width="48%">
+  &nbsp;
+  <img src="assets/screenshots/ProductDetail.png" alt="Product detail" width="48%">
+</p>
+
 ---
 
 ## About this fork
