@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { userQueries } from '../models';
@@ -7,6 +7,21 @@ const router = Router();
 
 // All routes require authentication
 router.use(authMiddleware);
+
+// Demo instances run with DEMO_MODE=true to lock down state-mutating operations
+// that would break the shared experience for other visitors. Read-only and
+// per-user-scoped writes (add/edit products, configure your own AI key, etc.)
+// stay open — only changes to the shared identity (display name, password)
+// are blocked.
+function blockInDemoMode(req: AuthRequest, res: Response, next: NextFunction) {
+  if (process.env.DEMO_MODE === 'true') {
+    res.status(403).json({
+      error: 'This action is disabled on the demo instance.',
+    });
+    return;
+  }
+  next();
+}
 
 // Get current user profile
 router.get('/', async (req: AuthRequest, res: Response) => {
@@ -27,7 +42,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // Update profile (name)
-router.put('/', async (req: AuthRequest, res: Response) => {
+router.put('/', blockInDemoMode, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
     const { name } = req.body;
@@ -47,7 +62,7 @@ router.put('/', async (req: AuthRequest, res: Response) => {
 });
 
 // Change password
-router.put('/password', async (req: AuthRequest, res: Response) => {
+router.put('/password', blockInDemoMode, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
     const { current_password, new_password } = req.body;
