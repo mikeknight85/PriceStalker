@@ -1,0 +1,109 @@
+# PriceStalker — Docker Swarm production stack (mikeknight85's deployment)
+#
+# This is the actual stack running at https://pricestalker.ikessler.ch.
+# Reconstructed 2026-04-27 from `docker service inspect` because the
+# original deploy YAML was never persisted on disk.
+#
+# Apply / re-apply with:
+#   docker stack deploy -c deploy/swarm-stack.yml --with-registry-auth pricestalker
+#
+# Prerequisites that already exist on the swarm and are NOT created by this file:
+#   - Docker secrets:  pg_pricestalker_pass, pg_pricestalker_jwt
+#       Created with:  echo "<value>" | docker secret create <name> -
+#   - External network:  traefik-public  (overlay, attachable, used by Traefik)
+#   - Authentik OIDC application configured at https://auth.ikessler.ch with
+#     redirect URI https://pricestalker.ikessler.ch/api/auth/oidc/callback
+#
+# Non-secret config — admin tunes these in PriceStalker UI (Settings →
+# Authentication), persisted in the auth_config table:
+#   - OIDC issuer URL, client ID, client secret
+#   - Sign-in policy, JIT toggle, "require verified email" toggle
+#
+# DB name is `priceghost` (not `pricestalker`) because the stack was originally
+# the upstream PriceGhost stack that Mike renamed in Portainer; the underlying
+# database name was preserved during that migration. Don't change it without
+# also renaming the DB itself (or the COMMAND wrapper below would break).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_pricestalker_pass
+      POSTGRES_DB: priceghost
+    secrets:
+      - pg_pricestalker_pass
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - pricestalker-internal
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  backend:
+    image: ghcr.io/mikeknight85/pricestalker-backend:1.2.4
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      # SSO config (added 2026-04-27 when prod migrated from Traefik forward-auth
+      # to in-app OIDC). ENABLE_SSO must be a string, not bool, for compose.
+      ENABLE_SSO: "true"
+      PUBLIC_URL: "https://pricestalker.ikessler.ch"
+    secrets:
+      - pg_pricestalker_pass
+      - pg_pricestalker_jwt
+    # $$ escapes Compose interpolation so the shell does the command substitution
+    # at container start, reading the secret files at runtime.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        export DATABASE_URL="postgresql://postgres:$$(cat /run/secrets/pg_pricestalker_pass)@postgres:5432/priceghost"
+        export JWT_SECRET="$$(cat /run/secrets/pg_pricestalker_jwt)"
+        exec docker-entrypoint.sh node dist/index.js
+    networks:
+      - pricestalker-internal
+    depends_on:
+      - postgres
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  frontend:
+    image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.4
+    networks:
+      - pricestalker-internal
+      - traefik-public
+    depends_on:
+      - backend
+    deploy:
+      restart_policy:
+        condition: on-failure
+      labels:
+        # Traefik routing — no `middlewares` label here. The Authentik
+        # forward-auth middleware was removed 2026-04-27 in favour of
+        # PriceStalker's in-app OIDC. Don't re-add it.
+        traefik.enable: "true"
+        traefik.docker.network: "traefik-public"
+        traefik.http.routers.pricestalker.entrypoints: "websecure"
+        traefik.http.routers.pricestalker.rule: "Host(`pricestalker.ikessler.ch`)"
+        traefik.http.routers.pricestalker.tls.certresolver: "letsencrypt"
+        traefik.http.services.pricestalker.loadbalancer.server.port: "80"
+
+secrets:
+  pg_pricestalker_pass:
+    external: true
+  pg_pricestalker_jwt:
+    external: true
+
+volumes:
+  # Stack name `pricestalker` + this volume name `postgres` produces the
+  # live volume name `pricestalker_postgres` (the one with the production data).
+  postgres:
+
+networks:
+  pricestalker-internal:
+    driver: overlay
+  traefik-public:
+    external: true
