@@ -5,6 +5,32 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-04-27
+
+### Fixed
+
+- **Puppeteer "Failed to launch the browser process"** — the `nodejs`
+  user in the backend image was created with `useradd -r` (no `-m`),
+  leaving `$HOME` unset at runtime. Chromium's crash handler
+  (`chrome_crashpad_handler`) derives its `--database` path from
+  `$HOME` / `$XDG_CONFIG_HOME`, so it crashed on launch with
+  `--database is required`, breaking the browser-fallback branch of
+  the voting scraper. Static-HTML sites (Amazon JSON-LD, Digitec
+  JSON-LD, etc.) were unaffected because they never reach Puppeteer.
+  Fix: create a real home directory for the `nodejs` user and set
+  `HOME=/home/nodejs`.
+
+### Added
+
+- **`DEMO_MODE` env flag** that disables identity-mutating profile
+  operations. With `DEMO_MODE=true`, `PUT /api/profile` and
+  `PUT /api/profile/password` return 403. Useful for any deployment
+  where the operator wants to keep a shared or test account stable —
+  public demos, multi-tenant sandboxes, QA environments. Per-user-scoped
+  operations stay open (adding products, configuring your own AI
+  provider, configuring your own notification webhooks). Off by default;
+  existing deployments see no change.
+
 ## [1.2.4] - 2026-04-22
 
 ### Fixed
