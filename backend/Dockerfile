@@ -59,11 +59,15 @@ RUN npm install --omit=dev
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
-# Create non-root user
-RUN groupadd -r nodejs && useradd -r -g nodejs nodejs
-
-# Change ownership of app directory
-RUN chown -R nodejs:nodejs /app
+# Create non-root user with a real home directory.
+# `useradd -r` (system user) without `-m` skips home creation, leaving HOME unset
+# at runtime. Chromium's crash handler (chrome_crashpad_handler) then crashes
+# with `--database is required` because it derives the crash-database path
+# from $HOME / $XDG_CONFIG_HOME, which don't exist. That broke Puppeteer
+# browser fallback for any site needing JS rendering. Fix: create home dir.
+RUN groupadd -r nodejs \
+    && useradd -r -g nodejs -m -d /home/nodejs -s /usr/sbin/nologin nodejs \
+    && chown -R nodejs:nodejs /app /home/nodejs
 
 USER nodejs
 
@@ -73,6 +77,7 @@ EXPOSE 3001
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV HOME=/home/nodejs
 
 # Start the application
 CMD ["node", "dist/index.js"]
