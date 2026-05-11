@@ -24,7 +24,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
-    const { url, refresh_interval, selectedPrice, selectedMethod } = req.body;
+    const { url, refresh_interval, selectedPrice, selectedMethod, notify_back_in_stock } = req.body;
 
     if (!url) {
       res.status(400).json({ error: 'URL is required' });
@@ -44,6 +44,13 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       // User has selected a price from candidates - use it directly
       const scrapedData = await scrapeProduct(url, userId);
 
+      // Default the restock-alert toggle to ON when the user is adding an OOS
+      // product — they've almost certainly opted in to back-in-stock alerts by
+      // taking the trouble to track something unbuyable today.
+      const finalNotifyBackInStock = typeof notify_back_in_stock === 'boolean'
+        ? notify_back_in_stock
+        : scrapedData.stockStatus === 'out_of_stock';
+
       // Create product with the user-selected price
       const product = await productQueries.create(
         userId,
@@ -51,7 +58,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         scrapedData.name?.substring(0, 255) ?? null,
         scrapedData.imageUrl,
         refresh_interval || 3600,
-        scrapedData.stockStatus
+        scrapedData.stockStatus,
+        finalNotifyBackInStock
       );
 
       // Store the preferred extraction method and the user-selected price
@@ -61,11 +69,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       await productQueries.updateAnchorPrice(product.id, selectedPrice);
       console.log(`[Products] Saved anchor price ${selectedPrice} for product ${product.id} (method: ${selectedMethod})`);
 
-      // Record the user-selected price
+      // Record the user-selected price with the currency the scraper detected
+      // (avoids defaulting EUR/GBP/etc. products to USD).
       await priceHistoryQueries.create(
         product.id,
         selectedPrice,
-        'USD', // TODO: Get currency from selection
+        scrapedData.price?.currency || 'USD',
         null
       );
 
@@ -129,6 +138,10 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       }
     }
 
+    const finalNotifyBackInStock = typeof notify_back_in_stock === 'boolean'
+      ? notify_back_in_stock
+      : scrapedData.stockStatus === 'out_of_stock';
+
     // Create product with stock status
     const product = await productQueries.create(
       userId,
@@ -136,7 +149,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       scrapedData.name?.substring(0, 255) ?? null,
       scrapedData.imageUrl,
       refresh_interval || 3600,
-      scrapedData.stockStatus
+      scrapedData.stockStatus,
+      finalNotifyBackInStock
     );
 
     // Store the extraction method that worked

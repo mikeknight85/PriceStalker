@@ -550,11 +550,12 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
       </div>
 
       <div className="product-price-section">
-        {isOutOfStock ? (
+        {isOutOfStock && (
           <span className="product-stock-badge out-of-stock">
             Out of Stock
           </span>
-        ) : (
+        )}
+        {product.current_price !== null && product.current_price !== undefined && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
               <span className="product-current-price">
@@ -562,17 +563,17 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
               </span>
               <AIStatusBadge status={product.ai_status} size="small" />
             </div>
-            {product.price_change_7d !== null && product.price_change_7d !== undefined && (
+            {!isOutOfStock && product.price_change_7d !== null && product.price_change_7d !== undefined && (
               <span className={`product-price-change ${priceChangeClass}`}>
                 {formatPriceChange(product.price_change_7d)} (7d)
               </span>
             )}
-            {isHistoricalLow && (
+            {!isOutOfStock && isHistoricalLow && (
               <span className="product-stock-badge historical-low">
                 Lowest Price
               </span>
             )}
-            {isNearHistoricalLow && (
+            {!isOutOfStock && isNearHistoricalLow && (
               <span className="product-stock-badge near-low">
                 Near Low
               </span>

@@ -1190,14 +1190,27 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
     }
 
     // Try JSON-LD structured data
+    let jsonLdDataCached: ReturnType<typeof extractJsonLd> = null;
     if (!result.price || !result.name || result.stockStatus === 'unknown') {
-      const jsonLdData = extractJsonLd($);
-      if (jsonLdData) {
-        if (!result.name && jsonLdData.name) result.name = jsonLdData.name;
-        if (!result.price && jsonLdData.price) result.price = jsonLdData.price;
-        if (!result.imageUrl && jsonLdData.image) result.imageUrl = jsonLdData.image;
-        if (result.stockStatus === 'unknown' && jsonLdData.stockStatus) {
-          result.stockStatus = jsonLdData.stockStatus;
+      jsonLdDataCached = extractJsonLd($);
+      if (jsonLdDataCached) {
+        if (!result.name && jsonLdDataCached.name) result.name = jsonLdDataCached.name;
+        if (!result.price && jsonLdDataCached.price) result.price = jsonLdDataCached.price;
+        if (!result.imageUrl && jsonLdDataCached.image) result.imageUrl = jsonLdDataCached.image;
+        if (result.stockStatus === 'unknown' && jsonLdDataCached.stockStatus) {
+          result.stockStatus = jsonLdDataCached.stockStatus;
+        }
+      }
+    }
+
+    // Shopify-aware extraction overrides earlier signals when present.
+    if (isShopifyPage($)) {
+      const shopify = await extractShopifyData(url);
+      if (shopify) {
+        result.stockStatus = shopify.available ? 'in_stock' : 'out_of_stock';
+        if (!result.price && shopify.price && shopify.price > 0) {
+          const currency = jsonLdDataCached?.price?.currency;
+          if (currency) result.price = { price: shopify.price, currency };
         }
       }
     }
@@ -1442,7 +1455,9 @@ export async function scrapeProductWithVoting(
     // 1. JSON-LD extraction (highest reliability)
     const jsonLdCandidates = extractJsonLdCandidates($);
     allCandidates.push(...jsonLdCandidates);
-    console.log(`[Voting] JSON-LD found ${jsonLdCandidates.length} candidates`);
+    const jsonLdData = extractJsonLd($);
+    if (jsonLdData?.stockStatus) result.stockStatus = jsonLdData.stockStatus;
+    console.log(`[Voting] JSON-LD found ${jsonLdCandidates.length} candidates, stock=${jsonLdData?.stockStatus ?? 'n/a'}`);
 
     // 2. Site-specific extraction
     const siteResult = extractSiteSpecificCandidates($, url);
@@ -1457,6 +1472,29 @@ export async function scrapeProductWithVoting(
     allCandidates.push(...genericCandidates);
     console.log(`[Voting] Generic CSS found ${genericCandidates.length} candidates`);
 
+    // 4. Shopify-aware extraction. /products/<handle>.js is the most reliable
+    // signal for Shopify storefronts because it bypasses theme/localization
+    // differences. Overrides earlier signals when present.
+    if (isShopifyPage($)) {
+      const shopify = await extractShopifyData(url);
+      if (shopify) {
+        result.stockStatus = shopify.available ? 'in_stock' : 'out_of_stock';
+        if (shopify.price && shopify.price > 0) {
+          const currency = jsonLdData?.price?.currency || jsonLdCandidates[0]?.currency;
+          if (currency) {
+            allCandidates.push({
+              price: shopify.price,
+              currency,
+              method: 'site-specific',
+              context: 'Shopify /products/<handle>.js',
+              confidence: 0.95,
+            });
+          }
+        }
+        console.log(`[Voting] Shopify .js: available=${shopify.available}, price=${shopify.price ?? 'n/a'}`);
+      }
+    }
+
     // If no candidates found in static HTML, try browser rendering
     if (allCandidates.length === 0 && !usedBrowser) {
       console.log(`[Voting] No candidates in static HTML, trying browser...`);
@@ -1466,7 +1504,12 @@ export async function scrapeProductWithVoting(
         $ = load(html);
 
         // Re-run all extraction methods
-        allCandidates.push(...extractJsonLdCandidates($));
+        const browserJsonLdCandidates = extractJsonLdCandidates($);
+        allCandidates.push(...browserJsonLdCandidates);
+        const browserJsonLdData = extractJsonLd($);
+        if (result.stockStatus === 'unknown' && browserJsonLdData?.stockStatus) {
+          result.stockStatus = browserJsonLdData.stockStatus;
+        }
         const browserSiteResult = extractSiteSpecificCandidates($, url);
         allCandidates.push(...browserSiteResult.candidates);
         if (!result.name && browserSiteResult.name) result.name = browserSiteResult.name;
@@ -1475,6 +1518,24 @@ export async function scrapeProductWithVoting(
           result.stockStatus = browserSiteResult.stockStatus;
         }
         allCandidates.push(...extractGenericCssCandidates($));
+        if (isShopifyPage($)) {
+          const shopify = await extractShopifyData(url);
+          if (shopify) {
+            result.stockStatus = shopify.available ? 'in_stock' : 'out_of_stock';
+            if (shopify.price && shopify.price > 0) {
+              const currency = browserJsonLdData?.price?.currency || browserJsonLdCandidates[0]?.currency;
+              if (currency) {
+                allCandidates.push({
+                  price: shopify.price,
+                  currency,
+                  method: 'site-specific',
+                  context: 'Shopify /products/<handle>.js',
+                  confidence: 0.95,
+                });
+              }
+            }
+          }
+        }
         console.log(`[Voting] Browser found ${allCandidates.length} total candidates`);
       } catch (browserError) {
         console.error(`[Voting] Browser fallback failed:`, browserError);
@@ -1836,6 +1897,46 @@ function extractJsonLd(
   return null;
 }
 
+// Shopify-aware extraction. Shopify storefronts expose /products/<handle>.js
+// returning canonical product JSON with per-variant `available` and price in
+// minor units. This bypasses theme HTML variation entirely.
+function isShopifyPage($: CheerioAPI): boolean {
+  const html = $.html();
+  return html.includes('cdn.shopify.com') || html.includes('Shopify.theme');
+}
+
+async function extractShopifyData(
+  url: string
+): Promise<{ available: boolean; price?: number } | null> {
+  try {
+    const parsed = new URL(url);
+    if (!/\/products\/[^/]+/.test(parsed.pathname)) return null;
+    const cleanPath = parsed.pathname.replace(/\/$/, '');
+    const jsUrl = `${parsed.origin}${cleanPath}.js`;
+
+    const response = await axios.get<{
+      available?: boolean;
+      price?: number;
+    }>(jsUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        Accept: 'application/json',
+      },
+      timeout: 10000,
+    });
+
+    const data = response.data;
+    if (typeof data?.available !== 'boolean') return null;
+    return {
+      available: data.available,
+      price: typeof data.price === 'number' ? data.price / 100 : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function findProduct(data: JsonLdProduct | JsonLdProduct[]): JsonLdProduct | null {
   if (!data) return null;
 
@@ -2028,6 +2129,17 @@ function extractGenericStockStatus($: CheerioAPI): StockStatus {
     'ships today',
     'ships immediately',
     'ready to ship',
+    // Localized "in stock" / "add to cart" — common on European Shopify themes
+    'in winkelwagen',
+    'aan winkelwagen toevoegen',
+    'op voorraad',
+    'in den warenkorb',
+    'auf lager',
+    'ajouter au panier',
+    'en stock',
+    'añadir al carrito',
+    'aggiungi al carrello',
+    'adicionar ao carrinho',
   ];
 
   // First, check if the page has strong in-stock indicators
@@ -2099,9 +2211,13 @@ function extractGenericStockStatus($: CheerioAPI): StockStatus {
     return 'in_stock';
   }
 
-  // Check for explicit out-of-stock elements - be specific
-  const hasOutOfStockBadge = $('[class*="out-of-stock" i]').length > 0 ||
-                              $('[class*="sold-out" i]').length > 0 ||
+  // Check for explicit out-of-stock elements - be specific.
+  // Exclude `badge`-classed spans: Shopify Dawn-family themes render both
+  // sale-badge and sold-out-badge in the DOM and toggle visibility via CSS
+  // rules (not inline style), so the bare class selector misfires on
+  // in-stock products. Real OOS indicators are buttons/forms, not badges.
+  const hasOutOfStockBadge = $('[class*="out-of-stock" i]').not('[class*="badge" i]').length > 0 ||
+                              $('[class*="sold-out" i]').not('[class*="badge" i]').length > 0 ||
                               $('[data-testid*="out-of-stock" i]').length > 0;
 
   if (hasOutOfStockBadge) {

@@ -583,16 +583,17 @@ export const productQueries = {
     name: string | null,
     imageUrl: string | null,
     refreshInterval: number = 3600,
-    stockStatus: StockStatus = 'unknown'
+    stockStatus: StockStatus = 'unknown',
+    notifyBackInStock: boolean = false
   ): Promise<Product> => {
     // Set initial next_check_at to a random time within the refresh interval
     // This spreads out new products so they don't all check at once
     const randomDelaySeconds = Math.floor(Math.random() * refreshInterval);
     const result = await pool.query(
-      `INSERT INTO products (user_id, url, name, image_url, refresh_interval, stock_status, next_check_at)
-       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP + ($7 || ' seconds')::interval)
+      `INSERT INTO products (user_id, url, name, image_url, refresh_interval, stock_status, notify_back_in_stock, next_check_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP + ($8 || ' seconds')::interval)
        RETURNING *`,
-      [userId, url, name, imageUrl, refreshInterval, stockStatus, randomDelaySeconds]
+      [userId, url, name, imageUrl, refreshInterval, stockStatus, notifyBackInStock, randomDelaySeconds]
     );
     return result.rows[0];
   },

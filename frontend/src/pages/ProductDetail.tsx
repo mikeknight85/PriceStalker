@@ -451,14 +451,21 @@ export default function ProductDetail() {
               </div>
             ) : null}
 
-            <div className="product-detail-price" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="product-detail-price" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               <span>
-                {product.stock_status === 'out_of_stock'
-                  ? 'Price unavailable'
-                  : formatPrice(product.current_price, product.currency)}
+                {product.current_price !== null && product.current_price !== undefined
+                  ? formatPrice(product.current_price, product.currency)
+                  : 'Price unavailable'}
               </span>
-              {product.stock_status !== 'out_of_stock' && (
+              {product.current_price !== null && product.current_price !== undefined && (
                 <AIStatusBadge status={product.ai_status} />
+              )}
+              {product.stock_status === 'out_of_stock' &&
+                product.current_price !== null &&
+                product.current_price !== undefined && (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    last known price
+                  </span>
               )}
             </div>
 

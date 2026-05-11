@@ -98,14 +98,19 @@ export default function Dashboard() {
     setProducts((prev) => [response.data as Product, ...prev]);
   };
 
-  const handlePriceSelected = async (selectedPrice: number, selectedMethod: string) => {
+  const handlePriceSelected = async (
+    selectedPrice: number,
+    selectedMethod: string,
+    notifyBackInStock: boolean
+  ) => {
     if (!priceReviewData) return;
 
     const response = await productsApi.create(
       priceReviewData.url,
       pendingRefreshInterval,
       selectedPrice,
-      selectedMethod
+      selectedMethod,
+      notifyBackInStock
     );
 
     // When selecting a price, the API should always return a Product
@@ -795,6 +800,7 @@ export default function Dashboard() {
         candidates={priceReviewData?.priceCandidates || []}
         suggestedPrice={priceReviewData?.suggestedPrice || null}
         url={priceReviewData?.url || ''}
+        stockStatus={priceReviewData?.stockStatus}
       />
 
       {error && <div className="alert alert-error">{error}</div>}
