@@ -223,6 +223,25 @@ function extractGenericCssCandidates($: CheerioAPI): PriceCandidate[] {
         const priceStr = content || dataPrice || text;
         parsed = parsePrice(priceStr);
         if (parsed) {
+          // parsePrice defaults to 'USD' when priceStr has no symbol (typical
+          // for <meta itemprop="price" content="259.99"> markup). Recover the
+          // real currency from canonical companions before accepting that
+          // fallback: schema.org [itemprop="priceCurrency"], then OpenGraph
+          // product:price:currency / og:price:currency.
+          const noSymbolInPriceStr = !/[$€£¥₹]|\b(USD|EUR|GBP|CHF|CAD|AUD|JPY|INR|BRL|PLN|SEK|NOK|DKK|KRW|RUB|CNY)\b/i.test(priceStr);
+          if (parsed.currency === 'USD' && noSymbolInPriceStr) {
+            const itemPropCurrency =
+              $el.siblings('[itemprop="priceCurrency"]').attr('content') ||
+              $el.parent().find('[itemprop="priceCurrency"]').first().attr('content') ||
+              $('[itemprop="priceCurrency"]').first().attr('content');
+            const ogCurrency =
+              $('meta[property="product:price:currency"]').attr('content') ||
+              $('meta[property="og:price:currency"]').attr('content');
+            const recovered = (itemPropCurrency || ogCurrency)?.toUpperCase().slice(0, 3);
+            if (recovered && /^[A-Z]{3}$/.test(recovered)) {
+              parsed.currency = recovered;
+            }
+          }
           // Surface the CSS selector alongside the matched text so the
           // product-detail "how was this extracted" hint is actionable.
           const sample = text.trim().slice(0, 40);
