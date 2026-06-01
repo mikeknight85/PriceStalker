@@ -5,6 +5,19 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8] - 2026-06-01
+
+### Added
+
+- **In-app update notification.** The backend queries the GitHub
+  releases API once a day. When a newer PriceStalker release is
+  available, logged-in users see a dismissible banner with a link to
+  the release notes. Dismissals are per-version (localStorage), so
+  a future release re-surfaces it. No telemetry — the only outbound
+  request is a single HTTPS GET to api.github.com from the backend
+  (never from the user's browser), with `User-Agent: PriceStalker/<v>`.
+  Opt-out entirely with `DISABLE_UPDATE_CHECK=true`.
+
 ## [1.2.7] - 2026-06-01
 
 ### Fixed
