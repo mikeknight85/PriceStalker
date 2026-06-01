@@ -12,7 +12,7 @@ export interface PriceCandidate {
 interface PriceSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (price: number, method: string, notifyBackInStock: boolean) => void;
+  onSelect: (price: number, method: string, notifyBackInStock: boolean, context: string | undefined) => void;
   productName: string | null;
   imageUrl: string | null;
   candidates: PriceCandidate[];
@@ -62,7 +62,7 @@ export default function PriceSelectionModal({
     const selected = candidates[selectedIndex];
     setIsSubmitting(true);
     try {
-      await onSelect(selected.price, selected.method, notifyBackInStock);
+      await onSelect(selected.price, selected.method, notifyBackInStock, selected.context);
     } finally {
       setIsSubmitting(false);
     }

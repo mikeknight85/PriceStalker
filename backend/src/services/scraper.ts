@@ -215,7 +215,7 @@ function extractGenericCssCandidates($: CheerioAPI): PriceCandidate[] {
             }
           }
           parsed = { price, currency };
-          context = `data-price-amount attribute`;
+          context = `${selector}[data-price-amount]`;
         }
       }
 
@@ -223,7 +223,10 @@ function extractGenericCssCandidates($: CheerioAPI): PriceCandidate[] {
         const priceStr = content || dataPrice || text;
         parsed = parsePrice(priceStr);
         if (parsed) {
-          context = text.trim().slice(0, 50);
+          // Surface the CSS selector alongside the matched text so the
+          // product-detail "how was this extracted" hint is actionable.
+          const sample = text.trim().slice(0, 40);
+          context = sample ? `${selector} → "${sample}"` : selector;
         }
       }
 

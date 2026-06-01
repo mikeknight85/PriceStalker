@@ -444,6 +444,8 @@ export interface Product {
   ai_verification_disabled: boolean;
   ai_extraction_disabled: boolean;
   checking_paused: boolean;
+  currency_override: string | null;
+  extraction_context: string | null;
   created_at: Date;
 }
 
@@ -472,7 +474,7 @@ export interface ProductWithSparkline extends ProductWithLatestPrice {
 export const productQueries = {
   findByUserId: async (userId: number): Promise<ProductWithLatestPrice[]> => {
     const result = await pool.query(
-      `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status
+      `SELECT p.*, ph.price as current_price, COALESCE(p.currency_override, ph.currency) as currency, ph.ai_status
        FROM products p
        LEFT JOIN LATERAL (
          SELECT price, currency, ai_status FROM price_history
@@ -490,7 +492,7 @@ export const productQueries = {
   findByUserIdWithSparkline: async (userId: number): Promise<ProductWithSparkline[]> => {
     // Get all products with current price
     const productsResult = await pool.query(
-      `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status
+      `SELECT p.*, ph.price as current_price, COALESCE(p.currency_override, ph.currency) as currency, ph.ai_status
        FROM products p
        LEFT JOIN LATERAL (
          SELECT price, currency, ai_status FROM price_history
@@ -564,7 +566,7 @@ export const productQueries = {
 
   findById: async (id: number, userId: number): Promise<ProductWithLatestPrice | null> => {
     const result = await pool.query(
-      `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status
+      `SELECT p.*, ph.price as current_price, COALESCE(p.currency_override, ph.currency) as currency, ph.ai_status
        FROM products p
        LEFT JOIN LATERAL (
          SELECT price, currency, ai_status FROM price_history
@@ -611,6 +613,7 @@ export const productQueries = {
       notify_any_change?: boolean;
       ai_verification_disabled?: boolean;
       ai_extraction_disabled?: boolean;
+      currency_override?: string | null;
     }
   ): Promise<Product | null> => {
     const fields: string[] = [];
@@ -648,6 +651,14 @@ export const productQueries = {
     if (updates.ai_extraction_disabled !== undefined) {
       fields.push(`ai_extraction_disabled = $${paramIndex++}`);
       values.push(updates.ai_extraction_disabled);
+    }
+    if (updates.currency_override !== undefined) {
+      // Normalise to uppercase 3-letter code or null
+      const normalised = updates.currency_override
+        ? updates.currency_override.toUpperCase().slice(0, 3)
+        : null;
+      fields.push(`currency_override = $${paramIndex++}`);
+      values.push(normalised);
     }
 
     if (fields.length === 0) return null;
@@ -699,10 +710,10 @@ export const productQueries = {
     return result.rows;
   },
 
-  updateExtractionMethod: async (id: number, method: string): Promise<void> => {
+  updateExtractionMethod: async (id: number, method: string, context?: string | null): Promise<void> => {
     await pool.query(
-      'UPDATE products SET preferred_extraction_method = $1, needs_price_review = false WHERE id = $2',
-      [method, id]
+      'UPDATE products SET preferred_extraction_method = $1, extraction_context = $2, needs_price_review = false WHERE id = $3',
+      [method, context ?? null, id]
     );
   },
 
