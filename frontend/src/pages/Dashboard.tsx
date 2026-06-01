@@ -101,7 +101,8 @@ export default function Dashboard() {
   const handlePriceSelected = async (
     selectedPrice: number,
     selectedMethod: string,
-    notifyBackInStock: boolean
+    notifyBackInStock: boolean,
+    selectedContext: string | undefined
   ) => {
     if (!priceReviewData) return;
 
@@ -110,7 +111,8 @@ export default function Dashboard() {
       pendingRefreshInterval,
       selectedPrice,
       selectedMethod,
-      notifyBackInStock
+      notifyBackInStock,
+      selectedContext
     );
 
     // When selecting a price, the API should always return a Product

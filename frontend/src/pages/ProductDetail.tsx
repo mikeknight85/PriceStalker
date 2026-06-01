@@ -32,8 +32,11 @@ export default function ProductDetail() {
   const [targetPrice, setTargetPrice] = useState<string>('');
   const [notifyBackInStock, setNotifyBackInStock] = useState(false);
   const [notifyAnyChange, setNotifyAnyChange] = useState(false);
+  const [currencyOverride, setCurrencyOverride] = useState<string>('');
   const [aiVerificationDisabled, setAiVerificationDisabled] = useState(false);
   const [aiExtractionDisabled, setAiExtractionDisabled] = useState(false);
+
+  const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF', 'CAD', 'AUD', 'JPY', 'INR', 'BRL', 'PLN', 'SEK', 'NOK', 'DKK', 'KRW', 'RUB', 'CNY'];
 
   const REFRESH_INTERVALS = [
     { value: 300, label: '5 minutes' },
@@ -72,6 +75,7 @@ export default function ProductDetail() {
         }
         setNotifyBackInStock(productRes.data.notify_back_in_stock || false);
         setNotifyAnyChange(productRes.data.notify_any_change || false);
+        setCurrencyOverride(productRes.data.currency_override || '');
         setAiVerificationDisabled(productRes.data.ai_verification_disabled || false);
         setAiExtractionDisabled(productRes.data.ai_extraction_disabled || false);
         setIsLoading(false);
@@ -154,6 +158,7 @@ export default function ProductDetail() {
     try {
       const threshold = priceDropThreshold ? parseFloat(priceDropThreshold) : null;
       const target = targetPrice ? parseFloat(targetPrice) : null;
+      const normalisedCurrencyOverride = currencyOverride ? currencyOverride : null;
       await productsApi.update(productId, {
         price_drop_threshold: threshold,
         target_price: target,
@@ -161,6 +166,7 @@ export default function ProductDetail() {
         notify_any_change: notifyAnyChange,
         ai_verification_disabled: aiVerificationDisabled,
         ai_extraction_disabled: aiExtractionDisabled,
+        currency_override: normalisedCurrencyOverride,
       });
       setProduct({
         ...product,
@@ -170,6 +176,8 @@ export default function ProductDetail() {
         notify_any_change: notifyAnyChange,
         ai_verification_disabled: aiVerificationDisabled,
         ai_extraction_disabled: aiExtractionDisabled,
+        currency_override: normalisedCurrencyOverride,
+        currency: normalisedCurrencyOverride || product.currency,
       });
       showToast('Notification settings saved');
     } catch {
@@ -482,6 +490,35 @@ export default function ProductDetail() {
               </span>
             )}
 
+            {product.preferred_extraction_method && (
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted)',
+                  marginTop: '0.5rem',
+                }}
+                title="How PriceStalker extracted this price"
+              >
+                <span>ⓘ Detected via: </span>
+                <strong>
+                  {product.preferred_extraction_method === 'json-ld'
+                    ? 'JSON-LD'
+                    : product.preferred_extraction_method === 'site-specific'
+                      ? 'Site-specific scraper'
+                      : product.preferred_extraction_method === 'generic-css'
+                        ? 'Generic CSS'
+                        : product.preferred_extraction_method === 'ai'
+                          ? 'AI extraction'
+                          : product.preferred_extraction_method}
+                </strong>
+                {product.extraction_context && (
+                  <span style={{ fontFamily: 'monospace', marginLeft: '0.25rem' }}>
+                    ({product.extraction_context})
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="product-detail-meta">
               <div className="product-detail-meta-item">
                 <span className="product-detail-meta-label">Last Checked</span>
@@ -788,6 +825,25 @@ export default function ProductDetail() {
                     </span>
                   </div>
                 </label>
+              </div>
+            </div>
+
+            <div className="notification-form-row">
+              <div className="notification-form-group">
+                <label>Currency</label>
+                <select
+                  value={currencyOverride}
+                  onChange={(e) => setCurrencyOverride(e.target.value)}
+                >
+                  <option value="">Auto-detect</option>
+                  {SUPPORTED_CURRENCIES.map((code) => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
+                <span className="hint">
+                  Force the displayed and stored currency for this product. Useful when the scraper
+                  defaults to USD on a non-USD store.
+                </span>
               </div>
             </div>
 

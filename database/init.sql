@@ -131,6 +131,23 @@ BEGIN
   END IF;
 END $$;
 
+-- Migration: Per-product currency override + extraction context (issue #6)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'currency_override'
+  ) THEN
+    ALTER TABLE products ADD COLUMN currency_override VARCHAR(3);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'extraction_context'
+  ) THEN
+    ALTER TABLE products ADD COLUMN extraction_context TEXT;
+  END IF;
+END $$;
+
 -- Price history table
 CREATE TABLE IF NOT EXISTS price_history (
   id SERIAL PRIMARY KEY,

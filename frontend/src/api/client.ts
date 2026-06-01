@@ -84,6 +84,9 @@ export interface Product {
   ai_verification_disabled: boolean;
   ai_extraction_disabled: boolean;
   checking_paused: boolean;
+  currency_override: string | null;
+  extraction_context: string | null;
+  preferred_extraction_method: string | null;
   created_at: string;
   current_price: number | null;
   currency: string | null;
@@ -141,13 +144,15 @@ export const productsApi = {
     refreshInterval?: number,
     selectedPrice?: number,
     selectedMethod?: string,
-    notifyBackInStock?: boolean
+    notifyBackInStock?: boolean,
+    selectedContext?: string
   ) =>
     api.post<CreateProductResponse>('/products', {
       url,
       refresh_interval: refreshInterval,
       selectedPrice,
       selectedMethod,
+      selectedContext,
       notify_back_in_stock: notifyBackInStock,
     }),
 
@@ -160,6 +165,7 @@ export const productsApi = {
     notify_any_change?: boolean;
     ai_verification_disabled?: boolean;
     ai_extraction_disabled?: boolean;
+    currency_override?: string | null;
   }) => api.put<Product>(`/products/${id}`, data),
 
   delete: (id: number) => api.delete(`/products/${id}`),

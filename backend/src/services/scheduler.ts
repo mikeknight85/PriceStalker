@@ -105,6 +105,10 @@ async function checkPrices(): Promise<void> {
           // Get the latest recorded price to compare
           const latestPrice = await priceHistoryQueries.getLatest(product.id);
 
+          // Honour per-product currency override (issue #6) — the notification
+          // and history rows should both show what the user said the currency is.
+          const effectiveCurrency = product.currency_override || scrapedData.price.currency;
+
           // Only record if price has changed or it's the first entry
           if (!latestPrice || latestPrice.price !== scrapedData.price.price) {
             // Per-product "any change" alert. Fires on every price movement
@@ -129,7 +133,7 @@ async function checkPrices(): Promise<void> {
                     type: 'price_change',
                     oldPrice: oldPrice!,
                     newPrice,
-                    currency: scrapedData.price.currency,
+                    currency: effectiveCurrency,
                   };
                   const result = await sendNotifications(userSettings, payload);
                   console.log(`Price change notification sent for product ${product.id}: ${oldPrice} -> ${newPrice}`);
@@ -142,7 +146,7 @@ async function checkPrices(): Promise<void> {
                       notification_type: 'price_change' as NotificationType,
                       old_price: oldPrice!,
                       new_price: newPrice,
-                      currency: scrapedData.price.currency,
+                      currency: effectiveCurrency,
                       price_change_percent: Math.round(priceChangePercent * 100) / 100,
                       channels_notified: result.channelsNotified,
                       product_name: product.name || 'Unknown Product',
@@ -171,7 +175,7 @@ async function checkPrices(): Promise<void> {
                       type: 'price_drop',
                       oldPrice: oldPrice,
                       newPrice: newPrice,
-                      currency: scrapedData.price.currency,
+                      currency: effectiveCurrency,
                       threshold: product.price_drop_threshold,
                     };
                     const result = await sendNotifications(userSettings, payload);
@@ -186,7 +190,7 @@ async function checkPrices(): Promise<void> {
                         notification_type: 'price_drop' as NotificationType,
                         old_price: oldPrice,
                         new_price: newPrice,
-                        currency: scrapedData.price.currency,
+                        currency: effectiveCurrency,
                         price_change_percent: Math.round(priceChangePercent * 100) / 100,
                         channels_notified: result.channelsNotified,
                         product_name: product.name || 'Unknown Product',
@@ -216,7 +220,7 @@ async function checkPrices(): Promise<void> {
                       productUrl: product.url,
                       type: 'target_price',
                       newPrice: newPrice,
-                      currency: scrapedData.price.currency,
+                      currency: effectiveCurrency,
                       targetPrice: targetPrice,
                     };
                     const result = await sendNotifications(userSettings, payload);
@@ -230,7 +234,7 @@ async function checkPrices(): Promise<void> {
                         notification_type: 'price_target' as NotificationType,
                         old_price: oldPrice || undefined,
                         new_price: newPrice,
-                        currency: scrapedData.price.currency,
+                        currency: effectiveCurrency,
                         target_price: targetPrice,
                         channels_notified: result.channelsNotified,
                         product_name: product.name || 'Unknown Product',
@@ -247,11 +251,11 @@ async function checkPrices(): Promise<void> {
             await priceHistoryQueries.create(
               product.id,
               scrapedData.price.price,
-              scrapedData.price.currency,
+              effectiveCurrency,
               scrapedData.aiStatus
             );
             console.log(
-              `Recorded new price for product ${product.id}: ${scrapedData.price.currency} ${scrapedData.price.price}${scrapedData.aiStatus ? ` (AI: ${scrapedData.aiStatus})` : ''}`
+              `Recorded new price for product ${product.id}: ${effectiveCurrency} ${scrapedData.price.price}${scrapedData.aiStatus ? ` (AI: ${scrapedData.aiStatus})` : ''}`
             );
           } else {
             console.log(`Price unchanged for product ${product.id}`);

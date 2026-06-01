@@ -24,7 +24,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
-    const { url, refresh_interval, selectedPrice, selectedMethod, notify_back_in_stock } = req.body;
+    const { url, refresh_interval, selectedPrice, selectedMethod, selectedContext, notify_back_in_stock } = req.body;
 
     if (!url) {
       res.status(400).json({ error: 'URL is required' });
@@ -62,19 +62,26 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         finalNotifyBackInStock
       );
 
-      // Store the preferred extraction method and the user-selected price
-      await productQueries.updateExtractionMethod(product.id, selectedMethod);
+      // Store the preferred extraction method and the user-selected price.
+      // selectedContext (e.g. ".price-tag → \"$9.99\"") surfaces in the UI so
+      // users can see exactly where the price came from.
+      await productQueries.updateExtractionMethod(
+        product.id,
+        selectedMethod,
+        typeof selectedContext === 'string' ? selectedContext : null
+      );
 
       // Store the anchor price - used on refresh to select the correct variant
       await productQueries.updateAnchorPrice(product.id, selectedPrice);
       console.log(`[Products] Saved anchor price ${selectedPrice} for product ${product.id} (method: ${selectedMethod})`);
 
       // Record the user-selected price with the currency the scraper detected
-      // (avoids defaulting EUR/GBP/etc. products to USD).
+      // (avoids defaulting EUR/GBP/etc. products to USD). If the user already
+      // set a per-product currency override, that wins.
       await priceHistoryQueries.create(
         product.id,
         selectedPrice,
-        scrapedData.price?.currency || 'USD',
+        product.currency_override || scrapedData.price?.currency || 'USD',
         null
       );
 
@@ -153,9 +160,17 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       finalNotifyBackInStock
     );
 
-    // Store the extraction method that worked
+    // Store the extraction method that worked, plus the winning candidate's
+    // context if we have one (for the "how was this extracted" UI hint).
     if (scrapedData.selectedMethod) {
-      await productQueries.updateExtractionMethod(product.id, scrapedData.selectedMethod);
+      const winning = scrapedData.priceCandidates.find(
+        (c) => c.method === scrapedData.selectedMethod && c.price === scrapedData.price?.price
+      );
+      await productQueries.updateExtractionMethod(
+        product.id,
+        scrapedData.selectedMethod,
+        winning?.context ?? null
+      );
     }
 
     // Record initial price if available
@@ -233,7 +248,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const { name, refresh_interval, price_drop_threshold, target_price, notify_back_in_stock, notify_any_change, ai_verification_disabled, ai_extraction_disabled } = req.body;
+    const { name, refresh_interval, price_drop_threshold, target_price, notify_back_in_stock, notify_any_change, ai_verification_disabled, ai_extraction_disabled, currency_override } = req.body;
 
     const product = await productQueries.update(productId, userId, {
       name,
@@ -244,6 +259,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       notify_any_change,
       ai_verification_disabled,
       ai_extraction_disabled,
+      currency_override,
     });
 
     if (!product) {

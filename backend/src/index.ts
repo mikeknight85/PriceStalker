@@ -281,6 +281,14 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'notify_any_change') THEN
           ALTER TABLE products ADD COLUMN notify_any_change BOOLEAN DEFAULT false;
         END IF;
+        -- Per-product currency override (issue #6)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'currency_override') THEN
+          ALTER TABLE products ADD COLUMN currency_override VARCHAR(3);
+        END IF;
+        -- Stored "how was this price extracted" context for UI display (issue #6)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'extraction_context') THEN
+          ALTER TABLE products ADD COLUMN extraction_context TEXT;
+        END IF;
       END $$;
     `);
 
