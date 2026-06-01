@@ -496,4 +496,19 @@ export const adminAuthApi = {
     api.post<DiscoveryTestResult>('/admin/auth/test-discovery', { issuer_url }),
 };
 
+export interface UpdateCheckResult {
+  current: string;
+  latest: string | null;
+  isOutdated: boolean;
+  releaseUrl: string | null;
+  publishedAt: string | null;
+  checkedAt: string;
+  disabled: boolean;
+  error: string | null;
+}
+
+export const versionApi = {
+  check: () => api.get<UpdateCheckResult>('/version/check'),
+};
+
 export default api;

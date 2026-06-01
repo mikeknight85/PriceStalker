@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { versionApi, UpdateCheckResult } from '../api/client';
 import NotificationBell from './NotificationBell';
 import ParticleBackground from './ParticleBackground';
 
@@ -21,6 +22,32 @@ export default function Layout({ children }: LayoutProps) {
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    versionApi
+      .check()
+      .then((res) => {
+        setUpdateInfo(res.data);
+        const dismissedFor = localStorage.getItem('pricestalker_update_dismissed_for');
+        if (res.data.latest && dismissedFor === res.data.latest) {
+          setUpdateDismissed(true);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
+  const dismissUpdate = () => {
+    if (updateInfo?.latest) {
+      localStorage.setItem('pricestalker_update_dismissed_for', updateInfo.latest);
+    }
+    setUpdateDismissed(true);
+  };
+
+  const showUpdateBanner =
+    !!user && !updateDismissed && !!updateInfo?.isOutdated && !!updateInfo.latest;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -377,6 +404,55 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </nav>
+
+      {showUpdateBanner && updateInfo && (
+        <div
+          style={{
+            background: 'linear-gradient(90deg, rgba(99,102,241,0.12), rgba(99,102,241,0.04))',
+            borderBottom: '1px solid var(--border)',
+            padding: '0.6rem 1rem',
+            fontSize: '0.875rem',
+            color: 'var(--text)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span>🎉</span>
+          <span>
+            PriceStalker <strong>v{updateInfo.latest}</strong> is available
+            {updateInfo.current && ` (you're on v${updateInfo.current})`}.
+          </span>
+          {updateInfo.releaseUrl && (
+            <a
+              href={updateInfo.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--primary)', textDecoration: 'underline' }}
+            >
+              Release notes →
+            </a>
+          )}
+          <button
+            onClick={dismissUpdate}
+            aria-label="Dismiss update notification"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border)',
+              borderRadius: '0.375rem',
+              padding: '0.15rem 0.5rem',
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              marginLeft: '0.5rem',
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <main className="main-content">
         <div className="main-content-inner">{children}</div>
