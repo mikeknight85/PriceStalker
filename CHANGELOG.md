@@ -5,6 +5,58 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2026-06-01
+
+### Fixed
+
+- **Shopify restock detection** (#2) — three compounding bugs made the
+  voting scraper mislabel in-stock Shopify products as out-of-stock and
+  hide the (correctly extracted) price for any OOS product:
+  - `scrapeProductWithVoting` silently dropped JSON-LD's
+    `offers.availability` signal because it called the price-only
+    candidate extractor but not the full extractor that reads stock.
+  - The generic CSS detector matched Shopify Dawn-family themes' hidden
+    `.price__badge-sold-out` element on in-stock products (Dawn renders
+    both badge states in the DOM and toggles visibility via CSS rules
+    Cheerio can't evaluate).
+  - The UI suppressed the price entirely when stock was OOS, leaving
+    affected users looking at an empty card and concluding detection
+    itself was broken.
+- **Wrong currency on generic CSS extractions** (#6) — the generic
+  scraper defaults to USD when it can't detect a symbol or code in the
+  text. Added a per-product currency override that wins across writes,
+  notifications and SELECTs (via `COALESCE`), so users can correct it
+  without waiting for a code fix.
+
+### Added
+
+- **Shopify-aware extraction.** New scraper path that detects a Shopify
+  storefront by its `cdn.shopify.com` / `Shopify.theme` signature and
+  fetches `/products/<handle>.js` for canonical per-variant `available`
+  and price. Bypasses theme/localization variation entirely and covers
+  the full Shopify long tail, not just the reported store.
+- **Localised in-stock phrases** in the generic stock detector
+  (Dutch / German / French / Spanish / Italian / Portuguese), so
+  non-English Shopify pages produce a positive in-stock signal instead
+  of falling through to OOS by default.
+- **"Notify on any price change" toggle** per product (#5). When
+  enabled, the scheduler fires a `price_change` notification on every
+  movement ≥ 0.01 in either direction, replacing the threshold-based
+  drop notification while it's on (no double-firing). Implemented for
+  Telegram, Discord (green/red embed by direction), Pushover, ntfy
+  (up/down trend tags) and Gotify.
+- **`notify_back_in_stock` accepted on `POST /products`** and defaulted
+  to `true` when adding an OOS product — the typical reason someone
+  tracks something unbuyable is to know when it returns.
+- **Price now shown alongside the OOS badge** on the product card and
+  detail page (no more "Price unavailable" hiding the last-known price).
+- **"Detected via: <method> (<context>)" hint** under the price on the
+  product detail page (#6). Generic CSS surfaces the actual selector
+  that matched, so wrong-currency / wrong-price calls are diagnosable.
+- **GitHub Actions runner bump** to Node 24-compatible majors
+  (`actions/checkout` v6, `dorny/paths-filter` v4, `docker/*` v4/v6/v7),
+  ahead of the June 2026 deprecation.
+
 ## [1.2.5] - 2026-04-27
 
 ### Fixed
