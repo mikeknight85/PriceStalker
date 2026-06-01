@@ -5,6 +5,22 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-06-01
+
+### Fixed
+
+- **Wrong currency in the price-selection modal** on stores that emit
+  canonical schema.org markup (`<meta itemprop="price" content="X">`
+  plus `<meta itemprop="priceCurrency" content="EUR">`). The generic
+  CSS candidate extractor read the numeric `content` attribute, found
+  no symbol, and `parsePrice()` defaulted to USD — so the modal
+  preview showed `$` even on EUR/GBP/etc. stores. The post-confirm
+  scrape used a different code path that did find the symbol, so the
+  saved row was correct, but the modal was misleading. The extractor
+  now falls back to the companion `[itemprop="priceCurrency"]`, then
+  OpenGraph `product:price:currency` / `og:price:currency`, before
+  accepting the USD default.
+
 ## [1.2.6] - 2026-06-01
 
 ### Fixed
