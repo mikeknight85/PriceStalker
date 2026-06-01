@@ -11,7 +11,9 @@ import profileRoutes from './routes/profile';
 import adminRoutes from './routes/admin';
 import adminAuthRoutes from './routes/admin-auth';
 import notificationRoutes from './routes/notifications';
+import versionRoutes from './routes/version';
 import { startScheduler } from './services/scheduler';
+import { startUpdateCheckScheduler } from './services/updateCheck';
 import pool from './config/database';
 
 // Run database migrations
@@ -353,6 +355,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/version', versionRoutes);
 
 // Error handling middleware
 app.use(
@@ -379,6 +382,7 @@ async function startServer() {
       // Start the background price checker
       if (process.env.NODE_ENV !== 'test') {
         startScheduler();
+        startUpdateCheckScheduler();
       }
     });
   } catch (error) {

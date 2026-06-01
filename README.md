@@ -351,6 +351,25 @@ PriceStalker/
 
 ---
 
+## Update check & privacy
+
+Once a day, the backend queries `api.github.com` for the latest PriceStalker
+release tag. If a newer version is available, logged-in users see a
+dismissible banner with a link to the release notes. The check runs
+server-side only — your users' browsers never contact GitHub.
+
+**What's sent.** A single HTTPS GET to
+`https://api.github.com/repos/mikeknight85/PriceStalker/releases/latest`
+with a `User-Agent: PriceStalker/<version>` header. No data about your
+deployment, users, or products is transmitted. PriceStalker does not run
+any telemetry or analytics — there's no separate phone-home.
+
+**Disable it.** Set `DISABLE_UPDATE_CHECK=true` in `.env` (or as a service
+env var) and the daily check never runs. Useful for air-gapped or
+strict-egress deployments.
+
+---
+
 ## Rate limiting & retailer etiquette
 
 Don't get banned:
