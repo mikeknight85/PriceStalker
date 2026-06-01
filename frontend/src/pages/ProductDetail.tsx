@@ -31,6 +31,7 @@ export default function ProductDetail() {
   const [priceDropThreshold, setPriceDropThreshold] = useState<string>('');
   const [targetPrice, setTargetPrice] = useState<string>('');
   const [notifyBackInStock, setNotifyBackInStock] = useState(false);
+  const [notifyAnyChange, setNotifyAnyChange] = useState(false);
   const [aiVerificationDisabled, setAiVerificationDisabled] = useState(false);
   const [aiExtractionDisabled, setAiExtractionDisabled] = useState(false);
 
@@ -70,6 +71,7 @@ export default function ProductDetail() {
           setTargetPrice(productRes.data.target_price.toString());
         }
         setNotifyBackInStock(productRes.data.notify_back_in_stock || false);
+        setNotifyAnyChange(productRes.data.notify_any_change || false);
         setAiVerificationDisabled(productRes.data.ai_verification_disabled || false);
         setAiExtractionDisabled(productRes.data.ai_extraction_disabled || false);
         setIsLoading(false);
@@ -156,6 +158,7 @@ export default function ProductDetail() {
         price_drop_threshold: threshold,
         target_price: target,
         notify_back_in_stock: notifyBackInStock,
+        notify_any_change: notifyAnyChange,
         ai_verification_disabled: aiVerificationDisabled,
         ai_extraction_disabled: aiExtractionDisabled,
       });
@@ -164,6 +167,7 @@ export default function ProductDetail() {
         price_drop_threshold: threshold,
         target_price: target,
         notify_back_in_stock: notifyBackInStock,
+        notify_any_change: notifyAnyChange,
         ai_verification_disabled: aiVerificationDisabled,
         ai_extraction_disabled: aiExtractionDisabled,
       });
@@ -765,6 +769,23 @@ export default function ProductDetail() {
                   <div className="notification-checkbox-label">
                     <span>Enable back-in-stock notifications</span>
                     <span>Get notified when this item becomes available</span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="notification-form-group">
+                <label>Any Price Change</label>
+                <label className="notification-checkbox-group">
+                  <input
+                    type="checkbox"
+                    checked={notifyAnyChange}
+                    onChange={(e) => setNotifyAnyChange(e.target.checked)}
+                  />
+                  <div className="notification-checkbox-label">
+                    <span>Notify on every price change</span>
+                    <span>
+                      Fires on any movement (up or down). Overrides the price-drop threshold above when enabled.
+                    </span>
                   </div>
                 </label>
               </div>

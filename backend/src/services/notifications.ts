@@ -15,7 +15,7 @@ function getCurrencySymbol(currency?: string): string {
 export interface NotificationPayload {
   productName: string;
   productUrl: string;
-  type: 'price_drop' | 'back_in_stock' | 'target_price';
+  type: 'price_drop' | 'back_in_stock' | 'target_price' | 'price_change';
   oldPrice?: number;
   newPrice?: number;
   currency?: string;
@@ -47,6 +47,19 @@ function formatMessage(payload: NotificationPayload): string {
     return `🎯 Target Price Reached!\n\n` +
       `📦 ${payload.productName}\n\n` +
       `💰 Price is now ${newPriceStr} (your target: ${targetPriceStr})\n\n` +
+      `🔗 ${payload.productUrl}`;
+  }
+
+  if (payload.type === 'price_change') {
+    const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
+    const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
+    const delta = payload.oldPrice && payload.newPrice ? payload.newPrice - payload.oldPrice : 0;
+    const arrow = delta < 0 ? '↓' : '↑';
+    const deltaStr = `${currencySymbol}${Math.abs(delta).toFixed(2)}`;
+
+    return `📊 Price Changed\n\n` +
+      `📦 ${payload.productName}\n\n` +
+      `${arrow} ${oldPriceStr} → ${newPriceStr} (${arrow}${deltaStr})\n\n` +
       `🔗 ${payload.productUrl}`;
   }
 
@@ -123,6 +136,22 @@ export async function sendDiscordNotification(
         url: payload.productUrl,
         timestamp: new Date().toISOString(),
       };
+    } else if (payload.type === 'price_change') {
+      const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
+      const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
+      const wentDown = payload.oldPrice && payload.newPrice && payload.newPrice < payload.oldPrice;
+
+      embed = {
+        title: wentDown ? '📊 Price Decreased' : '📊 Price Increased',
+        description: payload.productName,
+        color: wentDown ? 0x10b981 : 0xef4444, // Green if down, red if up
+        fields: [
+          { name: 'Old Price', value: oldPriceStr, inline: true },
+          { name: 'New Price', value: newPriceStr, inline: true },
+        ],
+        url: payload.productUrl,
+        timestamp: new Date().toISOString(),
+      };
     } else {
       const priceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'Check link';
 
@@ -172,6 +201,12 @@ export async function sendPushoverNotification(
       const targetPriceStr = payload.targetPrice ? `${currencySymbol}${payload.targetPrice.toFixed(2)}` : 'N/A';
       title = '🎯 Target Price Reached!';
       message = `${payload.productName}\n\nPrice is now ${newPriceStr} (your target: ${targetPriceStr})`;
+    } else if (payload.type === 'price_change') {
+      const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
+      const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
+      const wentDown = payload.oldPrice && payload.newPrice && payload.newPrice < payload.oldPrice;
+      title = wentDown ? '📊 Price Decreased' : '📊 Price Increased';
+      message = `${payload.productName}\n\nPrice changed from ${oldPriceStr} to ${newPriceStr}`;
     } else {
       const priceStr = payload.newPrice ? ` at ${currencySymbol}${payload.newPrice.toFixed(2)}` : '';
       title = '🎉 Back in Stock!';
@@ -221,6 +256,13 @@ export async function sendNtfyNotification(
       title = 'Target Price Reached!';
       message = `${payload.productName}\n\nPrice is now ${newPriceStr} (your target: ${targetPriceStr})`;
       tags = ['dart', 'white_check_mark'];
+    } else if (payload.type === 'price_change') {
+      const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
+      const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
+      const wentDown = payload.oldPrice && payload.newPrice && payload.newPrice < payload.oldPrice;
+      title = wentDown ? 'Price Decreased' : 'Price Increased';
+      message = `${payload.productName}\n\nPrice changed from ${oldPriceStr} to ${newPriceStr}`;
+      tags = wentDown ? ['chart_with_downwards_trend'] : ['chart_with_upwards_trend'];
     } else {
       const priceStr = payload.newPrice ? ` at ${currencySymbol}${payload.newPrice.toFixed(2)}` : '';
       title = 'Back in Stock!';
@@ -279,6 +321,13 @@ export async function sendGotifyNotification(
       title = 'Target Price Reached!';
       message = `${payload.productName}\n\nPrice is now ${newPriceStr} (your target: ${targetPriceStr})\n\n${payload.productUrl}`;
       priority = 8; // Higher priority
+    } else if (payload.type === 'price_change') {
+      const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
+      const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
+      const wentDown = payload.oldPrice && payload.newPrice && payload.newPrice < payload.oldPrice;
+      title = wentDown ? 'Price Decreased' : 'Price Increased';
+      message = `${payload.productName}\n\nPrice changed from ${oldPriceStr} to ${newPriceStr}\n\n${payload.productUrl}`;
+      priority = 5; // Normal priority — informational
     } else {
       const priceStr = payload.newPrice ? ` at ${currencySymbol}${payload.newPrice.toFixed(2)}` : '';
       title = 'Back in Stock!';

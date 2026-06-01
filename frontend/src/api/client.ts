@@ -80,6 +80,7 @@ export interface Product {
   price_drop_threshold: number | null;
   target_price: number | null;
   notify_back_in_stock: boolean;
+  notify_any_change: boolean;
   ai_verification_disabled: boolean;
   ai_extraction_disabled: boolean;
   checking_paused: boolean;
@@ -156,6 +157,7 @@ export const productsApi = {
     price_drop_threshold?: number | null;
     target_price?: number | null;
     notify_back_in_stock?: boolean;
+    notify_any_change?: boolean;
     ai_verification_disabled?: boolean;
     ai_extraction_disabled?: boolean;
   }) => api.put<Product>(`/products/${id}`, data),

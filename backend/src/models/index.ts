@@ -440,6 +440,7 @@ export interface Product {
   price_drop_threshold: number | null;
   target_price: number | null;
   notify_back_in_stock: boolean;
+  notify_any_change: boolean;
   ai_verification_disabled: boolean;
   ai_extraction_disabled: boolean;
   checking_paused: boolean;
@@ -607,6 +608,7 @@ export const productQueries = {
       price_drop_threshold?: number | null;
       target_price?: number | null;
       notify_back_in_stock?: boolean;
+      notify_any_change?: boolean;
       ai_verification_disabled?: boolean;
       ai_extraction_disabled?: boolean;
     }
@@ -634,6 +636,10 @@ export const productQueries = {
     if (updates.notify_back_in_stock !== undefined) {
       fields.push(`notify_back_in_stock = $${paramIndex++}`);
       values.push(updates.notify_back_in_stock);
+    }
+    if (updates.notify_any_change !== undefined) {
+      fields.push(`notify_any_change = $${paramIndex++}`);
+      values.push(updates.notify_any_change);
     }
     if (updates.ai_verification_disabled !== undefined) {
       fields.push(`ai_verification_disabled = $${paramIndex++}`);
@@ -971,7 +977,7 @@ export const stockStatusHistoryQueries = {
 };
 
 // Notification History types and queries
-export type NotificationType = 'price_drop' | 'price_target' | 'stock_change';
+export type NotificationType = 'price_drop' | 'price_target' | 'stock_change' | 'price_change';
 
 export interface NotificationHistory {
   id: number;
