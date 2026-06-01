@@ -12,12 +12,13 @@ export interface PriceCandidate {
 interface PriceSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (price: number, method: string) => void;
+  onSelect: (price: number, method: string, notifyBackInStock: boolean) => void;
   productName: string | null;
   imageUrl: string | null;
   candidates: PriceCandidate[];
   suggestedPrice: { price: number; currency: string } | null;
   url: string;
+  stockStatus?: string;
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -43,6 +44,7 @@ export default function PriceSelectionModal({
   candidates,
   suggestedPrice,
   url,
+  stockStatus,
 }: PriceSelectionModalProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(
     suggestedPrice
@@ -50,6 +52,8 @@ export default function PriceSelectionModal({
       : 0
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isOutOfStock = stockStatus === 'out_of_stock';
+  const [notifyBackInStock, setNotifyBackInStock] = useState(isOutOfStock);
 
   if (!isOpen) return null;
 
@@ -58,7 +62,7 @@ export default function PriceSelectionModal({
     const selected = candidates[selectedIndex];
     setIsSubmitting(true);
     try {
-      await onSelect(selected.price, selected.method);
+      await onSelect(selected.price, selected.method, notifyBackInStock);
     } finally {
       setIsSubmitting(false);
     }
@@ -284,6 +288,35 @@ export default function PriceSelectionModal({
         </div>
 
         <div className="price-modal-body">
+          {isOutOfStock && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+                padding: '0.75rem 1rem',
+                marginBottom: '1rem',
+                borderRadius: '0.5rem',
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+              }}
+            >
+              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>⚠</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500, color: 'var(--text)', marginBottom: '0.5rem' }}>
+                  Currently out of stock
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={notifyBackInStock}
+                    onChange={(e) => setNotifyBackInStock(e.target.checked)}
+                  />
+                  Notify me when this comes back in stock
+                </label>
+              </div>
+            </div>
+          )}
           <div className="price-candidates-list">
             {sortedCandidates.map((candidate, index) => {
               const originalIndex = candidates.indexOf(candidate);
