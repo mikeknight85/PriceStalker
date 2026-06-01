@@ -58,6 +58,7 @@ async function runMigrations() {
         price_drop_threshold DECIMAL(10,2),
         target_price DECIMAL(10,2),
         notify_back_in_stock BOOLEAN DEFAULT false,
+        notify_any_change BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, url)
       );
@@ -275,6 +276,10 @@ async function runMigrations() {
         -- Per-product checking pause flag
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'checking_paused') THEN
           ALTER TABLE products ADD COLUMN checking_paused BOOLEAN DEFAULT false;
+        END IF;
+        -- Notify on any price change (issue #5)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'notify_any_change') THEN
+          ALTER TABLE products ADD COLUMN notify_any_change BOOLEAN DEFAULT false;
         END IF;
       END $$;
     `);

@@ -107,8 +107,56 @@ async function checkPrices(): Promise<void> {
 
           // Only record if price has changed or it's the first entry
           if (!latestPrice || latestPrice.price !== scrapedData.price.price) {
+            // Per-product "any change" alert. Fires on every price movement
+            // (up or down) above a 0.01 noise floor. When this is on, the
+            // price_drop_threshold check below is skipped to avoid sending
+            // two notifications for the same change.
+            const oldPrice = latestPrice ? parseFloat(String(latestPrice.price)) : null;
+            const newPrice = scrapedData.price.price;
+            const anyChangeFired =
+              latestPrice &&
+              product.notify_any_change &&
+              oldPrice !== null &&
+              Math.abs(newPrice - oldPrice) >= 0.01;
+
+            if (anyChangeFired) {
+              try {
+                const userSettings = await userQueries.getNotificationSettings(product.user_id);
+                if (userSettings) {
+                  const payload: NotificationPayload = {
+                    productName: product.name || 'Unknown Product',
+                    productUrl: product.url,
+                    type: 'price_change',
+                    oldPrice: oldPrice!,
+                    newPrice,
+                    currency: scrapedData.price.currency,
+                  };
+                  const result = await sendNotifications(userSettings, payload);
+                  console.log(`Price change notification sent for product ${product.id}: ${oldPrice} -> ${newPrice}`);
+
+                  if (result.channelsNotified.length > 0) {
+                    const priceChangePercent = ((newPrice - oldPrice!) / oldPrice!) * 100;
+                    await notificationHistoryQueries.create({
+                      user_id: product.user_id,
+                      product_id: product.id,
+                      notification_type: 'price_change' as NotificationType,
+                      old_price: oldPrice!,
+                      new_price: newPrice,
+                      currency: scrapedData.price.currency,
+                      price_change_percent: Math.round(priceChangePercent * 100) / 100,
+                      channels_notified: result.channelsNotified,
+                      product_name: product.name || 'Unknown Product',
+                      product_url: product.url,
+                    });
+                  }
+                }
+              } catch (notifyError) {
+                console.error(`Failed to send price change notification for product ${product.id}:`, notifyError);
+              }
+            }
+
             // Check for price drop notification before recording
-            if (latestPrice && product.price_drop_threshold) {
+            if (!anyChangeFired && latestPrice && product.price_drop_threshold) {
               const oldPrice = parseFloat(String(latestPrice.price));
               const newPrice = scrapedData.price.price;
               const priceDrop = oldPrice - newPrice;

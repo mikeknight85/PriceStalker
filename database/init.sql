@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS products (
   price_drop_threshold DECIMAL(10,2),
   target_price DECIMAL(10,2),
   notify_back_in_stock BOOLEAN DEFAULT false,
+  notify_any_change BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, url)
 );
@@ -116,6 +117,17 @@ BEGIN
     WHERE table_name = 'products' AND column_name = 'target_price'
   ) THEN
     ALTER TABLE products ADD COLUMN target_price DECIMAL(10,2);
+  END IF;
+END $$;
+
+-- Migration: Add notify_any_change column for "alert on any price change"
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products' AND column_name = 'notify_any_change'
+  ) THEN
+    ALTER TABLE products ADD COLUMN notify_any_change BOOLEAN DEFAULT false;
   END IF;
 END $$;
 
