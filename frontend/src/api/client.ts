@@ -518,6 +518,7 @@ export interface UpdateCheckResult {
   checkedAt: string;
   disabled: boolean;
   error: string | null;
+  channel: 'stable' | 'beta';
 }
 
 export const versionApi = {
