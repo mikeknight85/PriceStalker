@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import PasswordInput from '../components/PasswordInput';
+import { useToast } from '../context/ToastContext';
 import {
   settingsApi,
   profileApi,
@@ -43,6 +44,7 @@ export default function Settings() {
   const [success, setSuccess] = useState('');
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
   const [channel, setChannel] = useState<'stable' | 'beta' | null>(null);
+  const { showToast } = useToast();
 
   // Profile state
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -587,9 +589,11 @@ export default function Settings() {
     }
   };
 
-  // Webhook handlers
+  // Webhook handlers — use toast so feedback floats over the viewport
+  // instead of landing in the inline alert bar at the top of the page,
+  // which is invisible when the user is scrolled to the webhook form at
+  // the bottom.
   const handleSaveWebhook = async () => {
-    clearMessages();
     setIsSavingNotifications(true);
     try {
       const response = await settingsApi.updateNotifications({
@@ -599,26 +603,25 @@ export default function Settings() {
         webhook_body_template: webhookBodyTemplate.trim() || null,
       });
       setNotificationSettings(response.data);
-      setSuccess('Webhook settings saved successfully');
+      showToast('Webhook settings saved');
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const axiosError = err as any;
-      setError(axiosError?.response?.data?.error || 'Failed to save webhook settings');
+      showToast(axiosError?.response?.data?.error || 'Failed to save webhook settings', 'error');
     } finally {
       setIsSavingNotifications(false);
     }
   };
 
   const handleTestWebhook = async () => {
-    clearMessages();
     setIsTesting('webhook');
     try {
       await settingsApi.testWebhook();
-      setSuccess('Webhook fired successfully — check the receiving service');
+      showToast('Webhook fired — check the receiving service');
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const axiosError = err as any;
-      setError(axiosError?.response?.data?.error || 'Webhook test failed');
+      showToast(axiosError?.response?.data?.error || 'Webhook test failed', 'error');
     } finally {
       setIsTesting(null);
     }
