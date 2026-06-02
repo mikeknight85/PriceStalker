@@ -5,6 +5,25 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.11] - 2026-06-02
+
+### Fixed
+
+- **Wrong product images on SPA pages with recommendation widgets**
+  (digitec.ch, etc.). `scrapeProductWithVoting` read JSON-LD for price
+  and stock but ignored the `image` field, so the cascade fell to the
+  generic image scan which picked the first matching element — often
+  a recommendation card on React-rendered pages, not the actual hero
+  image. The stored URL pointed at a *different product's* image.
+  Same class of bug as the JSON-LD stock-signal drop fixed in v1.2.6.
+  The voting path now applies the type-aware JSON-LD `Product.image`
+  whenever the page exposes it.
+- **Stored bogus image URLs were permanent.** The image self-heal added
+  in v1.2.9/1.2.10 only triggered when `image_url` was NULL, so once
+  a bad URL was in the DB it stayed forever. Self-heal now also fires
+  when the scrape returns a different non-null URL — broken products
+  recover on their next check or the next manual refresh.
+
 ## [1.2.10] - 2026-06-02
 
 ### Fixed
