@@ -70,8 +70,13 @@ export default function Settings() {
   const [gotifyAppToken, setGotifyAppToken] = useState('');
   const [gotifyEnabled, setGotifyEnabled] = useState(true);
   const [isTestingGotify, setIsTestingGotify] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookMethod, setWebhookMethod] = useState('POST');
+  const [webhookHeaders, setWebhookHeaders] = useState('');
+  const [webhookBodyTemplate, setWebhookBodyTemplate] = useState('');
+  const [webhookEnabled, setWebhookEnabled] = useState(true);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
-  const [isTesting, setIsTesting] = useState<'telegram' | 'discord' | 'pushover' | 'ntfy' | 'gotify' | null>(null);
+  const [isTesting, setIsTesting] = useState<'telegram' | 'discord' | 'pushover' | 'ntfy' | 'gotify' | 'webhook' | null>(null);
 
   // AI state
   const [aiSettings, setAISettings] = useState<AISettings | null>(null);
@@ -164,6 +169,11 @@ export default function Settings() {
       setGotifyUrl(notificationsRes.data.gotify_url || '');
       setGotifyAppToken(notificationsRes.data.gotify_app_token || '');
       setGotifyEnabled(notificationsRes.data.gotify_enabled ?? true);
+      setWebhookUrl(notificationsRes.data.webhook_url || '');
+      setWebhookMethod(notificationsRes.data.webhook_method || 'POST');
+      setWebhookHeaders(notificationsRes.data.webhook_headers || '');
+      setWebhookBodyTemplate(notificationsRes.data.webhook_body_template || '');
+      setWebhookEnabled(notificationsRes.data.webhook_enabled ?? true);
       // Populate AI fields with actual values
       setAISettings(aiRes.data);
       setAIEnabled(aiRes.data.ai_enabled);
@@ -567,6 +577,54 @@ export default function Settings() {
     } catch {
       setGotifyEnabled(!enabled);
       setError('Failed to update Gotify status');
+    }
+  };
+
+  // Webhook handlers
+  const handleSaveWebhook = async () => {
+    clearMessages();
+    setIsSavingNotifications(true);
+    try {
+      const response = await settingsApi.updateNotifications({
+        webhook_url: webhookUrl || null,
+        webhook_method: webhookMethod,
+        webhook_headers: webhookHeaders.trim() || null,
+        webhook_body_template: webhookBodyTemplate.trim() || null,
+      });
+      setNotificationSettings(response.data);
+      setSuccess('Webhook settings saved successfully');
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const axiosError = err as any;
+      setError(axiosError?.response?.data?.error || 'Failed to save webhook settings');
+    } finally {
+      setIsSavingNotifications(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    clearMessages();
+    setIsTesting('webhook');
+    try {
+      await settingsApi.testWebhook();
+      setSuccess('Webhook fired successfully — check the receiving service');
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const axiosError = err as any;
+      setError(axiosError?.response?.data?.error || 'Webhook test failed');
+    } finally {
+      setIsTesting(null);
+    }
+  };
+
+  const handleToggleWebhook = async (enabled: boolean) => {
+    setWebhookEnabled(enabled);
+    try {
+      const response = await settingsApi.updateNotifications({ webhook_enabled: enabled });
+      setNotificationSettings(response.data);
+    } catch {
+      setWebhookEnabled(!enabled);
+      setError('Failed to update webhook status');
     }
   };
 
@@ -1729,6 +1787,119 @@ export default function Settings() {
                       disabled={isTesting === 'gotify'}
                     >
                       {isTesting === 'gotify' ? 'Sending...' : 'Send Test'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-icon">🪝</span>
+                  <h2 className="settings-section-title">Custom Webhook</h2>
+                  <span className={`settings-section-status ${notificationSettings?.webhook_url ? 'configured' : 'not-configured'}`}>
+                    {notificationSettings?.webhook_url ? 'Configured' : 'Not Configured'}
+                  </span>
+                </div>
+                <p className="settings-section-description">
+                  Route notifications to any HTTP endpoint — Apprise, Home Assistant, n8n, Zapier,
+                  a custom backend, anything that speaks HTTP. Configure the URL, method, optional
+                  headers (JSON), and a body template with placeholders. Available placeholders:
+                  {' '}<code>{'{title}'}</code>, <code>{'{type}'}</code>, <code>{'{url}'}</code>,
+                  {' '}<code>{'{currency}'}</code>, <code>{'{price}'}</code>,
+                  {' '}<code>{'{new_price}'}</code>, <code>{'{old_price}'}</code>,
+                  {' '}<code>{'{threshold}'}</code>, <code>{'{target_price}'}</code>,
+                  {' '}<code>{'{timestamp}'}</code>.
+                </p>
+
+                <div className="settings-toggle">
+                  <div className="settings-toggle-label">
+                    <span className="settings-toggle-title">Enable Webhook Notifications</span>
+                    <span className="settings-toggle-description">
+                      Toggle to enable or disable the custom webhook
+                    </span>
+                  </div>
+                  <button
+                    className={`toggle-switch ${webhookEnabled ? 'active' : ''}`}
+                    onClick={() => handleToggleWebhook(!webhookEnabled)}
+                    aria-label="Toggle Webhook"
+                    type="button"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="webhook-url">Webhook URL</label>
+                  <input
+                    id="webhook-url"
+                    type="url"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="https://example.com/webhook"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="webhook-method">HTTP Method</label>
+                  <select
+                    id="webhook-method"
+                    value={webhookMethod}
+                    onChange={(e) => setWebhookMethod(e.target.value)}
+                  >
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="GET">GET</option>
+                    <option value="DELETE">DELETE</option>
+                  </select>
+                  <p className="hint">GET requests don't include a body — useful for trigger URLs.</p>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="webhook-headers">Headers (JSON object)</label>
+                  <textarea
+                    id="webhook-headers"
+                    value={webhookHeaders}
+                    onChange={(e) => setWebhookHeaders(e.target.value)}
+                    placeholder={'{\n  "Authorization": "Bearer xxx",\n  "X-Source": "PriceStalker"\n}'}
+                    rows={4}
+                    style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                  />
+                  <p className="hint">
+                    Optional. JSON object of header name → string value. Content-Type defaults to
+                    {' '}<code>application/json</code> for non-GET if not set.
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="webhook-body">Body Template</label>
+                  <textarea
+                    id="webhook-body"
+                    value={webhookBodyTemplate}
+                    onChange={(e) => setWebhookBodyTemplate(e.target.value)}
+                    placeholder={'{"title":"{title}","price":"{price} {currency}","url":"{url}","type":"{type}"}'}
+                    rows={6}
+                    style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                  />
+                  <p className="hint">
+                    Optional. Leave blank to use a sensible JSON default. Tokens like
+                    {' '}<code>{'{title}'}</code> are substituted at send time.
+                  </p>
+                </div>
+
+                <div className="settings-form-actions">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveWebhook}
+                    disabled={isSavingNotifications}
+                  >
+                    {isSavingNotifications ? 'Saving...' : 'Save Webhook Settings'}
+                  </button>
+                  {notificationSettings?.webhook_url && (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleTestWebhook}
+                      disabled={isTesting === 'webhook'}
+                    >
+                      {isTesting === 'webhook' ? 'Sending...' : 'Send Test'}
                     </button>
                   )}
                 </div>

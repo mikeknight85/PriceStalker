@@ -35,6 +35,11 @@ router.get('/notifications', async (req: AuthRequest, res: Response) => {
       gotify_url: settings.gotify_url || null,
       gotify_app_token: settings.gotify_app_token || null,
       gotify_enabled: settings.gotify_enabled ?? true,
+      webhook_url: settings.webhook_url || null,
+      webhook_method: settings.webhook_method || 'POST',
+      webhook_headers: settings.webhook_headers || null,
+      webhook_body_template: settings.webhook_body_template || null,
+      webhook_enabled: settings.webhook_enabled ?? true,
     });
   } catch (error) {
     console.error('Error fetching notification settings:', error);
@@ -63,7 +68,38 @@ router.put('/notifications', async (req: AuthRequest, res: Response) => {
       gotify_url,
       gotify_app_token,
       gotify_enabled,
+      webhook_url,
+      webhook_method,
+      webhook_headers,
+      webhook_body_template,
+      webhook_enabled,
     } = req.body;
+
+    // Validate webhook_headers is a parseable JSON object when provided.
+    if (
+      typeof webhook_headers === 'string' &&
+      webhook_headers.trim().length > 0
+    ) {
+      try {
+        const parsed = JSON.parse(webhook_headers);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          res.status(400).json({ error: 'webhook_headers must be a JSON object' });
+          return;
+        }
+      } catch {
+        res.status(400).json({ error: 'webhook_headers is not valid JSON' });
+        return;
+      }
+    }
+
+    // Validate method is one of the supported verbs.
+    if (typeof webhook_method === 'string' && webhook_method.length > 0) {
+      const allowed = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+      if (!allowed.includes(webhook_method.toUpperCase())) {
+        res.status(400).json({ error: `webhook_method must be one of ${allowed.join(', ')}` });
+        return;
+      }
+    }
 
     const settings = await userQueries.updateNotificationSettings(userId, {
       telegram_bot_token,
@@ -82,6 +118,11 @@ router.put('/notifications', async (req: AuthRequest, res: Response) => {
       gotify_url,
       gotify_app_token,
       gotify_enabled,
+      webhook_url,
+      webhook_method: webhook_method ? webhook_method.toUpperCase() : undefined,
+      webhook_headers,
+      webhook_body_template,
+      webhook_enabled,
     });
 
     if (!settings) {
@@ -106,6 +147,11 @@ router.put('/notifications', async (req: AuthRequest, res: Response) => {
       gotify_url: settings.gotify_url || null,
       gotify_app_token: settings.gotify_app_token || null,
       gotify_enabled: settings.gotify_enabled ?? true,
+      webhook_url: settings.webhook_url || null,
+      webhook_method: settings.webhook_method || 'POST',
+      webhook_headers: settings.webhook_headers || null,
+      webhook_body_template: settings.webhook_body_template || null,
+      webhook_enabled: settings.webhook_enabled ?? true,
       message: 'Notification settings updated successfully',
     });
   } catch (error) {
@@ -628,6 +674,45 @@ router.post('/ai/test-openrouter', async (req: AuthRequest, res: Response) => {
         success: false,
       });
     }
+  }
+});
+
+// Test generic webhook — fires the saved template against a stub payload
+router.post('/notifications/test/webhook', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const settings = await userQueries.getNotificationSettings(userId);
+
+    if (!settings?.webhook_url) {
+      res.status(400).json({ error: 'Webhook not configured' });
+      return;
+    }
+
+    const { sendWebhookNotification } = await import('../services/notifications');
+    const success = await sendWebhookNotification(
+      settings.webhook_url,
+      settings.webhook_method || 'POST',
+      settings.webhook_headers,
+      settings.webhook_body_template,
+      {
+        productName: 'Test Product',
+        productUrl: 'https://example.com/product',
+        type: 'price_drop',
+        oldPrice: 29.99,
+        newPrice: 19.99,
+        currency: 'USD',
+        threshold: 10,
+      }
+    );
+
+    if (success) {
+      res.json({ message: 'Test webhook fired successfully' });
+    } else {
+      res.status(502).json({ error: 'Webhook target returned a non-2xx status or was unreachable' });
+    }
+  } catch (error) {
+    console.error('Error testing webhook:', error);
+    res.status(500).json({ error: 'Failed to fire test webhook' });
   }
 });
 

@@ -142,6 +142,24 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'gotify_enabled') THEN
           ALTER TABLE users ADD COLUMN gotify_enabled BOOLEAN DEFAULT true;
         END IF;
+        -- Generic configurable webhook (issue #4) — URL/method/headers/body
+        -- template let users route notifications to anything (Apprise, Home
+        -- Assistant, Zapier, custom services, etc.).
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'webhook_url') THEN
+          ALTER TABLE users ADD COLUMN webhook_url TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'webhook_method') THEN
+          ALTER TABLE users ADD COLUMN webhook_method VARCHAR(10) DEFAULT 'POST';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'webhook_headers') THEN
+          ALTER TABLE users ADD COLUMN webhook_headers TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'webhook_body_template') THEN
+          ALTER TABLE users ADD COLUMN webhook_body_template TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'webhook_enabled') THEN
+          ALTER TABLE users ADD COLUMN webhook_enabled BOOLEAN DEFAULT true;
+        END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'ai_verification_enabled') THEN
           ALTER TABLE users ADD COLUMN ai_verification_enabled BOOLEAN DEFAULT false;
         END IF;

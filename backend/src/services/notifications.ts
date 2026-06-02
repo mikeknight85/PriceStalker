@@ -381,6 +381,92 @@ export async function testGotifyConnection(
   }
 }
 
+// Render a webhook body template by substituting {placeholder} tokens.
+// Available tokens: {title} {type} {url} {currency} {price} {new_price}
+// {old_price} {threshold} {target_price} {timestamp}. Missing values
+// resolve to empty strings rather than literal "undefined" so a JSON
+// template stays parseable.
+export function renderWebhookTemplate(
+  template: string,
+  payload: NotificationPayload,
+  timestampIso: string
+): string {
+  const v = {
+    title: payload.productName ?? '',
+    type: payload.type ?? '',
+    url: payload.productUrl ?? '',
+    currency: payload.currency ?? '',
+    price: payload.newPrice !== undefined ? String(payload.newPrice) : '',
+    new_price: payload.newPrice !== undefined ? String(payload.newPrice) : '',
+    old_price: payload.oldPrice !== undefined ? String(payload.oldPrice) : '',
+    threshold: payload.threshold !== undefined ? String(payload.threshold) : '',
+    target_price: payload.targetPrice !== undefined ? String(payload.targetPrice) : '',
+    timestamp: timestampIso,
+  };
+  return template.replace(/\{(\w+)\}/g, (_, key) =>
+    key in v ? (v as Record<string, string>)[key] : ''
+  );
+}
+
+export const DEFAULT_WEBHOOK_BODY_TEMPLATE =
+  '{"title":"{title}","type":"{type}","url":"{url}","price":"{price}","old_price":"{old_price}","currency":"{currency}","timestamp":"{timestamp}"}';
+
+export async function sendWebhookNotification(
+  webhookUrl: string,
+  method: string,
+  headersJson: string | null,
+  bodyTemplate: string | null,
+  payload: NotificationPayload
+): Promise<boolean> {
+  try {
+    const verb = (method || 'POST').toUpperCase();
+    const template = bodyTemplate && bodyTemplate.trim().length > 0
+      ? bodyTemplate
+      : DEFAULT_WEBHOOK_BODY_TEMPLATE;
+    const body = renderWebhookTemplate(template, payload, new Date().toISOString());
+
+    let parsedHeaders: Record<string, string> = {};
+    if (headersJson && headersJson.trim().length > 0) {
+      try {
+        const obj = JSON.parse(headersJson);
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          for (const [k, val] of Object.entries(obj)) {
+            if (typeof val === 'string') parsedHeaders[k] = val;
+          }
+        }
+      } catch {
+        console.error('[Webhook] Invalid headers JSON, sending without custom headers');
+        parsedHeaders = {};
+      }
+    }
+
+    // Default Content-Type only if the caller didn't set one — body templates
+    // are JSON by default but users might POST form-encoded or anything else.
+    const hasContentType = Object.keys(parsedHeaders).some((k) => k.toLowerCase() === 'content-type');
+    if (!hasContentType && verb !== 'GET') {
+      parsedHeaders['Content-Type'] = 'application/json';
+    }
+
+    const config = {
+      method: verb,
+      url: webhookUrl,
+      headers: parsedHeaders,
+      timeout: 15000,
+      // GET requests don't carry a body — most webhook receivers expect a
+      // pure URL trigger. Body templates only apply to non-GET verbs.
+      ...(verb === 'GET' ? {} : { data: body }),
+      validateStatus: (s: number) => s >= 200 && s < 300,
+    };
+
+    await axios(config);
+    console.log(`Webhook notification sent (${verb} ${webhookUrl})`);
+    return true;
+  } catch (error) {
+    console.error('Failed to send webhook notification:', error);
+    return false;
+  }
+}
+
 export interface NotificationResult {
   channelsNotified: string[];
   channelsFailed: string[];
@@ -404,6 +490,11 @@ export async function sendNotifications(
     gotify_url: string | null;
     gotify_app_token: string | null;
     gotify_enabled?: boolean;
+    webhook_url?: string | null;
+    webhook_method?: string | null;
+    webhook_headers?: string | null;
+    webhook_body_template?: string | null;
+    webhook_enabled?: boolean;
   },
   payload: NotificationPayload
 ): Promise<NotificationResult> {
@@ -448,6 +539,19 @@ export async function sendNotifications(
     channelPromises.push({
       channel: 'gotify',
       promise: sendGotifyNotification(settings.gotify_url, settings.gotify_app_token, payload),
+    });
+  }
+
+  if (settings.webhook_url && settings.webhook_enabled !== false) {
+    channelPromises.push({
+      channel: 'webhook',
+      promise: sendWebhookNotification(
+        settings.webhook_url,
+        settings.webhook_method || 'POST',
+        settings.webhook_headers ?? null,
+        settings.webhook_body_template ?? null,
+        payload
+      ),
     });
   }
 

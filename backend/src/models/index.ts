@@ -43,6 +43,11 @@ export interface NotificationSettings {
   gotify_url: string | null;
   gotify_app_token: string | null;
   gotify_enabled: boolean;
+  webhook_url: string | null;
+  webhook_method: string | null;
+  webhook_headers: string | null;
+  webhook_body_template: string | null;
+  webhook_enabled: boolean;
 }
 
 export interface AISettings {
@@ -140,7 +145,9 @@ export const userQueries = {
               discord_webhook_url, COALESCE(discord_enabled, true) as discord_enabled,
               pushover_user_key, pushover_app_token, COALESCE(pushover_enabled, true) as pushover_enabled,
               ntfy_topic, ntfy_server_url, ntfy_username, ntfy_password, COALESCE(ntfy_enabled, true) as ntfy_enabled,
-              gotify_url, gotify_app_token, COALESCE(gotify_enabled, true) as gotify_enabled
+              gotify_url, gotify_app_token, COALESCE(gotify_enabled, true) as gotify_enabled,
+              webhook_url, COALESCE(webhook_method, 'POST') as webhook_method,
+              webhook_headers, webhook_body_template, COALESCE(webhook_enabled, true) as webhook_enabled
        FROM users WHERE id = $1`,
       [id]
     );
@@ -219,6 +226,26 @@ export const userQueries = {
       fields.push(`gotify_enabled = $${paramIndex++}`);
       values.push(settings.gotify_enabled);
     }
+    if (settings.webhook_url !== undefined) {
+      fields.push(`webhook_url = $${paramIndex++}`);
+      values.push(settings.webhook_url);
+    }
+    if (settings.webhook_method !== undefined) {
+      fields.push(`webhook_method = $${paramIndex++}`);
+      values.push(settings.webhook_method);
+    }
+    if (settings.webhook_headers !== undefined) {
+      fields.push(`webhook_headers = $${paramIndex++}`);
+      values.push(settings.webhook_headers);
+    }
+    if (settings.webhook_body_template !== undefined) {
+      fields.push(`webhook_body_template = $${paramIndex++}`);
+      values.push(settings.webhook_body_template);
+    }
+    if (settings.webhook_enabled !== undefined) {
+      fields.push(`webhook_enabled = $${paramIndex++}`);
+      values.push(settings.webhook_enabled);
+    }
 
     if (fields.length === 0) return null;
 
@@ -229,7 +256,9 @@ export const userQueries = {
                  discord_webhook_url, COALESCE(discord_enabled, true) as discord_enabled,
                  pushover_user_key, pushover_app_token, COALESCE(pushover_enabled, true) as pushover_enabled,
                  ntfy_topic, ntfy_server_url, ntfy_username, ntfy_password, COALESCE(ntfy_enabled, true) as ntfy_enabled,
-                 gotify_url, gotify_app_token, COALESCE(gotify_enabled, true) as gotify_enabled`,
+                 gotify_url, gotify_app_token, COALESCE(gotify_enabled, true) as gotify_enabled,
+                 webhook_url, COALESCE(webhook_method, 'POST') as webhook_method,
+                 webhook_headers, webhook_body_template, COALESCE(webhook_enabled, true) as webhook_enabled`,
       values
     );
     return result.rows[0] || null;

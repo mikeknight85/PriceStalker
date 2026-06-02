@@ -231,6 +231,11 @@ export interface NotificationSettings {
   gotify_url: string | null;
   gotify_app_token: string | null;
   gotify_enabled: boolean;
+  webhook_url: string | null;
+  webhook_method: string;
+  webhook_headers: string | null;
+  webhook_body_template: string | null;
+  webhook_enabled: boolean;
 }
 
 export const settingsApi = {
@@ -254,6 +259,11 @@ export const settingsApi = {
     gotify_url?: string | null;
     gotify_app_token?: string | null;
     gotify_enabled?: boolean;
+    webhook_url?: string | null;
+    webhook_method?: string;
+    webhook_headers?: string | null;
+    webhook_body_template?: string | null;
+    webhook_enabled?: boolean;
   }) => api.put<NotificationSettings & { message: string }>('/settings/notifications', data),
 
   testTelegram: () =>
@@ -276,6 +286,9 @@ export const settingsApi = {
 
   testGotify: () =>
     api.post<{ message: string }>('/settings/notifications/test/gotify'),
+
+  testWebhook: () =>
+    api.post<{ message: string }>('/settings/notifications/test/webhook'),
 
   // AI Settings
   getAI: () =>
