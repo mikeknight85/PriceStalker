@@ -21,6 +21,7 @@ router.get('/check', authMiddleware, async (_req: AuthRequest, res: Response) =>
       checkedAt: new Date().toISOString(),
       disabled: false,
       error: 'check failed',
+      channel: process.env.PRICESTALKER_CHANNEL === 'beta' ? 'beta' : 'stable',
     });
   }
 });

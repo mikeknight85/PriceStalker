@@ -16,6 +16,7 @@ export interface UpdateCheckResult {
   checkedAt: string;
   disabled: boolean;
   error: string | null;
+  channel: 'stable' | 'beta';
 }
 
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -36,6 +37,8 @@ function loadVersion(): string {
 }
 
 const CURRENT_VERSION = loadVersion();
+const CURRENT_CHANNEL: 'stable' | 'beta' =
+  process.env.PRICESTALKER_CHANNEL === 'beta' ? 'beta' : 'stable';
 
 function compareVersions(a: string, b: string): number {
   const parts = (v: string) => v.replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
@@ -54,6 +57,7 @@ async function fetchLatestRelease(): Promise<UpdateCheckResult> {
     checkedAt: new Date().toISOString(),
     disabled: false,
     error: null,
+    channel: CURRENT_CHANNEL,
   };
 
   try {
@@ -92,6 +96,7 @@ export async function checkForUpdate(force = false): Promise<UpdateCheckResult> 
       checkedAt: new Date().toISOString(),
       disabled: true,
       error: null,
+      channel: CURRENT_CHANNEL,
     };
   }
 

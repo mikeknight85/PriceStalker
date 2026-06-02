@@ -7,6 +7,7 @@ import {
   profileApi,
   adminApi,
   adminAuthApi,
+  versionApi,
   NotificationSettings,
   AISettings,
   UserProfile,
@@ -41,6 +42,7 @@ export default function Settings() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+  const [channel, setChannel] = useState<'stable' | 'beta' | null>(null);
 
   // Profile state
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -140,6 +142,11 @@ export default function Settings() {
       .then(res => res.json())
       .then(data => setVersionInfo(data))
       .catch(() => {}); // Silently fail if version.json not found
+    // Pull the build channel (beta vs stable) for the BETA pill next to
+    // the version display.
+    versionApi.check()
+      .then(res => setChannel(res.data.channel))
+      .catch(() => {});
   }, []);
 
   const fetchInitialData = async () => {
@@ -1293,7 +1300,26 @@ export default function Settings() {
               flexDirection: 'column',
               gap: '0.25rem',
             }}>
-              <span>PriceStalker v{versionInfo.version}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                PriceStalker v{versionInfo.version}
+                {channel === 'beta' && (
+                  <span
+                    title="This deployment was built from the main branch — pre-release. May contain unfinished features."
+                    style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      padding: '0.1rem 0.4rem',
+                      borderRadius: '0.25rem',
+                      background: 'linear-gradient(90deg, #f59e0b, #ef4444)',
+                      color: 'white',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    BETA
+                  </span>
+                )}
+              </span>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <a
                   href="https://github.com/mikeknight85/PriceStalker/blob/main/CHANGELOG.md"

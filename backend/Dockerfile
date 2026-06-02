@@ -50,6 +50,12 @@ RUN apt-get update && apt-get install -y \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
+# Distribution channel — set by the CI workflow at build time. `stable` for
+# tag-built images (vX.Y.Z), `beta` for main-branch builds. Surfaced via
+# /api/version/check so the frontend can render a BETA pill.
+ARG CHANNEL=stable
+ENV PRICESTALKER_CHANNEL=$CHANNEL
+
 # Copy package files
 COPY package*.json ./
 
