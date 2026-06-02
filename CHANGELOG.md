@@ -5,6 +5,16 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.10] - 2026-06-02
+
+### Fixed
+
+- **Manual "Refresh Price now" now also backfills missing `image_url`.**
+  Parity with the scheduler's image self-heal added in v1.2.9 — the
+  manual refresh route was a separate code path that wasn't updated.
+  Clicking refresh on a product missing a picture now rescues it
+  immediately instead of waiting up to a full refresh interval.
+
 ## [1.2.9] - 2026-06-02
 
 ### Fixed
