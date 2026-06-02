@@ -1883,11 +1883,12 @@ export default function Settings() {
                   <label htmlFor="webhook-headers">Headers (JSON object)</label>
                   <textarea
                     id="webhook-headers"
+                    className="code-input"
                     value={webhookHeaders}
                     onChange={(e) => setWebhookHeaders(e.target.value)}
                     placeholder={'{\n  "Authorization": "Bearer xxx",\n  "X-Source": "PriceStalker"\n}'}
                     rows={4}
-                    style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                    spellCheck={false}
                   />
                   <p className="hint">
                     Optional. JSON object of header name → string value. Content-Type defaults to
@@ -1899,11 +1900,12 @@ export default function Settings() {
                   <label htmlFor="webhook-body">Body Template</label>
                   <textarea
                     id="webhook-body"
+                    className="code-input"
                     value={webhookBodyTemplate}
                     onChange={(e) => setWebhookBodyTemplate(e.target.value)}
                     placeholder={'{"title":"{title}","price":"{price} {currency}","url":"{url}","type":"{type}"}'}
                     rows={6}
-                    style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                    spellCheck={false}
                   />
                   <p className="hint">
                     Optional. Leave blank to use a sensible JSON default. Tokens like
