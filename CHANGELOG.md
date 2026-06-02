@@ -5,6 +5,22 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.9] - 2026-06-02
+
+### Fixed
+
+- **Missing product images that never recovered.** `image_url` was
+  only written at create-time, so a first-scrape miss became permanent
+  even when later scrapes would have succeeded. JS-heavy SPAs
+  (digitec.ch via Puppeteer) hit this when render timing varied.
+  Scheduler now backfills `image_url` whenever the current value is
+  null and the scrape produced one — existing broken products
+  self-heal on their next scheduled check.
+- **Lazy-load attribute coverage.** `extractGenericImage` now also
+  reads `data-original`, `data-lazy`, `data-lazy-src`, `data-srcset`
+  and `srcset` (picking the first URL out of srcset descriptor lists).
+  Reduces first-scrape misses on lazy-loaded image elements.
+
 ## [1.2.8] - 2026-06-01
 
 ### Added
