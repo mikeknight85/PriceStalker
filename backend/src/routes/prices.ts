@@ -84,6 +84,13 @@ router.post('/:productId/refresh', async (req: AuthRequest, res: Response) => {
       await stockStatusHistoryQueries.recordChange(productId, scrapedData.stockStatus);
     }
 
+    // Self-heal missing product images (parity with the scheduler — see
+    // scheduler.ts; image_url is only written at create-time, so a manual
+    // refresh should also rescue products that missed the picture on add).
+    if (!product.image_url && scrapedData.imageUrl) {
+      await productQueries.updateImageUrl(productId, scrapedData.imageUrl);
+    }
+
     // Record new price if available
     let newPrice = null;
     if (scrapedData.price) {
