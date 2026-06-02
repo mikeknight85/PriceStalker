@@ -177,17 +177,22 @@ automatically on first boot.
 
 See [.env.example](.env.example) for all available overrides.
 
-### Pinning to a specific version
+### Image channels
 
-`ghcr.io/mikeknight85/pricestalker-backend:latest` tracks main. Pin to a
-specific release for stability:
+Three rolling tags are published, in order of stability:
+
+| Tag | When it updates | Use for |
+|-----|-----------------|---------|
+| `:latest` | Every tagged release (`vX.Y.Z`) | Production. Sticks until the next release. |
+| `:1.2` | Same as `:latest`, but only within the 1.2.x line | Production with auto-patch but no minor bumps. |
+| `:beta` | Every merge to `main` | Pre-release / staging instances. May break. |
+
+Pin to an immutable version for absolute stability:
 
 ```yaml
-image: ghcr.io/mikeknight85/pricestalker-backend:1.1.2
-image: ghcr.io/mikeknight85/pricestalker-frontend:1.1.2
+image: ghcr.io/mikeknight85/pricestalker-backend:1.2.11
+image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.11
 ```
-
-Major.minor tags (e.g. `:1.1`) also auto-move to the latest patch in that line.
 
 ---
 
