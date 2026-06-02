@@ -49,13 +49,15 @@ async function checkPrices(): Promise<void> {
 
         console.log(`[Scheduler] Product ${product.id} - scraped price: ${scrapedData.price?.price}, candidates: ${scrapedData.priceCandidates.map(c => `${c.price}(${c.method})`).join(', ')}`);
 
-        // Self-heal missing product images. image_url is only written at
-        // create-time, so if the first scrape missed the picture (Puppeteer
-        // timing on a JS-heavy SPA, lazy-load, transient error), it stays
-        // NULL forever. Back-fill on the next successful scrape.
-        if (!product.image_url && scrapedData.imageUrl) {
+        // Self-heal product images. image_url used to only be written at
+        // create-time; we now also update whenever a scrape returns a
+        // different non-null URL. Covers (a) first-scrape misses, (b)
+        // recovery from previously-stored bogus URLs (e.g. when an earlier
+        // scrape picked up a recommendation card's image), and (c)
+        // legitimate retailer image swaps.
+        if (scrapedData.imageUrl && scrapedData.imageUrl !== product.image_url) {
           await productQueries.updateImageUrl(product.id, scrapedData.imageUrl);
-          console.log(`[Scheduler] Backfilled image for product ${product.id}: ${scrapedData.imageUrl}`);
+          console.log(`[Scheduler] Updated image for product ${product.id}: ${scrapedData.imageUrl}`);
         }
 
         // Check for back-in-stock notification

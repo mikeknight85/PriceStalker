@@ -1479,7 +1479,12 @@ export async function scrapeProductWithVoting(
     allCandidates.push(...jsonLdCandidates);
     const jsonLdData = extractJsonLd($);
     if (jsonLdData?.stockStatus) result.stockStatus = jsonLdData.stockStatus;
-    console.log(`[Voting] JSON-LD found ${jsonLdCandidates.length} candidates, stock=${jsonLdData?.stockStatus ?? 'n/a'}`);
+    // Prefer JSON-LD's Product.image because it's type-aware — findProduct()
+    // walks the page's JSON-LD blocks looking specifically for the Product
+    // type, so it won't accidentally pick up a recommendation card's image
+    // the way the generic img-tag scan does.
+    if (jsonLdData?.image) result.imageUrl = jsonLdData.image;
+    console.log(`[Voting] JSON-LD found ${jsonLdCandidates.length} candidates, stock=${jsonLdData?.stockStatus ?? 'n/a'}, image=${jsonLdData?.image ? 'yes' : 'no'}`);
 
     // 2. Site-specific extraction
     const siteResult = extractSiteSpecificCandidates($, url);
@@ -1531,6 +1536,9 @@ export async function scrapeProductWithVoting(
         const browserJsonLdData = extractJsonLd($);
         if (result.stockStatus === 'unknown' && browserJsonLdData?.stockStatus) {
           result.stockStatus = browserJsonLdData.stockStatus;
+        }
+        if (!result.imageUrl && browserJsonLdData?.image) {
+          result.imageUrl = browserJsonLdData.image;
         }
         const browserSiteResult = extractSiteSpecificCandidates($, url);
         allCandidates.push(...browserSiteResult.candidates);
