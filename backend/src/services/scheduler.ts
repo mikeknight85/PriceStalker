@@ -49,6 +49,15 @@ async function checkPrices(): Promise<void> {
 
         console.log(`[Scheduler] Product ${product.id} - scraped price: ${scrapedData.price?.price}, candidates: ${scrapedData.priceCandidates.map(c => `${c.price}(${c.method})`).join(', ')}`);
 
+        // Self-heal missing product images. image_url is only written at
+        // create-time, so if the first scrape missed the picture (Puppeteer
+        // timing on a JS-heavy SPA, lazy-load, transient error), it stays
+        // NULL forever. Back-fill on the next successful scrape.
+        if (!product.image_url && scrapedData.imageUrl) {
+          await productQueries.updateImageUrl(product.id, scrapedData.imageUrl);
+          console.log(`[Scheduler] Backfilled image for product ${product.id}: ${scrapedData.imageUrl}`);
+        }
+
         // Check for back-in-stock notification
         const wasOutOfStock = product.stock_status === 'out_of_stock';
         const nowInStock = scrapedData.stockStatus === 'in_stock';

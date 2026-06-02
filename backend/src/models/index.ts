@@ -717,6 +717,10 @@ export const productQueries = {
     );
   },
 
+  updateImageUrl: async (id: number, imageUrl: string): Promise<void> => {
+    await pool.query('UPDATE products SET image_url = $1 WHERE id = $2', [imageUrl, id]);
+  },
+
   getPreferredExtractionMethod: async (id: number): Promise<string | null> => {
     const result = await pool.query(
       'SELECT preferred_extraction_method FROM products WHERE id = $1',

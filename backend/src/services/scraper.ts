@@ -2069,14 +2069,30 @@ function extractGenericName($: CheerioAPI): string | null {
 }
 
 function extractGenericImage($: CheerioAPI, baseUrl: string): string | null {
+  // Pull the first URL out of a srcset value (`url1 1x, url2 2x` or
+  // `url1 480w, url2 800w` — both forms are common).
+  const firstFromSrcset = (srcset: string | undefined): string | undefined => {
+    if (!srcset) return undefined;
+    const first = srcset.split(',')[0]?.trim().split(/\s+/)[0];
+    return first || undefined;
+  };
+
   for (const selector of genericImageSelectors) {
     const element = $(selector).first();
     if (element.length) {
+      // Try the common patterns plus several lazy-load conventions.
+      // Order matters — explicit lazy attrs first, then fall back to plain
+      // `src` (which on some SPAs is a 1×1 placeholder before hydration).
       const src =
-        element.attr('src') ||
         element.attr('content') ||
         element.attr('data-zoom-image') ||
-        element.attr('data-src');
+        element.attr('data-src') ||
+        element.attr('data-original') ||
+        element.attr('data-lazy') ||
+        element.attr('data-lazy-src') ||
+        firstFromSrcset(element.attr('data-srcset')) ||
+        firstFromSrcset(element.attr('srcset')) ||
+        element.attr('src');
       if (src) {
         try {
           return new URL(src, baseUrl).href;
