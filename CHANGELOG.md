@@ -5,6 +5,41 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-06-05
+
+### Added
+
+- **Configurable generic webhook notification provider** (#4). New
+  "Custom Webhook" provider alongside the existing 5 (Telegram,
+  Discord, Pushover, ntfy, Gotify). Configure URL, method (GET / POST
+  / PUT / PATCH / DELETE), optional headers (JSON object), and a body
+  template with placeholders — `{title}`, `{type}`, `{url}`,
+  `{currency}`, `{price}`, `{new_price}`, `{old_price}`, `{threshold}`,
+  `{target_price}`, `{timestamp}`. Routes notifications to anything
+  that speaks HTTP: Apprise, Home Assistant, n8n, Zapier, custom
+  backends.
+- **Beta channel** (`:beta` Docker tag). Tracks every merge to `main`.
+  `:latest` now only updates on tagged releases. Demo / staging stacks
+  pin to `:beta` for auto-rolling pre-release deployments; prod stacks
+  stay on `:latest` until the next tag.
+- **BETA pill** next to the running-version display in Settings when
+  the image was built from `main`. Makes pre-release deployments
+  visually distinguishable from prod without checking the image tag.
+- **Themed textareas** — global form-group CSS now styles textareas
+  the same as inputs (was missing the selector, every textarea fell
+  through to browser defaults). Plus a `.code-input` modifier class
+  for monospace JSON/code-shaped fields.
+
+### Fixed
+
+- **Webhook save/test feedback uses toast** instead of the top-of-page
+  alert bar. The webhook form sits at the bottom of a long Settings
+  page; feedback was previously invisible to anyone scrolled there.
+- **Product card alert badges respect product currency.** Price-drop
+  and target-price badges in the dashboard's product card hardcoded a
+  `$` prefix and ignored the product's actual currency. Now use the
+  same `formatPrice` helper as the displayed price next to them.
+
 ## [1.2.11] - 2026-06-02
 
 ### Fixed
