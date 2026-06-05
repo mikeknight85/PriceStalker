@@ -523,7 +523,7 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
-                ${Number(product.price_drop_threshold).toFixed(2)} drop
+                {formatPrice(product.price_drop_threshold, product.currency)} drop
               </span>
             )}
             {product.target_price && (
@@ -533,7 +533,7 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
                   <circle cx="12" cy="12" r="6" />
                   <circle cx="12" cy="12" r="2" />
                 </svg>
-                Target: ${Number(product.target_price).toFixed(2)}
+                Target: {formatPrice(product.target_price, product.currency)}
               </span>
             )}
             {product.notify_back_in_stock && (
