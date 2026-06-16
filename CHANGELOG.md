@@ -5,6 +5,20 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-06-05
+
+### Documentation
+
+- README "What's new" table caught up to the 1.3.x line (was stale at
+  1.1.x).
+- New Notifications → Custom Webhook config section with the full
+  placeholder reference table.
+- Notifications feature blurb now mentions the Custom Webhook provider
+  and the any-change alert added in 1.2.8.
+
+No code changes — pure docs/version-bump release so `:latest` users on
+prod see the most recent README on the GitHub release page.
+
 ## [1.3.0] - 2026-06-05
 
 ### Added

@@ -67,6 +67,7 @@ No more accidentally tracking:
 
 | Version | Highlights |
 |---------|-----------|
+| **1.3.x** | **Custom Webhook** notification provider (any HTTP endpoint). **`:beta` Docker channel** + BETA pill in Settings. Shopify-aware extraction (`/products/<handle>.js`). Per-product currency override + "Detected via …" hint. Any-price-change alert (#5). Self-healing product images. In-app update notification. Themed textareas + UI polish. |
 | **1.1.2** | New logo (ghost with binoculars). `/version.json` caching hardened. |
 | **1.1.1** | Fix version display stuck at 1.0.6 post-release. |
 | **1.1.0** | Rebrand to PriceStalker. **Groq** and **OpenRouter** AI providers. Multi-currency parser fixes (BRL, Swiss apostrophe, EUR thousands-only). Base image bumped to Node 22 LTS. Default insecure port mappings removed. Migration path from upstream PriceGhost. |
@@ -97,10 +98,11 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 - Display formatter centralised — notifications, charts, tables all speak the same currency
 
 ### Notifications
-Telegram · Discord · Pushover · ntfy.sh (self-hosted supported) · Gotify · per-channel toggles · test buttons for every provider.
+Telegram · Discord · Pushover · ntfy.sh (self-hosted supported) · Gotify · **Custom Webhook** (any HTTP endpoint — Apprise, Home Assistant, n8n, Zapier, your own backend) · per-channel toggles · test buttons for every provider.
 
 - **Price drop alerts** — set a CHF/USD/EUR threshold
 - **Target price alerts** — get notified when a specific price is reached
+- **Any-change alerts** — fire on every price movement (up or down), useful for a complete log
 - **Back-in-stock alerts** — know when out-of-stock items return
 
 ### Stock tracking
@@ -251,6 +253,31 @@ npm run dev
 1. Deploy [Gotify](https://gotify.net/docs/install)
 2. Create an application in Gotify to get an App Token
 3. Enter server URL + App Token in Settings → Notifications; use "Test Connection" before saving.
+</details>
+
+<details><summary><b>Custom Webhook</b> (Apprise, Home Assistant, n8n, Zapier, custom services)</summary>
+
+For everything that isn't one of the providers above. Settings → Notifications → Custom Webhook.
+
+Configure:
+- **URL** of the receiver
+- **HTTP method** — `GET` / `POST` / `PUT` / `PATCH` / `DELETE`
+- **Headers** — optional JSON object of header → value (e.g. `{"Authorization": "Bearer ..."}`); `Content-Type` defaults to `application/json` for non-GET when not set
+- **Body template** — optional. Leave blank to send a sensible JSON default. Tokens in `{braces}` are substituted at send time:
+
+| Token | Meaning |
+|-------|---------|
+| `{title}` | Product name |
+| `{type}` | `price_drop` · `price_change` · `target_price` · `back_in_stock` |
+| `{url}` | Product URL |
+| `{currency}` | ISO currency code |
+| `{price}` / `{new_price}` | Current price |
+| `{old_price}` | Previous price (when applicable) |
+| `{threshold}` | Configured drop threshold |
+| `{target_price}` | Configured target price |
+| `{timestamp}` | ISO-8601 send time |
+
+Hit **Send Test** to fire the configured template against a stub payload. `webhook.site` is the quickest receiver for first-time testing.
 </details>
 
 ### AI
