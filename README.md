@@ -67,6 +67,7 @@ No more accidentally tracking:
 
 | Version | Highlights |
 |---------|-----------|
+| **1.4.x** | **Edit a watcher's price selection** after creation — re-pick the price/selector without losing price history (#21). Relative product image URLs now resolved to absolute so images stop breaking (#22). |
 | **1.3.x** | **Custom Webhook** notification provider (any HTTP endpoint). **`:beta` Docker channel** + BETA pill in Settings. Shopify-aware extraction (`/products/<handle>.js`). Per-product currency override + "Detected via …" hint. Any-price-change alert (#5). Self-healing product images. In-app update notification. Themed textareas + UI polish. |
 | **1.1.2** | New logo (ghost with binoculars). `/version.json` caching hardened. |
 | **1.1.1** | Fix version display stuck at 1.0.6 post-release. |
