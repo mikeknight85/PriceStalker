@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import PriceChart from '../components/PriceChart';
 import StockTimeline from '../components/StockTimeline';
 import AIStatusBadge from '../components/AIStatusBadge';
+import PriceSelectionModal from '../components/PriceSelectionModal';
 import { useToast } from '../context/ToastContext';
 import {
   productsApi,
@@ -11,6 +12,7 @@ import {
   settingsApi,
   ProductWithStats,
   PriceHistory,
+  PriceReviewResponse,
   NotificationSettings,
 } from '../api/client';
 import { formatPrice } from '../utils/formatPrice';
@@ -35,6 +37,8 @@ export default function ProductDetail() {
   const [currencyOverride, setCurrencyOverride] = useState<string>('');
   const [aiVerificationDisabled, setAiVerificationDisabled] = useState(false);
   const [aiExtractionDisabled, setAiExtractionDisabled] = useState(false);
+  const [isRescraping, setIsRescraping] = useState(false);
+  const [priceReviewData, setPriceReviewData] = useState<PriceReviewResponse | null>(null);
 
   const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CHF', 'CAD', 'AUD', 'JPY', 'INR', 'BRL', 'PLN', 'SEK', 'NOK', 'DKK', 'KRW', 'RUB', 'CNY'];
 
@@ -118,6 +122,36 @@ export default function ProductDetail() {
       showToast('Failed to refresh price', 'error');
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  // Re-open the price picker so the user can correct a wrong selection
+  // without losing price history (issue #21).
+  const handleEditPriceSelection = async () => {
+    setIsRescraping(true);
+    try {
+      const response = await productsApi.rescrape(productId);
+      setPriceReviewData(response.data);
+    } catch {
+      showToast('Failed to re-scan this page for prices', 'error');
+    } finally {
+      setIsRescraping(false);
+    }
+  };
+
+  const handlePriceSelected = async (
+    selectedPrice: number,
+    selectedMethod: string,
+    _notifyBackInStock: boolean,
+    selectedContext: string | undefined
+  ) => {
+    try {
+      await productsApi.selectPrice(productId, selectedPrice, selectedMethod, selectedContext);
+      setPriceReviewData(null);
+      await fetchData(30);
+      showToast('Price selection updated');
+    } catch {
+      showToast('Failed to update price selection', 'error');
     }
   };
 
@@ -574,6 +608,14 @@ export default function ProductDetail() {
                   'Refresh Price Now'
                 )}
               </button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleEditPriceSelection}
+                disabled={isRescraping}
+                title="Re-scan the page and pick a different price — your price history is kept"
+              >
+                {isRescraping ? <span className="spinner" /> : 'Edit Price Selection'}
+              </button>
               <button className="btn btn-danger" onClick={handleDelete}>
                 Stop Tracking
               </button>
@@ -979,6 +1021,18 @@ export default function ProductDetail() {
           </button>
         </div>
       </div>
+
+      <PriceSelectionModal
+        isOpen={priceReviewData !== null}
+        onClose={() => setPriceReviewData(null)}
+        onSelect={handlePriceSelected}
+        productName={priceReviewData?.name ?? product.name}
+        imageUrl={priceReviewData?.imageUrl ?? product.image_url}
+        candidates={priceReviewData?.priceCandidates || []}
+        suggestedPrice={priceReviewData?.suggestedPrice ?? null}
+        url={priceReviewData?.url ?? product.url}
+        stockStatus={priceReviewData?.stockStatus}
+      />
     </Layout>
   );
 }

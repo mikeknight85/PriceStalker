@@ -170,6 +170,19 @@ export const productsApi = {
 
   delete: (id: number) => api.delete(`/products/${id}`),
 
+  // Re-scrape an existing product to re-pick the price selector (issue #21).
+  // Returns the same candidate-review payload shown when adding a product.
+  rescrape: (id: number) =>
+    api.post<PriceReviewResponse>(`/products/${id}/rescrape`),
+
+  // Apply a re-picked price selection without losing price history (issue #21).
+  selectPrice: (id: number, selectedPrice: number, selectedMethod: string, selectedContext?: string) =>
+    api.post<Product>(`/products/${id}/select-price`, {
+      selectedPrice,
+      selectedMethod,
+      selectedContext,
+    }),
+
   bulkPause: (ids: number[], paused: boolean) =>
     api.post<{ message: string; updated: number }>('/products/bulk/pause', { ids, paused }),
 };
