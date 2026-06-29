@@ -5,6 +5,23 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Edit a price watcher's selection after creation** (#21). New "Edit
+  Price Selection" button on the product detail page re-scrapes the page
+  and reopens the price picker, so you can correct a wrong price (e.g. a
+  bad CSS match) without deleting the watcher or losing its price
+  history. The corrected price is recorded as a new point.
+
+### Fixed
+
+- **Broken product images from relative URLs** (#22). Image URLs returned
+  as site-relative paths (e.g. `/i/abc123`) are now resolved to absolute
+  URLs against the source page, so they render correctly. Existing broken
+  images self-heal on the next price check.
+
 ## [1.3.1] - 2026-06-05
 
 ### Documentation
