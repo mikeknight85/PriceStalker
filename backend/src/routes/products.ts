@@ -274,6 +274,121 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Re-scrape an existing product to re-pick the price selector (issue #21).
+// Returns fresh price candidates WITHOUT touching the product or its price
+// history — purely a read, mirroring the candidate list shown at creation.
+router.post('/:id/rescrape', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const productId = parseInt(req.params.id, 10);
+
+    if (isNaN(productId)) {
+      res.status(400).json({ error: 'Invalid product ID' });
+      return;
+    }
+
+    const product = await productQueries.findById(productId, userId);
+    if (!product) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    // Scrape with all strategies (no preferred method / anchor) so the user
+    // sees every candidate and can pick a different one than before.
+    const scrapedData = await scrapeProductWithVoting(product.url, userId);
+
+    const candidates = scrapedData.priceCandidates.length > 0
+      ? scrapedData.priceCandidates
+      : scrapedData.price
+        ? [{
+            price: scrapedData.price.price,
+            currency: scrapedData.price.currency,
+            method: scrapedData.selectedMethod || 'ai' as const,
+            context: 'Extracted price',
+            confidence: 0.8,
+          }]
+        : [];
+
+    if (candidates.length === 0) {
+      res.status(400).json({ error: 'Could not extract any prices from this page' });
+      return;
+    }
+
+    res.json({
+      needsReview: true,
+      name: scrapedData.name,
+      imageUrl: scrapedData.imageUrl,
+      stockStatus: scrapedData.stockStatus,
+      priceCandidates: candidates.map(c => ({
+        price: c.price,
+        currency: c.currency,
+        method: c.method,
+        context: c.context,
+        confidence: c.confidence,
+      })),
+      suggestedPrice: scrapedData.price,
+      url: product.url,
+    });
+  } catch (error) {
+    console.error('Error re-scraping product:', error);
+    res.status(500).json({ error: 'Failed to re-scrape product' });
+  }
+});
+
+// Apply a re-picked price selection to an existing product (issue #21).
+// Updates the preferred extraction method/context and anchor price, then
+// records the corrected price as a new history point. Existing price history
+// is preserved — this is an edit, not a delete-and-recreate.
+router.post('/:id/select-price', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const productId = parseInt(req.params.id, 10);
+
+    if (isNaN(productId)) {
+      res.status(400).json({ error: 'Invalid product ID' });
+      return;
+    }
+
+    const { selectedPrice, selectedMethod, selectedContext } = req.body;
+
+    if (typeof selectedPrice !== 'number' || !isFinite(selectedPrice) || !selectedMethod) {
+      res.status(400).json({ error: 'selectedPrice (number) and selectedMethod are required' });
+      return;
+    }
+
+    const product = await productQueries.findById(productId, userId);
+    if (!product) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    // Update the selector the scraper should prefer on future checks.
+    await productQueries.updateExtractionMethod(
+      productId,
+      selectedMethod,
+      typeof selectedContext === 'string' ? selectedContext : null
+    );
+
+    // Re-anchor to the user's corrected price so refresh picks this variant.
+    await productQueries.updateAnchorPrice(productId, selectedPrice);
+
+    // Record the corrected price as a new point. Currency follows the product's
+    // override, else the most recent recorded currency, else USD. Existing
+    // history rows are left untouched.
+    const latest = await priceHistoryQueries.getLatest(productId);
+    const currency = product.currency_override || latest?.currency || 'USD';
+    await priceHistoryQueries.create(productId, selectedPrice, currency, null);
+
+    console.log(`[Products] Re-selected price ${selectedPrice} for product ${productId} (method: ${selectedMethod})`);
+
+    const updated = await productQueries.findById(productId, userId);
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating price selection:', error);
+    res.status(500).json({ error: 'Failed to update price selection' });
+  }
+});
+
 // Delete a product
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
