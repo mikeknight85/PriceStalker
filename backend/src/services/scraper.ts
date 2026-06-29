@@ -38,6 +38,19 @@ export interface ScrapedProductWithCandidates {
   selectedMethod?: ExtractionMethod; // Which method was used for final price
 }
 
+// Resolve a possibly-relative image URL against the source page URL so the
+// frontend never receives a path like "/i/abc123" that the browser would
+// resolve against the dashboard origin. Handles relative paths, protocol-
+// relative URLs, and passes through already-absolute URLs unchanged.
+function resolveImageUrl(imageUrl: string | null, baseUrl: string): string | null {
+  if (!imageUrl) return null;
+  try {
+    return new URL(imageUrl, baseUrl).href;
+  } catch (_e) {
+    return imageUrl;
+  }
+}
+
 // Check if two prices are "close enough" to be considered the same (within 5%)
 function pricesMatch(price1: number, price2: number): boolean {
   if (price1 === price2) return true;
@@ -1382,6 +1395,7 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
     console.error(`Error scraping ${url}:`, error);
   }
 
+  result.imageUrl = resolveImageUrl(result.imageUrl, url);
   return result;
 }
 
@@ -1632,6 +1646,7 @@ export async function scrapeProductWithVoting(
           }
         }
 
+        result.imageUrl = resolveImageUrl(result.imageUrl, url);
         return result;
       } else {
         // No close match - still use the closest candidate
@@ -1665,6 +1680,7 @@ export async function scrapeProductWithVoting(
           }
         }
 
+        result.imageUrl = resolveImageUrl(result.imageUrl, url);
         return result;
       }
     }
@@ -1678,6 +1694,7 @@ export async function scrapeProductWithVoting(
         console.log(`[Voting] Using preferred method ${preferredMethod}: ${selectedCandidate.price}`);
         result.price = { price: selectedCandidate.price, currency: selectedCandidate.currency };
         result.selectedMethod = preferredMethod;
+        result.imageUrl = resolveImageUrl(result.imageUrl, url);
         return result;
       }
     }
@@ -1833,6 +1850,7 @@ export async function scrapeProductWithVoting(
     console.error(`[Voting] Error scraping ${url}:`, error);
   }
 
+  result.imageUrl = resolveImageUrl(result.imageUrl, url);
   return result;
 }
 
