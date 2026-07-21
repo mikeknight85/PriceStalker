@@ -38,3 +38,6 @@ out/
 db-data/
 tmp/
 *.dump.html
+
+# TypeScript incremental build state
+*.tsbuildinfo

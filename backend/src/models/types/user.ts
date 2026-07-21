@@ -1,11 +1,15 @@
 export interface User {
   id: number;
   email: string;
-  password_hash: string;
+  /** NULL for SSO-provisioned accounts, which have no password. */
+  password_hash: string | null;
   name: string | null;
   currency: string;
   locale: string;
   is_admin: boolean;
+  auth_provider: string;
+  oidc_subject: string | null;
+  oidc_issuer: string | null;
   disabled: boolean;
   telegram_bot_token: string | null;
   telegram_chat_id: string | null;

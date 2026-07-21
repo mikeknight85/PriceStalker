@@ -39,6 +39,10 @@ services:
       - ./backend/debug_html:/app/backend/debug_html
       - ./logs:/app/backend/logs
     environment:
+      # SSO / OIDC. See .env.example; issuer and client are configured in the UI.
+      - ENABLE_SSO=${ENABLE_SSO:-false}
+      - PUBLIC_URL=${PUBLIC_URL:-}
+      - OIDC_REDIRECT_URI_OVERRIDE=${OIDC_REDIRECT_URI_OVERRIDE:-}
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-development_password}@pricestalker-db:5432/${POSTGRES_DB:-priceghost}
       - JWT_SECRET=change_this_to_a_secure_random_string
       - ADMIN_API_TOKEN=development_admin_token_2026

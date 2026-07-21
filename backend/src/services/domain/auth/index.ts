@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { userRepository, User } from '../../../models';
+import { userRepository, User, OidcClaims } from '../../../models';
 import { systemService } from '../system';
 import { generateToken } from '../../../middleware/auth';
 import { logger } from '../../../utils/system/logger';
@@ -91,6 +91,15 @@ export class AuthService {
       throw err;
     }
 
+    // SSO-provisioned accounts have no password. Without this guard the value
+    // reaches bcrypt.compare as null, and the account would be unreachable via
+    // a confusing error rather than being told to use SSO.
+    if (!user.password_hash) {
+      const err = new Error('This account signs in with SSO. Use the SSO button to log in.');
+      (err as any).statusCode = 401;
+      throw err;
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       const err = new Error('Invalid email or password');
@@ -116,6 +125,77 @@ export class AuthService {
         categories: user.categories || [],
       },
     };
+  }
+
+  /**
+   * Resolve an OIDC identity to a local user.
+   *
+   * Resolution order, per docs/SSO_DESIGN.md:
+   *   1. Match on (oidc_issuer, oidc_subject) -- a returning SSO user.
+   *   2. Match on email -- an existing local account, linked to this identity.
+   *   3. JIT-create, if the admin has enabled it.
+   *
+   * Returns null when no account matches and JIT is disabled, which the caller
+   * surfaces as "ask an admin for an account" rather than a generic failure.
+   *
+   * The first user in the database becomes admin whichever path created them,
+   * matching the rule already applied to local registration.
+   */
+  async resolveOidcUser(claims: OidcClaims, jitEnabled: boolean): Promise<User | null> {
+    // 1. Stable external identity.
+    const bySubject = await userRepository.findByOidcSubject(claims.issuer, claims.subject);
+    if (bySubject) {
+      if (bySubject.disabled) {
+        const err = new Error(
+          'Your account has been locked or disabled. Please contact the site administrator.'
+        );
+        (err as any).statusCode = 403;
+        throw err;
+      }
+      return bySubject;
+    }
+
+    // 2. Existing local account with the same email -- link it.
+    const byEmail = await userRepository.findByEmail(claims.email);
+    if (byEmail) {
+      if (byEmail.disabled) {
+        const err = new Error(
+          'Your account has been locked or disabled. Please contact the site administrator.'
+        );
+        (err as any).statusCode = 403;
+        throw err;
+      }
+      await userRepository.linkOidcIdentity(byEmail.id, claims.issuer, claims.subject);
+      logger.info(
+        `Auth | Linked existing account to OIDC identity | ID: ${byEmail.id} | Email: ${byEmail.email}`,
+        'Auth'
+      );
+      return byEmail;
+    }
+
+    // 3. Just-in-time provisioning.
+    if (!jitEnabled) return null;
+
+    const existingCount = await userRepository.count();
+    const newUser = await userRepository.createOidc({
+      email: claims.email,
+      name: claims.name,
+      issuer: claims.issuer,
+      subject: claims.subject,
+    });
+    logger.info(
+      `Auth | JIT-provisioned OIDC user | ID: ${newUser.id} | Email: ${newUser.email}`,
+      'Auth'
+    );
+
+    // This user made the count 1, so they are the first: promote to admin.
+    if (existingCount === 0) {
+      await userRepository.setAdmin(newUser.id, true);
+      newUser.is_admin = true;
+      logger.info(`Auth | First User Promoted to Admin | ID: ${newUser.id}`, 'Auth');
+    }
+
+    return newUser;
   }
 }
 

@@ -64,3 +64,29 @@
 .auth-theme-toggle:hover {
   border-color: var(--primary);
 }
+
+/* --- SSO --- */
+.auth-sso-button {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.auth-sso-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--muted);
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.auth-sso-divider::before,
+.auth-sso-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-sso-divider span {
+  padding: 0 0.75rem;
+}

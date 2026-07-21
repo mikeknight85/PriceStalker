@@ -3,8 +3,12 @@ import { AuthRequest } from '../../middleware/auth';
 import { authService } from '../../services/domain/auth';
 import { logger } from '../../utils/system/logger';
 import { asyncHandler } from '../../utils/system/route-helpers';
+import oidcRoutes from './oidc';
 
 const router = Router();
+
+// OIDC / SSO. The sub-router 404s when SSO is disabled.
+router.use('/oidc', oidcRoutes);
 
 // Get registration status
 router.get('/registration-status', asyncHandler(async (_req, res) => {

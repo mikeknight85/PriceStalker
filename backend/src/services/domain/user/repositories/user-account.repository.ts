@@ -26,6 +26,53 @@ export const userAccountRepository = {
     return result.rows[0];
   },
 
+  // --- OIDC / SSO identity ---------------------------------------------------
+
+  /** Look up a user by their stable external identity (issuer + subject). */
+  findByOidcSubject: async (issuer: string, subject: string): Promise<User | null> => {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE oidc_issuer = $1 AND oidc_subject = $2',
+      [issuer, subject]
+    );
+    return result.rows[0] || null;
+  },
+
+  /** Bind an existing local account to an external identity. */
+  linkOidcIdentity: async (id: number, issuer: string, subject: string): Promise<boolean> => {
+    const result = await pool.query(
+      `UPDATE users
+          SET oidc_issuer = $1, oidc_subject = $2,
+              auth_provider = CASE WHEN auth_provider = 'local' THEN 'oidc' ELSE auth_provider END
+        WHERE id = $3`,
+      [issuer, subject, id]
+    );
+    return (result.rowCount ?? 0) > 0;
+  },
+
+  /**
+   * Create a user from OIDC claims (JIT provisioning). password_hash is left
+   * NULL deliberately: these accounts have no password and must not be able to
+   * authenticate through the local login path.
+   */
+  createOidc: async (
+    params: { email: string; name: string | null; issuer: string; subject: string },
+    currency: string = 'AUD',
+    locale: string = 'en-AU'
+  ): Promise<User> => {
+    const result = await pool.query(
+      `INSERT INTO users (email, name, oidc_issuer, oidc_subject, auth_provider, currency, locale)
+       VALUES ($1, $2, $3, $4, 'oidc', $5, $6)
+       RETURNING *`,
+      [params.email, params.name, params.issuer, params.subject, currency, locale]
+    );
+    return result.rows[0];
+  },
+
+  count: async (): Promise<number> => {
+    const result = await pool.query('SELECT COUNT(*)::int AS n FROM users');
+    return result.rows[0].n;
+  },
+
   updatePassword: async (id: number, passwordHash: string): Promise<boolean> => {
     const result = await pool.query(
       'UPDATE users SET password_hash = $1 WHERE id = $2',

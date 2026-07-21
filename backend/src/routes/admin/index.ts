@@ -10,6 +10,7 @@ import debugRoutes from './debug';
 import tokensRoutes from './tokens';
 import logsRoutes from './logs';
 import commandsRoutes from './commands';
+import authConfigRoutes from './auth-config';
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use('/debug', debugRoutes);
 router.use('/system-tokens', tokensRoutes);
 router.use('/logs', logsRoutes);
 router.use('/command', commandsRoutes);
+router.use('/auth', authConfigRoutes);
 
 export default router;

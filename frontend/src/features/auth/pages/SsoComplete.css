@@ -1,0 +1,42 @@
+.sso-complete-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.sso-complete-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+  text-align: center;
+}
+
+.sso-complete-logo {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0.5rem;
+}
+
+.sso-complete-card h1 {
+  margin-bottom: 0.5rem;
+}
+
+.sso-complete-error {
+  color: var(--danger);
+  margin-bottom: 1.5rem;
+}
+
+.sso-complete-muted {
+  color: var(--muted);
+}
+
+.sso-complete-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

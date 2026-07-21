@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AuthService } from '../services/AuthService';
+import { AuthService, beginSsoLogin, PublicAuthConfig } from '../services/AuthService';
 import { useTheme } from '../../../context/ThemeContext';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import './AuthForm.css';
@@ -17,6 +17,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+  const [ssoConfig, setSsoConfig] = useState<PublicAuthConfig | null>(null);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
@@ -25,7 +26,21 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
     AuthService.getRegistrationStatus()
       .then(res => setRegistrationEnabled(res.data.enabled))
       .catch(() => setRegistrationEnabled(true)); // Default to true on error
+
+    // 404s when SSO is disabled on the server; that is the normal
+    // local-login-only case, not an error worth surfacing.
+    AuthService.getPublicAuthConfig()
+      .then(res => setSsoConfig(res.data))
+      .catch(() => setSsoConfig(null));
   }, []);
+
+  const forceLocal = new URLSearchParams(location.search).get('local') === '1';
+  const ssoAvailable = mode === 'login' && !!ssoConfig?.oidc_enabled;
+  // policy 'oidc' means SSO-only, so the password form is hidden unless the
+  // ?local=1 escape hatch is used -- without it a misconfigured or unreachable
+  // identity provider would lock every account out permanently.
+  const showLocalForm = !(ssoAvailable && ssoConfig?.policy === 'oidc' && !forceLocal);
+  const providerName = ssoConfig?.oidc_provider_name || 'SSO';
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -81,6 +96,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
 
         {error && <div className="alert alert-error">{error}</div>}
 
+        {ssoAvailable && (
+          <>
+            <button
+              type="button"
+              className="btn btn-primary auth-sso-button"
+              onClick={beginSsoLogin}
+            >
+              Sign in with {providerName}
+            </button>
+            {showLocalForm && <div className="auth-sso-divider"><span>or</span></div>}
+          </>
+        )}
+
+        {showLocalForm && (
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -141,8 +170,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
             )}
           </button>
         </form>
+        )}
 
-        {mode === 'login' && registrationEnabled && (
+        {!showLocalForm && (
+          <div className="auth-form-footer">
+            <Link to="/login?local=1">Sign in with a password instead</Link>
+          </div>
+        )}
+
+        {showLocalForm && mode === 'login' && registrationEnabled && (
           <div className="auth-form-footer">
             Don't have an account? <Link to={`/register${location.search}`} state={location.state}>Sign up</Link>
           </div>

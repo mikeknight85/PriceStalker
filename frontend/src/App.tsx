@@ -11,6 +11,7 @@ import NotificationHistory from './pages/NotificationHistory';
 import Settings from './pages/Settings';
 import Admin from './pages/Admin';
 import Debug from './pages/Debug';
+import SsoComplete from './pages/SsoComplete';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -100,6 +101,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/auth/sso-complete" element={<SsoComplete />} />
       <Route path="/debug" element={<Debug />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

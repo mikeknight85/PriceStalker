@@ -54,6 +54,16 @@ export class UserProfileService {
     const user = await userRepository.findById(userId);
     if (!user) throw new Error('User not found');
 
+    // SSO-provisioned accounts have no password to change or verify against.
+    // Their credentials live with the identity provider.
+    if (!user.password_hash) {
+      const err = new Error(
+        'This account signs in with SSO and has no password. Change it with your identity provider.'
+      );
+      (err as any).statusCode = 400;
+      throw err;
+    }
+
     const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
     if (!isValidPassword) {
       const err = new Error('Current password is incorrect');

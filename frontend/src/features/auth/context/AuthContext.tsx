@@ -24,6 +24,7 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  completeOidcLogin: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   };
 
+  /**
+   * Finish an SSO sign-in. The backend has already validated the identity and
+   * issued a JWT, handing it back in the URL fragment; the profile is fetched
+   * separately because the redirect cannot carry a response body.
+   */
+  const completeOidcLogin = async (token: string) => {
+    localStorage.setItem('token', token);
+    try {
+      const response = await AuthService.getProfile();
+      const userData = response.data;
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      // Never leave a token behind without a user: that yields a session that
+      // looks authenticated but has no identity attached.
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      throw new Error('Signed in, but loading your profile failed. Please try again.');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -80,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUser, completeOidcLogin }}>
       {children}
     </AuthContext.Provider>
   );

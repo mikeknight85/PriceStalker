@@ -32,6 +32,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^8.0.4",
     "openai": "^4.47.0",
+    "openid-client": "^5.7.1",
     "p-limit": "^7.3.0",
     "pg": "^8.11.3",
     "umzug": "^3.7.0",

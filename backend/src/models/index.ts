@@ -25,5 +25,6 @@ export const retailerRepository = {
 export const retailerQueries = retailerRepository;
 
 export { systemApiTokenRepository as systemApiTokenQueries, systemApiTokenRepository } from '../services/domain/token/repositories/system_api_token.repository';
+export { authConfigRepository, authConfigRepository as authConfigQueries } from '../services/domain/auth/repositories/auth-config.repository';
 
 export { pool };
