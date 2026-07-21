@@ -5,7 +5,7 @@
 export function formatPrice(
   price: number | string | null | undefined,
   currency: string | null = 'USD',
-  locale: string = 'en-AU',
+  locale: string | null | undefined = 'en-AU',
   fallback: string = 'N/A'
 ): string {
   if (price === null || price === undefined) return fallback;
@@ -13,7 +13,8 @@ export function formatPrice(
   if (isNaN(numPrice)) return fallback;
 
   try {
-    const formatter = new Intl.NumberFormat(locale, {
+    // Intl throws on an explicit null; undefined means "use the runtime default".
+    const formatter = new Intl.NumberFormat(locale ?? undefined, {
       style: 'currency',
       currency: currency || 'USD',
       currencyDisplay: 'narrowSymbol',
@@ -63,7 +64,7 @@ export function formatRelativeDate(dateString: string | null): string {
  */
 export function formatDate(
   dateString: string | null | undefined,
-  locale: string = 'en-AU',
+  locale: string | null | undefined = 'en-AU',
   includeTime: boolean = false
 ): string {
   if (!dateString) return 'N/A';
@@ -81,5 +82,11 @@ export function formatDate(
     options.minute = '2-digit';
   }
 
-  return date.toLocaleDateString(locale, options);
+  try {
+    // Intl throws on an explicit null, and unlike formatPrice this had no
+    // guard -- an unset user locale took the whole page down.
+    return date.toLocaleDateString(locale ?? undefined, options);
+  } catch {
+    return date.toLocaleDateString(undefined, options);
+  }
 }

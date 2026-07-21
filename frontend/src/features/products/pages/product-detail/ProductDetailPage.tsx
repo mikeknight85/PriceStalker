@@ -5,6 +5,7 @@ import DashboardTabs from '../../components/DashboardTabs';
 import PriceSelectionModal from '../../components/PriceSelectionModal';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
+import ErrorBoundary from '../../../../components/ErrorBoundary';
 import { useAuth } from '../../../auth';
 import { useProductDetailState } from '../../hooks/useProductDetailState';
 import { REFRESH_INTERVALS } from '../../constants';
@@ -156,54 +157,64 @@ export default function ProductDetail({ productIdProp, onBack, onDeleted, onUpda
       </div>
 
       {activeSection === 'overview' && (
-        <OverviewSection 
-          product={state.product}
-          user={user}
-          state={state}
-          REFRESH_INTERVALS={REFRESH_INTERVALS}
-        />
+        <ErrorBoundary section="the overview">
+          <OverviewSection
+            product={state.product}
+            user={user}
+            state={state}
+            REFRESH_INTERVALS={REFRESH_INTERVALS}
+          />
+        </ErrorBoundary>
       )}
 
       {activeSection === 'chart' && (
-        <PriceHistorySection 
-          product={state.product}
-          prices={state.prices}
-          handleRangeChange={state.handleRangeChange}
-          user={user}
-        />
+        <ErrorBoundary section="the price history">
+          <PriceHistorySection
+            product={state.product}
+            prices={state.prices}
+            handleRangeChange={state.handleRangeChange}
+            user={user}
+          />
+        </ErrorBoundary>
       )}
 
       {activeSection === 'stock' && (
-        <StockAvailabilitySection productId={productId} />
+        <ErrorBoundary section="stock availability">
+          <StockAvailabilitySection productId={productId} />
+        </ErrorBoundary>
       )}
 
       {activeSection === 'notifications' && (
-        <NotificationSettingsSection 
-          notificationSettings={state.notificationSettings}
-          priceDropThreshold={state.priceDropThreshold}
-          setPriceDropThreshold={state.setPriceDropThreshold}
-          targetPrice={state.targetPrice}
-          setTargetPrice={state.setTargetPrice}
-          notifyBackInStock={state.notifyBackInStock}
-          setNotifyBackInStock={state.setNotifyBackInStock}
-          handleSaveNotifications={state.handleSaveNotifications}
-          isSavingNotifications={state.isSavingNotifications}
-        />
+        <ErrorBoundary section="notification settings">
+          <NotificationSettingsSection
+            notificationSettings={state.notificationSettings}
+            priceDropThreshold={state.priceDropThreshold}
+            setPriceDropThreshold={state.setPriceDropThreshold}
+            targetPrice={state.targetPrice}
+            setTargetPrice={state.setTargetPrice}
+            notifyBackInStock={state.notifyBackInStock}
+            setNotifyBackInStock={state.setNotifyBackInStock}
+            handleSaveNotifications={state.handleSaveNotifications}
+            isSavingNotifications={state.isSavingNotifications}
+          />
+        </ErrorBoundary>
       )}
 
       {activeSection === 'settings' && (
-        <AdvancedSettingsSection 
-          isAdvancedCollapsed={state.isAdvancedCollapsed}
-          setIsAdvancedCollapsed={state.setIsAdvancedCollapsed}
-          checkingPaused={state.checkingPaused}
-          setCheckingPaused={state.setCheckingPaused}
-          aiExtractionDisabled={state.aiExtractionDisabled}
-          setAiExtractionDisabled={state.setAiExtractionDisabled}
-          aiVerificationDisabled={state.aiVerificationDisabled}
-          setAiVerificationDisabled={state.setAiVerificationDisabled}
-          handleSaveNotifications={state.handleSaveNotifications}
-          isSavingNotifications={state.isSavingNotifications}
-        />
+        <ErrorBoundary section="advanced settings">
+          <AdvancedSettingsSection
+            isAdvancedCollapsed={state.isAdvancedCollapsed}
+            setIsAdvancedCollapsed={state.setIsAdvancedCollapsed}
+            checkingPaused={state.checkingPaused}
+            setCheckingPaused={state.setCheckingPaused}
+            aiExtractionDisabled={state.aiExtractionDisabled}
+            setAiExtractionDisabled={state.setAiExtractionDisabled}
+            aiVerificationDisabled={state.aiVerificationDisabled}
+            setAiVerificationDisabled={state.setAiVerificationDisabled}
+            handleSaveNotifications={state.handleSaveNotifications}
+            isSavingNotifications={state.isSavingNotifications}
+          />
+        </ErrorBoundary>
       )}
 
       <ConfirmationModal
