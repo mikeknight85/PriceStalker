@@ -8,7 +8,10 @@
 # developer's machine, so a clean checkout is all CI needs.
 
 # --- build stage -----------------------------------------------------------
-FROM node:20-slim AS builder
+# Runs on the native build platform, not the target: tsc/vite/esbuild output is
+# architecture-independent, so emulating this stage under QEMU only makes it slow
+# (and has hung outright). Only the runtime stage below is built per-architecture.
+FROM --platform=$BUILDPLATFORM node:20-slim AS builder
 
 WORKDIR /app
 
