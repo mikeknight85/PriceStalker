@@ -5,6 +5,98 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-beta.1] - 2026-07-21
+
+2.0 rebuilds the application on a heavily-reworked branch of the same upstream,
+contributed by a collaborator, keeping the PriceStalker name, identity layer and
+release engineering. It is a breaking release: **the schema migrates
+automatically on first boot and there is no down path.** Back up your database
+before upgrading.
+
+### Upgrading
+
+- Schema migrations now run at backend startup. The server waits for the
+  database, applies what is pending, and only then listens. A first boot on a
+  large database takes noticeably longer.
+- Products, price history and stock history carry over unchanged.
+- `notification_history` is converted into the new in-app notification model and
+  then dropped. Notifications you had already cleared arrive read; the rest
+  arrive unread. Original payloads are preserved in each notification's `data`
+  column.
+- Each user's preferred currency is derived from the currency they have recorded
+  most often, rather than defaulting every install to one value.
+- Per-user AI credentials are not migrated. AI is configured centrally in 2.0;
+  an admin re-enters the key once under Admin -> AI Engine.
+- `users.password_hash` becomes nullable so SSO accounts, which have no
+  password, are representable.
+- `POSTGRES_PASSWORD` and `JWT_SECRET` are now required. The stack refuses to
+  start without them instead of falling back to a built-in default.
+
+### Added
+
+- Rebuilt scraping engine: acquisition, transport and extraction are separate
+  stages, with consensus arbitration between extractors and DOM denoising.
+- Per-retailer configuration UI (Admin -> Retailers): selector sets, stock
+  phrase lists, JSON-LD key mapping, custom user-agent and referrer, engine
+  choice, retailer status history, and a visual selector picker.
+- Optional remote scraper service: a stealth browser in its own container with
+  a pooled, recycled Chromium instance, for sites that block ordinary scraping.
+  Off by default (`docker compose --profile remotescraper up -d`).
+- Live currency conversion with daily FX rates and a per-user preferred
+  currency.
+- Product categories with sidebar filtering, dashboard tabs, pagination and
+  sorting.
+- Multiple price types per product: standard, deal, member and pre-order.
+- Email/SMTP notification channel, and customisable message templates per
+  channel.
+- Product search by name via SearXNG.
+- Persisted system logs with an admin viewer, and system API tokens for
+  machine access.
+- Database health monitoring with optional SMTP alerting.
+- Admin -> Authentication panel for OIDC/SSO, including a discovery test that
+  validates an issuer URL before saving it.
+- AI providers: Google Vertex AI, DeepSeek and Mistral.
+- Backend and remote scraper images now run as an unprivileged user.
+
+### Changed
+
+- AI configuration moved from per-user to instance-wide, managed by an admin.
+- SSO settings moved from Settings to Admin -> Authentication.
+- Container images are now built entirely in CI from a clean checkout. They
+  previously required a locally pre-built `dist/` to be copied in.
+- `docker-compose.yaml` pulls published images instead of building locally, no
+  longer publishes PostgreSQL to the host, and uses a named volume.
+
+### Fixed
+
+- Unversioned assets (`icon.svg`, `manifest.json`, `sw.js`) were served with
+  `Cache-Control: immutable` and a one-year expiry. Because their paths never
+  change, a new logo or service worker could not reach anyone who had already
+  loaded the site. They now revalidate.
+- `Cache-Control` was sent twice on every static response.
+- SSO accounts could reach the password-login path, where a null password hash
+  produced a confusing failure instead of a clear "use SSO" message. The same
+  applied to changing a password.
+- Disabled users were rejected on local login but not on SSO.
+
+### Removed
+
+- OpenRouter AI provider. Use Groq, which also has a free tier, or stay on
+  1.4.x.
+- The daily GitHub update check and its in-app banner. `DISABLE_UPDATE_CHECK`
+  currently has no effect.
+- Per-product currency override and the "notify on any price change" option.
+- Demo mode.
+
+### Known issues
+
+- The OIDC sign-in flow has been exercised up to the provider redirect, but a
+  full token exchange against a live provider has not been verified in this
+  release.
+- Migrations have been tested against a 1.4.x database. Older 1.x schemas
+  should converge, since 1.x reapplies its own migrations at every boot, but
+  this is untested.
+
 ## [1.4.0] - 2026-06-29
 
 ### Added
