@@ -1,0 +1,220 @@
+.pb-card {
+  display: flex;
+  background: var(--surface);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  min-height: 120px;
+}
+
+.pb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.pb-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-rgb);
+}
+
+.pb-card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  padding-bottom: 3px; /* Space for progress bar */
+}
+
+.pb-card-content {
+  display: flex;
+  padding: 1rem;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.pb-card-image-wrapper {
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+  background: white;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+}
+
+.pb-card-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.pb-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pb-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.pb-card-price-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pb-card-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.pb-card-price-converted {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pb-card-price-original {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.pb-card-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.pb-card-badges {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pb-card-chart {
+  margin-left: auto;
+  align-self: center;
+  padding-right: 0.5rem;
+}
+
+.pb-card-actions {
+  display: flex;
+  flex-direction: column;
+  width: 42px;
+  background: var(--background);
+  border-left: 1px solid var(--border);
+}
+
+.pb-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+}
+
+.pb-action-btn:last-child {
+  border-bottom: none;
+}
+
+.pb-action-btn:hover {
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.pb-action-btn.danger:hover {
+  color: #ef4444;
+}
+
+.pb-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+  transition: width 1s linear;
+  z-index: 5;
+}
+
+.pb-card-main::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border);
+  z-index: 4;
+}
+
+.pb-time-remaining {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 1px 4px;
+  border-radius: 3px;
+  opacity: 0.8;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.pb-refreshing {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.pb-card.paused { border-style: dashed; }
+.pb-card.out-of-stock .pb-card-image-wrapper { filter: grayscale(1); }
+.pb-card.not-available .pb-card-image-wrapper { filter: grayscale(1) opacity(0.5); }
+
+@media (max-width: 480px) {
+  .pb-card-content { padding: 0.75rem; gap: 0.75rem; flex-wrap: wrap; }
+  .pb-card-image-wrapper { width: 60px; height: 60px; }
+  .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
+  .pb-card-price { font-size: 1.25rem; }
+  .pb-card-chart { 
+    display: flex;
+    flex-basis: 100%; 
+    justify-content: center; 
+    margin-left: 0;
+    margin-top: 0.5rem;
+    padding-right: 0;
+  }
+}

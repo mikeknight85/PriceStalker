@@ -1,0 +1,225 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.navbar-brand:hover {
+  text-decoration: none;
+  color: var(--primary);
+}
+
+.navbar-brand-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.navbar-brand-text {
+  display: flex;
+}
+
+.navbar-brand-ghost {
+  background: linear-gradient(90deg, var(--text) 0%, var(--text) 20%, transparent 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 8px var(--ghost-glow, rgba(150, 150, 150, 0.4));
+  position: relative;
+}
+
+.navbar-brand:hover .navbar-brand-ghost {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 20%, transparent 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 12px var(--primary-glow, rgba(99, 102, 241, 0.5));
+}
+
+[data-theme="dark"] {
+  --ghost-glow: rgba(200, 200, 200, 0.3);
+  --primary-glow: rgba(129, 140, 248, 0.5);
+}
+
+[data-theme="light"] {
+  --ghost-glow: rgba(100, 100, 100, 0.25);
+  --primary-glow: rgba(99, 102, 241, 0.4);
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-email {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.theme-toggle {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0 0.75rem;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary);
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 1rem;
+}
+
+.main-content-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.user-dropdown {
+  position: relative;
+}
+
+.user-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  height: 42px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.user-dropdown-trigger:hover {
+  border-color: var(--primary);
+}
+
+.user-dropdown-avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.user-dropdown-email {
+  color: var(--text);
+  font-size: 0.875rem;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dropdown-arrow {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.user-dropdown-trigger.open .user-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.user-dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.2s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.user-dropdown-menu-item:hover {
+  background: var(--background);
+  text-decoration: none;
+}
+
+.user-dropdown-menu-item svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.user-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+.user-dropdown-menu-item.danger {
+  color: var(--danger);
+}
+
+.user-dropdown-menu-item.danger svg {
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .navbar-email, .user-dropdown-email {
+    display: none;
+  }
+}

@@ -5,7 +5,9 @@
 }
 
 :root {
+  color-scheme: light dark;
   --primary: #6366f1;
+  --primary-rgb: 99, 102, 241;
   --primary-dark: #4f46e5;
   --secondary: #10b981;
   --danger: #ef4444;
@@ -20,8 +22,10 @@
   --chart-text: #94a3b8;
 }
 
-[data-theme="dark"] {
+/* Dark theme variables */
+:root[data-theme="dark"] {
   --primary: #818cf8;
+  --primary-rgb: 129, 140, 248;
   --primary-dark: #6366f1;
   --secondary: #34d399;
   --danger: #f87171;
@@ -34,6 +38,28 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   --chart-grid: #334155;
   --chart-text: #64748b;
+  color-scheme: dark;
+}
+
+/* System dark preference - only apply if not explicitly set to light */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #818cf8;
+    --primary-rgb: 129, 140, 248;
+    --primary-dark: #6366f1;
+    --secondary: #34d399;
+    --danger: #f87171;
+    --background: #0f172a;
+    --surface: #1e293b;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    --chart-grid: #334155;
+    --chart-text: #64748b;
+    color-scheme: dark;
+  }
 }
 
 body {
@@ -42,6 +68,7 @@ body {
   background-color: var(--background);
   color: var(--text);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -58,7 +85,7 @@ button {
   font-family: inherit;
 }
 
-input, button {
+input, button, select, textarea {
   font-size: 1rem;
 }
 
@@ -82,7 +109,8 @@ input, button {
 
 .form-group input,
 .form-group select,
-.form-group textarea {
+.form-group textarea,
+.form-control {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border);
@@ -91,31 +119,24 @@ input, button {
   background-color: var(--surface);
   color: var(--text);
   transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: inherit;
+  color-scheme: light dark;
 }
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-control:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
-/* Monospace variant for code-like content (JSON headers, body templates,
-   CSS selectors etc.). Overrides only the font + line-height; everything
-   else inherits from the textarea base rules above so theme tokens apply. */
-.form-group .code-input {
-  font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  resize: vertical;
-  min-height: 5rem;
-}
-
-.form-group .code-input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.7;
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--background);
 }
 
 /* Button styles */
@@ -126,8 +147,9 @@ input, button {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -169,6 +191,7 @@ input, button {
   border-radius: 0.75rem;
   box-shadow: var(--shadow);
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 .card-header {
@@ -211,24 +234,340 @@ input, button {
   border: 1px solid #166534;
 }
 
-/* Loading spinner */
-.spinner {
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+/* Settings & Admin Layouts */
+.settings-container-new {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.settings-header-new {
+  margin-bottom: 2rem;
+}
+
+.settings-title-new {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0 0;
+}
+
+.settings-back-new {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-sidebar-new {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.settings-nav-new {
+  background: var(--surface);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.settings-nav-item-new {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-nav-item-new:last-child {
+  border-bottom: none;
+}
+
+.settings-nav-item-new:hover {
+  background: var(--background);
+}
+
+.settings-nav-item-new.active {
+  background: var(--primary);
+  color: white;
+}
+
+.settings-card {
+  background: var(--surface);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border);
+}
+
+.settings-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Table Styles */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.users-table th {
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.users-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.users-table tr:hover {
+  background: rgba(var(--primary-rgb), 0.02);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+}
+
+.toggle-switch.active {
+  background: var(--primary);
+}
+
+.toggle-switch .toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: left 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+  left: 22px;
+}
+
+.settings-mobile-select {
+display: none;
+}
+
+@media (max-width: 968px) {
+  .settings-container-new {
+  grid-template-columns: 1fr;
+gap: 1rem;
+}
+
+.settings-sidebar-new {
+display: none;
+}
+
+.settings-mobile-select {
+display: block;
+  width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+
+  .settings-nav-new {
+    display: flex;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE/Edge */
+  }
+
+  .settings-nav-new::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+  
+  .settings-nav-item-new {
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    padding: 1rem 1.5rem;
+    flex-shrink: 0;
+    width: auto;
+  }
+
+  .settings-card {
+    padding: 1.5rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Utility classes */
+@media (max-width: 640px) {
+  .settings-card {
+    padding: 1rem;
+  }
+  
+  .settings-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .settings-actions .btn {
+    width: 100%;
+  }
+
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-scroll-hint {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    text-align: right;
+  }
+
+  /* Responsive Table-to-Card Transformation for Logs */
+  .responsive-log-table thead {
+    display: none;
+  }
+
+  .responsive-log-table, 
+  .responsive-log-table tbody, 
+  .responsive-log-table tr, 
+  .responsive-log-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .responsive-log-table tr {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .responsive-log-table tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .responsive-log-table td {
+    border: none;
+    padding: 0;
+    text-align: left !important;
+  }
+
+  /* Create a header row inside the card for Checkbox + Level */
+  .responsive-log-table .log-select-cell {
+    display: inline-block;
+    width: auto;
+    margin-right: 0.75rem;
+    vertical-align: middle;
+  }
+
+  .responsive-log-table .log-level-cell {
+    display: inline-block;
+    width: auto;
+    vertical-align: middle;
+  }
+
+  .responsive-log-table .log-message-cell {
+    margin: 0.75rem 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(var(--primary-rgb), 0.05);
+  }
+
+  .responsive-log-table .log-message-content {
+    white-space: normal !important;
+    word-break: break-word;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .responsive-log-table .log-action-cell {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+
+  /* Handle details row in card mode */
+  .responsive-log-table tr.details-row {
+    margin-top: -1.25rem;
+    margin-bottom: 2rem;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+
+  .responsive-log-table tr.details-row td {
+    padding: 0;
+  }
+}
+
+.mobile-scroll-hint {
+  display: none;
+}
+
+/* Generic utility classes */
 .text-center {
   text-align: center;
 }

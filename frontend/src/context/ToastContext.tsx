@@ -1,13 +1,31 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useRef, useEffect } from 'react';
+
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
+export interface ActivityLogEntry {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  timestamp: Date;
+  details?: any;
+}
 
 interface Toast {
   id: number;
   message: string;
   type: 'success' | 'error' | 'info';
+  action?: ToastAction;
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info', details?: any, action?: ToastAction) => void;
+  activityLog: ActivityLogEntry[];
+  clearActivityLog: () => void;
+  isDrawerOpen: boolean;
+  setDrawerOpen: (open: boolean) => void;
 }
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -26,15 +44,41 @@ interface ToastProviderProps {
 
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const toastsRef = useRef<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  // Keep ref in sync for stacking limit logic
+  useEffect(() => {
+    toastsRef.current = toasts;
+  }, [toasts]);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success', details?: any, action?: ToastAction) => {
     const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    
+    // Add to activity log (persistent for session, not DB)
+    setActivityLog((prev) => [
+      { id, message, type, timestamp: new Date(), details },
+      ...prev.slice(0, 49), // Keep last 50
+    ]);
 
-    // Auto-dismiss after 3 seconds
+    // Enforce stacking limit (Max 3)
+    setToasts((prev) => {
+      const next = [...prev, { id, message, type, action }];
+      if (next.length > 3) {
+        return next.slice(next.length - 3);
+      }
+      return next;
+    });
+
+    // Auto-dismiss toast after 6 seconds
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 3000);
+    }, 6000);
+  }, []);
+
+  const clearActivityLog = useCallback(() => {
+    setActivityLog([]);
   }, []);
 
   const removeToast = useCallback((id: number) => {
@@ -42,7 +86,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, activityLog, clearActivityLog, isDrawerOpen, setDrawerOpen }}>
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
@@ -74,15 +118,43 @@ function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
         .toast {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.875rem 1.25rem;
-          border-radius: 0.5rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          gap: 0.875rem;
+          padding: 1rem 1.25rem 1rem 1.5rem;
+          border-radius: 0.75rem;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
           font-size: 0.9375rem;
           font-weight: 500;
           pointer-events: auto;
-          animation: toast-slide-in 0.3s ease-out;
-          max-width: 360px;
+          animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          max-width: 400px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          color: var(--text);
+          position: relative;
+          overflow: hidden;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+
+        .toast::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 4px;
+        }
+
+        .toast.toast-success::before {
+          background: var(--secondary);
+        }
+
+        .toast.toast-error::before {
+          background: var(--danger);
+        }
+
+        .toast.toast-info::before {
+          background: var(--primary);
         }
 
         @keyframes toast-slide-in {
@@ -96,44 +168,74 @@ function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
           }
         }
 
-        .toast.toast-success {
-          background: #10b981;
-          color: white;
-        }
-
-        .toast.toast-error {
-          background: #ef4444;
-          color: white;
-        }
-
-        .toast.toast-info {
-          background: #6366f1;
-          color: white;
-        }
-
         .toast-icon {
-          font-size: 1.125rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
           flex-shrink: 0;
+        }
+
+        .toast-success .toast-icon {
+          color: var(--secondary);
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        .toast-error .toast-icon {
+          color: var(--danger);
+          background: rgba(239, 68, 68, 0.1);
+        }
+
+        .toast-info .toast-icon {
+          color: var(--primary);
+          background: rgba(99, 102, 241, 0.1);
         }
 
         .toast-message {
           flex: 1;
+          line-height: 1.4;
+        }
+
+        .toast-action-btn {
+          background: var(--primary);
+          color: white;
+          border: none;
+          padding: 0.375rem 0.75rem;
+          border-radius: 0.375rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+          margin-left: 0.5rem;
+          white-space: nowrap;
+        }
+
+        .toast-action-btn:hover {
+          background: var(--primary-dark);
         }
 
         .toast-close {
-          background: none;
+          background: transparent;
           border: none;
-          color: inherit;
-          opacity: 0.7;
+          color: var(--text-muted);
           cursor: pointer;
-          padding: 0.25rem;
-          font-size: 1.125rem;
-          line-height: 1;
+          padding: 0;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.375rem;
           flex-shrink: 0;
+          transition: background 0.2s, color 0.2s;
+          margin-left: 0.5rem;
         }
 
         .toast-close:hover {
-          opacity: 1;
+          background: var(--background);
+          color: var(--text);
         }
 
         @media (max-width: 480px) {
@@ -151,14 +253,43 @@ function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
       <div className="toast-container">
         {toasts.map((toast) => (
           <div key={toast.id} className={`toast toast-${toast.type}`}>
-            <span className="toast-icon">
-              {toast.type === 'success' && '✓'}
-              {toast.type === 'error' && '✕'}
-              {toast.type === 'info' && 'ℹ'}
-            </span>
+            <div className="toast-icon">
+              {toast.type === 'success' && (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              {toast.type === 'error' && (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              )}
+              {toast.type === 'info' && (
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              )}
+            </div>
             <span className="toast-message">{toast.message}</span>
-            <button className="toast-close" onClick={() => onRemove(toast.id)}>
-              ×
+            {toast.action && (
+              <button 
+                className="toast-action-btn" 
+                onClick={() => {
+                  toast.action?.onClick();
+                  onRemove(toast.id);
+                }}
+              >
+                {toast.action.label}
+              </button>
+            )}
+            <button className="toast-close" onClick={() => onRemove(toast.id)} aria-label="Close">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
         ))}

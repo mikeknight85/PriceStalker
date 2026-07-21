@@ -1,6 +1,6 @@
 {
-  "name": "PriceStalker",
-  "short_name": "PriceStalker",
+  "name": "PriceGhost",
+  "short_name": "PriceGhost",
   "description": "Track product prices and get notified when they drop",
   "start_url": "/",
   "display": "standalone",
