@@ -236,6 +236,10 @@ What the migration does to your data:
 - SSO users keep their linked identity; `password_hash` becomes nullable to
   allow accounts that have no password.
 
+**Log out and back in afterwards.** The frontend caches your user object at
+sign-in, so a session that spans the upgrade keeps the one 1.x issued — which
+shows up as a missing Admin entry in the user dropdown.
+
 There is no down migration. Rolling back means restoring the backup.
 
 ### Migrating from PriceGhost

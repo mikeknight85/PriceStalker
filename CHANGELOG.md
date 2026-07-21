@@ -31,6 +31,10 @@ before upgrading.
   password, are representable.
 - `POSTGRES_PASSWORD` and `JWT_SECRET` are now required. The stack refuses to
   start without them instead of falling back to a built-in default.
+- **Log out and back in after upgrading.** The frontend caches the user object
+  in localStorage at sign-in, so a session that spans the upgrade keeps the one
+  1.x issued. The visible symptom is a missing Admin entry in the user dropdown
+  even for an admin account. Signing out and in refetches it.
 
 ### Added
 
