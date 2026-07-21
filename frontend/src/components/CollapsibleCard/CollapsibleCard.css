@@ -70,3 +70,17 @@
 .pg-collapsible-card-body {
   padding: 1.25rem;
 }
+
+/* Leading icon sits with the title and inherits its colour, so it tracks
+   theme and hover state without extra rules. */
+.pg-collapsible-card-leading-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.pg-collapsible-card-header:hover .pg-collapsible-card-leading-icon,
+.pg-collapsible-card.expanded .pg-collapsible-card-leading-icon {
+  color: var(--primary);
+}

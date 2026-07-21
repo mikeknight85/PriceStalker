@@ -6,6 +6,7 @@ import {
   CollapsibleCard, 
   UnifiedSelectorManager 
 } from '../../components';
+import Icon from '../../../../components/Icon';
 
 export default function GlobalSelectorsSection() {
   const { showToast } = useToast();
@@ -111,15 +112,15 @@ export default function GlobalSelectorsSection() {
     <div className="settings-card">
       <h2 className="settings-card-title">Global HTML Selector Configuration</h2>
 
-      <CollapsibleCard title="🔍 Generic Price Selectors" id="sys_sel_price" badge={String(globalPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Price Selectors" leadingIcon={<Icon name="search" />} id="sys_sel_price" badge={String(globalPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Price Selectors" items={globalPriceSelectors} onChange={setGlobalPriceSelectors} placeholder=".price, #price" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="🏷️ Deal / Sale / Clearance Price Selectors" id="sys_sel_deal" badge={String(globalDealPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Deal / Sale / Clearance Price Selectors" leadingIcon={<Icon name="tag" />} id="sys_sel_deal" badge={String(globalDealPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Deal / Sale / Clearance Price Selectors" items={globalDealPriceSelectors} onChange={setGlobalDealPriceSelectors} placeholder=".price-item--sale" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="👥 Generic Member Price Selectors" id="sys_sel_member" badge={String(globalMemberPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Member Price Selectors" leadingIcon={<Icon name="users" />} id="sys_sel_member" badge={String(globalMemberPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Member Price Selectors" items={globalMemberPriceSelectors} onChange={setGlobalMemberPriceSelectors} placeholder=".member-price" />
       </CollapsibleCard>
 
@@ -127,37 +128,37 @@ export default function GlobalSelectorsSection() {
         <UnifiedSelectorManager label="Generic Pre-Order Price Selectors" items={globalPreOrderPriceSelectors} onChange={setGlobalPreOrderPriceSelectors} placeholder=".preorder-price" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="📝 Generic Name Selectors" id="sys_sel_name" badge={String(globalNameSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Name Selectors" leadingIcon={<Icon name="fileText" />} id="sys_sel_name" badge={String(globalNameSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Name Selectors" items={globalNameSelectors} onChange={setGlobalNameSelectors} placeholder="h1, .product-name" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="🏢 Generic Retailer Name Selectors" id="sys_sel_retailer" badge={String(globalRetailerNameSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Retailer Name Selectors" leadingIcon={<Icon name="building" />} id="sys_sel_retailer" badge={String(globalRetailerNameSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Retailer Name Selectors" items={globalRetailerNameSelectors} onChange={setGlobalRetailerNameSelectors} placeholder="meta[property='og:site_name']" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="🖼️ Generic Image Selectors" id="sys_sel_image" badge={String(globalImageSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Image Selectors" leadingIcon={<Icon name="image" />} id="sys_sel_image" badge={String(globalImageSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Image Selectors" items={globalImageSelectors} onChange={setGlobalImageSelectors} placeholder="img.product" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="📦 Generic Stock Selectors" id="sys_sel_stock" badge={String(globalStockSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Stock Selectors" leadingIcon={<Icon name="package" />} id="sys_sel_stock" badge={String(globalStockSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Stock Selectors" items={globalStockSelectors} onChange={setGlobalStockSelectors} placeholder=".stock-status, .availability" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="🚫 Generic Exclusion Selectors" id="sys_sel_exclusion" badge={String(globalExclusionSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Exclusion Selectors" leadingIcon={<Icon name="ban" />} id="sys_sel_exclusion" badge={String(globalExclusionSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Exclusion Selectors" items={globalExclusionSelectors} onChange={setGlobalExclusionSelectors} placeholder=".ad-container, .carousel" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="📦 Global Stock Phrases" id="sys_phrases" badge={String(globalInStockPhrases.length + globalOutOfStockPhrases.length + globalPreOrderPhrases.length) + ' total'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Global Stock Phrases" leadingIcon={<Icon name="package" />} id="sys_phrases" badge={String(globalInStockPhrases.length + globalOutOfStockPhrases.length + globalPreOrderPhrases.length) + ' total'} expandedSections={expandedSections} onToggle={toggleSection}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
-          <CollapsibleCard title="🟢 Generic In-Stock Phrases" id="sys_phr_instock" badge={String(globalInStockPhrases.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+          <CollapsibleCard title="Generic In-Stock Phrases" leadingIcon={<Icon name="checkCircle" />} id="sys_phr_instock" badge={String(globalInStockPhrases.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
             <UnifiedSelectorManager label="Generic In-Stock Phrases" items={globalInStockPhrases} onChange={setGlobalInStockPhrases} placeholder="in stock, available" />
           </CollapsibleCard>
 
-          <CollapsibleCard title="🔴 Generic Out-of-Stock Phrases" id="sys_phr_outofstock" badge={String(globalOutOfStockPhrases.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+          <CollapsibleCard title="Generic Out-of-Stock Phrases" leadingIcon={<Icon name="xCircle" />} id="sys_phr_outofstock" badge={String(globalOutOfStockPhrases.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
             <UnifiedSelectorManager label="Generic Out-of-Stock Phrases" items={globalOutOfStockPhrases} onChange={setGlobalOutOfStockPhrases} placeholder="out of stock, sold out" />
           </CollapsibleCard>
 
-          <CollapsibleCard title="🟡 Generic Pre-Order Phrases" id="sys_phr_preorder" badge={String(globalPreOrderPhrases.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+          <CollapsibleCard title="Generic Pre-Order Phrases" leadingIcon={<Icon name="clock" />} id="sys_phr_preorder" badge={String(globalPreOrderPhrases.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
             <UnifiedSelectorManager label="Generic Pre-Order Phrases" items={globalPreOrderPhrases} onChange={setGlobalPreOrderPhrases} placeholder="pre-order, preorder" />
           </CollapsibleCard>
         </div>

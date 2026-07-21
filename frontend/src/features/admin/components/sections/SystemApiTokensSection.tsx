@@ -3,6 +3,7 @@ import { AdminSystemService } from '../../services/AdminSystemService';
 import { SystemApiToken } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import Icon from '../../../../components/Icon';
 
 export default function SystemApiTokensSection() {
   const { showToast } = useToast();
@@ -253,7 +254,7 @@ export default function SystemApiTokensSection() {
                 marginBottom: '1.5rem'
               }}>
                 <p style={{ color: '#ffab00', fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
-                  ⚠️ Warning: You won't be able to see this token again. Store it securely.
+                  <Icon name="alertTriangle" /> Warning: You won't be able to see this token again. Store it securely.
                 </p>
               </div>
 

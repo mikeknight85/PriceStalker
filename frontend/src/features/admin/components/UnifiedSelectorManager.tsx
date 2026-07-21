@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Icon from '../../../components/Icon';
 
 /**
  * Normalizes a selector string into the standardized format.
@@ -103,7 +104,7 @@ const UnifiedSelectorManager: React.FC<UnifiedSelectorManagerProps> = ({
       const status = stockModifierMatch[6];
       
       const symbol = type === 'equals' ? '==' : '∋';
-      const displayVal = hasAttr ? `${base} [${attr}] ${symbol} "${val}" ➔ ${status}` : `${base} ${symbol} "${val}" ➔ ${status}`;
+      const displayVal = hasAttr ? `${base} [${attr}] ${symbol} "${val}" → ${status}` : `${base} ${symbol} "${val}" → ${status}`;
       return { type: 'Stock', val: displayVal, color: '#10b981' };
     }
 
@@ -198,12 +199,12 @@ const UnifiedSelectorManager: React.FC<UnifiedSelectorManagerProps> = ({
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                     {isEditing ? (
                       <>
-                        <button type="button" onClick={saveEdit} className="mini-action-btn success">✓</button>
-                        <button type="button" onClick={() => setEditingIndex(null)} className="mini-action-btn">✕</button>
+                        <button type="button" onClick={saveEdit} className="mini-action-btn success"><Icon name="check" /></button>
+                        <button type="button" onClick={() => setEditingIndex(null)} className="mini-action-btn"><Icon name="x" /></button>
                       </>
                     ) : (
                       <>
-                        <button type="button" onClick={() => startEditing(idx, item)} className="mini-action-btn">✎</button>
+                        <button type="button" onClick={() => startEditing(idx, item)} className="mini-action-btn"><Icon name="edit" /></button>
                         <button type="button" onClick={() => handleRemove(idx)} className="mini-action-btn danger">×</button>
                       </>
                     )}

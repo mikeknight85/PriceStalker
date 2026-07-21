@@ -1,5 +1,6 @@
 import { RetailerConfig } from '../../../../../types/api';
 import { UnifiedSelectorManager } from '../../index';
+import Icon from '../../../../../components/Icon';
 
 interface ExtractionParamsSectionProps {
   draftConfig: Partial<RetailerConfig>;
@@ -129,7 +130,7 @@ export default function ExtractionParamsSection({
       </div>
       
       <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--surface)', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
-        <h4 className="mb-2">🚫 Structural Pruning (Exclusions)</h4>
+        <h4 className="mb-2"><Icon name="ban" /> Structural Pruning (Exclusions)</h4>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           Elements matching these selectors will be completely removed from the DOM before any extraction logic runs. Use this to strip noisy carousels, ads, or recommended products that might contain false-positive prices.
         </div>

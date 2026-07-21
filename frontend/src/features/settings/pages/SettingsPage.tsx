@@ -6,6 +6,7 @@ import ProfileSection from './ProfileSection';
 import RegionalSection from './RegionalSection';
 import SecuritySection from './SecuritySection';
 import NotificationChannelsSection from './NotificationChannelsSection';
+import Icon from '../../../components/Icon';
 
 type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
 
@@ -30,25 +31,25 @@ export default function Settings() {
           value={activeSection}
           onChange={(e) => setActiveSection(e.target.value as SettingsSection)}
         >
-          <option value="profile">👤 Profile</option>
-          <option value="regional">🌍 Regional</option>
-          <option value="notifications">🔔 Notifications</option>
-          <option value="security">🔒 Security</option>
+          <option value="profile">Profile</option>
+          <option value="regional">Regional</option>
+          <option value="notifications">Notifications</option>
+          <option value="security">Security</option>
         </select>
 
         <aside className="settings-sidebar-new">
           <nav className="settings-nav-new">
             <button className={`settings-nav-item-new ${activeSection === 'profile' ? 'active' : ''}`} onClick={() => setActiveSection('profile')}>
-              <span>👤 Profile</span>
+              <Icon name="user" /><span>Profile</span>
             </button>
             <button className={`settings-nav-item-new ${activeSection === 'regional' ? 'active' : ''}`} onClick={() => setActiveSection('regional')}>
-              <span>🌍 Regional</span>
+              <Icon name="globe" /><span>Regional</span>
             </button>
             <button className={`settings-nav-item-new ${activeSection === 'notifications' ? 'active' : ''}`} onClick={() => setActiveSection('notifications')}>
-              <span>🔔 Notifications</span>
+              <Icon name="bell" /><span>Notifications</span>
             </button>
             <button className={`settings-nav-item-new ${activeSection === 'security' ? 'active' : ''}`} onClick={() => setActiveSection('security')}>
-              <span>🔒 Security</span>
+              <Icon name="lock" /><span>Security</span>
             </button>
           </nav>
         </aside>

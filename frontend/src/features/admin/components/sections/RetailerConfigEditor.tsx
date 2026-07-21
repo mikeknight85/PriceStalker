@@ -17,6 +17,7 @@ import ExtractionParamsSection from './retailer-config/ExtractionParamsSection';
 import StockPhrasesSection from './retailer-config/StockPhrasesSection';
 import ScrapeValidationHub from './retailer-config/ScrapeValidationHub';
 import AISelectorsSection from './retailer-config/AISelectorsSection';
+import Icon from '../../../../components/Icon';
 
 interface RetailerConfigEditorProps {
   initialRetailer: Partial<RetailerConfig>;
@@ -273,14 +274,14 @@ export default function RetailerConfigEditor({
       </div>
 
       <div style={{ marginTop: '2rem' }}>
-        <CollapsibleCard title="🌐 Scraper Configuration" id="engine" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Scraper Configuration" leadingIcon={<Icon name="globe" />} id="engine" expandedSections={expandedSections} onToggle={toggleSection}>
           <ScraperEngineSection 
             draftConfig={draftConfig} 
             onUpdateConfig={handleUpdateDraft} 
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="🔍 Extraction Parameters" id="selectors" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Extraction Parameters" leadingIcon={<Icon name="search" />} id="selectors" expandedSections={expandedSections} onToggle={toggleSection}>
           <ExtractionParamsSection 
             draftConfig={draftConfig}
             onUpdateConfig={handleUpdateDraft}
@@ -305,7 +306,7 @@ export default function RetailerConfigEditor({
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="📦 Stock Status & Phrases" id="phrases" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Stock Status & Phrases" leadingIcon={<Icon name="package" />} id="phrases" expandedSections={expandedSections} onToggle={toggleSection}>
           <StockPhrasesSection 
             stockSelectors={draftStockSelectors}
             setStockSelectors={setDraftStockSelectors}
@@ -318,7 +319,7 @@ export default function RetailerConfigEditor({
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="🤖 AI Preprocessor Selectors" id="ai_selectors" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="AI Preprocessor Selectors" leadingIcon={<Icon name="cpu" />} id="ai_selectors" expandedSections={expandedSections} onToggle={toggleSection}>
           <AISelectorsSection 
             draftAiPriceSelectors={draftAiPriceSelectors}
             setDraftAiPriceSelectors={setDraftAiPriceSelectors}
@@ -327,7 +328,7 @@ export default function RetailerConfigEditor({
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="🧪 Validation Hub" id="tester" isExpanded={expandedSections.tester} onToggle={toggleSection}>
+        <CollapsibleCard title="Validation Hub" leadingIcon={<Icon name="flask" />} id="tester" isExpanded={expandedSections.tester} onToggle={toggleSection}>
           <ScrapeValidationHub 
             testUrl={testUrl}
             setTestUrl={setTestUrl}

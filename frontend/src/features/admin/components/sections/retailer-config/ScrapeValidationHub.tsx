@@ -1,4 +1,5 @@
 import { formatPrice } from '../../../../../utils/format';
+import Icon from '../../../../../components/Icon';
 
 interface ScrapeValidationHubProps {
   testUrl: string;
@@ -58,7 +59,9 @@ export default function ScrapeValidationHub({
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <strong>Status:</strong> 
               <span style={{ color: testResult.success ? 'var(--secondary)' : 'var(--danger)', fontWeight: 700 }}>
-                {testResult.success ? '✅ SUCCESS' : '❌ FAILED'}
+                {testResult.success
+                  ? <><Icon name="checkCircle" /> SUCCESS</>
+                  : <><Icon name="xCircle" /> FAILED</>}
               </span>
             </div>
             <div>

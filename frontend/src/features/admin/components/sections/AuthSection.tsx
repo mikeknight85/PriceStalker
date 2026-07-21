@@ -10,6 +10,7 @@ import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import PasswordInput from '../../../../components/PasswordInput';
 import { CollapsibleCard, ToggleSwitch } from '../../components';
+import Icon from '../../../../components/Icon';
 
 const toggleRow: React.CSSProperties = {
   display: 'flex',
@@ -151,7 +152,7 @@ export default function AuthSection() {
       </p>
 
       <CollapsibleCard
-        title="🔑 Sign-in Policy"
+        title="Sign-in Policy" leadingIcon={<Icon name="key" />}
         id="auth_policy"
         expandedSections={expandedSections}
         onToggle={toggleSection}
@@ -181,7 +182,7 @@ export default function AuthSection() {
       </CollapsibleCard>
 
       <CollapsibleCard
-        title="🌐 Provider"
+        title="Provider" leadingIcon={<Icon name="globe" />}
         id="auth_provider"
         expandedSections={expandedSections}
         onToggle={toggleSection}
@@ -309,7 +310,7 @@ export default function AuthSection() {
       </CollapsibleCard>
 
       <CollapsibleCard
-        title="👤 Account Behaviour"
+        title="Account Behaviour" leadingIcon={<Icon name="user" />}
         id="auth_behaviour"
         expandedSections={expandedSections}
         onToggle={toggleSection}

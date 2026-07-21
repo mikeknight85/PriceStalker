@@ -613,3 +613,27 @@ display: block;
 .gap-4 {
   gap: 1.5rem;
 }
+
+/* Nav items pair an icon with a label; keep them on one baseline-aligned row. */
+.settings-nav-item-new {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.settings-nav-item-new svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.settings-nav-item-new.active svg,
+.settings-nav-item-new:hover svg {
+  opacity: 1;
+}
+
+/* Inline icons sitting next to text in badges, headings and buttons. */
+.mini-action-btn svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  vertical-align: -0.125em;
+}

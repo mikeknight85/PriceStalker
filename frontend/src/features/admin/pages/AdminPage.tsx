@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import Layout from '../../../layouts/Layout';
 import { useAuth } from '../../auth';
+import Icon from '../../../components/Icon';
 import { SharedService } from '../../../services/SharedService';
 import { GlobalCurrency } from '../../../types/api';
 
@@ -61,25 +62,25 @@ export default function Admin() {
           value={activeSection}
           onChange={(e) => setActiveSection(e.target.value as AdminSection)}
         >
-          <option value="system">⚙️ System</option>
-          <option value="selectors">🔍 Global Selectors</option>
-          <option value="retailers">🏬 Retailers</option>
-          <option value="users">👥 Users</option>
-          <option value="tokens">🔑 API Tokens</option>
-          <option value="ai">🤖 AI Engine</option>
-          <option value="logs">📜 Logs</option>
+          <option value="system">System</option>
+          <option value="selectors">Global Selectors</option>
+          <option value="retailers">Retailers</option>
+          <option value="users">Users</option>
+          <option value="tokens">API Tokens</option>
+          <option value="ai">AI Engine</option>
+          <option value="logs">Logs</option>
         </select>
 
         <aside className="settings-sidebar-new">
           <nav className="settings-nav-new">
-            <button className={`settings-nav-item-new ${activeSection === 'system' ? 'active' : ''}`} onClick={() => setActiveSection('system')}>⚙️ System</button>
-            <button className={`settings-nav-item-new ${activeSection === 'selectors' ? 'active' : ''}`} onClick={() => setActiveSection('selectors')}>🔍 Global Selectors</button>
-            <button className={`settings-nav-item-new ${activeSection === 'retailers' ? 'active' : ''}`} onClick={() => setActiveSection('retailers')}>🏬 Retailers</button>
-            <button className={`settings-nav-item-new ${activeSection === 'users' ? 'active' : ''}`} onClick={() => setActiveSection('users')}>👥 Users</button>
-            <button className={`settings-nav-item-new ${activeSection === 'tokens' ? 'active' : ''}`} onClick={() => setActiveSection('tokens')}>🔑 API Tokens</button>
-            <button className={`settings-nav-item-new ${activeSection === 'auth' ? 'active' : ''}`} onClick={() => setActiveSection('auth')}>🔐 Authentication</button>
-            <button className={`settings-nav-item-new ${activeSection === 'ai' ? 'active' : ''}`} onClick={() => setActiveSection('ai')}>🤖 AI Engine</button>
-            <button className={`settings-nav-item-new ${activeSection === 'logs' ? 'active' : ''}`} onClick={() => setActiveSection('logs')}>📜 Logs</button>
+            <button className={`settings-nav-item-new ${activeSection === 'system' ? 'active' : ''}`} onClick={() => setActiveSection('system')}><Icon name="settings" /><span>System</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'selectors' ? 'active' : ''}`} onClick={() => setActiveSection('selectors')}><Icon name="search" /><span>Global Selectors</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'retailers' ? 'active' : ''}`} onClick={() => setActiveSection('retailers')}><Icon name="store" /><span>Retailers</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'users' ? 'active' : ''}`} onClick={() => setActiveSection('users')}><Icon name="users" /><span>Users</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'tokens' ? 'active' : ''}`} onClick={() => setActiveSection('tokens')}><Icon name="key" /><span>API Tokens</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'auth' ? 'active' : ''}`} onClick={() => setActiveSection('auth')}><Icon name="shield" /><span>Authentication</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'ai' ? 'active' : ''}`} onClick={() => setActiveSection('ai')}><Icon name="cpu" /><span>AI Engine</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'logs' ? 'active' : ''}`} onClick={() => setActiveSection('logs')}><Icon name="logs" /><span>Logs</span></button>
           </nav>
         </aside>
 

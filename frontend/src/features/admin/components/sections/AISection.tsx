@@ -7,6 +7,7 @@ import AIStatusBadge from '../../../../components/AIStatusBadge';
 import { CollapsibleCard } from '../../components';
 import AIProviderConfig from './AIProviderConfig';
 import AIModelTester from './AIModelTester';
+import Icon from '../../../../components/Icon';
 
 export default function AISection() {
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
@@ -49,7 +50,7 @@ export default function AISection() {
         <AIStatusBadge status={aiSettings?.ai_enabled ? 'verified' : null} />
       </div>
 
-      <CollapsibleCard title="🤖 Provider Settings" id="ai_general" expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Provider Settings" leadingIcon={<Icon name="cpu" />} id="ai_general" expandedSections={expandedSections} onToggle={toggleSection}>
         <AIProviderConfig 
           aiSettings={aiSettings}
           setAiSettings={setAiSettings}
@@ -63,7 +64,7 @@ export default function AISection() {
         </div>
       </CollapsibleCard>
 
-      <CollapsibleCard title="🧪 AI Extraction Tester" id="ai_tester" isExpanded={expandedSections.ai_tester} onToggle={toggleSection}>
+      <CollapsibleCard title="AI Extraction Tester" leadingIcon={<Icon name="flask" />} id="ai_tester" isExpanded={expandedSections.ai_tester} onToggle={toggleSection}>
          <AIModelTester />
       </CollapsibleCard>
     </div>

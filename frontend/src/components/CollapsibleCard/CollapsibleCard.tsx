@@ -9,7 +9,10 @@ interface CollapsibleCardProps {
   isExpanded?: boolean;
   expandedSections?: Record<string, boolean>;
   onToggle: (id: string) => void;
+  /** The expand/collapse chevron. */
   icon?: string;
+  /** Optional icon rendered before the title, in place of an emoji prefix. */
+  leadingIcon?: React.ReactNode;
 }
 
 const CollapsibleCard: React.FC<CollapsibleCardProps> = ({ 
@@ -20,7 +23,8 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   isExpanded,
   expandedSections, 
   onToggle,
-  icon = '▾'
+  icon = '▾',
+  leadingIcon
 }) => {
   const expanded = isExpanded !== undefined ? isExpanded : (expandedSections ? expandedSections[id] : false);
 
@@ -32,6 +36,9 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         className="pg-collapsible-card-header"
       >
         <div className="pg-collapsible-card-title-group">
+          {leadingIcon && (
+            <span className="pg-collapsible-card-leading-icon">{leadingIcon}</span>
+          )}
           <span className="pg-collapsible-card-title">{title}</span>
           {badge !== undefined && <span className="pg-collapsible-card-badge">{badge}</span>}
         </div>
