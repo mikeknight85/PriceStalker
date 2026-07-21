@@ -13,6 +13,7 @@ import Pagination from '../../../components/Pagination';
 import Tabs, { Tab } from '../../../components/Tabs';
 
 import './NotificationHistoryPage.css';
+import Icon from '../../../components/Icon';
 
 export default function NotificationHistory() {
   const { user } = useAuth();
@@ -76,8 +77,8 @@ export default function NotificationHistory() {
   }, [notifications, filter]);
 
   const historyTabs: Tab[] = [
-    { id: 'activity', label: 'Session Activity', icon: '\u{1F4D1}' },
-    { id: 'alerts', label: 'Alert History', icon: '\u{1F514}' },
+    { id: 'activity', label: 'Session Activity', icon: <Icon name="fileText" /> },
+    { id: 'alerts', label: 'Alert History', icon: <Icon name="bell" /> },
   ];
 
   const headerActions = (

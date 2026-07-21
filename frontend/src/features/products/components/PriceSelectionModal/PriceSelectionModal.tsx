@@ -3,6 +3,7 @@ import { useAuth } from '../../../auth';
 import { formatPrice } from '../../../../utils/format';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import './PriceSelectionModal.css';
+import Icon from '../../../../components/Icon';
 
 export interface PriceCandidate {
   price: number;
@@ -259,7 +260,7 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
         {/* Warning Banner */}
         {warningMessage && (
           <div className="warning-banner">
-            ⚠️ {warningMessage}
+            <Icon name="alertTriangle" /> {warningMessage}
           </div>
         )}
 

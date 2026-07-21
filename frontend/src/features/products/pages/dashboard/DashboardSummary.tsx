@@ -4,6 +4,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ChartTooltip, BarC
 import { Product } from '../../../../types/api';
 import { STOCK_COLORS } from '../../constants';
 import './DashboardSummary.css';
+import Icon from '../../../../components/Icon';
 
 interface DashboardSummaryProps {
   summary: {
@@ -49,7 +50,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
   if (!summary || summary.totalProducts === 0) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">📊</div>
+        <div className="empty-state-icon"><Icon name="barChart" size="2.5rem" /></div>
         <h3 className="empty-state-title">No stats available</h3>
         <p className="empty-state-text">Start tracking products to see price insights here.</p>
       </div>
@@ -135,7 +136,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
                       {p.image_url ? (
                         <img src={p.image_url} alt="" />
                       ) : (
-                        <span style={{ fontSize: '1rem' }}>📦</span>
+                        <Icon name="package" />
                       )}
                     </div>
                     <div className="drop-media-info">
@@ -179,7 +180,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
                       <Link key={p.id} to={`/?product=${p.id}&tab=products`} className="quick-product-item-link">
                         <div className="quick-product-item">
                           <div className="quick-product-image">
-                            {p.image_url ? <img src={p.image_url} alt="" /> : '📦'}
+                            {p.image_url ? <img src={p.image_url} alt="" /> : <Icon name="package" />}
                           </div>
                           <div className="quick-product-name">{truncateName(p.name)}</div>
                           <div className="quick-product-price">
@@ -216,7 +217,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
                       <Link key={p.id} to={`/?product=${p.id}&tab=products`} className="quick-product-item-link">
                         <div className="quick-product-item">
                           <div className="quick-product-image">
-                            {p.image_url ? <img src={p.image_url} alt="" /> : '📦'}
+                            {p.image_url ? <img src={p.image_url} alt="" /> : <Icon name="package" />}
                           </div>
                           <div className="quick-product-name">{truncateName(p.name)}</div>
                           <div className="quick-product-price">

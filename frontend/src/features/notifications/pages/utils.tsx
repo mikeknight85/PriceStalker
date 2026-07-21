@@ -1,4 +1,5 @@
 import React from 'react';
+import type { IconName } from '../../../components/Icon';
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -103,21 +104,20 @@ export function getNotificationTypeLabel(type: string): string {
   }
 }
 
-export function getChannelIcon(channel: string): string {
+export function getChannelIcon(channel: string): IconName {
   switch (channel.toLowerCase()) {
     case 'telegram':
-      return '\u{1F4AC}';
     case 'discord':
-      return '\u{1F4AC}';
+      return 'messageCircle';
     case 'pushover':
-      return '\u{1F4F1}';
+      return 'smartphone';
     case 'ntfy':
-      return '\u{1F4E2}';
+      return 'megaphone';
     case 'gotify':
-      return '\u{1F514}';
+      return 'bell';
     case 'email':
-      return '\u2709\uFE0F';
+      return 'mail';
     default:
-      return '\u{1F4E8}';
+      return 'inbox';
   }
 }

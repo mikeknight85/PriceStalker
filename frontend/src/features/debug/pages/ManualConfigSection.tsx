@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { UnifiedSelectorManager } from '../../admin/components';
+import Icon from '../../../components/Icon';
 
 interface ManualConfigSectionProps {
   state: {
@@ -59,7 +60,7 @@ export default function ManualConfigSection({ state }: ManualConfigSectionProps)
           </optgroup>
         </select>
         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '-0.5rem', marginBottom: '1rem', paddingLeft: '0.25rem' }}>
-          💡 Tip: Click elements in the <strong>Interactive Inspector</strong> to pull selectors.
+          <Icon name="lightbulb" /> Tip: Click elements in the <strong>Interactive Inspector</strong> to pull selectors.
         </div>
       </div>
 

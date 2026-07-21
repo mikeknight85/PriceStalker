@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { formatPrice } from '../../../utils/format';
 import PriceSelectionModal from '../../products/components/PriceSelectionModal';
+import Icon from '../../../components/Icon';
 
 interface ResultDisplayProps {
   state: {
@@ -52,14 +53,14 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
         {/* Summary Card */}
         <div className="card result-card summary-section">
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <h3 style={{ margin: 0 }}>📦 Extraction Results</h3>
+            <h3 style={{ margin: 0 }}><Icon name="package" /> Extraction Results</h3>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <button 
                 className="btn btn-secondary btn-sm" 
                 onClick={() => showToast('Full result payload sent to session activity', 'info', result)}
                 title="View technical details in activity drawer"
               >
-                📋 LOG
+                <Icon name="clipboard" /> LOG
               </button>
               {result.debugFileUrl && (
                 <a href={getFullDebugUrl(result.debugFileUrl)} target="_blank" rel="noopener noreferrer" className="download-link" style={{ fontSize: '0.7rem', fontWeight: 600 }}>
@@ -71,7 +72,7 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
                 onClick={() => setShowVotingPreview(true)}
                 style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
               >
-                👁️ VOTING
+                <Icon name="eye" /> VOTING
               </button>
               <button 
                 className="btn btn-primary btn-sm" 
@@ -79,7 +80,7 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
                 disabled={isSavingConfig}
                 style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
               >
-                {isSavingConfig ? '...' : '💾 SAVE'}
+                {isSavingConfig ? '...' : <><Icon name="save" /> SAVE</>}
               </button>
             </div>
           </div>
@@ -114,7 +115,7 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
                   )}
                   {result.needsReview && (
                     <span className="badge status-needs-review" title="Requires manual configuration verification">
-                      ⚠️ Needs Review
+                      <Icon name="alertTriangle" /> Needs Review
                     </span>
                   )}
                 </div>
@@ -127,7 +128,7 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
         <div className="card result-card candidates-section">
           <div className="card-header" style={{ borderBottom: 'none' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3 style={{ margin: 0 }}>🗳️ Candidates</h3>
+              <h3 style={{ margin: 0 }}><Icon name="listChecks" /> Candidates</h3>
               
               <div className="tab-buttons">
                 <button className={`tab-btn ${activeCandidateTab === 'price' ? 'active' : ''}`} onClick={() => setActiveCandidateTab('price')}>Price</button>

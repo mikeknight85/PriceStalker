@@ -4,6 +4,7 @@ import { AuthService, beginSsoLogin, PublicAuthConfig } from '../services/AuthSe
 import { useTheme } from '../../../context/ThemeContext';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import './AuthForm.css';
+import Icon from '../../../components/Icon';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -80,7 +81,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
         onClick={toggleTheme}
         title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
       >
-        {theme === 'light' ? '🌙' : '☀️'}
+        {theme === 'light' ? <Icon name="moon" /> : <Icon name="sun" />}
       </button>
 
       <div className="auth-form-card">

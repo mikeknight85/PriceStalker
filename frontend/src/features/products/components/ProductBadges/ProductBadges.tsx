@@ -3,6 +3,7 @@ import { Product } from '../../../../types/api';
 import AIStatusBadge from '../../../../components/AIStatusBadge';
 import Badge from '../../../../components/Badge';
 import './ProductBadges.css';
+import Icon from '../../../../components/Icon';
 
 interface ProductBadgesProps {
   product: Product;
@@ -35,7 +36,7 @@ const ProductBadges: React.FC<ProductBadgesProps> = ({
     <div className="pg-badges">
       {/* Paused Badge */}
       {product.checking_paused && (
-        <Badge variant="warning" size="small" icon={<i>⏸️</i>}>
+        <Badge variant="warning" size="small" icon={<Icon name="pause" />}>
           Paused
         </Badge>
       )}
@@ -60,27 +61,27 @@ const ProductBadges: React.FC<ProductBadgesProps> = ({
 
       {/* Stock Status Badges */}
       {isPreOrder && (
-        <Badge variant="warning" size="small" icon={<i>🕒</i>}>
+        <Badge variant="warning" size="small" icon={<Icon name="clock" />}>
           Pre-Order
         </Badge>
       )}
       {isMemberOnly && (
-        <Badge variant="member" size="small" icon={<i>👤</i>}>
+        <Badge variant="member" size="small" icon={<Icon name="user" />}>
           Member Only
         </Badge>
       )}
       {isOutOfStock && (
-        <Badge variant="danger" size="small" icon={<i>⚠</i>}>
+        <Badge variant="danger" size="small" icon={<Icon name="alertTriangle" />}>
           Out of Stock
         </Badge>
       )}
       {isNotAvailable && (
-        <Badge variant="outline" size="small" icon={<i>🚫</i>}>
+        <Badge variant="outline" size="small" icon={<Icon name="ban" />}>
           Unavailable
         </Badge>
       )}
       {showInStock && isInStock && (
-        <Badge variant="success" size="small" icon={<i>✓</i>}>
+        <Badge variant="success" size="small" icon={<Icon name="check" />}>
           In Stock
         </Badge>
       )}

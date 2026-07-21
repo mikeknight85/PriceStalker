@@ -1,5 +1,6 @@
 import React from 'react';
 import { Product } from '../../../../types/api';
+import Icon from '../../../../components/Icon';
 
 interface CategorySidebarProps {
   activeCategory: string | null;
@@ -23,7 +24,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
       <div className="sidebar-header">
         {!isCollapsed && <h3 className="sidebar-title">Categories</h3>}
         <button className="sidebar-toggle" onClick={onToggle} title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}>
-          {isCollapsed ? '➡️' : '⬅️'}
+          {isCollapsed ? <Icon name="chevronRight" /> : <Icon name="chevronLeft" />}
         </button>
       </div>
 
@@ -35,7 +36,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
               onClick={() => onCategorySelect(null)}
               title="All Products"
             >
-              <span className="category-icon">📦</span>
+              <span className="category-icon"><Icon name="package" /></span>
               <span className="category-name">All Products</span>
               <span className="category-count">{products.length}</span>
             </button>
@@ -52,7 +53,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                   onClick={() => onCategorySelect(cat)}
                   title={cat}
                 >
-                  <span className="category-icon">🏷️</span>
+                  <span className="category-icon"><Icon name="tag" /></span>
                   <span className="category-name" title={cat}>{cat}</span>
                   <span className="category-count">{count}</span>
                 </button>

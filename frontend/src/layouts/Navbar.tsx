@@ -4,6 +4,7 @@ import { useAuth } from '../features/auth';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationBell } from '../features/notifications';
 import UserDropdown from './UserDropdown';
+import Icon from '../components/Icon';
 
 const Navbar: React.FC = () => {
   const { user } = useAuth();
@@ -26,7 +27,7 @@ const Navbar: React.FC = () => {
             onClick={toggleTheme}
             title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
-            {theme === 'light' ? '🌙' : '☀️'}
+            {theme === 'light' ? <Icon name="moon" /> : <Icon name="sun" />}
           </button>
           {user && <NotificationBell />}
           {user && <UserDropdown />}

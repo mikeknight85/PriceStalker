@@ -1,4 +1,5 @@
 import { formatDate, getNotificationIcon } from '../pages/utils';
+import Icon from '../../../components/Icon';
 
 interface ActivityLogItem {
   id: number;
@@ -16,7 +17,7 @@ export default function ActivityLogTable({ activityLog }: ActivityLogTableProps)
   if (activityLog.length === 0) {
     return (
       <div className="notifications-empty">
-        <div className="notifications-empty-icon">{'\u{1F4D1}'}</div>
+        <div className="notifications-empty-icon"><Icon name="fileText" /></div>
         <div>No activity recorded in this session</div>
       </div>
     );

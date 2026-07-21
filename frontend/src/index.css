@@ -637,3 +637,39 @@ display: block;
   height: 0.875rem;
   vertical-align: -0.125em;
 }
+
+/* Icons replacing emoji in buttons and badges: emoji carried their own size,
+   SVGs inherit from the button, so give the small action controls a size. */
+.pb-action-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.badge svg,
+.filter-btn svg,
+.mode-icon svg,
+.tab-icon svg,
+.category-icon svg,
+.search-icon svg {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
+/* Empty-state and section-header glyphs were sized by font-size before. */
+.empty-state-icon svg,
+.no-results-icon svg,
+.empty-icon svg,
+.drawer-empty-icon svg,
+.stock-timeline-icon svg,
+.notification-settings-icon svg,
+.advanced-settings-icon svg {
+  width: 2rem;
+  height: 2rem;
+  opacity: 0.5;
+}
+
+.notification-bell-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}

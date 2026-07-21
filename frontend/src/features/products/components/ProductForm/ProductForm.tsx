@@ -11,6 +11,7 @@ interface ProductFormProps {
 }
 
 import { REFRESH_INTERVALS } from '../../constants';
+import Icon from '../../../../components/Icon';
 
 const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories }) => {
   const [url, setUrl] = useState('');
@@ -140,14 +141,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
             className={`mode-switch-btn ${mode === 'url' ? 'active' : ''}`}
             onClick={() => setMode('url')}
           >
-            🔗 Direct URL
+            <Icon name="link" /> Direct URL
           </button>
           <button 
             type="button"
             className={`mode-switch-btn ${mode === 'search' ? 'active' : ''}`}
             onClick={() => setMode('search')}
           >
-            🔎 Product Search
+            <Icon name="search" /> Product Search
           </button>
         </div>
       )}

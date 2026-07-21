@@ -1,5 +1,6 @@
 import React from 'react';
 import { NotificationSettings } from '../../../../types/api';
+import Icon from '../../../../components/Icon';
 
 interface NotificationSettingsSectionProps {
   notificationSettings: NotificationSettings | null;
@@ -42,7 +43,7 @@ const NotificationSettingsSection: React.FC<NotificationSettingsSectionProps> = 
   return (
     <div className="notification-settings-card">
       <div className="notification-settings-header">
-        <span className="notification-settings-icon">🔔</span>
+        <span className="notification-settings-icon"><Icon name="bell" /></span>
         <h2 className="notification-settings-title">Notification Settings</h2>
       </div>
       <div className="notification-form-row">

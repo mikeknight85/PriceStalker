@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../../../components/Icon';
 
 interface NotificationFiltersProps {
   filter: string;
@@ -18,19 +19,19 @@ const NotificationFilters: React.FC<NotificationFiltersProps> = ({ filter, setFi
         className={`filter-btn ${filter === 'price_drop' ? 'active' : ''}`}
         onClick={() => setFilter('price_drop')}
       >
-        {'\u{1F4C9}'} Drops
+        <Icon name="trendingDown" /> Drops
       </button>
       <button
         className={`filter-btn ${filter === 'target_price' ? 'active' : ''}`}
         onClick={() => setFilter('target_price')}
       >
-        {'\u{1F3AF}'} Targets
+        <Icon name="target" /> Targets
       </button>
       <button
         className={`filter-btn ${filter === 'stock_alert' ? 'active' : ''}`}
         onClick={() => setFilter('stock_alert')}
       >
-        {'\u{1F4E6}'} Stock
+        <Icon name="package" /> Stock
       </button>
     </div>
   );

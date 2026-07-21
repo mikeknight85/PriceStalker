@@ -1,6 +1,7 @@
 import React from 'react';
 import { PRESET_USER_AGENTS } from '../../admin/components';
 import { RetailerConfig } from '../../../types/api';
+import Icon from '../../../components/Icon';
 
 interface DebugControlsProps {
   state: {
@@ -33,8 +34,8 @@ export default function DebugControls({ state, actions, children }: DebugControl
     <div className="card workstation-card">
       <div className="card-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>📡 Target Input</h3>
-          {isFetchingConfig && <small style={{ color: 'var(--primary)' }}>⚡ Syncing Config...</small>}
+          <h3><Icon name="radio" /> Target Input</h3>
+          {isFetchingConfig && <small style={{ color: 'var(--primary)' }}><Icon name="zap" /> Syncing Config...</small>}
         </div>
       </div>
       <div className="card-body">
@@ -79,7 +80,7 @@ export default function DebugControls({ state, actions, children }: DebugControl
                 className={`mode-btn ${mode === 'normal' ? 'active' : ''}`}
                 onClick={() => setMode('normal')}
               >
-                <span className="mode-icon">🧪</span>
+                <span className="mode-icon"><Icon name="flask" /></span>
                 <span className="mode-text"><strong>Normal</strong><small>Full Logic</small></span>
               </button>
               <button 
@@ -87,7 +88,7 @@ export default function DebugControls({ state, actions, children }: DebugControl
                 className={`mode-btn ${mode === 'simulate' ? 'active' : ''}`}
                 onClick={() => setMode('simulate')}
               >
-                <span className="mode-icon">🔄</span>
+                <span className="mode-icon"><Icon name="refresh" /></span>
                 <span className="mode-text"><strong>Simulate</strong><small>Update Path</small></span>
               </button>
               <button 
@@ -95,7 +96,7 @@ export default function DebugControls({ state, actions, children }: DebugControl
                 className={`mode-btn ${mode === 'bypass' ? 'active' : ''}`}
                 onClick={() => setMode('bypass')}
               >
-                <span className="mode-icon">⚡</span>
+                <span className="mode-icon"><Icon name="zap" /></span>
                 <span className="mode-text"><strong>Bypass</strong><small>Raw Fetch</small></span>
               </button>
             </div>

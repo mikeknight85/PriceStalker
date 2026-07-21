@@ -1,4 +1,5 @@
 import { AIStatus } from '../../types/api';
+import Icon from '../Icon';
 
 interface AIStatusBadgeProps {
   status: AIStatus;
@@ -28,7 +29,7 @@ export default function AIStatusBadge({ status, size = 'normal' }: AIStatusBadge
         }}
         title="User confirmed price"
       >
-        <span style={{ fontSize: isSmall ? '0.7rem' : '0.8rem' }}>✓</span>
+        <Icon name="check" size={isSmall ? '0.7rem' : '0.8rem'} />
       </span>
     );
   }
@@ -49,7 +50,7 @@ export default function AIStatusBadge({ status, size = 'normal' }: AIStatusBadge
         }}
         title="AI verified this price is correct"
       >
-        <span style={{ fontSize: isSmall ? '0.7rem' : '0.8rem' }}>✓</span>
+        <Icon name="check" size={isSmall ? '0.7rem' : '0.8rem'} />
         AI
       </span>
     );
@@ -71,7 +72,7 @@ export default function AIStatusBadge({ status, size = 'normal' }: AIStatusBadge
         }}
         title="AI corrected this price (original scrape was incorrect)"
       >
-        <span style={{ fontSize: isSmall ? '0.7rem' : '0.8rem' }}>⚡</span>
+        <Icon name="zap" size={isSmall ? '0.7rem' : '0.8rem'} />
         AI
       </span>
     );

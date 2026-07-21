@@ -1,4 +1,5 @@
 
+import Icon from '../../../components/Icon';
 
 interface SelectorTesterProps {
   state: {
@@ -17,7 +18,7 @@ export default function SelectorTester({ state, actions }: SelectorTesterProps) 
   return (
     <div className="card workstation-card mt-4">
       <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3>🧪 Live Selector Lab</h3>
+        <h3><Icon name="flask" /> Live Selector Lab</h3>
         <div className="badge method-badge">{liveMatches.length} Matches</div>
       </div>
       <div className="card-body">

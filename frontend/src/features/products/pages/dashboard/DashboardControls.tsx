@@ -1,5 +1,6 @@
 import React from 'react';
 import { SortOption, SortOrder, PauseFilter, SORT_OPTIONS } from './utils';
+import Icon from '../../../../components/Icon';
 
 interface DashboardControlsProps {
   searchQuery: string;
@@ -35,7 +36,7 @@ const DashboardControls: React.FC<DashboardControlsProps> = ({
       <div className="dashboard-controls-wrapper">
         <div className="dashboard-controls">
           <div className="search-container" style={{ position: 'relative' }}>
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" /></span>
             <input
               type="text"
               className="search-input"

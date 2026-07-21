@@ -1,6 +1,7 @@
 import React from 'react';
 import { StockStatusHistoryEntry, StockStatusStats } from '../../../types/api';
 import './PriceChart/Charts.css';
+import Icon from '../../../components/Icon';
 
 interface StockTimelineProps {
   history: StockStatusHistoryEntry[];
@@ -67,7 +68,7 @@ const StockTimeline: React.FC<StockTimelineProps> = ({ history, stats, days = 30
   return (
     <div className="stock-timeline-card">
       <div className="stock-timeline-header">
-        <span className="stock-timeline-icon">📊</span>
+        <span className="stock-timeline-icon"><Icon name="barChart" /></span>
         <h2 className="stock-timeline-title">Stock Availability</h2>
         <span className="stock-timeline-period">Last {days} days</span>
       </div>

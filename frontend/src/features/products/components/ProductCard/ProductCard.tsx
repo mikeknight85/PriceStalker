@@ -6,6 +6,7 @@ import { formatPrice, truncateUrl } from '../../../../utils/format';
 import Sparkline from '../Sparkline';
 import ProductBadges from '../ProductBadges';
 import './ProductCard.css';
+import Icon from '../../../../components/Icon';
 
 interface ProductCardProps {
   product: Product;
@@ -135,7 +136,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {product.image_url ? (
                 <img src={product.image_url} alt="" className="pb-card-image" />
               ) : (
-                <span style={{ fontSize: '1.5rem' }}>📦</span>
+                <Icon name="package" size="1.5rem" />
               )}
             </div>
             
@@ -215,7 +216,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           title={isPaused ? "Cannot refresh paused product" : "Refresh Price"}
           style={isPaused ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
         >
-          🔄
+          <Icon name="refresh" />
         </button>
         <button 
           className={`pb-action-btn ${isPausing ? 'pb-refreshing' : ''}`}
@@ -223,7 +224,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           disabled={isPausing}
           title={isPaused ? "Resume Tracking" : "Pause Tracking"}
         >
-          {isPaused ? '▶️' : '⏸️'}
+          {isPaused ? <Icon name="play" /> : <Icon name="pause" />}
         </button>
         <Link 
           to={`/?product=${product.id}`} 
@@ -231,13 +232,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           title="View Details"
           onClick={handleCardClick}
         >
-          👁️
+          <Icon name="eye" />
         </Link>
         <a href={product.url} target="_blank" rel="noopener noreferrer" className="pb-action-btn" title="Open Store">
-          🔗
+          <Icon name="link" />
         </a>
         <button className="pb-action-btn danger" onClick={handleDelete} title="Delete Product">
-          🗑️
+          <Icon name="trash" />
         </button>
       </div>
     </div>

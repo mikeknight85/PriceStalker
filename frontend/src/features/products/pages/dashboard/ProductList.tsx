@@ -2,6 +2,7 @@ import React from 'react';
 import ProductCard from '../../components/ProductCard';
 import { Product } from '../../../../types/api';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
+import Icon from '../../../../components/Icon';
 
 interface ProductListProps {
   products: Product[];
@@ -48,7 +49,7 @@ const ProductList: React.FC<ProductListProps> = ({
   if (hasAnyProducts) {
     return (
       <div className="no-results">
-        <div className="no-results-icon">🔍</div>
+        <div className="no-results-icon"><Icon name="search" size="2.5rem" /></div>
         <h3 className="no-results-title">No products found</h3>
         <p className="no-results-text">
           Try adjusting your search query, status filter or category.
@@ -59,7 +60,7 @@ const ProductList: React.FC<ProductListProps> = ({
 
   return (
     <div className="empty-state">
-      <div className="empty-state-icon">🛍️</div>
+      <div className="empty-state-icon"><Icon name="shoppingBag" size="2.5rem" /></div>
       <h3 className="empty-state-title">No tracked products yet</h3>
       <p className="empty-state-text" style={{ marginBottom: '1.5rem' }}>
         Start monitoring prices and stock status by adding your first product.

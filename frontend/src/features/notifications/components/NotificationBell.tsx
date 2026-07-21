@@ -3,6 +3,7 @@ import { NotificationService } from '../services/NotificationService';
 import { useToast } from '../../../context/ToastContext';
 import { logger } from '../../../utils/logger';
 import './NotificationBell.css';
+import Icon from '../../../components/Icon';
 
 export default function NotificationBell() {
   const { setDrawerOpen, showToast } = useToast();
@@ -53,7 +54,7 @@ export default function NotificationBell() {
         onClick={() => setDrawerOpen(true)}
         title="Notifications & Activity"
       >
-        {'\u{1F514}'}
+        <Icon name="bell" />
         {recentCount > 0 && (
           <span className="notification-badge">
             {recentCount > 99 ? '99+' : recentCount}

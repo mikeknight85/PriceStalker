@@ -9,6 +9,7 @@ import DebugControls from './DebugControls';
 import ManualConfigSection from './ManualConfigSection';
 import ResultDisplay from './ResultDisplay';
 import './DebugPage.css';
+import Icon from '../../../components/Icon';
 
 export default function Debug() {
   const { user } = useAuth();
@@ -87,7 +88,7 @@ export default function Debug() {
       <Layout>
         <div className="container py-4">
           <div className="alert alert-error" style={{ marginTop: '2rem', textAlign: 'center', padding: '3rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
+            <div style={{ marginBottom: '1rem' }}><Icon name="lock" size="3rem" /></div>
             <h2>Debug Access Restricted</h2>
             <p>The public debug page is currently disabled. An administrator can enable it in the System Settings.</p>
           </div>
@@ -102,7 +103,7 @@ export default function Debug() {
         <header className="debug-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="header-title">
-              <h1>🛠️ Scraper Workstation</h1>
+              <h1><Icon name="wrench" /> Scraper Workstation</h1>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
@@ -128,7 +129,7 @@ export default function Debug() {
           <aside className="debug-sidebar">
             {state.recentUrls.length > 0 && (
               <div className="card workstation-card mb-4">
-                <div className="card-header"><h3>🕒 Recent</h3></div>
+                <div className="card-header"><h3><Icon name="clock" /> Recent</h3></div>
                 <div className="card-body p-0">
                   <div className="history-list">
                     {state.recentUrls.map((item, idx) => (
@@ -151,7 +152,7 @@ export default function Debug() {
           <main className="debug-main">
             {!state.result && !state.isLoading && (
               <div className="empty-state">
-                <div className="empty-icon">🧪</div>
+                <div className="empty-icon"><Icon name="flask" size="2.5rem" /></div>
                 <h2>Ready for Analysis</h2>
                 <p>Enter a URL and select a mode to begin extraction testing.</p>
               </div>
@@ -164,13 +165,13 @@ export default function Debug() {
                     className={`view-tab-btn ${activeView === 'results' ? 'active' : ''}`}
                     onClick={() => setActiveView('results')}
                   >
-                    📊 Extraction Results
+                    <Icon name="barChart" /> Extraction Results
                   </button>
                   <button 
                     className={`view-tab-btn ${activeView === 'inspector' ? 'active' : ''}`}
                     onClick={() => setActiveView('inspector')}
                   >
-                    🔍 Interactive Inspector
+                    <Icon name="search" /> Interactive Inspector
                   </button>
                 </div>
 
@@ -183,7 +184,7 @@ export default function Debug() {
                   ) : (
                     <div className="iframe-viewer-container full-height">
                       <div className="inspector-header">
-                        <h3>🔍 Interactive Inspector</h3>
+                        <h3><Icon name="search" /> Interactive Inspector</h3>
                         {state.result?.debugFileUrl && (
                           <a href={state.result.debugFileUrl} target="_blank" rel="noreferrer" className="download-link">
                             Full Window

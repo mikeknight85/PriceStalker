@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../../../../components/Icon';
 
 interface AdvancedSettingsSectionProps {
   isAdvancedCollapsed: boolean;
@@ -28,7 +29,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
   return (
     <div className="advanced-settings-card">
       <div className="advanced-settings-header" onClick={() => setIsAdvancedCollapsed(!isAdvancedCollapsed)}>
-        <span className="advanced-settings-icon">⚙️</span>
+        <span className="advanced-settings-icon"><Icon name="settings" /></span>
         <h2 className="advanced-settings-title">Advanced Settings</h2>
         <svg 
           className={`collapse-icon ${!isAdvancedCollapsed ? 'open' : ''}`} 

@@ -9,6 +9,7 @@ import LoadingSpinner from '../../../components/LoadingSpinner';
 import { logger } from '../../../utils/logger';
 import './NotificationDrawer.css';
 import { getNotificationIcon } from '../pages/utils';
+import Icon from '../../../components/Icon';
 
 const NotificationDrawer: React.FC = () => {
   const { user } = useAuth();
@@ -92,7 +93,7 @@ const NotificationDrawer: React.FC = () => {
           {activeTab === 'activity' ? (
             activityLog.length === 0 ? (
               <div className="drawer-empty">
-                <div className="drawer-empty-icon">{'\u{1F4D1}'}</div>
+                <div className="drawer-empty-icon"><Icon name="fileText" /></div>
                 <div style={{ fontWeight: 600 }}>No activity this session</div>
               </div>
             ) : (
@@ -123,7 +124,7 @@ const NotificationDrawer: React.FC = () => {
               <div className="drawer-empty"><LoadingSpinner size="1.5rem" centered /></div>
             ) : notifications.length === 0 ? (
               <div className="drawer-empty">
-                <div className="drawer-empty-icon">{'\u{1F514}'}</div>
+                <div className="drawer-empty-icon"><Icon name="bell" /></div>
                 <div style={{ fontWeight: 600 }}>No alerts yet</div>
               </div>
             ) : (

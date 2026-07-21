@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { NotificationEntry } from '../../../types/api';
 import { formatPrice } from '../../../utils/format';
 import { formatDate, getNotificationIcon, getNotificationTypeLabel, getChannelIcon } from './utils';
+import Icon from '../../../components/Icon';
 
 interface NotificationTableProps {
   notifications: NotificationEntry[];
@@ -23,7 +24,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
     return (
       <div className="notifications-table">
         <div className="notifications-empty">
-          <div className="notifications-empty-icon">{'\u{1F514}'}</div>
+          <div className="notifications-empty-icon"><Icon name="bell" /></div>
           <div>No notifications found</div>
         </div>
       </div>
@@ -115,7 +116,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
               {channelsNotified.length > 0 ? (
                 channelsNotified.map((channel: string) => (
                   <span key={channel} className="channel-badge" title={channel}>
-                    {getChannelIcon(channel)}
+                    <Icon name={getChannelIcon(channel)} />
                   </span>
                 ))
               ) : (
