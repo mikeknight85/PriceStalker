@@ -1,14 +1,34 @@
-# Production stage - serve with nginx
+# Frontend image. Build context is the REPOSITORY ROOT, not ./frontend, because
+# this is an npm workspace: the root package.json and lockfile are required to
+# resolve dependencies.
+#
+#   docker build -f frontend/Dockerfile .
+#
+# Self-contained: Vite builds here rather than the dist/ being copied in from a
+# developer's machine, so a clean checkout is all CI needs.
+
+# --- build stage -----------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Manifests first so dependency installation caches independently of source.
+COPY package.json package-lock.json ./
+COPY frontend/package.json ./frontend/
+
+# Dev dependencies are required here: vite and typescript do the building.
+RUN npm ci -w frontend
+
+COPY frontend/ ./frontend/
+
+RUN npm run build -w frontend
+
+# --- runtime stage ---------------------------------------------------------
 FROM nginx:alpine
 
-# Copy built files from local dist folder (pre-built on curacao)
-COPY frontend/dist /usr/share/nginx/html
-
-# Copy nginx configuration
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
 EXPOSE 80
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
