@@ -12,7 +12,6 @@ services:
       TZ: Australia/Perth
     volumes:
       - ./db-data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       priceghost_net:
         ipv4_address: 172.16.5.12

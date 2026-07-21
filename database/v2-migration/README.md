@@ -1,8 +1,17 @@
 # PriceStalker v2 data migration
 
-Working notes for moving existing PriceStalker installs onto the v2 codebase
-(Steven's fork, `priceghost-stevene`). This directory is planning material for
-the v2 port — nothing here runs as part of the current release.
+Notes on moving existing PriceStalker installs onto the v2 codebase (Steven's
+fork, `priceghost-stevene`).
+
+**The migrations themselves now live in `backend/src/migrations/`** and run at
+startup. This directory keeps the analysis, the generator, and its inputs:
+
+| File | Purpose |
+|---|---|
+| `generate-baseline.py` | Regenerates `001_baseline.ts` from a schema dump |
+| `seeds.sql` | Captured `system_settings` seed data (generator input) |
+| `migrate.sql` | Side-by-side migration, for one-off instance moves |
+| `000_v1_compat.ts`, `001_baseline.ts`, `002_v1_notifications.ts` | Reference copies of the installed chain |
 
 ## What's verified
 

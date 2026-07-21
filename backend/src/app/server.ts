@@ -1,5 +1,6 @@
 import app from './app';
 import { initializeDatabase } from './database';
+import { runMigrationsOnBoot } from './migrateOnBoot';
 import { logger } from '../utils/system/logger';
 import { startScheduler } from '../services/scheduler';
 import { startSettingsListener, databaseHealthMonitor } from '../services/domain/system';
@@ -48,6 +49,11 @@ export async function startServer() {
     // 1. Initialize DB and Logger Persistence
     await initializeDatabase();
 
+    // 2. Bring the schema up to date before anything reads or writes it.
+    //    Blocks startup on purpose: serving requests against a half-migrated
+    //    schema fails in ways that look like application bugs.
+    await runMigrationsOnBoot();
+
     // Preload regional/currency cache
     try {
       await currencyCache.refresh();
@@ -62,11 +68,11 @@ export async function startServer() {
     // Start database health checker monitor daemon
     databaseHealthMonitor.start();
 
-    // 2. Start Express Listener
+    // 3. Start Express Listener
     app.listen(PORT, () => {
       logger.info(`System | Server | Running on port ${PORT}`, 'Server');
 
-      // 3. Start the background price checker scheduler
+      // 4. Start the background price checker scheduler
       if (process.env.NODE_ENV !== 'test') {
         startScheduler();
       }
