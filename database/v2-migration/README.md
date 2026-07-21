@@ -75,20 +75,66 @@ ntfy_message_template       gotify_message_template
 These back the notification templating and multi-currency systems. The instance
 boots, reports a successful migration, and then errors on core features.
 
-### Options
+### Solution: `000_v1_compat.ts`
 
-1. **Pre-flight migration `000`** that detects a v1 database (`users` exists,
-   `migrations` does not), brings it up to the exact post-001 shape, then stamps
-   001 as executed so 002–022 apply cleanly. Keeps a single upgrade path;
-   requires 000 to reproduce 001 faithfully for every v1 version in the wild.
-2. **Rewrite 001** to be genuinely idempotent — `ADD COLUMN IF NOT EXISTS` for
-   every column rather than `CREATE TABLE IF NOT EXISTS`. Cleaner long-term,
-   but diverges from upstream and complicates future merges.
-3. **Export/import upgrade** — ship this script plus tooling and have operators
-   do a side-by-side move. Safest, but it is a manual step for every install.
+`000_v1_compat.ts` is the proposed fix. umzug orders migrations
+lexicographically, so it runs before 001 and adds exactly the columns 001 would
+have created but cannot, because the tables already exist.
 
-Option 1 is the most likely fit. Whichever is chosen, it needs testing against a
-v1 snapshot the same way `migrate.sql` was.
+It deliberately does **not** stamp 001 as executed. 001 still needs to run, to
+create the six tables v1 lacks (`retailer_configs`, `system_logs`,
+`exchange_rates`, `global_currencies`, `regional_currency_mappings`,
+`user_memberships`) and to seed `system_settings`. Every statement in 001 is
+`IF NOT EXISTS` or `ON CONFLICT DO NOTHING`, so running it after 000 is safe.
+
+On a fresh install `users` does not exist yet, so 000 is a no-op.
+
+The column list was derived empirically rather than by reading the schemas: a
+reference database built by running only 001 was diffed against a real v1
+production database. The gap is 21 columns:
+
+| Table | Columns 001 cannot add |
+|---|---|
+| `users` | 17 (all `*_message_template`, all email/SMTP, `currency`, `locale`, `preferred_currency`, `categories`) |
+| `products` | `ai_status`, `category`, `price_type` |
+| `price_history` | `price_type` |
+
+Two behaviours worth noting:
+
+- **`webhook_body_template` is renamed, not re-added.** v2 calls the same field
+  `webhook_payload_template`. Renaming preserves any custom webhook body the
+  user configured; adding a fresh column would silently discard it.
+- **`currency` is back-filled from observed data, not defaulted.** Upstream
+  defaults to `AUD`/`en-AU`. Applying that to an existing install would
+  reinterpret stored prices, since v2 converts against this value. 000 instead
+  picks each user's most frequently recorded `price_history.currency`, falling
+  back to `USD`.
+
+### Verification status
+
+Verified: **000 → 001 against a real v1 production database.** Afterwards, all
+six shared tables contain every column a fresh install has after 001, with data
+intact (21 products / 10,364 price_history), the webhook template preserved, and
+currency correctly derived (`CHF` for the user with CHF history, `USD` fallback).
+
+Since the post-000/001 schema is shape-identical to a fresh install's, 002–022
+should behave identically. That is an inference, **not yet a test** — running
+them requires building the v2 backend (`npm install` in Steven's repo). Running
+002–022 end-to-end against a migrated v1 database is the next verification step,
+and should happen before this is relied on.
+
+Also still untested: v1 databases from **older** PriceStalker releases. v1 runs
+its DO-block migrations at every boot, so any instance on a current image should
+converge to the same schema — but that assumption is worth checking against an
+older snapshot.
+
+### Alternatives considered
+
+- **Rewrite 001** to be genuinely idempotent (`ADD COLUMN IF NOT EXISTS`
+  throughout). Cleaner long-term, but diverges from upstream and complicates
+  future merges from Steven.
+- **Export/import upgrade** using `migrate.sql` side-by-side. Safest, but a
+  manual step for every install.
 
 ## Decisions baked into `migrate.sql`
 
