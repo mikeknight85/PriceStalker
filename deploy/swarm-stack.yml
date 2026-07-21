@@ -14,7 +14,7 @@
 #   - Authentik OIDC application configured at https://auth.ikessler.ch with
 #     redirect URI https://pricestalker.ikessler.ch/api/auth/oidc/callback
 #
-# Non-secret config — admin tunes these in PriceStalker UI (Settings →
+# Non-secret config — admin tunes these in PriceStalker UI (Admin →
 # Authentication), persisted in the auth_config table:
 #   - OIDC issuer URL, client ID, client secret
 #   - Sign-in policy, JIT toggle, "require verified email" toggle
@@ -23,6 +23,20 @@
 # the upstream PriceGhost stack that Mike renamed in Portainer; the underlying
 # database name was preserved during that migration. Don't change it without
 # also renaming the DB itself (or the COMMAND wrapper below would break).
+#
+# ---------------------------------------------------------------------------
+# BEFORE FIRST v2 DEPLOY — TAKE A DATABASE BACKUP
+# ---------------------------------------------------------------------------
+# v2 applies schema migrations automatically at backend startup, and they are
+# one-way: notification_history is converted into notifications and then
+# dropped, and users.password_hash becomes nullable. There is no down path.
+#
+#   docker exec $(docker ps -q -f name=pricestalker_postgres) \
+#     pg_dump -U postgres --no-owner --no-privileges priceghost | gzip > backup.sql.gz
+#
+# The tag below defaults to `beta`, which is what this stack has been running.
+# Once v2 merges to main, `beta` becomes v2 — so pin PRICESTALKER_TAG to a
+# specific version if you want to choose your upgrade moment.
 
 services:
   postgres:
@@ -42,7 +56,7 @@ services:
         condition: on-failure
 
   backend:
-    image: ghcr.io/mikeknight85/pricestalker-backend:1.2.4
+    image: ghcr.io/mikeknight85/pricestalker-backend:${PRICESTALKER_TAG:-beta}
     environment:
       NODE_ENV: production
       PORT: "3001"
@@ -71,7 +85,7 @@ services:
         condition: on-failure
 
   frontend:
-    image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.4
+    image: ghcr.io/mikeknight85/pricestalker-frontend:${PRICESTALKER_TAG:-beta}
     networks:
       - pricestalker-internal
       - traefik-public
@@ -90,6 +104,23 @@ services:
         traefik.http.routers.pricestalker.rule: "Host(`pricestalker.ikessler.ch`)"
         traefik.http.routers.pricestalker.tls.certresolver: "letsencrypt"
         traefik.http.services.pricestalker.loadbalancer.server.port: "80"
+
+  # Optional stealth scraper, used only by retailers configured with
+  # `use_remote_scraper`. Point Admin -> System -> Remote Scraper URL at
+  # http://remotescraper:5100/scrape once deployed. Remove this service if
+  # unused; the backend scrapes in-process without it.
+  remotescraper:
+    image: ghcr.io/mikeknight85/pricestalker-remotescraper:${PRICESTALKER_TAG:-beta}
+    environment:
+      PORT: "5100"
+    # Chromium needs more than the default 64MB of shared memory or it crashes
+    # on content-heavy pages.
+    shm_size: 2gb
+    networks:
+      - pricestalker-internal
+    deploy:
+      restart_policy:
+        condition: on-failure
 
 secrets:
   pg_pricestalker_pass:

@@ -1,91 +1,109 @@
+# PriceStalker deployment stack.
+#
+# Pulls published images from GHCR -- nothing is built locally. Copy .env.example
+# to .env and set at minimum POSTGRES_PASSWORD and JWT_SECRET; both are required
+# and the stack refuses to start without them rather than falling back to a
+# well-known default.
+#
+#   cp .env.example .env && $EDITOR .env
+#   docker compose up -d
+#
+# The remote scraper is optional and off by default:
+#   docker compose --profile remotescraper up -d
+
 services:
-  pricestalker-db:
+  postgres:
     image: postgres:16-alpine
     container_name: pricestalker-db
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: development_password
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # No default: a known password on a database is not a sensible fallback.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      # Defaults to `priceghost` so existing installs keep their database.
+      # New deployments can set anything; see .env.example.
       POSTGRES_DB: ${POSTGRES_DB:-priceghost}
-      TZ: Australia/Perth
+      TZ: ${TZ:-UTC}
     volumes:
-      - ./db-data:/var/lib/postgresql/data
-    networks:
-      pricestalker_net:
-        ipv4_address: 172.16.5.12
+      - postgres_data:/var/lib/postgresql/data
+    # Deliberately not published to the host. Add a ports: entry only if you
+    # need external access, and firewall it if you do.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-priceghost}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-priceghost}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
-
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: ghcr.io/mikeknight85/pricestalker-backend:${IMAGE_TAG:-latest}
     container_name: pricestalker-backend
-    dns:
-      - 1.1.1.1
-      - 1.0.0.1
-    mem_limit: 1g
     restart: unless-stopped
-    ports:
-      - "3003:3001"
-    volumes:
-      - ./backend/debug_html:/app/backend/debug_html
-      - ./logs:/app/backend/logs
+    mem_limit: ${BACKEND_MEM_LIMIT:-1g}
     environment:
-      # SSO / OIDC. See .env.example; issuer and client are configured in the UI.
-      - ENABLE_SSO=${ENABLE_SSO:-false}
-      - PUBLIC_URL=${PUBLIC_URL:-}
-      - OIDC_REDIRECT_URI_OVERRIDE=${OIDC_REDIRECT_URI_OVERRIDE:-}
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-development_password}@pricestalker-db:5432/${POSTGRES_DB:-priceghost}
-      - JWT_SECRET=change_this_to_a_secure_random_string
-      - ADMIN_API_TOKEN=development_admin_token_2026
-      - PORT=3001
-      - NODE_ENV=production
-      - TZ=Australia/Perth
-      - DEBUG=true
-      - LOG_LEVEL=debug
-      - SMTP_FALLBACK_HOST=mail.example.com
-      - SMTP_FALLBACK_PORT=25
-      - SMTP_FALLBACK_FROM=admin@example.com
-      - ADMIN_ALERT_EMAIL=admin@example.com
-    networks:
-      pricestalker_net:
-        ipv4_address: 172.16.5.3
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-priceghost}
+      # No default: a shared fallback secret would let anyone forge a session.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      PORT: 3001
+      NODE_ENV: production
+      TZ: ${TZ:-UTC}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # SSO / OIDC. Master switch; the issuer, client ID and secret are
+      # configured in the UI under Admin -> Authentication.
+      ENABLE_SSO: ${ENABLE_SSO:-false}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      OIDC_REDIRECT_URI_OVERRIDE: ${OIDC_REDIRECT_URI_OVERRIDE:-}
+      # Optional: bootstrap/emergency API access. Leave unset to disable.
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN:-}
+      # Optional: SMTP fallback used only for database health alerts.
+      SMTP_FALLBACK_HOST: ${SMTP_FALLBACK_HOST:-}
+      SMTP_FALLBACK_PORT: ${SMTP_FALLBACK_PORT:-587}
+      SMTP_FALLBACK_FROM: ${SMTP_FALLBACK_FROM:-}
+      ADMIN_ALERT_EMAIL: ${ADMIN_ALERT_EMAIL:-}
+    volumes:
+      - backend_logs:/app/backend/logs
+      - backend_debug:/app/backend/debug_html
     depends_on:
-      pricestalker-db:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
+      # Migrations run before the server listens, so allow for a slow first boot.
+      start_period: 60s
 
-  pricestalker-frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
+  frontend:
+    image: ghcr.io/mikeknight85/pricestalker-frontend:${IMAGE_TAG:-latest}
     container_name: pricestalker-frontend
     restart: unless-stopped
     ports:
-      - "5003:80"
+      - "${FRONTEND_PORT:-80}:80"
     environment:
-      - TZ=Australia/Perth
-    networks:
-      pricestalker_net:
-        ipv4_address: 172.16.5.11
+      TZ: ${TZ:-UTC}
     depends_on:
       - backend
 
-networks:
-  pricestalker_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.16.5.0/24
+  # Optional stealth scraper. Only needed for retailers configured with
+  # `use_remote_scraper`; the backend falls back to in-process scraping without
+  # it. Start with: docker compose --profile remotescraper up -d
+  remotescraper:
+    image: ghcr.io/mikeknight85/pricestalker-remotescraper:${IMAGE_TAG:-latest}
+    container_name: pricestalker-remotescraper
+    restart: unless-stopped
+    profiles: ["remotescraper"]
+    # Chromium needs more than the default 64MB of shared memory or it will
+    # crash on content-heavy pages.
+    shm_size: 2gb
+    environment:
+      PORT: 5100
+      TZ: ${TZ:-UTC}
+    expose:
+      - "5100"
+
+volumes:
+  postgres_data:
+    name: ${POSTGRES_VOLUME_NAME:-pricestalker_postgres_data}
+  backend_logs:
+  backend_debug:
