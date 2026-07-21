@@ -117,11 +117,50 @@ six shared tables contain every column a fresh install has after 001, with data
 intact (21 products / 10,364 price_history), the webhook template preserved, and
 currency correctly derived (`CHF` for the user with CHF history, `USD` fallback).
 
-Since the post-000/001 schema is shape-identical to a fresh install's, 002–022
-should behave identically. That is an inference, **not yet a test** — running
-them requires building the v2 backend (`npm install` in Steven's repo). Running
-002–022 end-to-end against a migrated v1 database is the next verification step,
-and should happen before this is relied on.
+The full umzug chain was then run for real (`tsx src/config/migrate.ts up`)
+against three databases. The result is that **000 is not the blocker — v2's
+migration chain does not replay on any path.**
+
+| Starting point | Result |
+|---|---|
+| v1 production DB, after 000 | 001–011 apply, **fails at 012** |
+| Fresh empty DB (control, no v1 data, no 000) | 001–011 apply, **fails at 012** — identical |
+| DB bootstrapped from `init.sql` (a real fresh v2 install) | **fails at 010** |
+
+000 carries a v1 database exactly as far as a clean database gets, so it is
+doing its job. The chain itself is broken:
+
+- **012 fails on `retailer_configs.original_price_selectors does not exist`.**
+  Migrations 012 and 020 both reference that column, but nothing in 001–011
+  creates it. It exists only in `database/init.sql`, which is a `pg_dump` of
+  Steven's live database rather than a replay of the migrations.
+- **010 fails on an `init.sql` database** with `u.notifications_cleared_at does
+  not exist`. The dump was taken *after* 010 had already run upstream, so the
+  column it needs was already dropped and `notification_history` already
+  converted. Re-running 010 cannot work.
+
+The migrations have drifted from the dump. `init.sql` is the only working
+bootstrap, and it stamps **zero** rows into the `migrations` table — so umzug
+believes nothing has run and starts from 001 against a schema already at 022.
+
+This is masked in normal operation because **the backend never runs migrations
+at startup**: there is no umzug call in the boot path, no `command:` in
+`docker-compose.yaml`, and the Dockerfile is just `node dist/index.js`.
+Migrations are a manual developer tool (`npm run db:migrate`). Steven's live
+database is correct because migrations were applied by hand as they were
+written; the checked-in chain no longer reproduces it.
+
+### Consequence for the port
+
+v2 has **no working automated schema-upgrade path at all** — not for v1 users,
+and not for existing v2 users either. Repairing the migration chain is therefore
+a prerequisite of the transplant, independent of anything v1-specific. Roughly:
+rebuild 001 so it reflects current reality, or squash 001–022 into a single
+accurate baseline, then stamp it. Only once the chain replays cleanly from empty
+does 000 have something to hand off to.
+
+Whether further breakage exists past 012 is unknown — the chain cannot get far
+enough to find out.
 
 Also still untested: v1 databases from **older** PriceStalker releases. v1 runs
 its DO-block migrations at every boot, so any instance on a current image should
