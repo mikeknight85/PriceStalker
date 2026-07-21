@@ -10,7 +10,7 @@ interface ProductRow {
 async function main() {
   const apply = process.argv.includes('--apply') || process.argv.includes('-a');
 
-  console.log('PriceGhost Existing URL Cleanup Tool');
+  console.log('PriceStalker Existing URL Cleanup Tool');
   console.log('====================================');
   console.log(`Mode: ${apply ? '💥 APPLY (Database updates WILL be made)' : '🔍 DRY-RUN (No database updates)'}\n`);
 

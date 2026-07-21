@@ -5,7 +5,7 @@ import { pool } from '../models';
 
 async function main() {
   const testUrl = process.argv[2] || 'https://httpbin.org/ip';
-  console.log(`--- PriceGhost Scraper Proxy & UA Tester ---`);
+  console.log(`--- PriceStalker Scraper Proxy & UA Tester ---`);
   console.log(`Target Test URL: ${testUrl}`);
 
   try {

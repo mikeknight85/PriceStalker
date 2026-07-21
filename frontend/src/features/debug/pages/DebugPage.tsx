@@ -196,7 +196,7 @@ export default function Debug() {
                         className="iframe-viewer"
                         srcDoc={`
                           <style>
-                            /* PriceGhost Debug Overrides: Prevent layout blowouts & Aggressive Flattening */
+                            /* PriceStalker Debug Overrides: Prevent layout blowouts & Aggressive Flattening */
                             body { 
                               overflow-x: hidden !important; 
                               max-width: 100vw !important; 

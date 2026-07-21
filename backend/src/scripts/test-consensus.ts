@@ -9,7 +9,7 @@ async function main() {
   const urlArg = process.argv[2];
   
   if (!urlArg) {
-    console.log('--- PriceGhost Consensus & Scraper Tester ---');
+    console.log('--- PriceStalker Consensus & Scraper Tester ---');
     console.log('Usage:');
     console.log('  npx tsx src/scripts/test-consensus.ts <url>                # Compare scraping methods');
     console.log('  npx tsx src/scripts/test-consensus.ts --simulate-vote       # Test Voting & Learning Loop');

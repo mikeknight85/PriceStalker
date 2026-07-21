@@ -192,7 +192,7 @@ export default function SystemApiTokensSection() {
                   type="text" 
                   value={newTokenLabel} 
                   onChange={e => setNewTokenLabel(e.target.value)} 
-                  placeholder="e.g. PriceGhost CLI, Integration Server" 
+                  placeholder="e.g. PriceStalker CLI, Integration Server" 
                   autoFocus
                 />
               </div>

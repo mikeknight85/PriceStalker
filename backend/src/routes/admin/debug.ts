@@ -93,7 +93,7 @@ router.get('/db-health', asyncHandler(async (req: AuthRequest, res: Response) =>
 // POST /api/admin/debug/db-health/test-alert
 router.post('/db-health/test-alert', asyncHandler(async (req: AuthRequest, res: Response) => {
   const result = await databaseHealthMonitor.sendAlertEmail(
-    'PriceGhost Test Alert',
+    'PriceStalker Test Alert',
     'This is a verification email triggered via the API to test the SMTP fallback settings.'
   );
   if (result.success) {

@@ -67,18 +67,18 @@ execute().catch(console.error);
   try {
     // Write runner.js to vodka host
     console.log('Transferring runner to vodka...');
-    execSync(`ssh steven@192.168.50.200 "cat <<EOF > /opt/usb/docker-compose/priceghost/source/backend/tests/integration/runner.js\n${runnerJs}\nEOF"`);
+    execSync(`ssh steven@192.168.50.200 "cat <<EOF > /opt/usb/docker-compose/pricestalker/source/backend/tests/integration/runner.js\n${runnerJs}\nEOF"`);
     
     // Copy runner.js into container
     console.log('Copying runner into container...');
-    execSync(`ssh steven@192.168.50.200 "docker cp /opt/usb/docker-compose/priceghost/source/backend/tests/integration/runner.js priceghost-backend:/app/runner-temp.js"`);
+    execSync(`ssh steven@192.168.50.200 "docker cp /opt/usb/docker-compose/pricestalker/source/backend/tests/integration/runner.js pricestalker-backend:/app/runner-temp.js"`);
 
     // Run it
     console.log('Executing inside container...\n');
-    execSync(`ssh steven@192.168.50.200 "docker exec -w /app priceghost-backend node runner-temp.js"`, { stdio: 'inherit' });
+    execSync(`ssh steven@192.168.50.200 "docker exec -w /app pricestalker-backend node runner-temp.js"`, { stdio: 'inherit' });
 
     // Cleanup
-    execSync(`ssh steven@192.168.50.200 "docker exec priceghost-backend rm /app/runner-temp.js"`);
+    execSync(`ssh steven@192.168.50.200 "docker exec pricestalker-backend rm /app/runner-temp.js"`);
   } catch (error: any) {
     console.error('Execution failed:', error.message);
   }

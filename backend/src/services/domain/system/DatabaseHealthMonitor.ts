@@ -114,12 +114,12 @@ export class DatabaseHealthMonitor {
   }
 
   async sendAlertEmail(subject: string, text: string) {
-    const toEmail = this.cachedAdminEmail || process.env.ADMIN_ALERT_EMAIL || 'steven@localhost';
+    const toEmail = this.cachedAdminEmail || process.env.ADMIN_ALERT_EMAIL || 'admin@localhost';
     const smtpHost = process.env.SMTP_FALLBACK_HOST;
     const smtpPort = parseInt(process.env.SMTP_FALLBACK_PORT || '587', 10);
     const smtpUser = process.env.SMTP_FALLBACK_USER;
     const smtpPass = process.env.SMTP_FALLBACK_PASS;
-    const emailFrom = process.env.SMTP_FALLBACK_FROM || 'priceghost-monitor@home.enuff.com';
+    const emailFrom = process.env.SMTP_FALLBACK_FROM || 'pricestalker-monitor@localhost';
 
     if (!smtpHost) {
       logger.error('DatabaseHealthMonitor | Cannot send alert email: SMTP_FALLBACK_HOST is not set in environment', 'Database');

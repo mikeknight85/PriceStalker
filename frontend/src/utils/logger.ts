@@ -1,4 +1,4 @@
-// PriceGhost Frontend Logger Utility
+// PriceStalker Frontend Logger Utility
 // Provides standardized logging with timestamps and log levels
 
 type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';

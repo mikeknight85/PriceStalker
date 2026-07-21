@@ -1,5 +1,5 @@
 {
-  "name": "priceghost-workspace",
+  "name": "pricestalker-workspace",
   "private": true,
   "workspaces": [
     "frontend",

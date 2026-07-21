@@ -48,7 +48,7 @@ export const PROVIDER_REGISTRY: Record<string, ProviderInitializer> = {
       s.smtp_port,
       s.email_from,
       s.email_to,
-      s.email_subject_template || 'PriceGhost Alert: {{product_name}}',
+      s.email_subject_template || 'PriceStalker Alert: {{product_name}}',
       s.email_body_template || 'Product: {{product_name}}\nPrice: {{current_price}}'
     );
   }

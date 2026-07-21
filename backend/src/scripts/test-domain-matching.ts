@@ -10,7 +10,7 @@ interface ProductRow {
 }
 
 async function main() {
-  console.log('Starting PriceGhost Domain Matching Audit...');
+  console.log('Starting PriceStalker Domain Matching Audit...');
   console.log('===========================================\n');
 
   // Fetch all products

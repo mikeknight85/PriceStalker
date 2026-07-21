@@ -12,7 +12,7 @@ async function main() {
 
   if (help) {
     console.log(`
-PriceGhost Retailer Selector Audit Tool
+PriceStalker Retailer Selector Audit Tool
 ======================================
 Usage: npm run audit-retailers [options]
    Or: node dist/scripts/audit-retailers.js [options]

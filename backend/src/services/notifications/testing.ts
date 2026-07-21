@@ -54,7 +54,7 @@ export async function sendTestNotification(
         settings.smtp_port,
         settings.email_from,
         settings.email_to,
-        settings.email_subject_template || 'PriceGhost Test',
+        settings.email_subject_template || 'PriceStalker Test',
         settings.email_body_template || 'This is a test notification.',
         payload
       );

@@ -204,7 +204,7 @@ Everything else (issuer URL, client ID, client secret, scopes, policy, JIT toggl
 
 1. Deploy v1.2.0 with `ENABLE_SSO=false` — zero behavior change, local login still works.
 2. Set `ENABLE_SSO=true`, redeploy. SSO routes come alive but policy defaults to `local`, so the login page is unchanged.
-3. In Authentik, create an **OIDC Provider** + **Application** for PriceStalker. Redirect URI: `https://priceghost.ikessler.ch/api/auth/oidc/callback`.
+3. In Authentik, create an **OIDC Provider** + **Application** for PriceStalker. Redirect URI: `https://pricestalker.ikessler.ch/api/auth/oidc/callback`.
 4. In PriceStalker Settings → Authentication: paste issuer URL, client ID, client secret. Hit "Test discovery". Enable OIDC. Keep policy `both` for safety.
 5. Log out, verify "Sign in with Authentik" button appears, click it, complete flow. Verify identity linking (should link to your existing admin account by email).
 6. Once confident, flip policy to `oidc` (with break-glass admin still available on local).

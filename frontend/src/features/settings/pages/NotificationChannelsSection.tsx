@@ -5,7 +5,7 @@ import PasswordInput from '../../../components/PasswordInput';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import NotificationChannelCard from '../components/NotificationChannelCard';
 
-const DEFAULT_EMAIL_SUBJECT = 'Price Ghost Alert: {{product_name}}';
+const DEFAULT_EMAIL_SUBJECT = 'PriceStalker Alert: {{product_name}}';
 const DEFAULT_EMAIL_BODY = 'Hi,\n\n{{product_name}} has dropped to {{current_price}}!\n\nView it here: {{product_url}}';
 
 interface ChannelSettings {

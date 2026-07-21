@@ -39,7 +39,7 @@ export const pickerScript = `
 </style>
 <div id="pg-picker-toolbar" style="position: fixed; bottom: 20px; right: 20px; background: rgba(15, 23, 42, 0.95); color: #fff; padding: 12px 18px; border-radius: 12px; font-family: system-ui, sans-serif; font-size: 13px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); z-index: 2147483647; border: 1px solid rgba(255,255,255,0.15); max-width: 400px; backdrop-filter: blur(8px); display: none;">
   <div style="font-weight: 700; margin-bottom: 6px; color: #38bdf8; display: flex; justify-content: space-between; align-items: center;">
-    <span>PriceGhost Selector Picker</span>
+    <span>PriceStalker Selector Picker</span>
     <button onclick="document.getElementById('pg-picker-toolbar').style.display='none'" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px;">&times;</button>
   </div>
   <div style="margin-bottom: 8px;">

@@ -21,7 +21,7 @@ import axios from 'axios';
 const SERVER = "steven@192.168.50.200";
 const DEV_SITE_DIR = "/opt/usb/dev-home/html/shop";
 const BACKEND_URL = "http://192.168.50.200:3003";
-const ADMIN_TOKEN = "supersecret-priceghost-admin-token-2026";
+const ADMIN_TOKEN = "supersecret-pricestalker-admin-token-2026";
 
 const headers = {
   'Authorization': `Bearer ${ADMIN_TOKEN}`,
@@ -106,7 +106,7 @@ async function run() {
   // STEP 4: Inspect DB state of confirmed product
   // ==========================================
   console.log('\n--- Step 4: Checking DB state for confirmation changes ---');
-  const dbInspectCmd = `docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT ai_status, anchor_price, preferred_extraction_method, last_checked, next_check_at, stock_status FROM products WHERE id = ${productId};"`;
+  const dbInspectCmd = `docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT ai_status, anchor_price, preferred_extraction_method, last_checked, next_check_at, stock_status FROM products WHERE id = ${productId};"`;
   const dbResult = runRemoteCommand(dbInspectCmd);
   console.log(`DB Values (ai_status | anchor | method | last_checked | next_check_at | stock):`);
   console.log(dbResult);
@@ -148,19 +148,19 @@ async function execute() {
 execute().catch(e => { console.error(e); process.exit(1); });
 `;
   
-  runRemoteCommand(`cat <<'EOF' > /opt/usb/docker-compose/priceghost/source/backend/runner-temp.js\n${inContainerRunner}\nEOF`);
-  runRemoteCommand(`docker cp /opt/usb/docker-compose/priceghost/source/backend/runner-temp.js priceghost-backend:/app/backend/runner-temp.js`);
-  runRemoteCommand(`docker exec priceghost-backend node runner-temp.js`);
+  runRemoteCommand(`cat <<'EOF' > /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js\n${inContainerRunner}\nEOF`);
+  runRemoteCommand(`docker cp /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js pricestalker-backend:/app/backend/runner-temp.js`);
+  runRemoteCommand(`docker exec pricestalker-backend node runner-temp.js`);
   console.log('✅ Refresh completed inside container.');
 
   // Verify DB price history record and anchor price drift
-  const priceHistoryResult = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT price FROM price_history WHERE product_id = ${productId} ORDER BY recorded_at DESC LIMIT 1;"`);
+  const priceHistoryResult = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT price FROM price_history WHERE product_id = ${productId} ORDER BY recorded_at DESC LIMIT 1;"`);
   console.log(`Latest Price in History: $${priceHistoryResult.trim()}`);
   if (parseFloat(priceHistoryResult) !== 99.99) {
     throw new Error('Expected price history record of $99.99');
   }
 
-  const updatedAnchorResult = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT anchor_price FROM products WHERE id = ${productId};"`);
+  const updatedAnchorResult = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT anchor_price FROM products WHERE id = ${productId};"`);
   console.log(`Drifted Anchor Price: $${updatedAnchorResult.trim()}`);
   if (parseFloat(updatedAnchorResult) !== 99.99) {
     throw new Error('Expected anchor price to drift to $99.99');
@@ -185,15 +185,15 @@ execute().catch(e => { console.error(e); process.exit(1); });
   runRemoteCommand(`cat <<'EOF' > ${mockFilePath}\n${outOfStockHtml}\nEOF`);
   
   console.log('Triggering backend refresh...');
-  runRemoteCommand(`docker exec priceghost-backend node runner-temp.js`);
+  runRemoteCommand(`docker exec pricestalker-backend node runner-temp.js`);
   
-  const stockInspect = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT stock_status FROM products WHERE id = ${productId};"`);
+  const stockInspect = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT stock_status FROM products WHERE id = ${productId};"`);
   console.log(`Stock Status in DB: ${stockInspect.trim()}`);
   if (stockInspect.trim() !== 'out_of_stock') {
     throw new Error('Expected stock status to change to "out_of_stock"');
   }
 
-  const stockHistoryInspect = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT status FROM stock_status_history WHERE product_id = ${productId} ORDER BY changed_at DESC LIMIT 1;"`);
+  const stockHistoryInspect = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT status FROM stock_status_history WHERE product_id = ${productId} ORDER BY changed_at DESC LIMIT 1;"`);
   console.log(`Stock History status: ${stockHistoryInspect.trim()}`);
   if (stockHistoryInspect.trim() !== 'out_of_stock') {
     throw new Error('Expected stock status history entry for "out_of_stock"');
@@ -208,9 +208,9 @@ execute().catch(e => { console.error(e); process.exit(1); });
   runRemoteCommand(`rm -f ${mockFilePath}`);
 
   console.log('Triggering backend refresh...');
-  runRemoteCommand(`docker exec priceghost-backend node runner-temp.js`);
+  runRemoteCommand(`docker exec pricestalker-backend node runner-temp.js`);
 
-  const goneInspectResult = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT stock_status, checking_paused FROM products WHERE id = ${productId};"`);
+  const goneInspectResult = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT stock_status, checking_paused FROM products WHERE id = ${productId};"`);
   console.log(`DB Values (stock_status | checking_paused): ${goneInspectResult.trim()}`);
   
   const goneParts = goneInspectResult.split('|').map(s => s.trim());
@@ -225,9 +225,9 @@ execute().catch(e => { console.error(e); process.exit(1); });
   await axios.delete(`${BACKEND_URL}/api/products/${productId}`, { headers });
   console.log('✅ Delete API call made.');
 
-  const productCount = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT count(*) FROM products WHERE id = ${productId};"`);
-  const priceHistoryCount = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT count(*) FROM price_history WHERE product_id = ${productId};"`);
-  const stockHistoryCount = runRemoteCommand(`docker exec priceghost-db psql -U postgres -d priceghost -t -c "SELECT count(*) FROM stock_status_history WHERE product_id = ${productId};"`);
+  const productCount = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT count(*) FROM products WHERE id = ${productId};"`);
+  const priceHistoryCount = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT count(*) FROM price_history WHERE product_id = ${productId};"`);
+  const stockHistoryCount = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT count(*) FROM stock_status_history WHERE product_id = ${productId};"`);
 
   console.log(`Post-Delete Counts - Products: ${productCount.trim()}, Price History: ${priceHistoryCount.trim()}, Stock History: ${stockHistoryCount.trim()}`);
   if (parseInt(productCount) !== 0) throw new Error('Expected product to be deleted');
@@ -239,8 +239,8 @@ execute().catch(e => { console.error(e); process.exit(1); });
   // CLEANUP MOCKS & TEMPS
   // ==========================================
   console.log('\n--- Cleaning up temporary files ---');
-  runRemoteCommand(`docker exec priceghost-backend rm -f runner-temp.js`);
-  runRemoteCommand(`rm -f /opt/usb/docker-compose/priceghost/source/backend/runner-temp.js`);
+  runRemoteCommand(`docker exec pricestalker-backend rm -f runner-temp.js`);
+  runRemoteCommand(`rm -f /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js`);
   console.log('✅ Temporary files cleared.');
 
   console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! E2E Lifecycle is structurally sound! 🎉\n');
@@ -250,8 +250,8 @@ run().catch(error => {
   console.error('\n❌ TEST FAILED:', error.stack || error);
   // Attempt remote temp cleanup in case of crash
   try {
-    runRemoteCommand(`docker exec priceghost-backend rm -f runner-temp.js`);
-    runRemoteCommand(`rm -f /opt/usb/docker-compose/priceghost/source/backend/runner-temp.js`);
+    runRemoteCommand(`docker exec pricestalker-backend rm -f runner-temp.js`);
+    runRemoteCommand(`rm -f /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js`);
   } catch {}
   process.exit(1);
 });
