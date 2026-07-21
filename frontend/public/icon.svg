@@ -4,18 +4,42 @@
       <stop offset="0%" style="stop-color:#818cf8"/>
       <stop offset="100%" style="stop-color:#6366f1"/>
     </linearGradient>
+    <radialGradient id="lensGrad" cx="35%" cy="35%" r="70%">
+      <stop offset="0%" style="stop-color:#34d399"/>
+      <stop offset="70%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </radialGradient>
   </defs>
+
   <!-- Background circle -->
   <circle cx="256" cy="256" r="240" fill="url(#ghostGrad)"/>
+
   <!-- Ghost body -->
   <path d="M256 100c-70.7 0-128 57.3-128 128v120c0 8 6 14 12 14 8 0 14-8 14-20v-30c0-8 8-14 16-14s16 6 16 14v30c0 12 6 20 14 20s14-8 14-20v-30c0-8 8-14 16-14s16 6 16 14v30c0 12 6 20 14 20s14-8 14-20v-30c0-8 8-14 16-14s16 6 16 14v30c0 12 6 20 14 20 6 0 12-6 12-14V228c0-70.7-57.3-128-128-128z" fill="white" opacity="0.95"/>
-  <!-- Left eye -->
-  <ellipse cx="210" cy="220" rx="20" ry="24" fill="#6366f1"/>
-  <!-- Right eye -->
-  <ellipse cx="302" cy="220" rx="20" ry="24" fill="#6366f1"/>
-  <!-- Price tag -->
-  <g transform="translate(320, 120) rotate(15)">
-    <rect x="0" y="0" width="60" height="40" rx="6" fill="#10b981"/>
-    <text x="30" y="28" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="22" font-weight="bold">$</text>
+
+  <!-- Binoculars -->
+  <g>
+    <!-- Bridge between eyepieces -->
+    <rect x="234" y="208" width="44" height="34" rx="6" fill="#1f2937"/>
+
+    <!-- Eyepiece bodies (dark rings) -->
+    <circle cx="210" cy="225" r="42" fill="#1f2937"/>
+    <circle cx="302" cy="225" r="42" fill="#1f2937"/>
+
+    <!-- Subtle outer rim highlight on the metal -->
+    <circle cx="210" cy="225" r="42" fill="none" stroke="#374151" stroke-width="2"/>
+    <circle cx="302" cy="225" r="42" fill="none" stroke="#374151" stroke-width="2"/>
+
+    <!-- Lenses (green, money-eyed stalker vibe) -->
+    <circle cx="210" cy="225" r="28" fill="url(#lensGrad)"/>
+    <circle cx="302" cy="225" r="28" fill="url(#lensGrad)"/>
+
+    <!-- Dollar signs inside each lens -->
+    <text x="210" y="237" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900">$</text>
+    <text x="302" y="237" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900">$</text>
+
+    <!-- Lens highlights (the creepy gleam) -->
+    <circle cx="198" cy="213" r="7" fill="white" opacity="0.55"/>
+    <circle cx="290" cy="213" r="7" fill="white" opacity="0.55"/>
   </g>
 </svg>
