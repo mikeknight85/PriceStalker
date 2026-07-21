@@ -54,7 +54,7 @@ export default function SsoComplete() {
             <p className="sso-complete-error">{error}</p>
             <div className="sso-complete-actions">
               {needsEmailVerifiedFix && (
-                <Link to="/settings?section=auth" className="btn btn-primary">
+                <Link to="/admin?tab=auth" className="btn btn-primary">
                   Open Authentication settings
                 </Link>
               )}

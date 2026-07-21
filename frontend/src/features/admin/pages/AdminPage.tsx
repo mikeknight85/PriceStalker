@@ -13,8 +13,9 @@ import UsersSection from '../components/sections/UsersSection';
 import AISection from '../components/sections/AISection';
 import LogsSection from '../components/sections/LogsSection';
 import SystemApiTokensSection from '../components/sections/SystemApiTokensSection';
+import AuthSection from '../components/sections/AuthSection';
 
-type AdminSection = 'system' | 'selectors' | 'retailers' | 'users' | 'ai' | 'logs' | 'tokens';
+type AdminSection = 'system' | 'selectors' | 'retailers' | 'users' | 'ai' | 'logs' | 'tokens' | 'auth';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -76,6 +77,7 @@ export default function Admin() {
             <button className={`settings-nav-item-new ${activeSection === 'retailers' ? 'active' : ''}`} onClick={() => setActiveSection('retailers')}>🏬 Retailers</button>
             <button className={`settings-nav-item-new ${activeSection === 'users' ? 'active' : ''}`} onClick={() => setActiveSection('users')}>👥 Users</button>
             <button className={`settings-nav-item-new ${activeSection === 'tokens' ? 'active' : ''}`} onClick={() => setActiveSection('tokens')}>🔑 API Tokens</button>
+            <button className={`settings-nav-item-new ${activeSection === 'auth' ? 'active' : ''}`} onClick={() => setActiveSection('auth')}>🔐 Authentication</button>
             <button className={`settings-nav-item-new ${activeSection === 'ai' ? 'active' : ''}`} onClick={() => setActiveSection('ai')}>🤖 AI Engine</button>
             <button className={`settings-nav-item-new ${activeSection === 'logs' ? 'active' : ''}`} onClick={() => setActiveSection('logs')}>📜 Logs</button>
           </nav>
@@ -87,6 +89,7 @@ export default function Admin() {
           {activeSection === 'retailers' && <RetailersSection globalCurrencies={globalCurrencies} initialSearch={retailerSearch} />}
           {activeSection === 'users' && <UsersSection globalCurrencies={globalCurrencies} />}
           {activeSection === 'tokens' && <SystemApiTokensSection />}
+          {activeSection === 'auth' && <AuthSection />}
           {activeSection === 'ai' && <AISection />}
           {activeSection === 'logs' && <LogsSection onSearchRetailer={handleSearchRetailer} />}
         </main>

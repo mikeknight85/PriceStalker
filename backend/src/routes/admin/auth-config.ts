@@ -57,4 +57,61 @@ router.put('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json(await authConfigRepository.getAdminView());
 }, 'Admin | Auth Config', 'Auth', 'Failed to update auth config'));
 
+// POST /api/admin/auth/test-discovery -- fetch the provider's well-known
+// document so an admin can validate an issuer URL before saving it. Saving a
+// wrong URL otherwise only fails at the first real login attempt.
+router.post('/test-discovery', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { issuer_url } = req.body as { issuer_url?: string };
+
+  if (!issuer_url || typeof issuer_url !== 'string') {
+    res.status(400).json({ ok: false, error: 'issuer_url is required' });
+    return;
+  }
+
+  // Per spec the discovery document lives at
+  //   {issuer}/.well-known/openid-configuration
+  // Trailing slashes are normalised so either form can be pasted.
+  const normalized = issuer_url.replace(/\/+$/, '');
+  const discoveryUrl = `${normalized}/.well-known/openid-configuration`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const response = await fetch(discoveryUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      res.status(400).json({
+        ok: false,
+        error: `Provider returned HTTP ${response.status} for ${discoveryUrl}`,
+      });
+      return;
+    }
+
+    const doc = (await response.json()) as Record<string, string | undefined>;
+
+    // A usable discovery document must carry all four of these.
+    const missing = (['issuer', 'authorization_endpoint', 'token_endpoint', 'jwks_uri'] as const)
+      .filter(f => !doc[f]);
+    if (missing.length > 0) {
+      res.status(400).json({
+        ok: false,
+        error: `Discovery document missing required fields: ${missing.join(', ')}`,
+      });
+      return;
+    }
+
+    res.json({
+      ok: true,
+      issuer: doc.issuer,
+      authorization_endpoint: doc.authorization_endpoint,
+      token_endpoint: doc.token_endpoint,
+      jwks_uri: doc.jwks_uri,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    res.status(400).json({ ok: false, error: `Failed to reach ${discoveryUrl}: ${message}` });
+  }
+}, 'Admin | Auth Discovery', 'Auth', 'Discovery test failed'));
+
 export default router;
