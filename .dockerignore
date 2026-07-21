@@ -1,0 +1,45 @@
+# Build context is the repository root for all three images, so this is the
+# only .dockerignore that applies. Keep source and tsconfigs: the images compile
+# their own artifacts rather than copying in a pre-built dist.
+
+# Dependencies and build output are produced inside the image.
+node_modules
+**/node_modules
+dist
+**/dist
+*.tsbuildinfo
+
+# VCS and CI
+.git
+.gitignore
+.github
+
+# Local environment and data
+.env
+.env.*
+!.env.example
+db-data
+logs
+debug_html
+tmp
+out
+
+# Docs and assets not needed at build time
+docs
+assets
+brag-output
+*.md
+!README.md
+
+# Editor and OS noise
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+*.swp
+*.log
+
+# Deployment recipes are applied outside the image
+deploy
+docker-compose*.yaml
+docker-compose*.yml

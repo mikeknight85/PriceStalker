@@ -1,42 +1,55 @@
 {
   "name": "pricestalker-backend",
-  "version": "1.4.0",
+  "version": "2.0.0-beta.1",
   "description": "PriceStalker price tracking API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:init": "tsx src/config/init-db.ts"
+    "test": "vitest",
+    "map": "tsx src/scripts/generate-codebase-map.ts",
+    "generate-api-token": "node dist/scripts/generate-api-token.js",
+    "db:migrate": "node dist/config/migrate.js up",
+    "db:migrate:down": "node dist/config/migrate.js down",
+    "db:migrate:dev": "tsx src/config/migrate.ts up",
+    "db:migrate:down:dev": "tsx src/config/migrate.ts down",
+    "postinstall": "rm -rf node_modules/formdata-node/node_modules/web-streams-polyfill",
+    "build:bundle": "npx esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --minify --external:bcrypt --external:pg --external:puppeteer --external:puppeteer-extra --external:puppeteer-extra-plugin-stealth --external:mock-aws-s3 --external:aws-sdk --external:nock --loader:.html=text"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
     "@google/generative-ai": "^0.24.1",
-    "axios": "^1.6.0",
-    "bcrypt": "^5.1.1",
-    "cheerio": "^1.0.0-rc.12",
+    "@xmldom/xmldom": "^0.9.10",
+    "axios": "1.14.0",
+    "bcryptjs": "^3.0.3",
+    "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "groq-sdk": "^0.5.0",
+    "https-proxy-agent": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^3.0.3",
+    "nodemailer": "^8.0.4",
     "openai": "^4.47.0",
-    "openid-client": "^5.7.0",
+    "openid-client": "^5.7.1",
+    "p-limit": "^7.3.0",
     "pg": "^8.11.3",
-    "puppeteer": "^22.0.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "umzug": "^3.7.0",
+    "xpath": "^0.0.34"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.10.0",
     "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.10.9",
+    "@vercel/ncc": "^0.38.4",
     "tsx": "^4.6.0",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "vitest": "^1.6.0"
   }
 }

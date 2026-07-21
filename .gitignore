@@ -32,3 +32,12 @@ coverage/
 # Misc
 *.tgz
 .cache/
+
+# From the v2 (PriceGhost) tree
+out/
+db-data/
+tmp/
+*.dump.html
+
+# TypeScript incremental build state
+*.tsbuildinfo

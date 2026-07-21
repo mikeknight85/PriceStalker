@@ -1,0 +1,25 @@
+{
+  "name": "pricestalker-workspace",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "remotescraper"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
+    "build:remotescraper": "npm run build -w stealth-scraper",
+    "build:all": "npm run build -w backend && npm run build -w frontend && npm run build -w stealth-scraper",
+    "start:backend": "npm start -w backend",
+    "start:frontend": "npm run dev -w frontend",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:migrate:dev": "npm run db:migrate:dev -w backend",
+    "tree": "npx tree-node-cli -I \"node_modules|build|dist|\\.git|\\.js\\.map|\\.d\\.ts\" -a"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0"
+  },
+  "version": "2.0.0-beta.1"
+}

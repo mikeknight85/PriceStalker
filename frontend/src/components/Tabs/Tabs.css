@@ -1,0 +1,117 @@
+.tabs-container {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tabs-list {
+  display: flex;
+  gap: 2rem;
+  flex: 1;
+}
+
+.tab-item {
+  padding: 1rem 0;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  position: relative;
+  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.tab-item:hover {
+  color: var(--text);
+}
+
+.tab-item.active {
+  color: var(--primary);
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+.tab-icon {
+  margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tabs-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Specific styling for the green "Add" tab pattern used in the dashboard */
+.tab-item.tab-success {
+  background: #10b981;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  margin: 0.5rem 0 0.5rem auto;
+  height: fit-content;
+  align-self: center;
+}
+
+.tab-item.tab-success:hover {
+  background: #059669;
+  color: white;
+}
+
+.tab-item.tab-success.active {
+  background: #047857;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+.tab-item.tab-success.active::after {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tabs-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    max-width: 100%;
+    padding-bottom: 2px;
+  }
+  
+  .tabs-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tabs-list {
+    flex: none;
+    gap: 1.25rem;
+  }
+  
+  .tab-item {
+    font-size: 0.9375rem;
+    padding: 0.75rem 0;
+  }
+  
+  .tab-item.tab-success {
+    margin-left: 1rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+  }
+  
+  .tabs-right {
+    margin-left: 1.5rem;
+    flex-shrink: 0;
+  }
+}

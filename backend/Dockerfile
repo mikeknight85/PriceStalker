@@ -1,89 +1,56 @@
-# Build stage — BUILDPLATFORM pins the builder to the runner's native arch.
-# tsc produces .js which is arch-agnostic, so there's no reason to run the
-# compilation under QEMU when targeting arm64.
-FROM --platform=$BUILDPLATFORM node:22-slim AS builder
+# Backend image. Build context is the REPOSITORY ROOT, not ./backend, because
+# this is an npm workspace: the root package.json and lockfile are required to
+# resolve dependencies.
+#
+#   docker build -f backend/Dockerfile .
+#
+# Self-contained: TypeScript is compiled here rather than copied in from a
+# developer's machine, so a clean checkout is all CI needs.
+
+# --- build stage -----------------------------------------------------------
+# Runs on the native build platform, not the target: tsc/vite/esbuild output is
+# architecture-independent, so emulating this stage under QEMU only makes it slow
+# (and has hung outright). Only the runtime stage below is built per-architecture.
+FROM --platform=$BUILDPLATFORM node:20-slim AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Manifests first so dependency installation caches independently of source.
+COPY package.json package-lock.json ./
+COPY backend/package.json ./backend/
 
-# Install dependencies
-RUN npm install
+# Dev dependencies are required here: typescript does the compiling.
+RUN npm ci -w backend
 
-# Copy source code
-COPY . .
+COPY backend/tsconfig*.json ./backend/
+COPY backend/src ./backend/src
 
-# Build TypeScript
-RUN npm run build
+# Compile with tsc, NOT build:bundle. The migration runner globs
+# dist/migrations/*.js at runtime; bundling would collapse them into a single
+# file and no migrations would ever be found.
+RUN npm run build -w backend
 
-# Production stage
-FROM node:22-slim AS production
+# --- runtime stage ---------------------------------------------------------
+FROM node:20-slim AS runtime
 
 WORKDIR /app
 
-# Install Chromium dependencies for Puppeteer
-RUN apt-get update && apt-get install -y \
-    chromium \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libxss1 \
-    xdg-utils \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
+COPY backend/package.json ./backend/
 
-# Set Puppeteer to use installed Chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# Production dependencies only; the toolchain stays in the build stage.
+RUN npm ci -w backend --omit=dev && npm cache clean --force
 
-# Distribution channel — set by the CI workflow at build time. `stable` for
-# tag-built images (vX.Y.Z), `beta` for main-branch builds. Surfaced via
-# /api/version/check so the frontend can render a BETA pill.
-ARG CHANNEL=stable
-ENV PRICESTALKER_CHANNEL=$CHANNEL
+COPY --from=builder /app/backend/dist ./backend/dist
 
-# Copy package files
-COPY package*.json ./
+# Drop privileges. node:20-slim ships a `node` user for exactly this.
+RUN chown -R node:node /app
+USER node
 
-# Install production dependencies only
-RUN npm install --omit=dev
+WORKDIR /app/backend
 
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
-
-# Create non-root user with a real home directory.
-# `useradd -r` (system user) without `-m` skips home creation, leaving HOME unset
-# at runtime. Chromium's crash handler (chrome_crashpad_handler) then crashes
-# with `--database is required` because it derives the crash-database path
-# from $HOME / $XDG_CONFIG_HOME, which don't exist. That broke Puppeteer
-# browser fallback for any site needing JS rendering. Fix: create home dir.
-RUN groupadd -r nodejs \
-    && useradd -r -g nodejs -m -d /home/nodejs -s /usr/sbin/nologin nodejs \
-    && chown -R nodejs:nodejs /app /home/nodejs
-
-USER nodejs
-
-# Expose port
 EXPOSE 3001
+ENV NODE_ENV=production \
+    PORT=3001
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3001
-ENV HOME=/home/nodejs
-
-# Start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "--max-old-space-size=256", "dist/index.js"]

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pricestalker-v1.4.0';
+const CACHE_NAME = 'pricestalker-v2.0.0-transplant';
 const STATIC_ASSETS = [
   '/',
   '/icon.svg',
@@ -36,6 +36,9 @@ self.addEventListener('fetch', (event) => {
 
   // Skip API requests - always go to network
   if (event.request.url.includes('/api/')) return;
+
+  // Only intercept and cache same-origin requests to prevent opaque response padding bloat
+  if (!event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
     fetch(event.request)

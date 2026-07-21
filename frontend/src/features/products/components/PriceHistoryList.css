@@ -1,0 +1,81 @@
+.price-history-list-container {
+  margin-top: 1.5rem;
+}
+
+.price-history-table-wrapper {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.price-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.price-history-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.price-history-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.price-history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.date-cell {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.price-cell {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.method-cell .method-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--background);
+  border: 1px solid var(--border);
+}
+
+.method-badge.deal-price {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+
+.method-badge.member-price {
+  background: #f0f9ff;
+  color: #0284c7;
+  border-color: #e0f2fe;
+}
+
+.method-badge.standard {
+  background: var(--background);
+  color: var(--text-muted);
+}
+
+.status-cell {
+  min-width: 100px;
+}
+
+@media (max-width: 640px) {
+  .price-history-table th, 
+  .price-history-table td {
+    padding: 0.5rem 0.75rem;
+  }
+}

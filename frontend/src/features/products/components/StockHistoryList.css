@@ -1,0 +1,85 @@
+.stock-history-list-container {
+  margin-top: 1.5rem;
+}
+
+.stock-history-table-wrapper {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.stock-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.stock-history-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stock-history-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.stock-history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.date-cell {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.status-cell .status-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--background);
+  border: 1px solid var(--border);
+}
+
+.status-badge.in_stock {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #dcfce7;
+}
+
+.status-badge.member_only {
+  background: #faf5ff;
+  color: #7c3aed;
+  border-color: #f3e8ff;
+}
+
+.status-badge.pre_order {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fef3c7;
+}
+
+.status-badge.out_of_stock {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+
+.status-badge.not_available {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+@media (max-width: 640px) {
+  .stock-history-table th, 
+  .stock-history-table td {
+    padding: 0.5rem 0.75rem;
+  }
+}

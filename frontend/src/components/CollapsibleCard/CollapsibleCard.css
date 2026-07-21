@@ -1,0 +1,72 @@
+.pg-collapsible-card {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--surface);
+  transition: border-color 0.2s;
+}
+
+.pg-collapsible-card.expanded {
+  border-color: var(--primary);
+}
+
+.pg-collapsible-card-header {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  transition: background 0.2s;
+}
+
+.pg-collapsible-card.expanded .pg-collapsible-card-header {
+  background: rgba(var(--primary-rgb), 0.05);
+  border-bottom: 1px solid var(--border);
+}
+
+.pg-collapsible-card-header:hover {
+  background: rgba(var(--primary-rgb), 0.02);
+}
+
+.pg-collapsible-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pg-collapsible-card-title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.pg-collapsible-card-badge {
+  font-size: 0.7rem;
+  background: var(--background);
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.pg-collapsible-card-icon {
+  font-size: 1.25rem;
+  transition: transform 0.2s;
+  display: inline-block;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.pg-collapsible-card-icon.rotated {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.pg-collapsible-card-body {
+  padding: 1.25rem;
+}

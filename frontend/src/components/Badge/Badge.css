@@ -1,0 +1,105 @@
+.pg-badge-v2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge-small {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badge-medium {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.badge-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+/* Variants */
+.badge-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.badge-secondary {
+  background: var(--background);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+[data-theme="dark"] .badge-success {
+  background: #052e16;
+  color: #86efac;
+}
+
+.badge-warning {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+[data-theme="dark"] .badge-warning {
+  background: #422006;
+  color: #fde047;
+}
+
+.badge-danger {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+[data-theme="dark"] .badge-danger {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+.badge-info {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+[data-theme="dark"] .badge-info {
+  background: #082f49;
+  color: #7dd3fc;
+}
+
+.badge-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.badge-deal {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+[data-theme="dark"] .badge-deal {
+  background: #500724;
+  color: #f9a8d4;
+}
+
+.badge-member {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+[data-theme="dark"] .badge-member {
+  background: #3b0764;
+  color: #d8b4fe;
+}

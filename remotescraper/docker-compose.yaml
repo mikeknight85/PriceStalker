@@ -1,0 +1,17 @@
+services:
+  remotescraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pricestalker-remotescraper
+    restart: unless-stopped
+    environment:
+      - PORT=5100
+      - NODE_ENV=production
+      - TZ=Australia/Perth
+      - DEBUG=false # Set to 'true' to permanently enable verbose browser logs
+    ports:
+      - "5100:5100"
+    shm_size: '2gb' # Puppeteer needs enough shared memory
+    cap_add:
+      - SYS_ADMIN # Needed for Sandbox in some environments

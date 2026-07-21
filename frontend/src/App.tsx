@@ -1,45 +1,28 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './features/auth';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
+import LoadingSpinner from './components/LoadingSpinner';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import SsoComplete from './pages/SsoComplete';
 import Dashboard from './pages/Dashboard';
 import ProductDetail from './pages/ProductDetail';
-import Settings from './pages/Settings';
 import NotificationHistory from './pages/NotificationHistory';
-
-function ThemeInitializer({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved) {
-      document.documentElement.setAttribute('data-theme', saved);
-    }
-  }, []);
-  return <>{children}</>;
-}
+import Settings from './pages/Settings';
+import Admin from './pages/Admin';
+import Debug from './pages/Debug';
+import SsoComplete from './pages/SsoComplete';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
-        <span className="spinner" style={{ width: '3rem', height: '3rem' }} />
-      </div>
-    );
+    return <LoadingSpinner fullPage size="3rem" />;
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -49,18 +32,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
-        <span className="spinner" style={{ width: '3rem', height: '3rem' }} />
-      </div>
-    );
+    return <LoadingSpinner fullPage size="3rem" />;
   }
 
   if (user) {
@@ -114,6 +86,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/notifications"
         element={
           <ProtectedRoute>
@@ -122,6 +102,7 @@ function AppRoutes() {
         }
       />
       <Route path="/auth/sso-complete" element={<SsoComplete />} />
+      <Route path="/debug" element={<Debug />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -129,7 +110,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ThemeInitializer>
+    <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
           <ToastProvider>
@@ -137,6 +118,6 @@ export default function App() {
           </ToastProvider>
         </AuthProvider>
       </BrowserRouter>
-    </ThemeInitializer>
+    </ThemeProvider>
   );
 }
