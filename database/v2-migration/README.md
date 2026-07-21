@@ -152,15 +152,77 @@ written; the checked-in chain no longer reproduces it.
 
 ### Consequence for the port
 
-v2 has **no working automated schema-upgrade path at all** — not for v1 users,
-and not for existing v2 users either. Repairing the migration chain is therefore
-a prerequisite of the transplant, independent of anything v1-specific. Roughly:
-rebuild 001 so it reflects current reality, or squash 001–022 into a single
-accurate baseline, then stamp it. Only once the chain replays cleanly from empty
-does 000 have something to hand off to.
+v2 had **no working automated schema-upgrade path at all** — not for v1 users,
+and not for existing v2 users either. Repairing the chain was therefore a
+prerequisite of the transplant, independent of anything v1-specific.
 
-Whether further breakage exists past 012 is unknown — the chain cannot get far
-enough to find out.
+## The replacement chain
+
+Three migrations replace 001–022:
+
+| File | Role |
+|---|---|
+| `000_v1_compat.ts` | Adds the 21 columns 001 cannot add to a v1 database. No-op on fresh installs. |
+| `001_baseline.ts` | Squashed schema baseline. **Generated** — do not hand-edit. |
+| `002_v1_notifications.ts` | Carries v1 `notification_history` into v2 `notifications`. No-op where there is no history. |
+
+`001_baseline.ts` is produced by `generate-baseline.py` from a canonical
+`pg_dump --schema-only`, so it tracks reality rather than an aspirational
+hand-written schema. Every statement it emits is idempotent:
+
+```
+CREATE SEQUENCE IF NOT EXISTS        CREATE INDEX IF NOT EXISTS
+CREATE TABLE IF NOT EXISTS           CREATE OR REPLACE FUNCTION
+ADD COLUMN IF NOT EXISTS             DROP TRIGGER IF EXISTS + CREATE TRIGGER
+ALTER COLUMN SET DEFAULT             ADD CONSTRAINT guarded by pg_constraint
+```
+
+The `ADD COLUMN` pass is what makes partially-migrated databases converge:
+`CREATE TABLE IF NOT EXISTS` alone would leave a v1 `users` table short of
+`locale`, silently.
+
+Seed data is captured by **executing** the seed-bearing migrations (001, 002,
+003, 007, 014, 017, 018, 019) against a canonical database and dumping the
+resulting `system_settings`, rather than parsing their source. Several build
+their values in JavaScript and bind them as query parameters, so static
+extraction silently missed them — `searxng_url` and `searxng_enabled` among
+them.
+
+`002_v1_notifications` reuses 010's mapping, including its use of
+`users.notifications_cleared_at` to set read state: anything the user had
+already cleared in v1 arrives read, the rest arrives unread. It then drops
+`notification_history` and `notifications_cleared_at`, as 010 did.
+
+### Verification
+
+Ran end-to-end with the real umzug runner against three starting points, then
+re-ran the whole chain a second time to check idempotency.
+
+| Starting point | Result |
+|---|---|
+| Empty database | 181 columns / 16 tables — **identical to canonical**, 24 settings seeded |
+| `init.sql`-bootstrapped (existing v2 install) | identical to canonical, no drift |
+| v1 production snapshot | **zero** canonical columns missing; 21 products, 10,364 price rows, 29 notifications carried over |
+| Full chain re-run on an already-migrated database | no change, no duplicate rows, no duplicate constraints |
+
+The v1 database keeps 33 extra columns beyond canonical. These are deliberate:
+the SSO columns and `auth_config` table (feature ported forward), the v1-only
+product columns, and the per-user AI credentials that v2 has no home for. Extra
+columns are unread by v2 and harmless.
+
+### Still open
+
+- **Only the current v1 schema was tested.** v1 re-runs its DO-block migrations
+  at every boot, so instances on a current image should converge — but that is
+  untested against an older snapshot.
+- **Migrations still are not run at startup.** The chain now works, but nothing
+  invokes it: no umzug call in the boot path, no `command:` in
+  `docker-compose.yaml`. Wiring that up is part of the port.
+- **`002_global_ai_settings` is not represented in the baseline.** It moved
+  per-user AI credentials into global `system_settings` and dropped the user
+  columns. The baseline does not drop them, so a migrated v1 database keeps its
+  per-user AI columns — unused, and retaining the keys rather than destroying
+  them.
 
 Also still untested: v1 databases from **older** PriceStalker releases. v1 runs
 its DO-block migrations at every boot, so any instance on a current image should
