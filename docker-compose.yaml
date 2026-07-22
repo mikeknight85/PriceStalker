@@ -36,7 +36,7 @@ services:
       start_period: 10s
 
   backend:
-    image: ghcr.io/mikeknight85/pricestalker-backend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-mikeknight85}/pricestalker-backend:${IMAGE_TAG:-latest}
     container_name: pricestalker-backend
     restart: unless-stopped
     mem_limit: ${BACKEND_MEM_LIMIT:-1g}
@@ -75,7 +75,7 @@ services:
       start_period: 60s
 
   frontend:
-    image: ghcr.io/mikeknight85/pricestalker-frontend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-mikeknight85}/pricestalker-frontend:${IMAGE_TAG:-latest}
     container_name: pricestalker-frontend
     restart: unless-stopped
     ports:
@@ -89,7 +89,7 @@ services:
   # `use_remote_scraper`; the backend falls back to in-process scraping without
   # it. Start with: docker compose --profile remotescraper up -d
   remotescraper:
-    image: ghcr.io/mikeknight85/pricestalker-remotescraper:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE:-mikeknight85}/pricestalker-remotescraper:${IMAGE_TAG:-latest}
     container_name: pricestalker-remotescraper
     restart: unless-stopped
     profiles: ["remotescraper"]
