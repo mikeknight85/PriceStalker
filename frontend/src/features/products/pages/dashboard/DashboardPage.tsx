@@ -5,6 +5,7 @@ import ProductForm from '../../components/ProductForm';
 import DashboardTabs from '../../components/DashboardTabs';
 import PriceSelectionModal from '../../components/PriceSelectionModal';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import ErrorBoundary from '../../../../components/ErrorBoundary';
 import { useDashboardState } from '../../hooks/useDashboardState';
 import DashboardSummary from './DashboardSummary';
 import DashboardControls from './DashboardControls';
@@ -153,7 +154,9 @@ const Dashboard: React.FC = () => {
         </div>
       ) : currentActiveTab === 'stats' ? (
         <div className="section-container">
-          <DashboardSummary summary={dashboardSummary} />
+          <ErrorBoundary section="the dashboard summary">
+            <DashboardSummary summary={dashboardSummary} />
+          </ErrorBoundary>
         </div>
       ) : (
         <div className="section-container">
