@@ -13,6 +13,7 @@ noted. Docs drift; trust the code for specifics.
 |---|---|
 | [SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md) | The 6-phase product scrape pipeline: acquisition → extraction → auto-mapping → consensus → verification. Confidence scores and method weights. |
 | [SELECTORS.md](SELECTORS.md) | The selector DSL — CSS/XPath/Regex engines, `::attr()` and `->status` modifiers, staleness scoring and eviction. |
+| [SCRAPER_AUDIT.md](SCRAPER_AUDIT.md) | Upstream backend audit / issue register (S-1…X-3). `[COMPLETED]` = fixed in HIS code — verify against ours. |
 | [DATABASE.md](DATABASE.md) | Core tables, the `pg_notify` cache-invalidation triggers, backup. |
 | [DESIGN_TOKENS.md](DESIGN_TOKENS.md) | Frontend CSS design tokens. Verified against `frontend/src/index.css`. |
 
