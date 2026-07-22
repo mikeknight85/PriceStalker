@@ -279,20 +279,13 @@ image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.11
 
 ## Development setup
 
-Requires Node.js 22+ and PostgreSQL 14+.
+Development requires Node 24.x (at least 24.18), npm 11.x (at least 11.16),
+and PostgreSQL 14+. [Volta](https://volta.sh/) automatically selects the
+project's pinned Node and npm versions.
 
-```bash
-# Backend
-cd backend
-npm install
-npm run db:init                   # initialize database schema
-npm run dev                       # watch mode
-
-# Frontend (in another terminal)
-cd frontend
-npm install
-npm run dev
-```
+For local development, setup, operating-system requirements, container and
+hot-reload workflows, and verification commands, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -374,8 +367,8 @@ Any of the eight providers listed above, configured instance-wide in
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 18, TypeScript, Vite, Recharts |
-| Backend | Node.js 20, Express, TypeScript, umzug migrations |
+| Frontend | React 19, TypeScript, Vite, Recharts |
+| Backend | Node.js 24, Express, TypeScript, umzug migrations |
 | Database | PostgreSQL 16 |
 | Scraping | Cheerio, Puppeteer (stealth + adblock), optional remote scraper service |
 | AI | Anthropic, OpenAI, Gemini, Vertex, Groq, DeepSeek, Mistral, Ollama |
