@@ -31,13 +31,15 @@ inactive since early 2026. Full credit to [@clucraft](https://github.com/clucraf
 for the original work — upstream commits are preserved in this repo's history
 and the MIT license is intact.
 
-**2.0 is a substantial rebuild.** The application was rebuilt on a
-heavily-reworked branch of the same upstream, contributed by a collaborator, and
-brings a far more capable scraping engine, per-retailer configuration, live
-currency conversion, and an optional stealth-browser service. The 1.x identity
-layer (OIDC/SSO) and release engineering were carried forward. See
-[Upgrading to 2.0](#upgrading-to-20) — the upgrade migrates your schema
-automatically and is one-way, so take a backup first.
+**2.0 is a substantial rebuild.** v2 is an almost complete rewrite based on a
+fork of the original PriceGhost by [@stevene1919](https://github.com/stevene1919).
+The application was
+rebuilt on a heavily-reworked branch of the same upstream, contributed by a
+collaborator, and brings a far more capable scraping engine, per-retailer
+configuration, live currency conversion, and an optional stealth-browser
+service. The 1.x identity layer (OIDC/SSO) and release engineering were carried
+forward. See [Upgrading to 2.0](#upgrading-to-20) — the upgrade migrates your
+schema automatically and is one-way, so take a backup first.
 
 **Already running PriceGhost?** See [Migrating from PriceGhost](#migrating-from-priceghost)
 — you can attach this fork to your existing database and volume without
