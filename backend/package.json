@@ -14,7 +14,6 @@
     "db:migrate:down": "node dist/config/migrate.js down",
     "db:migrate:dev": "tsx src/config/migrate.ts up",
     "db:migrate:down:dev": "tsx src/config/migrate.ts down",
-    "postinstall": "rm -rf node_modules/formdata-node/node_modules/web-streams-polyfill",
     "build:bundle": "npx esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --minify --external:bcrypt --external:pg --external:puppeteer --external:puppeteer-extra --external:puppeteer-extra-plugin-stealth --external:mock-aws-s3 --external:aws-sdk --external:nock --loader:.html=text"
   },
   "dependencies": {

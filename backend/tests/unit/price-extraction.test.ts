@@ -173,5 +173,9 @@ describe('parsePrice Robust Currency Normalisation Tests', () => {
       expect(normalizePrice('1,234', 'invalid-locale')).toBe(1234);
       expect(normalizePrice('1,234.56', 'invalid-locale')).toBe(1234.56);
     });
+
+    it('should fall back to smart parsing when the input separators differ from the locale', () => {
+      expect(normalizePrice('123.456,78', 'fr-FR')).toBe(123456.78);
+    });
   });
 });

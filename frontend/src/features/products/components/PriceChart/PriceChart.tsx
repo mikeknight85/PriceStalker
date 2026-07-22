@@ -276,9 +276,12 @@ export default function PriceChart({
               domain={['auto', 'auto']}
             />
             <Tooltip
-              formatter={(value: number, name: string) => [formatPrice(value), name]}
+              formatter={(value, name) => {
+                const numericValue = Array.isArray(value) ? value[0] : value;
+                return [formatPrice(Number(numericValue ?? 0)), String(name ?? '')];
+              }}
               labelFormatter={(label) =>
-                new Date(label).toLocaleDateString('en-US', {
+                new Date(String(label)).toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',

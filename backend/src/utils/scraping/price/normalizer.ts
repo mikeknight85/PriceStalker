@@ -9,6 +9,13 @@ export function normalizePrice(priceStr: string, locale: string): number | null 
 
   // Detect separators for the given locale
   try {
+    // Intl accepts syntactically valid but unsupported locale tags by silently
+    // resolving them to the host default. That would make parsing depend on the
+    // operating system's ICU data, so use the locale-independent fallback instead.
+    if (Intl.NumberFormat.supportedLocalesOf([cleanLocale]).length === 0) {
+      throw new RangeError(`Unsupported locale: ${cleanLocale}`);
+    }
+
     const parts = new Intl.NumberFormat(cleanLocale).formatToParts(1234.5);
     const decimalSep = parts.find(p => p.type === 'decimal')?.value || '.';
     const groupSep = parts.find(p => p.type === 'group')?.value || ',';
@@ -17,11 +24,10 @@ export function normalizePrice(priceStr: string, locale: string): number | null 
     const lastComma = priceStr.lastIndexOf(',');
     const lastPeriod = priceStr.lastIndexOf('.');
     if (lastComma !== -1 && lastPeriod !== -1) {
-      if (groupSep === ',' && decimalSep === '.' && lastComma > lastPeriod) {
-        throw new Error('Format mismatch: comma found after decimal point');
-      }
-      if (groupSep === '.' && decimalSep === ',' && lastPeriod > lastComma) {
-        throw new Error('Format mismatch: period found after decimal comma');
+      const inputDecimalSep = lastComma > lastPeriod ? ',' : '.';
+      const inputGroupSep = inputDecimalSep === ',' ? '.' : ',';
+      if (decimalSep !== inputDecimalSep || groupSep !== inputGroupSep) {
+        throw new Error('Format mismatch: input separators differ from locale');
       }
     } else if (lastComma !== -1 && groupSep === ',' && decimalSep === '.') {
       // Only comma exists, but resolved locale expects it to be grouping separator (,).
