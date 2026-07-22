@@ -98,6 +98,16 @@ seed it.
   environment variable in addition to the in-app toggle — both gates must be on.
 - **Secrets are write-only over the API.** The auth-config endpoint returns
   `has_client_secret`, never the value. Preserve that pattern for any secret.
+- **`axios` is pinned to exactly `1.14.0`** in every workspace. This is a hard
+  upstream mandate — do not bump or use a range.
+
+## Understanding the scraper
+
+Before changing anything in `backend/src/services/scraper/`, read
+[docs/SCRAPER_LIFECYCLE.md](docs/SCRAPER_LIFECYCLE.md) (the 6-phase pipeline) and
+[docs/SELECTORS.md](docs/SELECTORS.md) (the selector DSL). The engine is subtle —
+consensus weighting, out-of-stock price nullification, and AI auto-mapping all
+interact. Guessing at it is how extraction bugs get introduced.
 
 ---
 
