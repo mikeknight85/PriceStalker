@@ -16,7 +16,8 @@
     "start:frontend": "npm run dev -w frontend",
     "db:migrate": "npm run db:migrate -w backend",
     "db:migrate:dev": "npm run db:migrate:dev -w backend",
-    "tree": "npx tree-node-cli -I \"node_modules|build|dist|\\.git|\\.js\\.map|\\.d\\.ts\" -a"
+    "tree": "npx tree-node-cli -I \"node_modules|build|dist|\\.git|\\.js\\.map|\\.d\\.ts\" -a",
+    "lint": "node scripts/check-no-emoji.mjs"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.12.0"

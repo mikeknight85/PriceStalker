@@ -29,8 +29,19 @@ env:
   REMOTESCRAPER_IMAGE: ghcr.io/${{ github.repository_owner }}/pricestalker-remotescraper
 
 jobs:
+  # Guardrails that must pass before anything is built or published.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      # Fails the build if emoji appear in the UI. See CLAUDE.md rule 1.
+      - name: No emoji in frontend
+        run: node scripts/check-no-emoji.mjs
+
   # Detect which paths changed
   changes:
+    needs: lint
     runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}

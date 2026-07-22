@@ -126,7 +126,7 @@ file and none are found. Do not change the backend build to bundle.
 
 - `npm run build -w frontend` — passes, and typechecks.
 - `npm test -w backend` and `npm run build -w backend` — pass.
-- Emoji check (rule 1) is clean.
+- `npm run lint` (the emoji check, rule 1) passes.
 - New migrations tested against a real Postgres, not just `tsc`.
 - Verify against the **built bundle / running app**, not only the source. Three
   separate bugs here were invisible in source and only showed up in the compiled
