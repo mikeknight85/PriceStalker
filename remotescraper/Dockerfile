@@ -11,7 +11,8 @@
 # Runs on the native build platform, not the target: tsc/vite/esbuild output is
 # architecture-independent, so emulating this stage under QEMU only makes it slow
 # (and has hung outright). Only the runtime stage below is built per-architecture.
-FROM --platform=$BUILDPLATFORM node:20-slim AS builder
+ARG BUILDPLATFORM=linux/amd64
+FROM --platform=$BUILDPLATFORM node:24.18.0-slim AS builder
 
 WORKDIR /app
 
@@ -29,7 +30,7 @@ COPY remotescraper/src ./remotescraper/src
 RUN npm run build -w stealth-scraper
 
 # --- runtime stage ---------------------------------------------------------
-FROM node:20-slim AS runtime
+FROM node:24.18.0-slim AS runtime
 
 # Chromium plus the font packages Puppeteer needs to render non-Latin pages.
 RUN apt-get update \

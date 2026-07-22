@@ -11,7 +11,8 @@
 # Runs on the native build platform, not the target: tsc/vite/esbuild output is
 # architecture-independent, so emulating this stage under QEMU only makes it slow
 # (and has hung outright). Only the runtime stage below is built per-architecture.
-FROM --platform=$BUILDPLATFORM node:20-slim AS builder
+ARG BUILDPLATFORM=linux/amd64
+FROM --platform=$BUILDPLATFORM node:24.18.0-slim AS builder
 
 WORKDIR /app
 
@@ -31,7 +32,7 @@ COPY backend/src ./backend/src
 RUN npm run build -w backend
 
 # --- runtime stage ---------------------------------------------------------
-FROM node:20-slim AS runtime
+FROM node:24.18.0-slim AS runtime
 
 WORKDIR /app
 
@@ -42,10 +43,11 @@ COPY backend/package.json ./backend/
 RUN npm ci -w backend --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/backend/dist ./backend/dist
+COPY backend/docker-entrypoint.sh /usr/local/bin/pricestalker-backend-entrypoint
 
-# Drop privileges. node:20-slim ships a `node` user for exactly this.
-RUN chown -R node:node /app
-USER node
+# The entrypoint repairs ownership of Docker volumes, then drops to this user.
+RUN chmod 755 /usr/local/bin/pricestalker-backend-entrypoint \
+    && chown -R node:node /app
 
 WORKDIR /app/backend
 
@@ -53,4 +55,5 @@ EXPOSE 3001
 ENV NODE_ENV=production \
     PORT=3001
 
+ENTRYPOINT ["/usr/local/bin/pricestalker-backend-entrypoint"]
 CMD ["node", "--max-old-space-size=256", "dist/index.js"]

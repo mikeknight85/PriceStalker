@@ -11,7 +11,8 @@
 # Runs on the native build platform, not the target: tsc/vite/esbuild output is
 # architecture-independent, so emulating this stage under QEMU only makes it slow
 # (and has hung outright). Only the runtime stage below is built per-architecture.
-FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+ARG BUILDPLATFORM=linux/amd64
+FROM --platform=$BUILDPLATFORM node:24.18.0-alpine AS builder
 
 WORKDIR /app
 
