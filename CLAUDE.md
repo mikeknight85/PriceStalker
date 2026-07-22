@@ -31,12 +31,12 @@ than reaching for an emoji.
 Typographic characters — `→ ← ↑ ↓ ↻` — are acceptable where they are genuine
 text (a "Back" arrow, a sort indicator). Emoji are not.
 
-Before committing frontend changes, confirm none crept in — including the
-escaped kind a plain text search misses:
+This is enforced in CI: `npm run lint` (`scripts/check-no-emoji.mjs`) fails the
+build on any emoji — literal or escaped — before anything is published. It runs
+the same locally as in CI, so run it before committing frontend changes:
 
 ```bash
-grep -rP '[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]' frontend/src        # literal
-grep -rP "\\\\u\{1F" frontend/src                                     # escaped
+npm run lint
 ```
 
 ### 2. Locale and currency formatting must survive null
