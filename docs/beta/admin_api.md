@@ -1,115 +1,125 @@
-# Admin API Documentation
+# PriceStalker API Reference Guide
 
-The Admin API provides a secure, authorized interface to manage users, system settings, AI configurations, retailers, and logs.
-
-## Connectivity
-- **Backend URL**: `http://localhost/api` (or your configured PriceStalker hostname/IP)
-- **Port**: Proxied via the frontend (usually port `80` or `8080`)
-
-## Authentication
-All admin endpoints require a valid JWT with `is_admin: true`, a valid `ADMIN_API_TOKEN` header (legacy bootstrap), or a database-backed **System API Token**.
+All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`. All endpoints require `Authorization: Bearer <token>` unless marked otherwise.
 
 ---
 
-## 🔑 System API Tokens
-| Endpoint | Method | Description |
+## 🔐 Authentication & Session Endpoints
+*No token required for registration status or login.*
+
+<details><summary><b>Authentication API</b></summary>
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/auth/register` | Create a new user account |
+| `POST` | `/auth/login` | Log in to retrieve a JWT session token |
+| `GET` | `/auth/registration-status` | Check if public registrations are enabled |
+</details>
+
+---
+
+## 📦 Products & Watcher Management
+
+<details><summary><b>Products API</b></summary>
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/products` | List all tracked products |
+| `POST` | `/products` | Add a new product by URL |
+| `GET` | `/products/:id` | Get details, stats, and metadata for a product |
+| `PUT` | `/products/:id` | Update settings and notification triggers for a product |
+| `DELETE` | `/products/:id` | Stop tracking and delete a product |
+| `GET` | `/products/:id/prices` | Retrieve price history data points |
+| `POST` | `/products/:id/refresh` | Force an immediate price check |
+</details>
+
+---
+
+## ⚙️ User Settings & Profile
+
+<details><summary><b>Settings & Profile API</b></summary>
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET`/`PUT` | `/settings/notifications` | Get / update user notification configurations |
+| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify}` | Send a test notification alert |
+| `POST` | `/settings/notifications/test-gotify` | Test Gotify connection before saving settings |
+| `GET`/`PUT` | `/settings/ai` | Get / update user AI settings |
+| `POST` | `/settings/ai/test` | Test AI extraction on a target URL |
+| `POST` | `/settings/ai/test-{ollama,gemini,groq,openai,mistral,anthropic}` | Test connection to a specific AI provider |
+| `GET`/`PUT` | `/profile` | Get / update user profile |
+| `PUT` | `/profile/password` | Change user password |
+</details>
+
+---
+
+## 🛡️ Administrative Management (Admin Only)
+*All admin endpoints require an active user account with `is_admin: true` or a valid system token.*
+
+<details><summary><b>System API Tokens</b></summary>
+
+| Method | Endpoint | Description |
 |----------|--------|-------------|
-| `/api/admin/system-tokens` | GET | List all active system tokens |
-| `/api/admin/system-tokens` | POST | Generate a new system token |
-| `/api/admin/system-tokens/:id` | DELETE | Revoke a system token |
+| `GET` | `/api/admin/system-tokens` | List all active system tokens |
+| `POST` | `/api/admin/system-tokens` | Generate a new system token |
+| `DELETE` | `/api/admin/system-tokens/:id` | Revoke a system token |
+</details>
 
----
+<details><summary><b>User Administation</b></summary>
 
-## 🛠️ System Commands
-`POST /api/admin/command`
-
-Execute predefined internal system tasks.
-
-| Command | Description | Params |
-|---------|-------------|--------|
-| `clear-settings-cache` | Invalidates internal settings & config cache | None |
-| `run-migration` | Triggers the database migration runner | None |
-
----
-
-## 👥 User Management
-| Endpoint | Method | Description |
+| Method | Endpoint | Description |
 |----------|--------|-------------|
-| `/api/admin/users` | GET | List all users |
-| `/api/admin/users` | POST | Create a new user |
-| `/api/admin/users/:id` | PUT | Update user details |
-| `/api/admin/users/:id` | DELETE | Delete a user |
-| `/api/admin/users/:id/admin` | PUT | Toggle user admin status |
+| `GET` | `/api/admin/users` | List all users in the system |
+| `POST` | `/api/admin/users` | Create a new user account |
+| `PUT` | `/api/admin/users/:id` | Update user details |
+| `DELETE` | `/api/admin/users/:id` | Delete a user |
+| `PUT` | `/api/admin/users/:id/admin` | Toggle user admin status |
+</details>
 
----
+<details><summary><b>System Operations & Settings</b></summary>
 
-## ⚙️ System Settings
-| Endpoint | Method | Description |
+| Method | Endpoint | Description |
 |----------|--------|-------------|
-| `/api/admin/settings` | GET | Get system settings |
-| `/api/admin/settings` | PUT | Update system settings |
-| `/api/admin/debug/status` | GET | (Public) Check if debug mode is enabled |
+| `GET`/`PUT` | `/api/admin/settings` | Get / update global system settings |
+| `GET` | `/api/admin/debug/status` | Check if public debug mode is active |
+| `POST` | `/api/admin/command` | Run system command (e.g. `clear-settings-cache`, `run-migration`) |
+</details>
 
----
+<details><summary><b>Retailer Database Mappings</b></summary>
 
-## 🤖 AI Configuration & Testing
-| Endpoint | Method | Description |
+| Method | Endpoint | Description |
 |----------|--------|-------------|
-| `/api/admin/settings/ai` | GET | Get global AI settings |
-| `/api/admin/settings/ai` | PUT | Update global AI settings |
-| `/api/admin/settings/ai/test` | POST | Test global AI extraction on a URL |
-| `/api/admin/settings/ai/test-gemini` | POST | Test Gemini API connection |
-| `/api/admin/settings/ai/test-deepseek` | POST | Test DeepSeek API connection |
-| `/api/admin/settings/ai/test-groq` | POST | Test Groq API connection |
-| `/api/admin/settings/ai/test-mistral` | POST | Test Mistral API connection |
-| `/api/admin/settings/ai/test-anthropic`| POST | Test Anthropic API connection |
-| `/api/admin/settings/ai/test-openai` | POST | Test OpenAI API connection |
-| `/api/admin/settings/ai/test-ollama` | POST | Test Ollama local connection |
-| `/api/admin/settings/ai/gemini/models` | GET | List cached Gemini models |
-| `/api/admin/settings/ai/gemini/models/refresh` | POST | Force refresh Gemini model list |
+| `GET` | `/api/admin/retailers` | List all retailer config mappings |
+| `POST` | `/api/admin/retailers` | Add or update a retailer configuration |
+| `DELETE` | `/api/admin/retailers/:id` | Remove a retailer configuration |
+| `GET` | `/api/admin/retailers/domain/:domain` | Fetch config for a specific domain |
+| `POST` | `/api/admin/retailers/test` | Test a retailer configuration live |
+</details>
 
----
+<details><summary><b>System Logs & Health</b></summary>
 
-## 🏪 Retailer Management
-| Endpoint | Method | Description |
+| Method | Endpoint | Description |
 |----------|--------|-------------|
-| `/api/admin/retailers` | GET | List all retailers |
-| `/api/admin/retailers` | POST | Add or update a retailer config |
-| `/api/admin/retailers/:id` | DELETE | Remove a retailer config |
-| `/api/admin/retailers/domain/:domain` | GET | Get config for a specific domain |
-| `/api/admin/retailers/test` | POST | Test a retailer config live |
-
----
-
-## 📜 System Logs
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/admin/logs` | GET | Fetch system logs (filtered/paginated) |
-| `/api/admin/logs` | DELETE | Delete specific logs by ID |
-| `/api/admin/logs/clear` | DELETE | Clear logs by level/context |
-
----
-
-## 🏥 Database Health Monitoring
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/admin/debug/db-health` | GET | Fetch active database health monitor state |
-| `/api/admin/debug/db-health/test-alert` | POST | Trigger direct SMTP test email using fallback credentials |
-| `/api/admin/debug/db-health/simulate` | POST | Simulate DB state transition (FAILED, HEALTHY, DEGRADED, RESET) |
+| `GET` | `/api/admin/logs` | Fetch system logs (paginated/filtered) |
+| `DELETE` | `/api/admin/logs` | Delete specific logs by ID |
+| `DELETE` | `/api/admin/logs/clear` | Clear logs by level or context |
+| `GET` | `/api/admin/debug/db-health` | Fetch active database health monitor state |
+| `POST` | `/api/admin/debug/db-health/test-alert` | Trigger direct SMTP test email |
+| `POST` | `/api/admin/debug/db-health/simulate` | Simulate database state transition |
+</details>
 
 ---
 
 ## 🔍 Debugging & Extraction
-| Endpoint | Method | Description |
+<details><summary><b>Extract API</b></summary>
+
+| Method | Endpoint | Description |
 |----------|--------|-------------|
-| `/api/admin/debug/extract` | POST | Run full multi-strategy extraction on a URL |
+| `POST` | `/api/admin/debug/extract` | Run full multi-strategy extraction on a URL |
 
-> [!NOTE]
-> `/api/admin/debug/extract` is the **preferred and standard way** to scrape or test any website via the API. It leverages the exact same multi-strategy consensus pipeline used by the background scheduler.
-> 
-> For websites that employ anti-bot protections (like Cloudflare, Geoblocking, or JS-based challenges), the remote scraper (`remotescraper` service) is utilized to bypass these blocks via a dockerized Puppeteer instance with stealth automation.
+`/api/admin/debug/extract` is the preferred way to test site scraper behaviors. It runs the exact same multi-strategy pipeline used by the scheduler background loops.
 
-**Payload for `/api/admin/debug/extract`**:
+**Payload**:
 ```json
 {
   "url": "https://www.example.com/product",
@@ -122,31 +132,8 @@ Execute predefined internal system tasks.
 }
 ```
 
-* **`mode`**: Options are:
-  * `"scraper"` (default, **preferred**): Executes the full extraction pipeline (standard HTTP first, falling back to remote browser scraping if Cloudflare or other bot challenges are detected).
-  * `"bypass"`: Performs a direct local `axios` download, bypassing selector, consensus, and remote scraper logic entirely.
-* **`config`**: An optional mock retailer configuration object to override the database config on-the-fly. Handy for testing different remote scraper, proxy, and user-agent settings:
-  * `"use_remote_scraper"`: Set to `false` to test lightweight local HTTP crawling first; set to `true` to force remote Puppeteer scraping.
-  * `"use_proxy"`: Enable proxy routing for the scrape attempt.
-  * `"price_selectors"` / `"deal_price_selectors"` / `"member_price_selectors"`: Test selector overrides.
-* **`returnHtml`**: Set to `true` to return the fetched HTML text directly in the JSON response payload.
-* **`use_ai`**: Set to `true` to run AI extraction fallback on standard selector failure.
-
-**Example cURL Request**:
-```bash
-curl -X POST http://localhost/api/admin/debug/extract \
-  -H "Authorization: Bearer <YOUR_TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://www.jbhifi.com.au/products/ecovacs-deebot-n30-pro-omni-robotic-vac-white",
-    "mode": "scraper",
-    "config": {
-      "use_remote_scraper": false
-    },
-    "use_ai": true,
-    "returnHtml": false
-  }'
-```
-
-**HTML Dumps**:
-Every debug scrape writes the acquired HTML content to the backend container's debug volume mapped to `/app/backend/debug_html/` on the server. The response payload will include a `debugFileUrl` field containing a relative path (e.g. `/debug_files/debug_1716900000000_example_com.html`) which can be used to view the exact HTML content served to the scraper at that second.
+* **`mode`**: Choose `"scraper"` (run full pipeline) or `"bypass"` (run direct local axios request).
+* **`config`**: Override scraper configs (e.g. `use_remote_scraper`, `use_proxy`).
+* **`use_ai`**: Set to `true` to allow AI extraction fallback on failure.
+* **`returnHtml`**: Set to `true` to return the raw HTML string inside the response payload.
+</details>

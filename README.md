@@ -330,58 +330,6 @@ hot-reload workflows, and verification commands, see
 
 ---
 
-## API reference
-
-Base URL: `/api`. All endpoints require `Authorization: Bearer <jwt>` except `/auth/*`.
-
-<details><summary><b>Authentication</b></summary>
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/auth/register` | Create account |
-| `POST` | `/auth/login` | Login, returns JWT |
-| `GET` | `/auth/registration-status` | Check if registration is enabled |
-</details>
-
-<details><summary><b>Products</b></summary>
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/products` | List tracked products |
-| `POST` | `/products` | Add product by URL |
-| `GET` | `/products/:id` | Product details + stats |
-| `PUT` | `/products/:id` | Update settings/notifications |
-| `DELETE` | `/products/:id` | Stop tracking |
-| `GET` | `/products/:id/prices` | Price history |
-| `POST` | `/products/:id/refresh` | Force immediate check |
-</details>
-
-<details><summary><b>Settings</b></summary>
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`/`PUT` | `/settings/notifications` | Notification config |
-| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify}` | Send a test notification |
-| `POST` | `/settings/notifications/test-gotify` | Test Gotify connection before saving |
-| `GET`/`PUT` | `/settings/ai` | AI extraction settings |
-| `POST` | `/settings/ai/test` | Test AI extraction on a URL |
-| `POST` | `/settings/ai/test-{ollama,gemini,groq,openrouter}` | Test a specific AI provider connection |
-</details>
-
-<details><summary><b>Profile & Admin</b></summary>
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`/`PUT` | `/profile` | Get / update user profile |
-| `PUT` | `/profile/password` | Change password |
-| `GET`/`POST` | `/admin/users` | List / create users (admin only) |
-| `DELETE` | `/admin/users/:id` | Delete user |
-| `PUT` | `/admin/users/:id/admin` | Toggle admin status |
-| `GET`/`PUT` | `/admin/settings` | System settings |
-</details>
-
----
-
 ## Project structure
 
 ```
