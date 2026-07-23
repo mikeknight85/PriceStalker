@@ -36,7 +36,7 @@ REMOTESCRAPER_IMAGE := $(IMAGE_REPOSITORY)/pricestalker-remotescraper:$(IMAGE_TA
 
 .DEFAULT_GOAL := help
 
-.PHONY: help check-tools check-env build build-backend build-frontend build-remotescraper up up-remotescraper down status logs logs-backend logs-frontend verify
+.PHONY: help check-tools check-env build build-backend build-frontend build-remotescraper up up-remotescraper down status logs logs-backend logs-frontend verify diagrams
 
 define build_image
 	@if docker buildx version >/dev/null 2>&1; then \
@@ -105,3 +105,7 @@ verify: ## Run a clean install, all builds, and backend tests.
 	PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 	pnpm run build:all
 	pnpm --filter pricestalker-backend exec vitest run
+
+diagrams: ## Rebuild product lifecycle diagrams from .dot file.
+	dot -Tsvg assets/product_lifecycle.dot -o assets/product_lifecycle.svg
+	dot -Tpng assets/product_lifecycle.dot -o assets/product_lifecycle.png

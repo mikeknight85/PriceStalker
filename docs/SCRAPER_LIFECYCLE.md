@@ -2,6 +2,8 @@
 
 This document is the canonical reference for how PriceStalker processes a product from initial URL submission through to scheduled monitoring. It supersedes all older flow diagrams (see `old_docs/`).
 
+![Product Lifecycle Diagram](../assets/product_lifecycle.svg)
+
 > For the visual stage-by-stage carousel (Parts 1–5), see [product_lifecycle_slides.md](product_lifecycle_slides.md).  
 > For the extraction system internals, see [SELECTORS.md](SELECTORS.md).  
 > For the consensus weighting table and arbitration audit, see the upstream audit register (not yet imported).

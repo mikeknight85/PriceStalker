@@ -1,0 +1,324 @@
+digraph PriceGhostProductLifecycle {
+    // Graph-level styling
+    graph [
+        label="PriceGhost End-to-End Product Lifecycle & Scraper Engine (v1.8.2+)",
+        labelloc="t",
+        fontname="Segoe UI, Arial, sans-serif",
+        fontsize=22,
+        rankdir=TB,
+        bgcolor="#0f172a",
+        fontcolor="#f8fafc",
+        nodesep=0.65,
+        ranksep=1.0,
+        compound=true,
+        splines=polyline
+    ];
+
+    node [
+        fontname="Segoe UI, Arial, sans-serif",
+        fontsize=10,
+        shape=box,
+        style="filled,rounded",
+        fillcolor="#1e293b",
+        fontcolor="#cbd5e1",
+        color="#334155",
+        penwidth=1.4,
+        width=2.9,
+        height=0.7
+    ];
+
+    edge [
+        fontname="Segoe UI, Arial, sans-serif",
+        fontsize=9,
+        color="#475569",
+        fontcolor="#94a3b8",
+        arrowsize=0.85,
+        penwidth=1.1
+    ];
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 0: SESSION INITIALISATION
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_init {
+        label="PHASE 0 — SESSION INITIALISATION";
+        color="#1e3a5f";
+        fontcolor="#60a5fa";
+        style="dashed,rounded,filled";
+        bgcolor="#0a1628";
+
+        Start_Product  [label="POST /api/products\n(Add Product URL)", fillcolor="#2563eb", fontcolor="#ffffff"];
+        Url_Clean      [label="cleanUrl() / getUrlLookup()\n(Strip UTM, normalize trailing slash)"];
+        Load_Config    [label="Load RetailerConfig + AI Settings\n(configCache / settingsCache)"];
+        Currency_Init  [label="Resolve Currency & Locale Hints\n(currencyHelper: Site Hint → URL → HTML lang)"];
+    }
+
+    Start_Product -> Url_Clean -> Load_Config -> Currency_Init;
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 1: HTML ACQUISITION
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_acquisition {
+        label="PHASE 1 — HTML ACQUISITION";
+        color="#1e3a8a";
+        fontcolor="#818cf8";
+        style="dashed,rounded,filled";
+        bgcolor="#0b1329";
+
+        Axios_Fetch    [label="Standard HTTP Fetch\n(axios + optional proxy + circuit-breaker)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+        Bot_Check      [label="Bot Challenge Detected?\n(Cloudflare / Imperva)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Soft404_Check  [label="Soft-404 Detected?\n(redirect / no PDP wrapper / robots.txt)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Remote_Browser [label="Stealth Puppeteer Fallback\n('ruski' container — use_remote_scraper)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+        Remote_Fail    [label="Remote Fail → Increment Failures\n(Backoff & retry next scheduler cycle)", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Set_Stealth    [label="Set use_remote_scraper = true\n(Saved to retailer_configs)"];
+        Maintenance    [label="Flag is_blocked = true\n(Retailer maintenance / bot-blocked)", fillcolor="#dc2626", fontcolor="#ffffff"];
+    }
+
+    Currency_Init  -> Axios_Fetch;
+    Axios_Fetch    -> Bot_Check;
+    Bot_Check      -> Remote_Browser [label="Yes"];
+    Bot_Check      -> Soft404_Check  [label="No"];
+    Soft404_Check  -> Maintenance    [label="Yes"];
+    Soft404_Check  -> DOM_Denoise    [label="No — HTML OK"];
+    Remote_Browser -> Set_Stealth    [label="Success"];
+    Remote_Browser -> Remote_Fail    [label="Fail"];
+    Set_Stealth    -> DOM_Denoise;
+    Maintenance    -> Remote_Browser [label="Retry via browser"];
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 2: DATA EXTRACTION
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_extraction {
+        label="PHASE 2 — DATA EXTRACTION";
+        color="#064e3b";
+        fontcolor="#34d399";
+        style="dashed,rounded,filled";
+        bgcolor="#061813";
+
+        DOM_Denoise   [label="denoiseDomForExtraction()\n(Strip script/style/nav/footer/header/aside)"];
+        Meta_Extract  [label="Metadata Extraction\n(name, image, stock via 4-layer cascade)"];
+
+        // Price cascade
+        subgraph cluster_price_cascade {
+            label="Price Candidate Cascade (7 Layers)";
+            color="#047857";
+            fontcolor="#6ee7b7";
+            style="rounded,filled";
+            bgcolor="#041f12";
+
+            L1_JSONLD   [label="L1: JSON-LD Parser\n(Schema.org — conf 0.95, weight 2.0)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+            L2_Deal     [label="L2: Deal Price Selectors\n(deal_price_selectors — conf 0.95)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+            L3_Member   [label="L3: Member Price Selectors\n(member_price_selectors — conf 0.95)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+            L4_PreOrder [label="L4: Pre-order Selectors\n(pre_order_price_selectors — conf 0.95)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+            L5_Original [label="L5: Original / RRP Selectors\n(original_price_selectors — conf 0.95)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+            L6_Custom   [label="L6: Custom CSS Selectors\n(price_selectors — conf 0.90, weight 1.5)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+            L7_Generic  [label="L7: Generic CSS (capped 40)\n(global selectors — conf 0.60, weight 0.2)", fillcolor="#334155", fontcolor="#94a3b8"];
+        }
+
+        Gather_All [label="Gather All Candidates\n(PriceCandidate[]: price, currency, method, selector, confidence)"];
+    }
+
+    DOM_Denoise -> Meta_Extract -> L1_JSONLD;
+    L1_JSONLD   -> L2_Deal -> L3_Member -> L4_PreOrder -> L5_Original -> L6_Custom -> L7_Generic -> Gather_All;
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 3: BOT / MAINTENANCE VALIDATION
+    // (success-first: skip if price data already found)
+    // ─────────────────────────────────────────────────────
+    // (Handled inline in Phase 1 above via Maintenance node)
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 4: AI AUTO-MAPPING
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_automapping {
+        label="PHASE 4 — AI AUTO-MAPPING (if no config / shell config)";
+        color="#581c87";
+        fontcolor="#c084fc";
+        style="dashed,rounded,filled";
+        bgcolor="#161026";
+
+        Has_Config_P4 [label="Retailer Config Exists\n& Not Shell Config?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        AI_Map_Enabled [label="ai_auto_mapping_enabled?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Clean_Html    [label="cleanHtml()\n(Prune to ≤50KB for Gemini context)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        Gemini_Gen    [label="Gemini: RETAILER_GENERATION_PROMPT\n(Generate CSS selectors from DOM)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        Save_Config   [label="Save to retailer_configs\n(price_selectors, name_selectors, etc.)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        Re_Scrape     [label="Re-run Extraction with New Config", fillcolor="#4f46e5", fontcolor="#ffffff"];
+    }
+
+    Gather_All    -> Has_Config_P4;
+    Has_Config_P4 -> Run_Consensus [label="Yes → proceed"];
+    Has_Config_P4 -> AI_Map_Enabled [label="No"];
+    AI_Map_Enabled -> Clean_Html   [label="Yes"];
+    AI_Map_Enabled -> Run_Consensus [label="No → use generic"];
+    Clean_Html    -> Gemini_Gen -> Save_Config -> Re_Scrape;
+    Re_Scrape     -> Run_Consensus;
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 5: PRICE CONSENSUS & OOS GUARDRAILS
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_consensus {
+        label="PHASE 5 — PRICE CONSENSUS & OOS GUARDRAILS";
+        color="#7c2d12";
+        fontcolor="#fb923c";
+        style="dashed,rounded,filled";
+        bgcolor="#1a0e08";
+
+        Run_Consensus [label="findPriceConsensus(candidates)\n(Stage A: method short-circuit → Stage B: weighted)"];
+
+        // Stage A
+        subgraph cluster_stageA {
+            label="Stage A — Method Short-Circuit";
+            color="#92400e";
+            fontcolor="#fbbf24";
+            style="rounded,filled";
+            bgcolor="#1f1206";
+
+            Deal_Check    [label="≥2 deal-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Member_Check  [label="≥2 member-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Pre_Check     [label="≥2 pre-order-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Orig_Check    [label="≥2 original-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        }
+
+        // Stage B
+        subgraph cluster_stageB {
+            label="Stage B — Weighted Arbitration (Fallback)";
+            color="#92400e";
+            fontcolor="#fbbf24";
+            style="rounded,filled";
+            bgcolor="#1f1206";
+
+            Weighted_Arb  [label="Group by (method + selector)\nAccumulate weight × count\nexpert-*=5.0  json-ld=2.0\ncustom-regex=1.6  custom-css=1.5\ngeneric-css=0.2"];
+            Tie_Break     [label="Tie-break:\nhighest confidence → lowest price", fillcolor="#92400e", fontcolor="#fbbf24"];
+        }
+
+        Has_Consensus  [label="Consensus Reached?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+
+        // OOS Guardrails
+        subgraph cluster_oos {
+            label="OOS Guardrails (if product out_of_stock)";
+            color="#7c2d12";
+            fontcolor="#fca5a5";
+            style="rounded,filled";
+            bgcolor="#1c0d0d";
+
+            OOS_Check     [label="Stock = out_of_stock?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Solo_JSONLD   [label="Single JSON-LD, no corroboration?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Low_Conf      [label="Score < 0.85 & generic method?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Anchor_Drift  [label="Price < 50% of anchorPrice?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Nullify_Price [label="Nullify price → null\nneedsReview = true", fillcolor="#dc2626", fontcolor="#ffffff"];
+        }
+    }
+
+    Run_Consensus -> Deal_Check;
+    Deal_Check    -> Has_Consensus [label="Yes → deal wins"];
+    Deal_Check    -> Member_Check  [label="No"];
+    Member_Check  -> Has_Consensus [label="Yes → member wins"];
+    Member_Check  -> Pre_Check     [label="No"];
+    Pre_Check     -> Has_Consensus [label="Yes → pre-order wins"];
+    Pre_Check     -> Orig_Check    [label="No"];
+    Orig_Check    -> Has_Consensus [label="Yes → original wins"];
+    Orig_Check    -> Weighted_Arb  [label="No → weighted fallback"];
+    Weighted_Arb  -> Tie_Break -> Has_Consensus;
+
+    Has_Consensus -> OOS_Check     [label="Yes"];
+    Has_Consensus -> Set_Review    [label="No (tie/no candidates)"];
+
+    OOS_Check     -> Solo_JSONLD   [label="Yes (OOS)"];
+    OOS_Check     -> AI_Verify_Check [label="No (in_stock)"];
+    Solo_JSONLD   -> Nullify_Price [label="Yes"];
+    Solo_JSONLD   -> Low_Conf      [label="No"];
+    Low_Conf      -> Nullify_Price [label="Yes"];
+    Low_Conf      -> Anchor_Drift  [label="No"];
+    Anchor_Drift  -> Nullify_Price [label="Yes (>50% drift)"];
+    Anchor_Drift  -> AI_Verify_Check [label="No (within range)"];
+    Nullify_Price -> Set_Review;
+
+    // ─────────────────────────────────────────────────────
+    // PHASE 6: AI VERIFICATION
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_verify {
+        label="PHASE 6 — AI VERIFICATION";
+        color="#4c1d95";
+        fontcolor="#a78bfa";
+        style="dashed,rounded,filled";
+        bgcolor="#13102a";
+
+        AI_Verify_Check [label="ai_verification_enabled?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Gemini_Verify   [label="Gemini Cross-Check\n(Verify price against denoised HTML)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        Verify_Pass     [label="Verification Passed?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+    }
+
+    AI_Verify_Check -> Gemini_Verify [label="Yes"];
+    AI_Verify_Check -> Persist_Price [label="No — skip"];
+    Gemini_Verify   -> Verify_Pass;
+    Verify_Pass     -> Persist_Price [label="Yes → ai_status=verified"];
+    Verify_Pass     -> Set_Review    [label="No → ai_status=corrected"];
+
+    // ─────────────────────────────────────────────────────
+    // VOTING MODAL FLOW
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_voting {
+        label="VOTING MODAL (needsReview = true)";
+        color="#701a75";
+        fontcolor="#f472b6";
+        style="dashed,rounded,filled";
+        bgcolor="#200c26";
+
+        Set_Review     [label="needsReview = true\n(DB: needs_price_review = true)", fillcolor="#db2777", fontcolor="#ffffff"];
+        Inject_Cands   [label="Inject member-price & original-price\nas typed PriceCandidate entries"];
+        Voting_Modal   [label="Frontend PriceSelectionModal\n(Tab UI: candidates by tier + confidence)", fillcolor="#db2777", fontcolor="#ffffff"];
+        User_Vote      [label="User Selects Candidate\n(POST /products/:id/confirm)\nselectedPrice + selectedMethod + selector", fillcolor="#db2777", fontcolor="#ffffff"];
+    }
+
+    Set_Review  -> Inject_Cands -> Voting_Modal -> User_Vote -> Persist_Price;
+
+    // ─────────────────────────────────────────────────────
+    // PERSISTENCE & AUTO-CONFIG LEARNING
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_persist {
+        label="PERSISTENCE & AUTO-CONFIG LEARNING LOOP";
+        color="#0f533a";
+        fontcolor="#34d399";
+        style="dashed,rounded,filled";
+        bgcolor="#071a12";
+
+        Persist_Price  [label="saveScrapeResult()\n(price_history, stock_status_history, product row)", fillcolor="#059669", fontcolor="#ffffff"];
+        Auto_Config    [label="runAutoRetailerConfig()\n(resolveWinningSelector → unshift to priority 0)"];
+        Stale_Track    [label="Update selector_metadata\n(match_count++  consecutive_failures++\nlast_matched_at = now())"];
+        Score_Evict    [label="Score-Based Eviction\n(cap at 10; evict score=match_count−failures×2)"];
+        Clean_Generic  [label="cleanSelectorArray()\n(Remove generic selectors from custom array)"];
+        Cache_Bust     [label="configCache.invalidate(domain)\n(Post-commit cache refresh)"];
+        Active_Track   [label="Product → Active Monitoring\n(needs_price_review cleared)", fillcolor="#059669", fontcolor="#ffffff"];
+    }
+
+    Persist_Price -> Auto_Config -> Stale_Track -> Score_Evict -> Clean_Generic -> Cache_Bust -> Active_Track;
+
+    // ─────────────────────────────────────────────────────
+    // SCHEDULER REFRESH LOOP
+    // ─────────────────────────────────────────────────────
+    subgraph cluster_scheduler {
+        label="SCHEDULER REFRESH LOOP";
+        color="#0f533a";
+        fontcolor="#4ade80";
+        style="dashed,rounded,filled";
+        bgcolor="#041a0c";
+
+        Scheduler      [label="Scheduler Cron Job\n(Every refresh_interval hours per product)", fillcolor="#059669", fontcolor="#ffffff"];
+        Notify_Drop    [label="Price-Drop Notification\n(Discord / Telegram / Email)", fillcolor="#059669", fontcolor="#ffffff"];
+        Soft_Hard_404  [label="Hard 404 / Soft 404?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Pause_Product  [label="checking_paused = true\nstock_status = not_available", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Alert_User     [label="NotificationService Alert\n(Product unavailable)", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Transient_Err  [label="Transient Error?\n(503 / timeout)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Backoff        [label="Increment failures\nBackoff → retry next cycle"];
+    }
+
+    Active_Track   -> Scheduler;
+    Scheduler      -> Axios_Fetch [label="Re-scrape loop", color="#10b981", penwidth=1.6, style=bold];
+    Scheduler      -> Notify_Drop [label="Price changed"];
+    Scheduler      -> Soft_Hard_404 [label="Scrape failed"];
+    Soft_Hard_404  -> Pause_Product [label="Yes"];
+    Soft_Hard_404  -> Transient_Err [label="No"];
+    Pause_Product  -> Alert_User;
+    Transient_Err  -> Backoff [label="Yes"];
+    Transient_Err  -> Pause_Product [label="No (limit exceeded)"];
+    Backoff        -> Scheduler;
+}
