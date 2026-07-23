@@ -102,6 +102,6 @@ logs-frontend: ## Follow frontend logs.
 	docker compose logs --follow --tail=100 frontend
 
 verify: ## Run a clean install, all builds, and backend tests.
-	PUPPETEER_SKIP_DOWNLOAD=true npm ci
-	npm run build:all
-	npm exec --workspace=pricestalker-backend vitest run
+	PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
+	pnpm run build:all
+	pnpm --filter pricestalker-backend exec vitest run

@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-- **Node 24.x** (at least 24.18) and **npm 11.x** (at least 11.16). The root
-  `package.json` pins the development versions through Volta and `.npmrc`
-  enforces the supported ranges.
+- **Node 24.x** (at least 24.18) and **pnpm 11.x** (at least 11.4). The root
+  `package.json` pins the development versions through Volta and declares the
+  supported package-manager range.
 - [Volta](https://volta.sh/) is recommended. From the repository root, it
-  automatically selects Node 24.18.0 and npm 11.16.0.
+  automatically selects Node 24.18.0 and pnpm 11.4.0.
 - Docker with the Compose v2 plugin and `make` for the local container stack.
 
 The Makefile uses a POSIX shell. It is supported on macOS, Linux, and Windows
@@ -18,12 +18,12 @@ PowerShell and Command Prompt are not supported for `make` commands.
 ```bash
 git clone https://github.com/mikeknight85/PriceStalker.git
 cd PriceStalker
-npm ci
+pnpm install --frozen-lockfile
 make check-tools
 ```
 
-`npm ci` must be run from the repository root so the workspace lockfile is
-used. Do not edit either `package-lock.json` by hand.
+Run `pnpm install --frozen-lockfile` from the repository root so the workspace
+lockfile is used. Do not edit `pnpm-lock.yaml` by hand.
 
 ## Run the local stack
 
@@ -69,7 +69,7 @@ This performs a clean install, builds every workspace, and runs the backend
 Vitest suite. To iterate on one backend test file:
 
 ```bash
-npm exec --workspace=pricestalker-backend vitest run tests/unit/price-extraction.test.ts
+pnpm --filter pricestalker-backend exec vitest run tests/unit/price-extraction.test.ts
 ```
 
 ## Manual hot-reload workflow
@@ -79,15 +79,15 @@ Set `DATABASE_URL` and `JWT_SECRET` in your environment or in a local `.env`
 file, then run:
 
 ```bash
-npm ci
-npm run db:migrate:dev
-npm run dev -w backend
+pnpm install --frozen-lockfile
+pnpm --filter pricestalker-backend run db:migrate:dev
+pnpm --filter pricestalker-backend run dev
 ```
 
 In a second terminal:
 
 ```bash
-npm run start:frontend
+pnpm --filter pricestalker-frontend run dev
 ```
 
 Vite serves the frontend at <http://localhost:5173> and proxies `/api` to the
@@ -98,5 +98,4 @@ backend at `http://localhost:3001`.
 - Keep secrets in `.env`; never commit `.env` or generated credentials.
 - Include relevant tests with behavior changes and run `make verify`.
 - Keep generated build output and `node_modules` out of commits.
-- Update the root and frontend npm lockfiles through npm whenever frontend
-  dependencies change.
+- Update `pnpm-lock.yaml` through pnpm whenever dependencies change.
