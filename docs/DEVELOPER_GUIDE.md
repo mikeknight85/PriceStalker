@@ -27,7 +27,10 @@ PriceStalker V2 utilizes a monorepo workspace managed with pnpm, separating comp
 │   │   ├── features/       # Feature-sliced aggregates (admin, products, auth)
 │   │   │   └── <feature>/  # Each feature folder bundles its pages, hooks, & services
 │   │   └── utils/          # Null-safe locale and date formatters
-├── remotescraper/          # Docker build files for the remote stealth Chromium container
+├── remotescraper/          # Optional stealth Chromium container (Puppeteer) for JS-heavy sites
+│                           #   or retailers behind CDN/bot protection (e.g. Cloudflare, Imperva).
+│                           #   Enabled per-retailer via the Admin UI. Requires `Remote Scraper URL`
+│                           #   to be configured in Admin > Settings.
 ├── deploy/                 # Docker Swarm configuration stack templates
 ├── Makefile                # Unified project runner commands (make up, make verify)
 ├── .env.example            # Baseline environment configurations

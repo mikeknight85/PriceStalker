@@ -12,7 +12,8 @@ entire codebase for answers that are already documented wastes time and misses
 context.
 
 PriceStalker is a self-hosted price tracker: a TypeScript/Express backend, a
-React/Vite frontend, an optional Puppeteer "remote scraper", and PostgreSQL.
+React/Vite frontend, an optional stealth Puppeteer remote scraper (for JS-heavy
+sites or retailers behind CDN/bot protection), and PostgreSQL.
 It is a pnpm workspace (`backend`, `frontend`, `remotescraper`).
 
 ---
@@ -101,12 +102,25 @@ seed it.
   `frontend/src/components/`. Put new work in the right feature, not in a
   catch-all.
 - **AI and auth config are instance-wide**, stored in the database and edited
-  under **Admin**, not per user. `SSO` also requires the `ENABLE_SSO=true`
-  environment variable in addition to the in-app toggle — both gates must be on.
+  under **Admin**, not per user. SSO requires **both** `ENABLE_SSO=true` in the
+  environment **and** the in-app Admin toggle — enabling one without the other
+  intentionally does nothing.
 - **Secrets are write-only over the API.** The auth-config endpoint returns
   `has_client_secret`, never the value. Preserve that pattern for any secret.
 - **`axios` is pinned to exactly `1.14.0`** in every workspace. This is a hard
   upstream mandate — do not bump or use a range.
+
+## Agent constraints
+
+- **Never search `node_modules`.** Do not run `find`, `grep`, or `ls` against
+  any `node_modules` directory. It causes tool failures and token spikes.
+- **Treat log files as streams.** The backend writes to `logs/backend.log` and
+  `logs/error.log`. Always use `tail -n 100` or `grep` for specific keywords.
+  Never `cat` a full log file.
+- **Verify before acting on docs.** Plans, audit reports, and markdown files may
+  be stale. Before acting on anything in `docs/` that seems inconsistent — check
+  the actual source file or running code first. Correct stale docs as part of the
+  task.
 
 ## Understanding the scraper
 
