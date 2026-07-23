@@ -49,20 +49,16 @@ moving any data.
 
 ## You choose the price. Always.
 
-Most price trackers silently pick a number off the page and hope for the best.
-PriceStalker runs **four independent extraction methods** in parallel and lets
-them vote:
+Most price trackers silently pick a single number off the page and hope for the best. PriceStalker extracts prices using a robust 7-layer cascade and arbitrates candidates using a weighted consensus engine:
 
-| Method | How it works | Reliability |
+| Strategy | How it works | Reliability |
 |--------|--------------|-------------|
-| **JSON-LD** | Reads `schema.org` structured data embedded by the retailer | Highest |
-| **Site-specific** | Custom-tuned scrapers for Amazon, Best Buy, Walmart, Target, Costco, eBay, Newegg, Home Depot, AliExpress, Magento 2 | High |
-| **Generic CSS** | Intelligent selectors that find price patterns on any site | Medium |
-| **AI analysis** | Claude / GPT / Gemini / Vertex / Groq / DeepSeek / Mistral / Ollama analyzes the page context | High |
+| **JSON-LD** | Parses `schema.org` structured data embedded by the retailer | Highest |
+| **Site-Specific Rules** | Evaluates custom CSS, deal, member, pre-order, or original price rules | High |
+| **Generic CSS** | Uses fallback selectors that detect price patterns on any site | Medium |
+| **AI Fallback** | Invokes Claude / GPT / Gemini to analyze the page context if selectors fail | High |
 
-When methods agree, you're set. When they disagree, the **Price Selection
-Modal** shows every candidate with confidence scores and context — you pick.
-No more accidentally tracking:
+When the extraction layers resolve a clear winner, the price is saved automatically. When they produce a tie, or if the price is suspicious, the **Price Selection Modal** displays all candidates with confidence scores and context so you can select the correct one. No more accidentally tracking:
 
 - `Save $200` discount amounts instead of the actual price
 - `$49/mo` financing plans instead of the real $1,999 price
