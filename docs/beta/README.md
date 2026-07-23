@@ -24,6 +24,10 @@ Welcome to the documentation portal for PriceStalker Version 2. This directory c
 * **[Admin API Endpoints Reference](admin_api.md)**  
   A complete list and reference of the secure HTTP API endpoints used to manage PriceStalker.
 
+* **[User Notifications Guide](user_notifications.md)**  
+  How to configure Telegram, Discord, Pushover, Email, and Webhook notification channels and customized price alerts.
+
+
 
 ---
 

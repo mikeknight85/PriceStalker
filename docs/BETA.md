@@ -73,4 +73,6 @@ When you manually select the correct price in the Voting Modal (or when a scrape
   * [beta/tokens.md](beta/tokens.md) — Creating security credentials and API tokens.
   * [beta/system.md](beta/system.md) — Managing proxies, schedules, and circuit breakers.
   * [beta/admin_api.md](beta/admin_api.md) — Reference of secure HTTP endpoints for programmatic management.
+  * [beta/user_notifications.md](beta/user_notifications.md) — How to configure notifications and customized alert types.
+
 

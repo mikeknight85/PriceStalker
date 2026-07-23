@@ -162,15 +162,12 @@ setting and catches the most embarrassing extraction errors.
 
 ---
 
-## Supported retailers
+## Documentation
 
-Site-specific scrapers (higher reliability than generic extraction):
+PriceStalker features comprehensive user and administrator guides:
 
-Amazon (all locales) · Best Buy · Walmart · Target · Costco · eBay · Newegg · Home Depot · AliExpress · Any Magento 2 store
-
-**Every other site** works via generic extraction + AI fallback. Tested
-extensively with European retailers (digitec.ch, galaxus.de, mediamarkt.*,
-etc.); they work via the AI path.
+* **[User Guide](docs/BETA.md)**: A simple, non-technical overview of how product scraping, consensus voting, out-of-stock safety rails, and AI auto-mapping work.
+* **[Developer & System Administration Portal](docs/README.md)**: The technical documentation index covering database schemas, backups, developer watch-outs, OIDC Single Sign-On (SSO) setups, and advanced configuration.
 
 ---
 
@@ -315,80 +312,6 @@ pnpm --filter pricestalker-frontend run dev
 For local development, setup, operating-system requirements, container and
 hot-reload workflows, and verification commands, see
 [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
-## Configuration
-
-### Notifications
-
-<details><summary><b>Telegram</b></summary>
-
-1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
-2. Get your Chat ID from [@userinfobot](https://t.me/userinfobot)
-3. Enter both in Settings → Notifications
-</details>
-
-<details><summary><b>Discord</b></summary>
-
-1. Server Settings → Integrations → Webhooks → New Webhook
-2. Copy the URL, paste it in Settings → Notifications
-</details>
-
-<details><summary><b>Pushover</b></summary>
-
-1. Create an account at [pushover.net](https://pushover.net)
-2. Note your User Key, create an application at [pushover.net/apps](https://pushover.net/apps/build) to get an API Token
-3. Enter both in Settings → Notifications
-</details>
-
-<details><summary><b>ntfy.sh</b></summary>
-
-1. Pick a unique topic (e.g. `pricestalker-yourname-abc123`)
-2. Subscribe on your phone via the [ntfy app](https://ntfy.sh/app) or <https://ntfy.sh/your-topic-name>
-3. Enter the topic in Settings → Notifications. Self-hosted ntfy is also supported — set the server URL + optional username/password.
-</details>
-
-<details><summary><b>Gotify (self-hosted)</b></summary>
-
-1. Deploy [Gotify](https://gotify.net/docs/install)
-2. Create an application in Gotify to get an App Token
-3. Enter server URL + App Token in Settings → Notifications; use "Test Connection" before saving.
-</details>
-
-<details><summary><b>Custom Webhook</b> (Apprise, Home Assistant, n8n, Zapier, custom services)</summary>
-
-For everything that isn't one of the providers above. Settings → Notifications → Custom Webhook.
-
-Configure:
-- **URL** of the receiver
-- **HTTP method** — `GET` / `POST` / `PUT` / `PATCH` / `DELETE`
-- **Headers** — optional JSON object of header → value (e.g. `{"Authorization": "Bearer ..."}`); `Content-Type` defaults to `application/json` for non-GET when not set
-- **Body template** — optional. Leave blank to send a sensible JSON default. Tokens in `{braces}` are substituted at send time:
-
-| Token | Meaning |
-|-------|---------|
-| `{title}` | Product name |
-| `{type}` | `price_drop` · `price_change` · `target_price` · `back_in_stock` |
-| `{url}` | Product URL |
-| `{currency}` | ISO currency code |
-| `{price}` / `{new_price}` | Current price |
-| `{old_price}` | Previous price (when applicable) |
-| `{threshold}` | Configured drop threshold |
-| `{target_price}` | Configured target price |
-| `{timestamp}` | ISO-8601 send time |
-
-Hit **Send Test** to fire the configured template against a stub payload. `webhook.site` is the quickest receiver for first-time testing.
-</details>
-
-### AI
-
-Any of the eight providers listed above, configured instance-wide in
-**Admin → AI Engine**. Recommended bootstrap:
-
-1. Start with **Groq** — free tier, no credit card to start
-2. For production quality, **Claude Haiku 4.5** via Anthropic
-3. For zero-cost + offline, **Ollama** with `qwen3` locally
 
 ---
 
