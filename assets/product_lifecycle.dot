@@ -1,7 +1,7 @@
-digraph PriceGhostProductLifecycle {
+digraph PriceStalkerProductLifecycle {
     // Graph-level styling
     graph [
-        label="PriceGhost End-to-End Product Lifecycle & Scraper Engine (v1.8.2+)",
+        label="PriceStalker End-to-End Product Lifecycle & Scraper Engine (v1.8.2+)",
         labelloc="t",
         fontname="Segoe UI, Arial, sans-serif",
         fontsize=22,
