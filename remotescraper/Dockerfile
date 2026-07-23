@@ -1,6 +1,8 @@
+# syntax=docker/dockerfile:1.7
 # Remote scraper image. Build context is the REPOSITORY ROOT, not
-# ./remotescraper, because this is an npm workspace (package name:
-# stealth-scraper) and the root lockfile is required to resolve dependencies.
+# ./remotescraper, because this is a pnpm workspace (package name:
+# stealth-scraper) and the root workspace definition and lockfile are required
+# to resolve dependencies.
 #
 #   docker build -f remotescraper/Dockerfile .
 #
@@ -13,21 +15,26 @@
 # (and has hung outright). Only the runtime stage below is built per-architecture.
 ARG BUILDPLATFORM=linux/amd64
 FROM --platform=$BUILDPLATFORM node:24.18.0-slim AS builder
+ARG BUILDPLATFORM
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY remotescraper/package.json ./remotescraper/
 
 # Chromium is installed via apt in the runtime stage, so Puppeteer must not
 # also download its own copy -- that would add several hundred MB per arch.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# Puppeteer 22 recognises PUPPETEER_SKIP_DOWNLOAD; retain the older variable
+# for compatibility with packages that still read it.
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_SKIP_DOWNLOAD=true
 
-RUN npm ci -w stealth-scraper
+RUN --mount=type=cache,id=pnpm-store-${BUILDPLATFORM},target=/pnpm/store \
+    corepack enable && pnpm install --store-dir=/pnpm/store --frozen-lockfile --filter stealth-scraper...
 
 COPY remotescraper/src ./remotescraper/src
 
-RUN npm run build -w stealth-scraper
+RUN pnpm --filter stealth-scraper run build
 
 # --- runtime stage ---------------------------------------------------------
 FROM node:24.18.0-slim AS runtime
@@ -47,12 +54,16 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+ARG TARGETPLATFORM
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY remotescraper/package.json ./remotescraper/
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_SKIP_DOWNLOAD=true
 
-RUN npm ci -w stealth-scraper --omit=dev && npm cache clean --force
+RUN --mount=type=cache,id=pnpm-store-${TARGETPLATFORM},target=/pnpm/store \
+    corepack enable && pnpm install --store-dir=/pnpm/store --prod --frozen-lockfile --filter stealth-scraper...
 
 COPY --from=builder /app/remotescraper/dist ./remotescraper/dist
 

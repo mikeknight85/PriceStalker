@@ -281,9 +281,27 @@ image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.11
 
 ## Development setup
 
-Development requires Node 24.x (at least 24.18), npm 11.x (at least 11.16),
-and PostgreSQL 14+. [Volta](https://volta.sh/) automatically selects the
-project's pinned Node and npm versions.
+Development requires Node 24.x (at least 24.18), pnpm 11.4.0, and PostgreSQL
+14+. [Volta](https://volta.sh/) automatically selects the project's pinned Node
+and pnpm versions. Otherwise, run `corepack enable` once and then
+`pnpm install --frozen-lockfile` from the repository root. `pnpm-lock.yaml` is
+the sole committed dependency lockfile.
+
+### Why pnpm?
+
+PriceStalker uses pnpm for faster, disk-efficient, strict workspace installs.
+This is a package-manager change only: Node remains the production runtime, and
+the project does not use Bun as a runtime or build tool.
+
+```bash
+corepack enable
+pnpm install --frozen-lockfile
+pnpm --filter pricestalker-backend run db:migrate:dev
+pnpm --filter pricestalker-backend run dev
+
+# Frontend (in another terminal)
+pnpm --filter pricestalker-frontend run dev
+```
 
 For local development, setup, operating-system requirements, container and
 hot-reload workflows, and verification commands, see

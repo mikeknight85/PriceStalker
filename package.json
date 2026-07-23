@@ -3,28 +3,29 @@
   "private": true,
   "engines": {
     "node": ">=24.18.0 <25",
-    "npm": ">=11.16.0 <12"
+    "pnpm": ">=11.4.0 <12"
   },
   "volta": {
     "node": "24.18.0",
-    "npm": "11.16.0"
+    "pnpm": "11.4.0"
   },
+  "packageManager": "pnpm@11.4.0",
   "workspaces": [
     "frontend",
     "backend",
     "remotescraper"
   ],
   "scripts": {
-    "install:all": "npm install",
-    "build:backend": "npm run build -w backend",
-    "build:frontend": "npm run build -w frontend",
-    "build:remotescraper": "npm run build -w stealth-scraper",
-    "build:all": "npm run build -w backend && npm run build -w frontend && npm run build -w stealth-scraper",
-    "start:backend": "npm start -w backend",
-    "start:frontend": "npm run dev -w frontend",
-    "db:migrate": "npm run db:migrate -w backend",
-    "db:migrate:dev": "npm run db:migrate:dev -w backend",
-    "tree": "npx tree-node-cli -I \"node_modules|build|dist|\\.git|\\.js\\.map|\\.d\\.ts\" -a",
+    "install:all": "pnpm install",
+    "build:backend": "pnpm --filter pricestalker-backend run build",
+    "build:frontend": "pnpm --filter pricestalker-frontend run build",
+    "build:remotescraper": "pnpm --filter stealth-scraper run build",
+    "build:all": "pnpm run build:backend && pnpm run build:frontend && pnpm run build:remotescraper",
+    "start:backend": "pnpm --filter pricestalker-backend start",
+    "start:frontend": "pnpm --filter pricestalker-frontend run dev",
+    "db:migrate": "pnpm --filter pricestalker-backend run db:migrate",
+    "db:migrate:dev": "pnpm --filter pricestalker-backend run db:migrate:dev",
+    "tree": "pnpm dlx tree-node-cli -I \"node_modules|build|dist|\\.git|\\.js\\.map|\\.d\\.ts\" -a",
     "lint": "node scripts/check-no-emoji.mjs"
   },
   "devDependencies": {

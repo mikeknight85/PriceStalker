@@ -10,7 +10,7 @@ async function main() {
   
   if (!channelArg || !validChannels.includes(channelArg.toLowerCase())) {
     console.error(`Error: Please specify a valid notification channel.`);
-    console.error(`Usage: npx tsx src/scripts/test-notifications.ts <channel> [userId]`);
+    console.error(`Usage: pnpm --filter pricestalker-backend exec tsx src/scripts/test-notifications.ts <channel> [userId]`);
     console.error(`Available channels: ${validChannels.join(', ')}`);
     process.exit(1);
   }

@@ -10,7 +10,8 @@ on:
       - 'frontend/**'
       - 'remotescraper/**'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/docker-build.yml'
   pull_request:
     branches: [main]
@@ -19,7 +20,8 @@ on:
       - 'frontend/**'
       - 'remotescraper/**'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
   workflow_dispatch:
 
 env:
@@ -59,15 +61,18 @@ jobs:
             backend:
               - 'backend/**'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
             frontend:
               - 'frontend/**'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
             remotescraper:
               - 'remotescraper/**'
               - 'package.json'
-              - 'package-lock.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
 
   build-backend:
     needs: changes

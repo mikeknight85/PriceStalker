@@ -96,11 +96,11 @@ To prevent cache staleness when settings are edited in the Admin Portal:
 Migrations are stored under `backend/src/migrations/` and run sequentially using the Umzug migrations runner.
 * **Run Migrations (Production)**:
   ```bash
-  npm run db:migrate -w backend
+  pnpm --filter pricestalker-backend run db:migrate
   ```
 * **Run Migrations (Development)**:
   ```bash
-  npm run db:migrate:dev -w backend
+  pnpm --filter pricestalker-backend run db:migrate:dev
   ```
 
 ### 2. Database Backup
@@ -114,4 +114,3 @@ docker exec $(docker ps -q -f name=pricestalker_postgres) \
 ```
 
 See `deploy/swarm-stack.yml` for the production stack.
-

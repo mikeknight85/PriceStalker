@@ -5,7 +5,7 @@ import { logger } from '../utils/system/logger';
 /**
  * Applies pending schema migrations during startup.
  *
- * Migrations were previously a manual developer step (`npm run db:migrate`), with
+ * Migrations were previously a manual developer step (`pnpm run db:migrate`), with
  * nothing invoking them at boot. Schema state therefore depended on an operator
  * remembering to run them, and a stale schema surfaced only as runtime errors on
  * whichever feature happened to touch a missing column.

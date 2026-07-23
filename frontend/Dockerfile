@@ -1,5 +1,7 @@
+# syntax=docker/dockerfile:1.7
 # Frontend image. Build context is the REPOSITORY ROOT, not ./frontend, because
-# this is an npm workspace: the root package.json and lockfile are required to
+# this is a pnpm workspace: the root package.json, workspace definition, and
+# lockfile are required to
 # resolve dependencies.
 #
 #   docker build -f frontend/Dockerfile .
@@ -13,19 +15,21 @@
 # (and has hung outright). Only the runtime stage below is built per-architecture.
 ARG BUILDPLATFORM=linux/amd64
 FROM --platform=$BUILDPLATFORM node:24.18.0-alpine AS builder
+ARG BUILDPLATFORM
 
 WORKDIR /app
 
 # Manifests first so dependency installation caches independently of source.
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY frontend/package.json ./frontend/
 
 # Dev dependencies are required here: vite and typescript do the building.
-RUN npm ci -w frontend
+RUN --mount=type=cache,id=pnpm-store-${BUILDPLATFORM},target=/pnpm/store \
+    corepack enable && PUPPETEER_SKIP_DOWNLOAD=true pnpm install --store-dir=/pnpm/store --frozen-lockfile --filter pricestalker-frontend...
 
 COPY frontend/ ./frontend/
 
-RUN npm run build -w frontend
+RUN pnpm --filter pricestalker-frontend run build
 
 # --- runtime stage ---------------------------------------------------------
 FROM nginx:alpine

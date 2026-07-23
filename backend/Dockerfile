@@ -1,5 +1,7 @@
+# syntax=docker/dockerfile:1.7
 # Backend image. Build context is the REPOSITORY ROOT, not ./backend, because
-# this is an npm workspace: the root package.json and lockfile are required to
+# this is a pnpm workspace: the root package.json, workspace definition, and
+# lockfile are required to
 # resolve dependencies.
 #
 #   docker build -f backend/Dockerfile .
@@ -13,15 +15,17 @@
 # (and has hung outright). Only the runtime stage below is built per-architecture.
 ARG BUILDPLATFORM=linux/amd64
 FROM --platform=$BUILDPLATFORM node:24.18.0-slim AS builder
+ARG BUILDPLATFORM
 
 WORKDIR /app
 
 # Manifests first so dependency installation caches independently of source.
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY backend/package.json ./backend/
 
 # Dev dependencies are required here: typescript does the compiling.
-RUN npm ci -w backend
+RUN --mount=type=cache,id=pnpm-store-${BUILDPLATFORM},target=/pnpm/store \
+    corepack enable && PUPPETEER_SKIP_DOWNLOAD=true pnpm install --store-dir=/pnpm/store --frozen-lockfile --filter pricestalker-backend...
 
 COPY backend/tsconfig*.json ./backend/
 COPY backend/src ./backend/src
@@ -29,18 +33,21 @@ COPY backend/src ./backend/src
 # Compile with tsc, NOT build:bundle. The migration runner globs
 # dist/migrations/*.js at runtime; bundling would collapse them into a single
 # file and no migrations would ever be found.
-RUN npm run build -w backend
+RUN pnpm --filter pricestalker-backend run build
 
 # --- runtime stage ---------------------------------------------------------
 FROM node:24.18.0-slim AS runtime
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+ARG TARGETPLATFORM
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY backend/package.json ./backend/
 
 # Production dependencies only; the toolchain stays in the build stage.
-RUN npm ci -w backend --omit=dev && npm cache clean --force
+RUN --mount=type=cache,id=pnpm-store-${TARGETPLATFORM},target=/pnpm/store \
+    corepack enable && PUPPETEER_SKIP_DOWNLOAD=true pnpm install --store-dir=/pnpm/store --prod --frozen-lockfile --filter pricestalker-backend...
 
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY backend/docker-entrypoint.sh /usr/local/bin/pricestalker-backend-entrypoint

@@ -8,7 +8,7 @@ import { execSync } from 'child_process';
  * Runs INSIDE the production container on vodka to use the real environment.
  * 
  * Usage: 
- *   npx tsx tests/integration/test-extraction-priority.ts --remote
+ *   pnpm --filter pricestalker-backend exec tsx tests/integration/test-extraction-priority.ts --remote
  */
 
 async function runTest() {
