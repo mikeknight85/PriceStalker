@@ -50,7 +50,8 @@ Houses the extraction selectors and custom routing rules. **Strictly no retailer
 * **Key Fields**:
  - `domain` (unique primary lookup key, e.g. `jbhifi.com.au`).
  - `use_remote_scraper`: Forces offloading browser-rendering requests to the `remotescraper` service.
- - `is_js_heavy`: Flags Puppeteer usage for JS-heavy elements.
+ - `use_browser`: Redundant, use `use_remote_scraper`.
+ - `is_js_heavy`: Redundant, use `use_remote_scraper`.
  - `currency_hint`: Default fallback currency for parser.
  - **JSONB Arrays**: Standardized selectors for `name_selectors`, `price_selectors`, `deal_price_selectors`, `member_price_selectors`, `image_selectors`, `stock_selectors`, `pre_order_price_selectors`.
  - `user_agent` & `referrer`: Request headers configuration overrides.
