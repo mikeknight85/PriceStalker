@@ -4,6 +4,8 @@ Guidance for anyone — human or AI — changing this repository. Claude Code an
 most AI coding tools read this file automatically. Read it before your first
 change.
 
+For a 60-second overview of the directory layout and key backend paths, see the **[AI Agent Quick-Start](docs/AGENT_QUICKSTART.md)**.
+
 PriceStalker is a self-hosted price tracker: a TypeScript/Express backend, a
 React/Vite frontend, an optional Puppeteer "remote scraper", and PostgreSQL.
 It is a pnpm workspace (`backend`, `frontend`, `remotescraper`).
