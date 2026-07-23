@@ -9,9 +9,9 @@
 > docs/SCRAPER_LIFECYCLE.md. Infrastructure specifics removed.
 
 
-**Date:** 2026-07-01  
-**Auditor:** Claude Sonnet 4.6 (Thinking)  
-**Scope:** `backend/src/` — Full read-only codebase audit  
+**Date:** 2026-07-01 
+**Auditor:** Claude Sonnet 4.6 (Thinking) 
+**Scope:** `backend/src/` — Full read-only codebase audit 
 **Focus Areas:** Scrape orchestration pipeline · stock extraction · price candidate selection · consensus weighting · voting/learning loop
 
 ---
@@ -21,16 +21,16 @@
 The full retrieval pipeline is split across **six phases** inside `scrapeProductWithVoting` (orchestration/index.ts):
 
 ```
-Phase 0: initScrapeSession        → Load domain config, AI settings, currency/locale hints
-Phase 1: acquireHtml              → HTTP fetch or browser fallback via acquisition stack
-Phase 2: runExtractionPhase       → DOM denoise → metadata (stock/title/image) → price candidates
-Phase 3: Validation               → Success-first: ignore bot challenge if price data found
-         handleRetailerMaintenance → Flag/restore blocked retailer
-Phase 4: handleAutoMapping        → AI auto-generates retailer config if none exists
-Phase 5: runConsensusPhase        → findPriceConsensus → weighted arbitration → OOS guardrails
-         handleRestoreStatus      → Restore retailer blocked state on success
-Phase 6: runVerificationPhase     → Optional AI cross-verification of selected price
-         → Result returned to caller (ProductRefreshService / ProductDiscoveryService)
+Phase 0: initScrapeSession → Load domain config, AI settings, currency/locale hints
+Phase 1: acquireHtml → HTTP fetch or browser fallback via acquisition stack
+Phase 2: runExtractionPhase → DOM denoise → metadata (stock/title/image) → price candidates
+Phase 3: Validation → Success-first: ignore bot challenge if price data found
+ handleRetailerMaintenance → Flag/restore blocked retailer
+Phase 4: handleAutoMapping → AI auto-generates retailer config if none exists
+Phase 5: runConsensusPhase → findPriceConsensus → weighted arbitration → OOS guardrails
+ handleRestoreStatus → Restore retailer blocked state on success
+Phase 6: runVerificationPhase → Optional AI cross-verification of selected price
+ → Result returned to caller (ProductRefreshService / ProductDiscoveryService)
 ```
 
 ---
@@ -108,7 +108,7 @@ When a custom stock selector matches text but no phrase maps to a known status, 
 ```typescript
 let targetedArea = $('main, [role="main"], ...').first();
 if (targetedArea.length === 0) {
-  targetedArea = $('body');
+ targetedArea = $('body');
 }
 ```
 
@@ -126,13 +126,13 @@ When no `<main>` is found, the full `<body>` text is searched. On pages with rec
 Price candidates are collected in this order:
 
 ```
-1. JSON-LD       → extractJsonLdCandidates   (confidence 0.95, method: 'json-ld')
-2. Deal          → deal_price_selectors       (confidence 0.95, method: 'deal-price')
-3. Member        → member_price_selectors     (confidence 0.95, method: 'member-price')
-4. Pre-order     → pre_order_price_selectors  (confidence 0.95, method: 'pre-order-price')
-5. Original      → original_price_selectors   (confidence 0.95, method: 'original-price')
-6. Custom CSS    → price_selectors            (confidence 0.90, method: 'custom-css')
-7. Generic CSS   → global price selectors     (confidence 0.60, method: 'generic-css')
+1. JSON-LD → extractJsonLdCandidates (confidence 0.95, method: 'json-ld')
+2. Deal → deal_price_selectors (confidence 0.95, method: 'deal-price')
+3. Member → member_price_selectors (confidence 0.95, method: 'member-price')
+4. Pre-order → pre_order_price_selectors (confidence 0.95, method: 'pre-order-price')
+5. Original → original_price_selectors (confidence 0.95, method: 'original-price')
+6. Custom CSS → price_selectors (confidence 0.90, method: 'custom-css')
+7. Generic CSS → global price selectors (confidence 0.60, method: 'generic-css')
 ```
 
 ### 3.2 Issue P-1: Extraction Pass Method Override Produces No Selector-Level Debug Log [COMPLETED]
@@ -217,7 +217,7 @@ Generic CSS (Step 7) uses `evaluatePriceSelectors` with `limit: 40`. However the
 
 ### 4.3 Issue C-2: `pricesMatch` 5% Tolerance Can Group Distinct Low-Value Prices
 
-> **Severity: Low**  
+> **Severity: Low** 
 > **Status: Completed — resolved in v1.8.7**
 
 **File:** arbitrators/utils.ts L6-L8
@@ -244,8 +244,8 @@ This is risky with fractional pricing (e.g. per-unit vs per-pack prices on a gro
 
 ```typescript
 const best = [...candidatesToSelect].sort((a, b) => {
-  if (Math.abs(a.confidence - b.confidence) > 0.001) return b.confidence - a.confidence;
-  return a.price - b.price;  // lowest price wins on equal confidence
+ if (Math.abs(a.confidence - b.confidence) > 0.001) return b.confidence - a.confidence;
+ return a.price - b.price; // lowest price wins on equal confidence
 })[0];
 ```
 
@@ -273,11 +273,11 @@ The `highConfidenceMethods` array hardcodes method string literals. Any future m
 
 ```
 User votes in frontend Voting Modal
-  → POST /products/:id/confirm OR POST /products (new)
-  → ProductConfirmationService.confirmProductSelection / confirmNewProduct
-  → productPersistenceService.saveScrapeResult (source: 'manual-confirm' | 'manual-add')
-  → runAutoRetailerConfig → resolveWinningSelector → unshift selector to priority 0
-  → configCache.invalidate()
+ → POST /products/:id/confirm OR POST /products (new)
+ → ProductConfirmationService.confirmProductSelection / confirmNewProduct
+ → productPersistenceService.saveScrapeResult (source: 'manual-confirm' | 'manual-add')
+ → runAutoRetailerConfig → resolveWinningSelector → unshift selector to priority 0
+ → configCache.invalidate()
 ```
 
 ### 5.2 Issue V-1: `runAutoRetailerConfig` Runs Outside the Persistence Transaction
@@ -289,7 +289,7 @@ User votes in frontend Voting Modal
 ```typescript
 await client.query('BEGIN');
 // ... advisory lock, metadata update, stock, prices ...
-await runAutoRetailerConfig({ ... });  // Opens its OWN pool connection + transaction
+await runAutoRetailerConfig({ ... }); // Opens its OWN pool connection + transaction
 await productRepository.updateLastChecked(productId, product.refresh_interval);
 await client.query('COMMIT');
 ```
@@ -312,7 +312,7 @@ await client.query('COMMIT');
 
 ```typescript
 const winner = candidates.find(
-  (c) => scrapedData.price && c.price === scrapedData.price.price && c.method === (scrapedData.selectedMethod || c.method)
+ (c) => scrapedData.price && c.price === scrapedData.price.price && c.method === (scrapedData.selectedMethod || c.method)
 );
 ```
 
@@ -382,11 +382,11 @@ All other generic selectors use dedicated typed `settingsCache.get*()` methods, 
 
 ```typescript
 const preScrapePrice = await priceHistoryRepository.getLatest(productId, 'standard'); // Captured here
-const scrapedData = await scrapeProductWithVoting(...);                               // Takes seconds
+const scrapedData = await scrapeProductWithVoting(...); // Takes seconds
 await productPersistenceService.saveScrapeResult(productId, userId, scrapedData, 'refresh');
 // ...
 if (!preScrapePrice || preScrapePrice.price !== scrapedData.price.price) {
-  await productNotificationService.notifyPriceDrop(...);  // Compares against stale preScrapePrice
+ await productNotificationService.notifyPriceDrop(...); // Compares against stale preScrapePrice
 ```
 
 `preScrapePrice` is captured before the scrape. In a concurrent scheduler environment, another worker could update the same product's price **during** the scrape. The advisory lock in `saveScrapeResult` prevents concurrent DB writes, but the notification check runs **after** the lock is released, allowing a second worker to update between `saveScrapeResult` and the notification comparison.
@@ -397,7 +397,7 @@ if (!preScrapePrice || preScrapePrice.price !== scrapedData.price.price) {
 
 ### 6.3 Issue R-2: `checking_paused` Unpause Condition Uses Stale Product Object
 
-> **Severity: Low**  
+> **Severity: Low** 
 > **Status: Completed — resolved in v1.8.7**
 
 **File:** ProductRefreshService.ts L44-L49
@@ -428,13 +428,13 @@ When auto-mapping generates a new retailer config, the code creates a fresh Chee
 
 ```typescript
 const isShellConfig = domainConfig &&
-  (!domainConfig.price_selectors || ...) &&
-  (!domainConfig.deal_price_selectors || ...) &&
-  (!domainConfig.member_price_selectors || ...) &&
-  (!domainConfig.name_selectors || ...) &&
-  (!domainConfig.image_selectors || ...) &&
-  (!domainConfig.stock_selectors || ...);
-  // pre_order_price_selectors and original_price_selectors NOT checked
+ (!domainConfig.price_selectors || ...) &&
+ (!domainConfig.deal_price_selectors || ...) &&
+ (!domainConfig.member_price_selectors || ...) &&
+ (!domainConfig.name_selectors || ...) &&
+ (!domainConfig.image_selectors || ...) &&
+ (!domainConfig.stock_selectors || ...);
+ // pre_order_price_selectors and original_price_selectors NOT checked
 ```
 
 A retailer config with **only** `pre_order_price_selectors` or `original_price_selectors` set would be classified as a "shell config" and trigger an unnecessary (and potentially destructive) AI auto-mapping call that overwrites the existing config.
@@ -451,7 +451,7 @@ A retailer config with **only** `pre_order_price_selectors` or `original_price_s
 
 ```typescript
 await extractMetadata($, domainConfig || undefined, extractionSteps, result);
-extractionSteps.push(`HTML | Metadata | Length: ${html.length} chars`);  // Should be BEFORE
+extractionSteps.push(`HTML | Metadata | Length: ${html.length} chars`); // Should be BEFORE
 ```
 
 The HTML length log line is pushed **after** metadata extraction, giving the misleading impression in debug traces that the length is a separator between metadata and price extraction phases.
@@ -492,35 +492,35 @@ The HTML length log line is pushed **after** metadata extraction, giving the mis
 ## 9. Priority Recommendations
 
 ### Immediate (High Severity)
-1. **V-1** — Move `runAutoRetailerConfig` inside the persistence transaction and defer `configCache.invalidate()` to post-commit. ✅ **FIXED in 1.8.2**
+1. **V-1** — Move `runAutoRetailerConfig` inside the persistence transaction and defer `configCache.invalidate()` to post-commit. **FIXED in 1.8.2**
 
 ### Short-Term (Medium Severity)
-2. **S-2** — Fix JSON-LD multi-offer stock resolution to use first-offer precedence, not optimistic `in_stock` preference. ✅ **FIXED in v1.9.2**
-3. **C-3** — Replace "lowest price" tie-breaker with "closest to anchor" or "median" selection. ✅ **FIXED in v1.9.2**
-4. **V-2** — Add null-guard to `resolveWinningSelector` for null `selectedMethod`. ✅ **FIXED in 1.8.2** (method whitelist now implicitly prevents null-method promotion)
-5. **V-4** — Add explicit `needs_price_review = false` clear after user confirmation. ✅ **FIXED in 1.8.2**
-6. **R-1** — Capture `preScrapePrice` inside the advisory lock scope for notification comparison. ✅ **FIXED in fix-audit-issues**
-7. **P-3** — Deduplicate JSON-LD candidates by `(price, currency)` before adding to `allCandidates`. ✅ **FIXED in fix-audit-issues**
-8. **VM-1** — Write `needs_price_review = true` to the DB during refresh when the scraper sets `needsReview=true` in-memory. ✅ **FIXED in 1.8.2 / 1.0.55**
-9. **VM-2** — Show the CSS selector used for each candidate in the Voting Modal UI. ✅ **FIXED in 1.8.2 / 1.0.55**
+2. **S-2** — Fix JSON-LD multi-offer stock resolution to use first-offer precedence, not optimistic `in_stock` preference. **FIXED in v1.9.2**
+3. **C-3** — Replace "lowest price" tie-breaker with "closest to anchor" or "median" selection. **FIXED in v1.9.2**
+4. **V-2** — Add null-guard to `resolveWinningSelector` for null `selectedMethod`. **FIXED in 1.8.2** (method whitelist now implicitly prevents null-method promotion)
+5. **V-4** — Add explicit `needs_price_review = false` clear after user confirmation. **FIXED in 1.8.2**
+6. **R-1** — Capture `preScrapePrice` inside the advisory lock scope for notification comparison. **FIXED in fix-audit-issues**
+7. **P-3** — Deduplicate JSON-LD candidates by `(price, currency)` before adding to `allCandidates`. **FIXED in fix-audit-issues**
+8. **VM-1** — Write `needs_price_review = true` to the DB during refresh when the scraper sets `needsReview=true` in-memory. **FIXED in 1.8.2 / 1.0.55**
+9. **VM-2** — Show the CSS selector used for each candidate in the Voting Modal UI. **FIXED in 1.8.2 / 1.0.55**
 10. **VM-6** — Add `json-ld` to the method whitelist in `resolveWinningSelector` so users confirming structured-data prices promote the selector. (N/A — structured JSON-LD data resolves dynamically and is omitted from whitelisted CSS-config promotion by design)
 
 ### Long-Term (Low Severity / Improvements)
-11. **V-3** — Implement selector staleness tracking (e.g. `selector_last_matched_at` JSON map). ✅ **FIXED in 1.8.2 / 1.0.55**
-12. **P-4** — Add per-selector candidate limit (e.g. 20) to `extractCustomCandidates`. ✅ **FIXED in fix-audit-issues**
-13. **C-2** — Apply an absolute 10-cent floor condition to `pricesMatch` for low-value items. ✅ **FIXED in 1.8.7**
-14. **X-1** — Refactor auto-map re-extraction to preserve first-pass metadata and re-run only price extraction. ✅ **FIXED in fix-audit-issues**
-15. **X-2** — Add `pre_order_price_selectors` and `original_price_selectors` to `isShellConfig` check. ✅ **FIXED in easy-audit-fixes**
-16. **V-5** — Add `settingsCache.getOriginalPriceSelectors()` typed accessor. ✅ **FIXED in easy-audit-fixes**
-17. **VM-3** — Add visual badge/icon differentiation for `deal-price` and `member-price` candidates in the Voting Modal. ✅ **FIXED in 1.8.2 / 1.0.55**
-18. **VM-4** — Add a "None of these are correct / Enter manually" escape hatch to the Voting Modal. ✅ **FIXED in 1.8.2 / 1.0.55**
-19. **VM-5** — Fix the `originalPrice` asymmetry between `discovery.ts` and `rescan.ts` blobs. ✅ **FIXED in 1.8.2 / 1.0.55**
+11. **V-3** — Implement selector staleness tracking (e.g. `selector_last_matched_at` JSON map). **FIXED in 1.8.2 / 1.0.55**
+12. **P-4** — Add per-selector candidate limit (e.g. 20) to `extractCustomCandidates`. **FIXED in fix-audit-issues**
+13. **C-2** — Apply an absolute 10-cent floor condition to `pricesMatch` for low-value items. **FIXED in 1.8.7**
+14. **X-1** — Refactor auto-map re-extraction to preserve first-pass metadata and re-run only price extraction. **FIXED in fix-audit-issues**
+15. **X-2** — Add `pre_order_price_selectors` and `original_price_selectors` to `isShellConfig` check. **FIXED in easy-audit-fixes**
+16. **V-5** — Add `settingsCache.getOriginalPriceSelectors()` typed accessor. **FIXED in easy-audit-fixes**
+17. **VM-3** — Add visual badge/icon differentiation for `deal-price` and `member-price` candidates in the Voting Modal. **FIXED in 1.8.2 / 1.0.55**
+18. **VM-4** — Add a "None of these are correct / Enter manually" escape hatch to the Voting Modal. **FIXED in 1.8.2 / 1.0.55**
+19. **VM-5** — Fix the `originalPrice` asymmetry between `discovery.ts` and `rescan.ts` blobs. **FIXED in 1.8.2 / 1.0.55**
 
 ---
 
 ## 10. Voting Modal Audit — Frontend & Backend
 
-**Scope:** Full end-to-end analysis of the price selection/voting flow presented to users.  
+**Scope:** Full end-to-end analysis of the price selection/voting flow presented to users. 
 **Audited:** `PriceSelectionModal.tsx`, `useProductActions.ts`, `useDashboardState.ts`, `ProductService.ts`, `discovery.ts`, `rescan.ts`, `confirmation.ts`, `ProductPersistenceService.ts`, `auto-config.helpers.ts`
 
 ---
@@ -531,17 +531,17 @@ The voting/price-selection flow has **two entry points** that converge on the sa
 
 ```
 New Product Add (POST /products/)
-  └─ productDiscoveryService.initiateProductDiscovery()
-       └─ if needsReview=true → returns PriceReviewResponse to client (nothing written to DB)
-            └─ Client shows PriceSelectionModal
-                 └─ User confirms → POST /products/ with selectedPrice + selectedMethod
+ └─ productDiscoveryService.initiateProductDiscovery()
+ └─ if needsReview=true → returns PriceReviewResponse to client (nothing written to DB)
+ └─ Client shows PriceSelectionModal
+ └─ User confirms → POST /products/ with selectedPrice + selectedMethod
 
 Re-scan (POST /products/:id/scan)
-  └─ ProductRescanService.scanProduct()
-       └─ ALWAYS returns needsReview=true + full voting blob
-            └─ Client shows PriceSelectionModal
-                 └─ User confirms → POST /products/:id/confirm
-                      └─ confirmation.ts → saveScrapeResult('manual-confirm') → runAutoRetailerConfig
+ └─ ProductRescanService.scanProduct()
+ └─ ALWAYS returns needsReview=true + full voting blob
+ └─ Client shows PriceSelectionModal
+ └─ User confirms → POST /products/:id/confirm
+ └─ confirmation.ts → saveScrapeResult('manual-confirm') → runAutoRetailerConfig
 ```
 
 The key behavioural difference: **new-product add** writes nothing until confirmed. **Re-scan** always gates on user review, even for automatic refreshes that don't need it.
@@ -552,7 +552,7 @@ The key behavioural difference: **new-product add** writes nothing until confirm
 
 **File:** `PriceSelectionModal.tsx`
 
-#### What Works Well ✅
+#### What Works Well
 
 | Feature | Detail |
 |---------|--------|
@@ -564,20 +564,20 @@ The key behavioural difference: **new-product add** writes nothing until confirm
 | Submit guard | Button disabled + spinner shown while submitting |
 | Selector passthrough | `candidate.selector` flows correctly through `onSelect` → API payload |
 
-#### Issues Found ❌
+#### Issues Found
 
 **VM-UI-1 (Medium): CSS Selector Not Shown to User**
 
 `candidate.selector` is present in the data but **never rendered in the modal card**. Users cannot see which DOM element was targeted, making it impossible to judge correctness for ambiguous situations (e.g., generic `.price` vs a deal-specific `span.flash-price`).
 
-> **File:** `PriceSelectionModal.tsx` lines 174–179  
+> **File:** `PriceSelectionModal.tsx` lines 174–179 
 > **Fix:** Render selector in a monospace `<code>` block beneath the method description, truncated with ellipsis if > 60 chars.
 
 **VM-UI-2 (Low): No Visual Distinction for Special Price Types**
 
 While `METHOD_LABELS` strings differ (`"Limited Deal"` vs `"Member Price"`), there is no icon, colour badge, or visual indicator differentiating special price types from standard retail prices. Given that `deal-price` is the system's highest-priority method and is auto-pre-selected, users get no visual cue explaining *why* one option is recommended over another.
 
-> **Fix:** Add coloured left-border or badge icon for `deal-price` (e.g. 🏷️ orange) and `member-price` (e.g. 🔑 blue).
+> **Fix:** Add coloured left-border or badge icon for `deal-price` (e.g. orange) and `member-price` (e.g. blue).
 
 **VM-UI-3 (Low): No "None of These / Enter Manually" Escape Hatch**
 
@@ -611,7 +611,7 @@ The modal has no `reason` or `reviewType` prop distinguishing "AI was unsure" fr
 
 The confirm flow is well-structured: it fetches the product, persists via `saveScrapeResult('manual-confirm')`, clears `needs_price_review`, unpauses checking, and returns the updated product. As of v1.8.2, `needs_price_review` is explicitly cleared and `ai_status` set to `'confirmed'` at `confirmation.ts` L78–81.
 
-#### Issues Found ❌
+#### Issues Found
 
 **VM-1 (Medium): `needs_price_review` Is Never Written `true` to the DB During Refresh**
 
@@ -631,7 +631,7 @@ The column can only be *cleared* — it is never *set* after the initial product
 - The UI's "needs review" badge/state relies on a DB column that is never triggered during scheduled monitoring.
 - If a product that was previously confirmed suddenly starts failing consensus (e.g., retailer restructured their page), the user is never notified via the review queue.
 
-> **Files:** `ProductRefreshService.ts`, `ProductPersistenceService.ts`  
+> **Files:** `ProductRefreshService.ts`, `ProductPersistenceService.ts` 
 > **Fix:** In `saveScrapeResult`, if `source === 'refresh'` and `scrapedData.needsReview === true`, call `productRepository.update(productId, userId, { needs_price_review: true })` before returning.
 
 **VM-2 (Medium): `json-ld` and `generic-css` Confirmations Don't Promote Selectors**
@@ -640,7 +640,7 @@ The column can only be *cleared* — it is never *set* after the initial product
 
 If a user confirms a **`json-ld` price** (the most reliable structured-data source), no selector is written to the retailer config. The retailer config learns nothing from this interaction — future scrapes still depend on generic JSON-LD parsing rather than the specific `priceSpecification` key or the particular `<script>` tag.
 
-> **File:** `auto-config.helpers.ts` L37 (`allowedMethods` array)  
+> **File:** `auto-config.helpers.ts` L37 (`allowedMethods` array) 
 > **Fix:** Assess whether `json-ld` confirmations should write the `jsonld_price_key` to `retailer_configs` rather than a CSS selector.
 
 **VM-3 (Low): `rescan.ts` Missing `originalPrice` in Voting Blob**
@@ -650,7 +650,7 @@ If a user confirms a **`json-ld` price** (the most reliable structured-data sour
 - On a re-scan of a product that previously had an original/RRP price, the modal has no `originalPrice` to pass back in the confirmation payload.
 - If the user's selection was intended to update the original price context, it silently drops.
 
-> **File:** `rescan.ts` L19–37  
+> **File:** `rescan.ts` L19–37 
 > **Fix:** Add `originalPrice: scrapedData.memberPrice || null` to the rescan voting blob (mirroring `discovery.ts`).
 
 **VM-4 (Low): `html` Payload in Voting Blob Is Unguarded**
@@ -670,26 +670,26 @@ The voting blob returns `suggestedPrice: { price, currency }` and `priceCandidat
 ### 10.4 Data Flow Summary
 
 ```
-Scraper                    Backend API              Frontend Modal          User Action
-───────                    ───────────              ──────────────          ───────────
+Scraper Backend API Frontend Modal User Action
+─────── ─────────── ────────────── ───────────
 scrapeProductWithVoting()
-  → priceCandidates[]      POST /products/scan      PriceSelectionModal
-  → suggestedPrice         ←─ PriceReviewResponse   ← candidates[]
-  → needsReview=true            (including html)     ← suggestedPrice       ← pre-selected
-  → selectedMethod                                   ← confidence badges
-  → selector (per cand.)                             ← method labels
-                                                     ✗ selector NOT shown   ← user picks
-                           POST /products/:id/confirm
-                           → selectedPrice
-                           → selectedMethod
-                           → selector (CSS string)
-                           → html (echoed back)
-                            ↓
-                           confirmation.ts
-                           → saveScrapeResult('manual-confirm')
-                             → updateExtractionMethod()   → clears needs_price_review
-                             → runAutoRetailerConfig()    → promotes selector to DB
-                           → productRepository.update({ needs_price_review: false, ai_status: 'confirmed' })
+ → priceCandidates[] POST /products/scan PriceSelectionModal
+ → suggestedPrice ←─ PriceReviewResponse ← candidates[]
+ → needsReview=true (including html) ← suggestedPrice ← pre-selected
+ → selectedMethod ← confidence badges
+ → selector (per cand.) ← method labels
+ selector NOT shown ← user picks
+ POST /products/:id/confirm
+ → selectedPrice
+ → selectedMethod
+ → selector (CSS string)
+ → html (echoed back)
+ ↓
+ confirmation.ts
+ → saveScrapeResult('manual-confirm')
+ → updateExtractionMethod() → clears needs_price_review
+ → runAutoRetailerConfig() → promotes selector to DB
+ → productRepository.update({ needs_price_review: false, ai_status: 'confirmed' })
 ```
 
 ---
@@ -715,7 +715,7 @@ scrapeProductWithVoting()
 
 ## 11. Voting Modal Redesign Recommendation
 
-> **Status:** Completed — fully implemented in v1.8.2 / v1.0.55 / v1.0.46  
+> **Status:** Completed — fully implemented in v1.8.2 / v1.0.55 / v1.0.46 
 > **Implementation Plan:** `plans/votingmodal1.md` (Completed)
 
 ---
@@ -763,10 +763,10 @@ A structured summary of all extracted prices, shown for context before the user 
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Standard Price:   $99.99                           │
-│  Deal Price:       $89.99   🏷 Flash Sale           │
-│  Member Price:     $79.99   🔑 Login required       │
-│  Original / RRP:  $149.99   ~~strikethrough~~       │
+│ Standard Price: $99.99 │
+│ Deal Price: $89.99 Flash Sale │
+│ Member Price: $79.99 Login required │
+│ Original / RRP: $149.99 ~~strikethrough~~ │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -777,7 +777,7 @@ Only rows where a price was found are rendered.
 The existing card-based list, filtered by a pill-tab type selector:
 
 ```
-[ Standard (4) ]  [ Deal (1) ]  [ Member (1) ]  [ RRP (1) ]
+[ Standard (4) ] [ Deal (1) ] [ Member (1) ] [ RRP (1) ]
 ```
 
 Users select the **price type** to track first, then select **which candidate** within that type. This makes intent explicit — the system knows the user wants to track the deal price, not the standard price.
@@ -803,17 +803,17 @@ Users select the **price type** to track first, then select **which candidate** 
 ```diff
 // PriceReviewResponse — proposed changes
 {
-  needsReview: true,
-  name: string | null,
-  imageUrl: string | null,
-  stockStatus: string,
-- suggestedPrice: { price, currency } | null,   // REMOVE — sort order makes this redundant
+ needsReview: true,
+ name: string | null,
+ imageUrl: string | null,
+ stockStatus: string,
+- suggestedPrice: { price, currency } | null, // REMOVE — sort order makes this redundant
 + reviewReason: 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan',
-  priceCandidates: PriceCandidate[],             // NOW INCLUDES member-price, original-price entries
-- memberPrice: { price, currency } | null,       // REMOVE — surfaced via priceCandidates tier
-- originalPrice: { price, currency } | null,     // REMOVE — surfaced via priceCandidates tier
-  url: string,
-- html: string | null,                           // REMOVE or cap at 100KB — not needed client-side
+ priceCandidates: PriceCandidate[], // NOW INCLUDES member-price, original-price entries
+- memberPrice: { price, currency } | null, // REMOVE — surfaced via priceCandidates tier
+- originalPrice: { price, currency } | null, // REMOVE — surfaced via priceCandidates tier
+ url: string,
+- html: string | null, // REMOVE or cap at 100KB — not needed client-side
 }
 ```
 
@@ -827,8 +827,8 @@ The following bugs were uncovered while writing and running new Vitest unit test
 
 ### 12.1 Issue U-1: `cleanUrl` Hash Fragment Stripping Has False-Positive Matches via Single-Char KEEP_LIST Entries
 
-> **Severity: Low — Incorrect URL Normalisation**  
-> **Discovered:** 2026-07-02 (unit test session — `url-helper.test.ts`)  
+> **Severity: Low — Incorrect URL Normalisation** 
+> **Discovered:** 2026-07-02 (unit test session — `url-helper.test.ts`) 
 > **Status: Completed — resolved in v1.8.6**
 
 **File:** `src/utils/scraping/urlHelper.ts` L64
@@ -836,7 +836,7 @@ The following bugs were uncovered while writing and running new Vitest unit test
 ```typescript
 const hasEssentialHash = KEEP_LIST.some(k => hashLower.includes(k)) || hashLower.includes('pid');
 if (!hasEssentialHash) {
-  urlObj.hash = '';
+ urlObj.hash = '';
 }
 ```
 
@@ -845,7 +845,7 @@ The `KEEP_LIST` contains single-character entries like `'v'` (intended to match 
 **Example:**
 ```
 https://example.com/product#reviews
-→ '#reviews'.includes('v') === true   ← KEEP_LIST 'v' causes false match
+→ '#reviews'.includes('v') === true ← KEEP_LIST 'v' causes false match
 → Hash is NOT stripped (incorrect behaviour)
 ```
 
@@ -855,8 +855,8 @@ https://example.com/product#reviews
 
 ```typescript
 const hasEssentialHash = KEEP_LIST
-  .filter(k => k.length > 1)   // Exclude single-char entries for hash matching
-  .some(k => hashLower.includes(k)) || hashLower.includes('pid');
+ .filter(k => k.length > 1) // Exclude single-char entries for hash matching
+ .some(k => hashLower.includes(k)) || hashLower.includes('pid');
 ```
 
 Alternatively, maintain a separate `HASH_KEEP_LIST` distinct from the query-param KEEP_LIST.
@@ -865,8 +865,8 @@ Alternatively, maintain a separate `HASH_KEEP_LIST` distinct from the query-para
 
 ### 12.2 Issue U-2: `parsePrice` Incorrectly Resolves `Fr.` (Swiss Franc Short Form) to `'FR.'` Instead of `'CHF'`
 
-> **Severity: Low — Wrong Currency Code Returned**  
-> **Discovered:** 2026-07-02 (unit test session — `price-parser.test.ts`)  
+> **Severity: Low — Wrong Currency Code Returned** 
+> **Discovered:** 2026-07-02 (unit test session — `price-parser.test.ts`) 
 > **Status: Completed — resolved in v1.8.6**
 
 **File:** `src/utils/scraping/price/parser.ts` L46–48
@@ -874,7 +874,7 @@ Alternatively, maintain a separate `HASH_KEEP_LIST` distinct from the query-para
 ```typescript
 const resolved = currencyHelper.getCurrencyFromSymbolSync(currencySymbol, localeHint);
 currency = resolved || CURRENCY_MAP[currencySymbol.toUpperCase()] || currencySymbol.toUpperCase() || 'USD';
-//                     ↑ CURRENCY_MAP lookup happens AFTER .toUpperCase()
+// ↑ CURRENCY_MAP lookup happens AFTER .toUpperCase()
 ```
 
 `CURRENCY_MAP` contains the key `'Fr.'` mapped to `'CHF'`. However, the map lookup is performed on `currencySymbol.toUpperCase()`, which transforms `'Fr.'` into `'FR.'` before the lookup — so `CURRENCY_MAP['FR.']` is `undefined`, and the fallback `currencySymbol.toUpperCase()` returns the raw string `'FR.'` as the currency code instead of `'CHF'`.
@@ -883,15 +883,15 @@ currency = resolved || CURRENCY_MAP[currencySymbol.toUpperCase()] || currencySym
 
 **Recommendation:** Either:
 - Perform the `CURRENCY_MAP` lookup **before** calling `.toUpperCase()`:
-  ```typescript
-  currency = resolved || CURRENCY_MAP[currencySymbol] || CURRENCY_MAP[currencySymbol.toUpperCase()] || currencySymbol.toUpperCase() || 'USD';
-  ```
+ ```typescript
+ currency = resolved || CURRENCY_MAP[currencySymbol] || CURRENCY_MAP[currencySymbol.toUpperCase()] || currencySymbol.toUpperCase() || 'USD';
+ ```
 - Or add `'FR.'` as an additional key in `CURRENCY_MAP` alongside `'Fr.'`:
-  ```typescript
-  // In constants.ts
-  'Fr.': 'CHF',
-  'FR.': 'CHF',   // Add this line
-  ```
+ ```typescript
+ // In constants.ts
+ 'Fr.': 'CHF',
+ 'FR.': 'CHF', // Add this line
+ ```
 
 The second option is a one-line fix and requires no logic change.
 
@@ -908,9 +908,9 @@ The second option is a one-line fix and requires no logic change.
 
 ## 13. Round 2 Deep Audit — Full Stack Analysis — 2026-07-16
 
-**Auditor:** Claude Sonnet 4.6 (Thinking) — 5-agent parallel audit  
-**Scope:** Full read of all backend layers: orchestration, acquisition, transport, extractors, arbitration, product services, system services, routes  
-**Files Audited:** 40+ source files across all service domains  
+**Auditor:** Claude Sonnet 4.6 (Thinking) — 5-agent parallel audit 
+**Scope:** Full read of all backend layers: orchestration, acquisition, transport, extractors, arbitration, product services, system services, routes 
+**Files Audited:** 40+ source files across all service domains 
 
 ---
 
@@ -922,7 +922,7 @@ The second option is a one-line fix and requires no logic change.
 
 > **Severity: Critical — Data Loss**
 
-**File:** orchestration/extraction.ts L74  
+**File:** orchestration/extraction.ts L74 
 **Also:** orchestration/index.ts L144–154
 
 ```typescript
@@ -973,8 +973,8 @@ An upward spike (e.g. `$200 → $2000` due to currency parsing error or wrong el
 **Recommendation:**
 ```typescript
 const isExtremeDrift = anchorPrice && (
-  resolvedPrice < (anchorPrice * 0.5) ||
-  resolvedPrice > (anchorPrice * 2.5)
+ resolvedPrice < (anchorPrice * 0.5) ||
+ resolvedPrice > (anchorPrice * 2.5)
 );
 ```
 
@@ -994,7 +994,7 @@ Called on every `handleAutoMapping` and `handleRestoreStatus`. Under concurrent 
 
 **Recommendation:**
 ```typescript
-configCache.invalidate(domain);              // in handleAutoMapping
+configCache.invalidate(domain); // in handleAutoMapping
 configCache.invalidate(domainConfig.domain); // in handleRestoreStatus
 ```
 
@@ -1125,13 +1125,13 @@ The locally-declared union type omits `'price_drift'` which exists in the canoni
 ```typescript
 const maxRetries = 3;
 let retryCount = 0;
-while (retryCount <= maxRetries) {   // 4 iterations: 0,1,2,3
-  ...
-  if (status === 503 && retryCount < maxRetries) { // retries at 0→1,1→2,2→3 only
-    retryCount++;
-    continue;
-  }
-  throw new Error(`Remote Scraper Failed (${status}): ${msg}`); // fires on 4th iter
+while (retryCount <= maxRetries) { // 4 iterations: 0,1,2,3
+ ...
+ if (status === 503 && retryCount < maxRetries) { // retries at 0→1,1→2,2→3 only
+ retryCount++;
+ continue;
+ }
+ throw new Error(`Remote Scraper Failed (${status}): ${msg}`); // fires on 4th iter
 }
 throw new Error('Remote Scraper Failed: Max retries exceeded'); // ← DEAD CODE
 ```
@@ -1150,9 +1150,9 @@ On the 4th iteration `retryCount < maxRetries` is `false`. The code throws the f
 
 ```typescript
 if (useRemoteScraper || requiresBrowser) {
-  usedRemoteFallback = true;         // ← set before success check
-  const remoteHtml = await acquireRemoteHtml(options);
-  if (remoteHtml) { html = remoteHtml; }
+ usedRemoteFallback = true; // ← set before success check
+ const remoteHtml = await acquireRemoteHtml(options);
+ if (remoteHtml) { html = remoteHtml; }
 }
 ```
 
@@ -1182,8 +1182,8 @@ If the remote scraper returns a bot-challenged page, `challengeReason` is set bu
 
 ```typescript
 if (fallbackResult) {
-  return { ...fallbackResult, usedRemoteFallback: true };
-  // ← no check that fallbackResult.challengeReason is null
+ return { ...fallbackResult, usedRemoteFallback: true };
+ // ← no check that fallbackResult.challengeReason is null
 }
 ```
 
@@ -1192,7 +1192,7 @@ If the remote fallback itself returns a Cloudflare-challenged page, this is retu
 **Recommendation:**
 ```typescript
 if (fallbackResult && !fallbackResult.challengeReason) {
-  return { ...fallbackResult, usedRemoteFallback: true };
+ return { ...fallbackResult, usedRemoteFallback: true };
 }
 ```
 
@@ -1334,7 +1334,7 @@ WAF markers like `'Incapsula incident ID'` and `'perimeterx'` are case-sensitive
 **File:** transport/detection.ts L10
 
 ```typescript
-html.includes('Reference #18.')  // misses Reference #1., #22., etc.
+html.includes('Reference #18.') // misses Reference #1., #22., etc.
 ```
 
 **Recommendation:** Use regex: `/Reference #\d+\./.test(html)`.
@@ -1381,7 +1381,7 @@ Nested quantifiers on large HTML exhibit catastrophic backtracking on malformed 
 
 ```typescript
 } else if (typeof obj === 'object') {
-  Object.values(obj).forEach(walk);
+ Object.values(obj).forEach(walk);
 }
 ```
 
@@ -1443,7 +1443,7 @@ $('script[type="application/ld+json"]').remove();
 
 ```typescript
 if (trimmed.includes('|')) {
-  const parts = trimmed.split('|');
+ const parts = trimmed.split('|');
 ```
 
 `div[lang|="en"]` (CSS language-subcode attribute selector) would be incorrectly split into `div[lang::attr(="en"])` — a completely invalid selector.
@@ -1609,7 +1609,7 @@ Each XPath selector causes a full DOM serialize + re-parse. 5 XPath selectors on
 
 ```typescript
 if (currency === "$") {
-  currency = currencyHint || 'USD';
+ currency = currencyHint || 'USD';
 }
 ```
 
@@ -1659,10 +1659,10 @@ In some Cheerio edge cases with detached/orphaned nodes, the `parent.length` che
 
 ```typescript
 private async updateMetadata(
-  _client: PoolClient, // "Reserved for future transactional needs" — never used
-  ...
+ _client: PoolClient, // "Reserved for future transactional needs" — never used
+ ...
 ) {
-  await productRepository.update(productId, userId, metadataUpdates); // ← uses pool
+ await productRepository.update(productId, userId, metadataUpdates); // ← uses pool
 }
 ```
 
@@ -1772,8 +1772,8 @@ When `runAutoRetailerConfig` is called within an existing transaction (`ownClien
 **Recommendation:**
 ```typescript
 } catch (err) {
-  logger.error(`Retailer | Config Auto-Update Failed | ...`, 'Products');
-  if (!ownClient) throw err; // propagate so outer TX can roll back
+ logger.error(`Retailer | Config Auto-Update Failed | ...`, 'Products');
+ if (!ownClient) throw err; // propagate so outer TX can roll back
 }
 ```
 
@@ -1886,11 +1886,11 @@ Contradicts the multi-currency resolution architecture. Australian store product
 
 ```typescript
 getStatus() {
-  return {
-    ...
-    cachedAdminEmail: this.cachedAdminEmail,  // ← exposed
-    ...
-  };
+ return {
+ ...
+ cachedAdminEmail: this.cachedAdminEmail, // ← exposed
+ ...
+ };
 }
 ```
 
@@ -1908,7 +1908,7 @@ Called from `GET /api/admin/debug/db-health`. Admin email address is returned in
 
 ```typescript
 const response = await axios.get(
-  `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+ `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
 ```
 
 URL query parameters are captured in proxy logs, access logs, and error tracking tools.
@@ -2255,8 +2255,8 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 
 ## 14. Round 3 Deep Audit — Frontend & Full-Stack Mappings — 2026-07-16
 
-**Auditor:** Claude Sonnet 4.6 (Thinking)  
-**Scope:** Frontend feature layers (`products`, `notifications`, `settings`, `admin`, `debug`, `auth`) & service worker caching  
+**Auditor:** Claude Sonnet 4.6 (Thinking) 
+**Scope:** Frontend feature layers (`products`, `notifications`, `settings`, `admin`, `debug`, `auth`) & service worker caching 
 **Focus Areas:** UI state handling · caching validation · pagination conflict · validation · full-stack architectural mappings
 
 ---
@@ -2268,14 +2268,14 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 * **File:** sw.js L43–52
 * **Description:** The Service Worker implements a "Network First" strategy but caches all returned responses, including HTTP errors (e.g. 500, 502, 404). If a user experiences a transient server outage, the SW will serve the cached 500 error page even when they are back online or the server is healthy.
 * **Recommendation:** Wrap `cache.put` to verify the response was successful (`response.ok && response.status === 200`):
-  ```javascript
-  if (response.ok && response.status === 200) {
-    const responseClone = response.clone();
-    caches.open(CACHE_NAME).then((cache) => {
-      cache.put(event.request, responseClone);
-    });
-  }
-  ```
+ ```javascript
+ if (response.ok && response.status === 200) {
+ const responseClone = response.clone();
+ caches.open(CACHE_NAME).then((cache) => {
+ cache.put(event.request, responseClone);
+ });
+ }
+ ```
 
 ---
 
@@ -2297,8 +2297,8 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 * **Severity: High — Architecture Mismatch**
 * **Files:** NotificationHistoryPage.tsx L39–41, L73–76
 * **Description:** 
-  1. The API returns paginated results (limit 20). The frontend filters out `session_activity` and `system_info` client-side, causing pages to have fewer than 20 items and leaving trailing empty pages.
-  2. Search filters ("Drops", "Targets", "Stock") filter loaded alerts *only client-side on the current page*. If the loaded 20 items are all stock events, selecting the "Drops" tab will render an empty page, even if thousands of drop events exist on later pages.
+ 1. The API returns paginated results (limit 20). The frontend filters out `session_activity` and `system_info` client-side, causing pages to have fewer than 20 items and leaving trailing empty pages.
+ 2. Search filters ("Drops", "Targets", "Stock") filter loaded alerts *only client-side on the current page*. If the loaded 20 items are all stock events, selecting the "Drops" tab will render an empty page, even if thousands of drop events exist on later pages.
 * **Recommendation:** Implement server-side filtering by passing the category/type to the backend history API, and resetting the page index to `1` on filter change.
 
 #### Issue FE-5 — MEDIUM: Notification Bell Stale Closures (Missing Dependencies) [COMPLETED]
@@ -2433,9 +2433,9 @@ Here we link frontend vulnerabilities to their corresponding backend counterpart
 
 ## 16. CSS Selector Picker & Debug Workstation Audit
 
-**Date:** 2026-07-16  
-**Auditor:** Claude Sonnet 4.6 (Thinking)  
-**Scope:** `frontend/src/features/debug/pages/` · `frontend/src/features/admin/components/UnifiedSelectorManager.tsx` · `backend/src/routes/admin/debug.ts`  
+**Date:** 2026-07-16 
+**Auditor:** Claude Sonnet 4.6 (Thinking) 
+**Scope:** `frontend/src/features/debug/pages/` · `frontend/src/features/admin/components/UnifiedSelectorManager.tsx` · `backend/src/routes/admin/debug.ts` 
 **Reference:** `other-apps/changedetection/changedetectionio/static/js/visual-selector.js`
 
 ---
@@ -2446,13 +2446,13 @@ The selector picking and debug HTML features are split across two surfaces:
 
 ```
 Debug Workstation (DebugPage.tsx)
-  ├── useDebugScraper.ts       → Calls POST /api/admin/debug/extract
-  ├── SelectorTester.tsx       → Live selector lab (runs querySelectorAll in browser)
-  └── ResultDisplay.tsx        → Shows debug results, "Open Debug HTML" link
+ ├── useDebugScraper.ts → Calls POST /api/admin/debug/extract
+ ├── SelectorTester.tsx → Live selector lab (runs querySelectorAll in browser)
+ └── ResultDisplay.tsx → Shows debug results, "Open Debug HTML" link
 
 Retailer Config Editor (RetailerConfigEditor.tsx)
-  ├── UnifiedSelectorManager.tsx → CSS/Regex/Attr/HTML selector list management
-  └── ScrapeValidationHub.tsx    → Test URL + Extract button, shows extraction result
+ ├── UnifiedSelectorManager.tsx → CSS/Regex/Attr/HTML selector list management
+ └── ScrapeValidationHub.tsx → Test URL + Extract button, shows extraction result
 ```
 
 The Live Selector Lab runs entirely client-side via the browser `DOMParser` + `querySelectorAll`. The "Open Debug HTML" link points to a file saved on the backend server disk. Neither feature works reliably by default.
@@ -2466,14 +2466,14 @@ The Live Selector Lab runs entirely client-side via the browser `DOMParser` + `q
 **File:** `useDebugScraper.ts` L14, L78–140
 
 ```typescript
-const [returnHtml, setReturnHtml] = useState(false);  // Default: false
+const [returnHtml, setReturnHtml] = useState(false); // Default: false
 // ...
 useEffect(() => {
-  if (!liveSelector || !result?.html) {   // result.html is always undefined
-    setLiveMatches([]);
-    return;
-  }
-  // ... querySelectorAll logic that never runs
+ if (!liveSelector || !result?.html) { // result.html is always undefined
+ setLiveMatches([]);
+ return;
+ }
+ // ... querySelectorAll logic that never runs
 }, [liveSelector, result?.html]);
 ```
 
@@ -2481,7 +2481,7 @@ useEffect(() => {
 
 ```typescript
 if (!returnHtml) {
-  delete response.html;   // html always deleted unless user manually toggles the switch
+ delete response.html; // html always deleted unless user manually toggles the switch
 }
 ```
 
@@ -2501,7 +2501,7 @@ if (!returnHtml) {
 
 ```typescript
 } else {
-  const elements = doc.querySelectorAll(liveSelector);  // Raw browser call — no pre-processing
+ const elements = doc.querySelectorAll(liveSelector); // Raw browser call — no pre-processing
 ```
 
 PriceStalker's selector engine supports extended syntax that the browser's native `querySelectorAll` will **always throw a `SyntaxError` for**:
@@ -2521,14 +2521,14 @@ All of these are caught silently by the `try/catch` and displayed as **"Invalid 
 
 ```typescript
 function parseExtendedSelector(sel: string): { base: string; attr?: string; mode: 'css' | 'attr' | 'regex' | 'html' | 'stock' } {
-  if (!sel) return { base: '', mode: 'css' };
-  if (sel.startsWith('~') && sel.endsWith('~')) return { base: sel.slice(1, -1), mode: 'regex' };
-  if (sel.startsWith('!')) return { base: sel.slice(1), mode: 'html' };
-  const stockMatch = sel.match(/^(.+?)::(equals|contains)\((.+?)\)->(.+)$/);
-  if (stockMatch) return { base: stockMatch[1].replace(/::attr\(.+?\)$/, ''), mode: 'stock' };
-  const attrMatch = sel.match(/^(.+?)::attr\((.+?)\)$/);
-  if (attrMatch) return { base: attrMatch[1], attr: attrMatch[2], mode: 'attr' };
-  return { base: sel, mode: 'css' };
+ if (!sel) return { base: '', mode: 'css' };
+ if (sel.startsWith('~') && sel.endsWith('~')) return { base: sel.slice(1, -1), mode: 'regex' };
+ if (sel.startsWith('!')) return { base: sel.slice(1), mode: 'html' };
+ const stockMatch = sel.match(/^(.+?)::(equals|contains)\((.+?)\)->(.+)$/);
+ if (stockMatch) return { base: stockMatch[1].replace(/::attr\(.+?\)$/, ''), mode: 'stock' };
+ const attrMatch = sel.match(/^(.+?)::attr\((.+?)\)$/);
+ if (attrMatch) return { base: attrMatch[1], attr: attrMatch[2], mode: 'attr' };
+ return { base: sel, mode: 'css' };
 }
 ```
 
@@ -2544,7 +2544,7 @@ For `mode: 'attr'`, run `querySelectorAll(base)` and extract `element.getAttribu
 
 ```tsx
 <div className="match-content">
-  <strong>Text:</strong> <code>{match.text || '(empty)'}</code>
+ <strong>Text:</strong> <code>{match.text || '(empty)'}</code>
 </div>
 ```
 
@@ -2563,15 +2563,15 @@ When a selector matches one of these elements, the live lab shows `Text: (empty)
 ```typescript
 const PRICE_ATTRS = ['content', 'data-price', 'value', 'data-value', 'itemprop', 'data-attr', 'href'];
 matches = Array.from(elements).slice(0, 10).map(el => ({
-  tagName: el.tagName.toLowerCase(),
-  text: el.textContent?.trim().substring(0, 100),
-  html: el.innerHTML.substring(0, 200),
-  suggestedAttr: PRICE_ATTRS.find(a => el.getAttribute(a)),
-  suggestedAttrValue: PRICE_ATTRS.map(a => el.getAttribute(a)).find(Boolean),
-  attributes: Array.from(el.attributes).reduce((acc: any, attr) => {
-    acc[attr.name] = attr.value;
-    return acc;
-  }, {})
+ tagName: el.tagName.toLowerCase(),
+ text: el.textContent?.trim().substring(0, 100),
+ html: el.innerHTML.substring(0, 200),
+ suggestedAttr: PRICE_ATTRS.find(a => el.getAttribute(a)),
+ suggestedAttrValue: PRICE_ATTRS.map(a => el.getAttribute(a)).find(Boolean),
+ attributes: Array.from(el.attributes).reduce((acc: any, attr) => {
+ acc[attr.name] = attr.value;
+ return acc;
+ }, {})
 }));
 ```
 
@@ -2593,18 +2593,18 @@ When a user enters a CSS selector and presses "Add", the value is appended direc
 
 ```typescript
 const handleAdd = () => {
-  let finalValue = inputValue.trim();
-  if (!finalValue) return;
-  
-  if (type === 'css') {
-    try {
-      document.querySelectorAll(finalValue);  // throws if invalid
-    } catch {
-      setCssValidationError(`Invalid CSS selector: "${finalValue}"`);
-      return;
-    }
-  }
-  // ... rest of add logic
+ let finalValue = inputValue.trim();
+ if (!finalValue) return;
+ 
+ if (type === 'css') {
+ try {
+ document.querySelectorAll(finalValue); // throws if invalid
+ } catch {
+ setCssValidationError(`Invalid CSS selector: "${finalValue}"`);
+ return;
+ }
+ }
+ // ... rest of add logic
 };
 ```
 
@@ -2621,7 +2621,7 @@ Add a `cssValidationError` state and render it as a red inline error beneath the
 ```typescript
 let debugFileUrl = null;
 if (result.html) {
-  debugFileUrl = systemService.saveDebugHtml(url, result.html);
+ debugFileUrl = systemService.saveDebugHtml(url, result.html);
 }
 // ...
 if (!returnHtml) { delete response.html; }

@@ -10,22 +10,22 @@ PriceStalker uses a unified selector engine that allows administrators to define
 By default, any rule you input is treated as a CSS selector. Cheerio parses the page, finds the element, and extracts its text.
 * **Syntax**: `.price-amount`, `span[itemprop="price"]`, `#pdp-details .current-price`
 * **Attribute extraction**: Add `::attr(attributeName)` to pull metadata values.
-  * *Example*: `link[itemprop="availability"]::attr(href)` (extracts the link URL)
+ * *Example*: `link[itemprop="availability"]::attr(href)` (extracts the link URL)
 * **Raw HTML extraction**: Prefix with `!` to extract the outer HTML snippet instead of plain text.
-  * *Example*: `!.product-title`
+ * *Example*: `!.product-title`
 
 ### XPath
 When CSS is not flexible enough (e.g. you need to select elements based on sibling positioning or text contents), you can use XPath queries.
 * **Syntax**: Must start with `xpath://`
 * **Prepend Rule**: If the path does not start with `/` or `.`, PriceStalker automatically prepends `//` for you.
-  * *Example*: `xpath://div[@class="pricing"]`
-  * *Example*: `xpath:span[text()="Out of Stock"]` (becomes `xpath://span[text()="Out of Stock"]`)
+ * *Example*: `xpath://div[@class="pricing"]`
+ * *Example*: `xpath:span[text()="Out of Stock"]` (becomes `xpath://span[text()="Out of Stock"]`)
 
 ### Regex (Regular Expressions)
 If the price or details are locked inside script blocks or raw Javascript variables on the page, you can use regular expressions.
 * **Syntax**: Must start with `regex:/pattern/`
 * **Capture Groups**: The first match capture group `()` is extracted. If no groups are present, the entire expression match is taken.
-  * *Example*: `regex:/var price = "([0-9.]+)";/`
+ * *Example*: `regex:/var price = "([0-9.]+)";/`
 * **Legacy format**: Patterns enclosed in tildes (`~pattern~`) are automatically treated as regex rules.
 
 ---
@@ -34,7 +34,7 @@ If the price or details are locked inside script blocks or raw Javascript variab
 Modifiers allow you to assert a status directly instead of checking against global phrase lists. This is highly useful for stock indicators.
 
 ### Syntax
-`base-selector::equals(targetValue)->status`  
+`base-selector::equals(targetValue)->status` 
 `base-selector::contains(substring)->status`
 
 ### Target Statuses

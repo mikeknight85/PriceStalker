@@ -2,9 +2,9 @@
 
 This document is the canonical reference for how PriceStalker processes a product from initial URL submission through to scheduled monitoring. It supersedes all older flow diagrams (see `old_docs/`).
 
-> For the visual end-to-end diagram, see [product_lifecycle_slides.md](product_lifecycle_slides.md).  
+> For the visual end-to-end diagram, see [product_lifecycle_slides.md](product_lifecycle_slides.md). 
 
-> For the extraction system internals, see [SELECTORS.md](SELECTORS.md).  
+> For the extraction system internals, see [SELECTORS.md](SELECTORS.md). 
 > For the consensus weighting table and arbitration audit, see the upstream audit register (not yet imported).
 
 ---
@@ -14,14 +14,14 @@ This document is the canonical reference for how PriceStalker processes a produc
 `scrapeProductWithVoting()` in `orchestration/index.ts` executes **six sequential phases**:
 
 ```
-Phase 0: initScrapeSession        → Load domain config, AI settings, currency/locale hints
-Phase 1: acquireHtml              → HTTP fetch (axios) → remote Puppeteer browser fallback (the remotescraper service)
-Phase 2: runExtractionPhase       → DOM denoise → metadata (stock/title/image) → price candidates
-Phase 3: Validation               → handleRetailerMaintenance (bot/maintenance detection)
-Phase 4: handleAutoMapping        → AI auto-generates retailer config if none exists
-Phase 5: runConsensusPhase        → findPriceConsensus → weighted arbitration → OOS guardrails
-Phase 6: runVerificationPhase     → Optional AI cross-verification of selected price
-          → Result returned to caller (ProductRefreshService / ProductDiscoveryService)
+Phase 0: initScrapeSession → Load domain config, AI settings, currency/locale hints
+Phase 1: acquireHtml → HTTP fetch (axios) → remote Puppeteer browser fallback (the remotescraper service)
+Phase 2: runExtractionPhase → DOM denoise → metadata (stock/title/image) → price candidates
+Phase 3: Validation → handleRetailerMaintenance (bot/maintenance detection)
+Phase 4: handleAutoMapping → AI auto-generates retailer config if none exists
+Phase 5: runConsensusPhase → findPriceConsensus → weighted arbitration → OOS guardrails
+Phase 6: runVerificationPhase → Optional AI cross-verification of selected price
+ → Result returned to caller (ProductRefreshService / ProductDiscoveryService)
 ```
 
 ---
@@ -45,7 +45,7 @@ Phase 6: runVerificationPhase     → Optional AI cross-verification of selected
 3. **Bot-challenge detection** — Flags Imperva/Cloudflare challenge responses.
 4. **Remote Puppeteer fallback** (the `remotescraper` service) — If standard request fails or `use_remote_scraper=true`, renders via stealth browser. On success, sets `use_remote_scraper=true` in config for future runs.
 
-> **URL cleaning:** `cleanUrl()` in `urlHelper.ts` strips UTM/affiliate/tracking parameters before lookup and storage.  
+> **URL cleaning:** `cleanUrl()` in `urlHelper.ts` strips UTM/affiliate/tracking parameters before lookup and storage. 
 > **Known quirk:** The hash-stripping logic uses `.includes(k)` against KEEP_LIST, meaning single-char entries like `'v'` match fragments like `#reviews` — documented in `url-helper.test.ts`. upstream audit issue **U-1**.
 
 ---
@@ -109,7 +109,7 @@ Triggers when no retailer config exists (or `isShellConfig = true`) AND `ai_auto
 3. **Config Save** — Saves generated CSS selectors to `retailer_configs`.
 4. **Re-Scrape** — Full extraction re-runs with the new config.
 
-> ⚠️ `isShellConfig` currently does NOT include `pre_order_price_selectors` or `original_price_selectors` in its guard check — a config with only those fields set would trigger unnecessary AI mapping. upstream audit issue **X-2**.
+> `isShellConfig` currently does NOT include `pre_order_price_selectors` or `original_price_selectors` in its guard check — a config with only those fields set would trigger unnecessary AI mapping. upstream audit issue **X-2**.
 
 ---
 
@@ -142,7 +142,7 @@ Candidates are grouped by source key (method + selector). Each group accumulates
 | `generic-css` | 0.2 |
 | All others | 1.0 |
 
-Tie-breaking within a group: highest confidence → lowest price (⚠️ see audit issue **C-3**).
+Tie-breaking within a group: highest confidence → lowest price ( see audit issue **C-3**).
 
 ### OOS Guardrails (`runConsensusPhase`)
 
@@ -175,20 +175,20 @@ If `ai_verification_enabled = true` and a price was resolved:
 When `needsReview = true`, the API response includes a `PriceReviewResponse` blob:
 
 ```
-POST /api/products              (new product add)
-  └─ productDiscoveryService.initiateProductDiscovery()
-       └─ if needsReview=true → returns PriceReviewResponse (nothing written to DB yet)
-            └─ Frontend shows PriceSelectionModal
-                 └─ User confirms → POST /api/products (with selectedPrice + selectedMethod)
+POST /api/products (new product add)
+ └─ productDiscoveryService.initiateProductDiscovery()
+ └─ if needsReview=true → returns PriceReviewResponse (nothing written to DB yet)
+ └─ Frontend shows PriceSelectionModal
+ └─ User confirms → POST /api/products (with selectedPrice + selectedMethod)
 
-POST /api/products/:id/scan     (re-scan existing product)
-  └─ productRescanService.scanProduct()
-       └─ ALWAYS returns PriceReviewResponse + full voting blob
-            └─ Frontend shows PriceSelectionModal
-                 └─ User confirms → POST /api/products/:id/confirm
-                      └─ confirmation.ts → saveScrapeResult('manual-confirm')
-                           → runAutoRetailerConfig() → promotes selector to priority 0 in DB
-                           → productRepository.update({ needs_price_review: false, ai_status: 'confirmed' })
+POST /api/products/:id/scan (re-scan existing product)
+ └─ productRescanService.scanProduct()
+ └─ ALWAYS returns PriceReviewResponse + full voting blob
+ └─ Frontend shows PriceSelectionModal
+ └─ User confirms → POST /api/products/:id/confirm
+ └─ confirmation.ts → saveScrapeResult('manual-confirm')
+ → runAutoRetailerConfig() → promotes selector to priority 0 in DB
+ → productRepository.update({ needs_price_review: false, ai_status: 'confirmed' })
 ```
 
 ### Candidate Enrichment
@@ -226,7 +226,7 @@ After a successful scrape (or user confirmation via the Voting Modal), `runAutoR
 5. **Generic selector cleaning** — `cleanSelectorArray()` removes any generic/global selectors that are now in the domain-specific array to prevent redundancy.
 6. **Cache invalidation** — `configCache.invalidate(domain)` fires after the DB upsert commits.
 
-> ⚠️ `runAutoRetailerConfig` currently runs **outside** the outer persistence transaction — a partial-failure risk. upstream audit issue **V-1** (FIXED in v1.8.2).
+> `runAutoRetailerConfig` currently runs **outside** the outer persistence transaction — a partial-failure risk. upstream audit issue **V-1** (FIXED in v1.8.2).
 
 ---
 

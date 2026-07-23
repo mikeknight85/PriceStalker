@@ -4,7 +4,7 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 
 ---
 
-## 🔐 Authentication & Session Endpoints
+## Authentication & Session Endpoints
 *No token required for registration status or login.*
 
 <details><summary><b>Authentication API</b></summary>
@@ -18,7 +18,7 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 
 ---
 
-## 📦 Products & Watcher Management
+## Products & Watcher Management
 
 <details><summary><b>Products API</b></summary>
 
@@ -35,7 +35,7 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 
 ---
 
-## ⚙️ User Settings & Profile
+## User Settings & Profile
 
 <details><summary><b>Settings & Profile API</b></summary>
 
@@ -53,7 +53,7 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 
 ---
 
-## 🛡️ Administrative Management (Admin Only)
+## Administrative Management (Admin Only)
 *All admin endpoints require an active user account with `is_admin: true` or a valid system token.*
 
 <details><summary><b>System API Tokens</b></summary>
@@ -110,7 +110,7 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 
 ---
 
-## 🔍 Debugging & Extraction
+## Debugging & Extraction
 <details><summary><b>Extract API</b></summary>
 
 | Method | Endpoint | Description |
@@ -122,13 +122,13 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 **Payload**:
 ```json
 {
-  "url": "https://www.example.com/product",
-  "mode": "scraper",
-  "config": {
-    "use_remote_scraper": false
-  },
-  "use_ai": true,
-  "returnHtml": false
+ "url": "https://www.example.com/product",
+ "mode": "scraper",
+ "config": {
+ "use_remote_scraper": false
+ },
+ "use_ai": true,
+ "returnHtml": false
 }
 ```
 

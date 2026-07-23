@@ -5,8 +5,8 @@ Target release: **v1.2.0**. Feature branch: `feature/sso`.
 ## Goals
 
 - Let PriceStalker act as an OIDC Relying Party against any compliant provider
-  (Authentik, Keycloak, Google, Okta, Auth0, etc.) using the standard
-  **Authorization Code + PKCE** flow.
+ (Authentik, Keycloak, Google, Okta, Auth0, etc.) using the standard
+ **Authorization Code + PKCE** flow.
 - Coexist with the existing local email/password system — admin picks a policy.
 - Safe, incremental rollout: ship off-by-default, flip on once verified in prod.
 
@@ -16,8 +16,8 @@ Target release: **v1.2.0**. Feature branch: `feature/sso`.
 - SAML. Only OIDC.
 - Multiple simultaneous OIDC providers — one provider at a time.
 - Group → role mapping from provider claims — all OIDC users start as regular
-  users; admin promotes manually (admin-of-first-sight rule below handles the
-  initial admin).
+ users; admin promotes manually (admin-of-first-sight rule below handles the
+ initial admin).
 - SCIM user provisioning — JIT only.
 
 ## Decisions (answered by project owner)
@@ -61,34 +61,34 @@ Even in `OIDC only` policy mode, local users with `is_admin=true` must still be 
 ### Flow (Authorization Code + PKCE)
 
 ```
-Browser                 PriceStalker API           Authentik / IdP
-   │                          │                          │
-   │ click "Sign in with SSO" │                          │
-   │────────────────────────▶│                          │
-   │                          │ discovery + gen           │
-   │                          │ code_verifier/state/nonce │
-   │                          │ store in short-lived      │
-   │                          │ server-side session       │
-   │ 302 redirect to IdP      │                          │
-   │◀─────────────────────────│                          │
-   │────────────────────────────────────────────────────▶│
-   │                          │              authenticate │
-   │◀────────────────────────────────────────────────────│
-   │ 302 back to /api/auth/oidc/callback?code=&state=     │
-   │─────────────────────────▶│                          │
-   │                          │ verify state              │
-   │                          │ exchange code+verifier    │
-   │                          │────────────────────────▶│
-   │                          │       id_token+userinfo  │
-   │                          │◀────────────────────────│
-   │                          │ verify ID token (JWKS)    │
-   │                          │ verify nonce              │
-   │                          │ lookup / JIT-create user  │
-   │                          │ issue our own JWT         │
-   │ 302 to /auth/sso-complete#token=<jwt>                │
-   │◀─────────────────────────│                          │
-   │ JS reads hash, stores in localStorage, clears hash,  │
-   │ redirects to /                                       │
+Browser PriceStalker API Authentik / IdP
+ │ │ │
+ │ click "Sign in with SSO" │ │
+ │────────────────────────▶│ │
+ │ │ discovery + gen │
+ │ │ code_verifier/state/nonce │
+ │ │ store in short-lived │
+ │ │ server-side session │
+ │ 302 redirect to IdP │ │
+ │◀─────────────────────────│ │
+ │────────────────────────────────────────────────────▶│
+ │ │ authenticate │
+ │◀────────────────────────────────────────────────────│
+ │ 302 back to /api/auth/oidc/callback?code=&state= │
+ │─────────────────────────▶│ │
+ │ │ verify state │
+ │ │ exchange code+verifier │
+ │ │────────────────────────▶│
+ │ │ id_token+userinfo │
+ │ │◀────────────────────────│
+ │ │ verify ID token (JWKS) │
+ │ │ verify nonce │
+ │ │ lookup / JIT-create user │
+ │ │ issue our own JWT │
+ │ 302 to /auth/sso-complete#token=<jwt> │
+ │◀─────────────────────────│ │
+ │ JS reads hash, stores in localStorage, clears hash, │
+ │ redirects to / │
 ```
 
 Why the hash fragment, not query string: hash is never sent to the server,
@@ -104,16 +104,16 @@ validation. Pin v5.x for CommonJS compatibility (v6+ is ESM-only).
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| `GET`  | `/config/public` | none | Returns `{ enabled, policy, providerName }` — used by the login page to decide what to render |
-| `GET`  | `/start` | none | Initiates flow: generates PKCE + state + nonce, stores server-side, 302 to IdP |
-| `GET`  | `/callback` | none | IdP redirects here with `code` + `state`. Verifies, exchanges, issues JWT, 302 to frontend with `#token=` |
+| `GET` | `/config/public` | none | Returns `{ enabled, policy, providerName }` — used by the login page to decide what to render |
+| `GET` | `/start` | none | Initiates flow: generates PKCE + state + nonce, stores server-side, 302 to IdP |
+| `GET` | `/callback` | none | IdP redirects here with `code` + `state`. Verifies, exchanges, issues JWT, 302 to frontend with `#token=` |
 
 **Admin routes** under `/api/admin/auth` (existing admin middleware):
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET`  | `/` | Read current config (client_secret redacted) |
-| `PUT`  | `/` | Update config |
+| `GET` | `/` | Read current config (client_secret redacted) |
+| `PUT` | `/` | Update config |
 | `POST` | `/test-discovery` | Hit the issuer's `.well-known/openid-configuration` and return success/error — lets admin verify the issuer URL before saving |
 
 **Short-lived flow state storage**: we need to persist the `code_verifier`, `state`, and `nonce` between the initial redirect and the callback. Options:
@@ -132,23 +132,23 @@ ALTER TABLE users ADD COLUMN oidc_subject TEXT;
 ALTER TABLE users ADD COLUMN oidc_issuer TEXT;
 CREATE UNIQUE INDEX users_oidc_sub_idx ON users(oidc_issuer, oidc_subject) WHERE oidc_subject IS NOT NULL;
 
-ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;  -- OIDC users have no password
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL; -- OIDC users have no password
 ```
 
 New table `auth_config` (single row, admin-only):
 
 ```sql
 CREATE TABLE IF NOT EXISTS auth_config (
-  id INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
-  policy VARCHAR(20) NOT NULL DEFAULT 'local',  -- 'local' | 'oidc' | 'both'
-  oidc_enabled BOOLEAN NOT NULL DEFAULT false,
-  oidc_provider_name TEXT,                 -- display label, e.g. "Authentik"
-  oidc_issuer_url TEXT,
-  oidc_client_id TEXT,
-  oidc_client_secret TEXT,                 -- stored plain, never returned via API
-  oidc_scopes TEXT NOT NULL DEFAULT 'openid profile email',
-  oidc_jit_enabled BOOLEAN NOT NULL DEFAULT true,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ id INTEGER PRIMARY KEY CHECK (id = 1), -- singleton row
+ policy VARCHAR(20) NOT NULL DEFAULT 'local', -- 'local' | 'oidc' | 'both'
+ oidc_enabled BOOLEAN NOT NULL DEFAULT false,
+ oidc_provider_name TEXT, -- display label, e.g. "Authentik"
+ oidc_issuer_url TEXT,
+ oidc_client_id TEXT,
+ oidc_client_secret TEXT, -- stored plain, never returned via API
+ oidc_scopes TEXT NOT NULL DEFAULT 'openid profile email',
+ oidc_jit_enabled BOOLEAN NOT NULL DEFAULT true,
+ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 INSERT INTO auth_config (id) VALUES (1) ON CONFLICT DO NOTHING;
 ```
@@ -240,30 +240,30 @@ Items deliberately out of scope for the initial release, roughly in priority
 order:
 
 - **Single Logout (SLO)** — when the admin logs out of the IdP, PriceStalker
-  should invalidate their JWT too. Today the two sessions are decoupled: an
-  IdP logout doesn't reach into PriceStalker's localStorage. Implementation
-  path: back-channel logout endpoint at `/api/auth/oidc/backchannel-logout`,
-  session-ID tracking in JWTs, a server-side session store (probably a new
-  `user_sessions` table — the in-memory flow-state Map won't cut it for this),
-  and Authentik/other IdP configuration. Target: **v1.3.0**.
+ should invalidate their JWT too. Today the two sessions are decoupled: an
+ IdP logout doesn't reach into PriceStalker's localStorage. Implementation
+ path: back-channel logout endpoint at `/api/auth/oidc/backchannel-logout`,
+ session-ID tracking in JWTs, a server-side session store (probably a new
+ `user_sessions` table — the in-memory flow-state Map won't cut it for this),
+ and Authentik/other IdP configuration. Target: **v1.3.0**.
 - **Silent auth (prompt=none)** — in `both` policy mode, attempt a background
-  OIDC auth on page load to discover if the user already has an IdP session.
-  If yes, auto-sign-in; if no, show the regular login page. Complementary to
-  SLO — together they make the SSO feel truly seamless.
+ OIDC auth on page load to discover if the user already has an IdP session.
+ If yes, auto-sign-in; if no, show the regular login page. Complementary to
+ SLO — together they make the SSO feel truly seamless.
 - **Shorter JWT lifetime for OIDC users** — 7 days is fine for local users;
-  OIDC users could plausibly have shorter JWTs (e.g. 8h) to tighten the gap
-  until SLO lands. Simple to implement, worth doing if v1.3.0 slips.
+ OIDC users could plausibly have shorter JWTs (e.g. 8h) to tighten the gap
+ until SLO lands. Simple to implement, worth doing if v1.3.0 slips.
 - **Group → role mapping from provider claims** — map an IdP group (e.g.
-  `pricestalker-admins`) to the `is_admin` flag so admin privileges survive
-  JIT without manual promotion. Requires a new admin UI for the mapping rules.
+ `pricestalker-admins`) to the `is_admin` flag so admin privileges survive
+ JIT without manual promotion. Requires a new admin UI for the mapping rules.
 - **Multiple simultaneous providers** — schema already leaves room (per-user
-  `oidc_issuer`). Admin UI only supports one for v1.2.0.
+ `oidc_issuer`). Admin UI only supports one for v1.2.0.
 - **Email change handling** — if an OIDC user's email changes in the IdP,
-  currently we don't update PriceStalker's record. Needs a "refresh from
-  provider on sign-in" pass that updates (name, email) from the latest claims.
+ currently we don't update PriceStalker's record. Needs a "refresh from
+ provider on sign-in" pass that updates (name, email) from the latest claims.
 - **PKCE-only / public client support** — we require a client secret today.
-  Public-client flows (no secret) would let purely frontend or mobile
-  deployments work.
+ Public-client flows (no secret) would let purely frontend or mobile
+ deployments work.
 
 ## Rejected alternatives
 

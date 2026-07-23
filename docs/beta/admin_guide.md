@@ -4,7 +4,7 @@ This guide describes how to navigate and manage the administrative features of t
 
 ---
 
-## 🗺️ Sidebar Navigation Tabs
+## Sidebar Navigation Tabs
 
 The System Administration screen is organized into eight specialized tabs:
 

@@ -7,9 +7,9 @@ This document explains how to configure custom selectors, attribute-based extrac
 
 ---
 
-## 🛠️ UI Field Mapping
+## UI Field Mapping
 
-When configuring a retailer via the Admin panel, use the following fields inside the **"📦 Stock Status & Phrases"** collapsible card:
+When configuring a retailer via the Admin panel, use the following fields inside the **" Stock Status & Phrases"** collapsible card:
 
 | Field Name | Description |
 | :--- | :--- |
@@ -20,7 +20,7 @@ When configuring a retailer via the Admin panel, use the following fields inside
 
 ---
 
-## 🚀 Unified Selector Engine
+## Unified Selector Engine
 
 PriceStalker uses a unified multi-engine selector system that allows you to mix and match CSS, XPath, and Regex within the same configuration arrays.
 
@@ -43,7 +43,7 @@ PriceStalker uses a unified multi-engine selector system that allows you to mix 
 
 ---
 
-## 🛠️ Suffix Modifiers & Chaining
+## Suffix Modifiers & Chaining
 
 Modifiers can be appended to ANY base selector (CSS or XPath) to transform or assert the result.
 
@@ -66,7 +66,7 @@ Modifiers allow for direct status assertion (primarily for Stock Status) without
 
 ---
 
-## 🧹 DOM Denoising & Preservation
+## DOM Denoising & Preservation
 
 The pre-extraction denoiser protects your custom selectors while stripping page noise.
 
@@ -76,15 +76,15 @@ The pre-extraction denoiser protects your custom selectors while stripping page 
 
 ---
 
-## 📈 Selector Staleness & Match Tracking
+## Selector Staleness & Match Tracking
 
 PriceStalker features a database-backed config auto-learning and eviction engine to maintain custom retailer configurations:
 
 1. **Whitelisted Method Promotion**: When a price is confirmed, only selectors resolved from specific whitelisted methods (`custom-css`, `deal-price`, `member-price`, `pre-order-price`, `original-price`, `custom-regex`) are promoted to the retailer's custom config, preventing generic styles from polluting the configuration.
 2. **Success/Failure Statistics**: Every scrape tracks custom selector matches using `selector_metadata` JSONB on `retailer_configs`.
-   - Matching selectors increment `match_count`, reset `consecutive_failures` to `0`, and update `last_matched_at`.
-   - Non-matching custom selectors evaluated during a scrape increment `consecutive_failures`.
+ - Matching selectors increment `match_count`, reset `consecutive_failures` to `0`, and update `last_matched_at`.
+ - Non-matching custom selectors evaluated during a scrape increment `consecutive_failures`.
 3. **Score-Based Eviction**: When a selector array grows beyond 10 entries, PriceStalker sorts custom selectors by score:
-   `score = match_count - consecutive_failures * 2`
-   It retains the top 10 highest-scoring selectors and evicts stale, failing ones dynamically.
+ `score = match_count - consecutive_failures * 2`
+ It retains the top 10 highest-scoring selectors and evicts stale, failing ones dynamically.
 

@@ -9,7 +9,7 @@ Use these standard custom CSS properties (using the `var()` function) rather tha
 
 ---
 
-## 🎨 Theme Colors
+## Theme Colors
 
 | CSS Variable | Light Theme Value | Dark Theme Value | Usage |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Use these standard custom CSS properties (using the `var()` function) rather tha
 
 ---
 
-## 📊 Chart Variables
+## Chart Variables
 
 | CSS Variable | Light Theme Value | Dark Theme Value | Usage |
 |---|---|---|---|
@@ -35,7 +35,7 @@ Use these standard custom CSS properties (using the `var()` function) rather tha
 
 ---
 
-## 👤 Shadow Properties
+## Shadow Properties
 
 | CSS Variable | Light Theme Value | Dark Theme Value | Usage |
 |---|---|---|---|
@@ -44,7 +44,7 @@ Use these standard custom CSS properties (using the `var()` function) rather tha
 
 ---
 
-## 📐 Layout Constraints (Standard Classes)
+## Layout Constraints (Standard Classes)
 - **Container**: Max-width is set to `1200px` with `0 auto` margin and `1rem` horizontal padding.
 - **Form Controls**: Use `padding: 0.75rem`, `border-radius: 0.5rem`, and transition `border-color 0.2s, box-shadow 0.2s`.
 - **Buttons**: Use `padding: 0.75rem 1.5rem` and `border-radius: 0.5rem`.
