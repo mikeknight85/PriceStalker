@@ -246,6 +246,6 @@ After a successful scrape (or user confirmation via the Voting Modal), `runAutoR
 ## Related Documentation
 
 - [SELECTORS.md](SELECTORS.md) — Selector format reference (CSS, Scrapy `::attr`, regex `~pattern~`, modifiers)
-- [TESTING.md](TESTING.md) — Unit test suite descriptions and vitest commands
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) — Developer setup, Vitest suites, and local execution workflows
 - [PROCESSES.md](PROCESSES.md) — Deployment, backup, and operational runbooks
 - the upstream audit register (not yet imported) — Full backend audit with issue register and fix status

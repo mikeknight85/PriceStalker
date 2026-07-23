@@ -9,6 +9,7 @@ Reference documentation for the codebase.
 | [BETA.md](BETA.md) | **User Guide**: High-level overview of product tracking, the scraping cascade, consensus weighting, and the user voting queue. |
 | [beta/README.md](beta/README.md) | **System Administration Portal**: Guides for managing retailers, custom selectors, AI settings, API security tokens, and proxies in Version 2. |
 | [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) | **Environment Configuration**: Reference guide for all optional and required `.env` file variables. |
+| [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | **Developer Guide**: Codebase directory structure, Vitest runner, live debugger, and backend compilation rules. |
 
 ## Engine internals (adapted from upstream)
 
