@@ -2,6 +2,13 @@
 
 Reference documentation for the codebase.
 
+## User & Administration Guides
+
+| Doc | Covers |
+|---|---|
+| [BETA.md](BETA.md) | **User Guide**: High-level overview of product tracking, the scraping cascade, consensus weighting, and the user voting queue. |
+| [beta/README.md](beta/README.md) | **System Administration Portal**: Guides for managing retailers, custom selectors, AI settings, API security tokens, and proxies in Version 2. |
+
 ## Engine internals (adapted from upstream)
 
 The scraper engine is shared with the upstream fork it was transplanted from.

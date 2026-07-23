@@ -174,6 +174,15 @@ etc.); they work via the AI path.
 
 ---
 
+## Documentation
+
+PriceStalker features comprehensive user and administrator guides:
+
+* **[User Guide](docs/BETA.md)**: A simple, non-technical overview of how product scraping, consensus voting, out-of-stock safety rails, and AI auto-mapping work.
+* **[Developer & System Administration Portal](docs/README.md)**: The technical documentation index covering database schemas, backups, developer watch-outs, OIDC Single Sign-On (SSO) setups, and advanced configuration.
+
+---
+
 ## Quick start
 
 ### Docker (recommended)
@@ -504,15 +513,3 @@ Don't get banned:
 
 MIT — see [LICENSE](LICENSE). Original copyright to @clucraft (PriceGhost),
 additional changes copyright to contributors to this fork.
-
----
-
-## Star history
-
-<a href="https://star-history.com/#mikeknight85/PriceStalker&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mikeknight85/PriceStalker&type=Date" />
-  </picture>
-</a>
