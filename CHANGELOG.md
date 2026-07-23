@@ -720,6 +720,13 @@ tightens default security.
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 2.0.0-beta.1 | 2026-07-21 | Rebuilt scraping engine, per-retailer configuration UI, remote browser scraper, live currency conversion, SearXNG search integration, system logs & tokens |
+| 1.4.0 | 2026-06-29 | Allow editing watcher price selections after creation, fix relative image URLs |
+| 1.3.1 | 2026-06-05 | Security updates and dependency fixes |
+| 1.3.0 | 2026-06-05 | Custom Webhook notification channel, Shopify-aware extraction, per-product currency override |
+| 1.2.11 | 2026-06-02 | Bug fixes for SSO/OIDC user invitation model |
+| 1.2.0 | 2026-04-21 | SSO / OIDC authentication integration with Google, Keycloak, Authentik, etc. |
+| 1.1.0 | 2026-04-20 | Rebrand to PriceStalker, Groq/OpenRouter AI integration, BRL currency parser |
 | 1.0.6 | 2026-01-26 | Google Gemini AI support, self-hosted ntfy support |
 | 1.0.5 | 2026-01-25 | AI model selector, per-product AI controls, Gotify support, Ollama fixes |
 | 1.0.4 | 2026-01-24 | Multi-strategy price voting system with user selection for ambiguous prices |
@@ -727,3 +734,4 @@ tightens default security.
 | 1.0.2 | 2026-01-23 | Fixed stock status false positives for in-stock items |
 | 1.0.1 | 2026-01-23 | Bug fixes, JS-rendered price support, pre-order detection |
 | 1.0.0 | 2026-01-23 | Initial public release |
+
