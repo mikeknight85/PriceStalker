@@ -197,9 +197,7 @@ docker compose --profile remotescraper up -d
 
 ### Remote scraper
 
-Some retailers block ordinary scraping. 2.0 can offload those pages to a
-separate container running a stealth browser with a pooled, recycled Chromium
-instance. The backend scrapes in-process without it, so it is entirely optional.
+Some retailers block ordinary scraping, require heavy JavaScript/CSS execution to render prices, or sit behind CDN/bot protection (such as Cloudflare or Imperva). 2.0 can offload those pages to a separate container running a stealth browser with a pooled, recycled Chromium instance. The backend scrapes in-process without it, so it is entirely optional.
 
 Once running, set the URL in **Admin → System → Network & Integration** to
 `http://remotescraper:5100/scrape`, then enable it per domain in
@@ -274,33 +272,10 @@ image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.11
 
 ---
 
-## Development setup
+## Development
 
-Development requires Node 24.x (at least 24.18), pnpm 11.4.0, and PostgreSQL
-14+. [Volta](https://volta.sh/) automatically selects the project's pinned Node
-and pnpm versions. Otherwise, run `corepack enable` once and then
-`pnpm install --frozen-lockfile` from the repository root. `pnpm-lock.yaml` is
-the sole committed dependency lockfile.
-
-### Why pnpm?
-
-PriceStalker uses pnpm for faster, disk-efficient, strict workspace installs.
-This is a package-manager change only: Node remains the production runtime, and
-the project does not use Bun as a runtime or build tool.
-
-```bash
-corepack enable
-pnpm install --frozen-lockfile
-pnpm --filter pricestalker-backend run db:migrate:dev
-pnpm --filter pricestalker-backend run dev
-
-# Frontend (in another terminal)
-pnpm --filter pricestalker-frontend run dev
-```
-
-For local development, setup, operating-system requirements, container and
-hot-reload workflows, and verification commands, see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+For local setup, prerequisites, container workflows, and testing — see
+**[CONTRIBUTING.md](CONTRIBUTING.md)** and **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)**.
 
 ---
 
@@ -321,27 +296,8 @@ hot-reload workflows, and verification commands, see
 
 ## Project structure
 
-```
-PriceStalker/
-├── backend/
-│   └── src/
-│       ├── config/         # Database connection, init
-│       ├── middleware/     # JWT authentication
-│       ├── models/         # Database queries
-│       ├── routes/         # API endpoints
-│       ├── services/       # Scraper, AI extractors, scheduler, notifications
-│       └── utils/          # Currency-aware price parser
-├── frontend/
-│   └── src/
-│       ├── api/            # Axios client + types
-│       ├── components/     # Reusable UI (PriceSelectionModal, PriceChart, …)
-│       ├── context/        # Auth & Toast contexts
-│       └── pages/          # Route-level screens
-├── database/
-│   └── init.sql            # Schema + idempotent column migrations
-├── .env.example            # Including the PriceGhost migration block
-└── docker-compose.yml
-```
+For a full breakdown of the directory layout and key source paths, see
+**[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)**.
 
 ---
 

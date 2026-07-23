@@ -8,6 +8,20 @@ We welcome contributions to PriceStalker. This document provides general guideli
 For detailed instructions on setting up your local workspace, running tests natively or in containers, and understanding the codebase architecture, please refer to the:
 * **[PriceStalker Developer Guide](docs/DEVELOPER_GUIDE.md)**
 
+### Package manager
+PriceStalker uses **pnpm** for faster, disk-efficient, strict workspace installs.
+This is a package-manager change only — Node remains the production runtime and
+the project does not use Bun as a runtime or build tool.
+
+```bash
+corepack enable                    # activate pnpm via Node's built-in corepack
+pnpm install --frozen-lockfile     # install all workspaces
+```
+
+`pnpm-lock.yaml` is the sole committed lockfile. Do not commit `package-lock.json`
+or `yarn.lock`. [Volta](https://volta.sh/) can automatically select the project's
+pinned Node and pnpm versions if you prefer not to manage them manually.
+
 ---
 
 ## 2. Preparing and Submitting Changes
