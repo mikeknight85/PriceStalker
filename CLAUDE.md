@@ -6,6 +6,11 @@ change.
 
 For a 60-second overview of the directory layout and key backend paths, see the **[AI Agent Quick-Start](docs/AGENT_QUICKSTART.md)**.
 
+Before searching the codebase or running discovery commands, check `CLAUDE.md`,
+`docs/AGENT_QUICKSTART.md`, and `docs/SCRAPER_LIFECYCLE.md` first. Grepping the
+entire codebase for answers that are already documented wastes time and misses
+context.
+
 PriceStalker is a self-hosted price tracker: a TypeScript/Express backend, a
 React/Vite frontend, an optional Puppeteer "remote scraper", and PostgreSQL.
 It is a pnpm workspace (`backend`, `frontend`, `remotescraper`).
@@ -107,7 +112,7 @@ seed it.
 
 Before changing anything in `backend/src/services/scraper/`, read
 [docs/SCRAPER_LIFECYCLE.md](docs/SCRAPER_LIFECYCLE.md) (the 6-phase pipeline) and
-[docs/SELECTORS.md](docs/SELECTORS.md) (the selector DSL). The engine is subtle —
+[docs/beta/selectors.md](docs/beta/selectors.md) (the selector DSL). The engine is subtle —
 consensus weighting, out-of-stock price nullification, and AI auto-mapping all
 interact. Guessing at it is how extraction bugs get introduced.
 
@@ -126,6 +131,9 @@ pnpm --filter pricestalker-backend run db:migrate:dev  # run migrations against 
 # frontend
 pnpm --filter pricestalker-frontend run build  # vite build (also typechecks)
 pnpm --filter pricestalker-frontend run dev    # dev server
+
+# full clean install + verification suite
+make verify
 ```
 
 The backend image compiles with `tsc`, **not** `build:bundle`. Migrations are
