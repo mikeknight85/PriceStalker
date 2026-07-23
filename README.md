@@ -171,15 +171,6 @@ PriceStalker features comprehensive user and administrator guides:
 
 ---
 
-## Documentation
-
-PriceStalker features comprehensive user and administrator guides:
-
-* **[User Guide](docs/BETA.md)**: A simple, non-technical overview of how product scraping, consensus voting, out-of-stock safety rails, and AI auto-mapping work.
-* **[Developer & System Administration Portal](docs/README.md)**: The technical documentation index covering database schemas, backups, developer watch-outs, OIDC Single Sign-On (SSO) setups, and advanced configuration.
-
----
-
 ## Quick start
 
 ### Docker (recommended)
