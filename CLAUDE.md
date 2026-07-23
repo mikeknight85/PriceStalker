@@ -94,13 +94,37 @@ seed it.
 
 ## Architecture you should not fight
 
-- **Backend is layered (DDD-ish).** Routes in `backend/src/routes/`, business
-  logic in `backend/src/services/domain/<aggregate>/`, data access in
-  `.../repositories/`. Keep SQL in repositories, not in routes or services.
+New features follow one of three patterns depending on what they are. Apply the
+wrong one and the code will fight the rest of the system:
+
+- **CRUD / data domain work** (users, products, retailers, settings): add a
+  service in `backend/src/services/domain/<aggregate>/`, a repository under
+  `.../repositories/`, and a thin Express route in `backend/src/routes/`. No SQL
+  outside repositories. No business logic in routes.
+- **Scraper pipeline work** (acquisition, extraction, arbitration): work inside
+  `backend/src/services/scraper/` following the existing phase structure in
+  `orchestration/`. Do not add scraper logic to domain services or routes.
+- **Scheduled / background jobs**: add a task in
+  `backend/src/services/scheduler/`. Do not trigger background work by calling
+  services directly from routes.
+
+Other rules that hold across all three:
+
 - **Frontend is feature-sliced.** `frontend/src/features/<feature>/` holds its
   own `pages/`, `components/`, `services/`, `hooks/`. Shared UI lives in
   `frontend/src/components/`. Put new work in the right feature, not in a
-  catch-all.
+  catch-all. `frontend/src/pages/` contains top-level route shells only —
+  do not add business logic, hooks, or API calls there.
+- **AI and notification channels use a provider pattern.** AI providers
+  implement `AIProvider` (`services/ai/providers/types.ts`) and are registered
+  in `services/ai/client.ts`. Notification providers are registered in
+  `services/notifications/registry.ts`. Adding a new provider means creating a
+  new file in the relevant `providers/` folder and adding one entry to the
+  registry — not modifying existing providers.
+- **`SettingsCache` has a 30-minute TTL.** Changes to `system_settings` in the
+  database are not immediately visible to running code. If a settings change
+  appears not to have taken effect, the cache has not expired yet — restart the
+  backend or wait before concluding something is broken.
 - **AI and auth config are instance-wide**, stored in the database and edited
   under **Admin**, not per user. SSO requires **both** `ENABLE_SSO=true` in the
   environment **and** the in-app Admin toggle — enabling one without the other
@@ -121,6 +145,18 @@ seed it.
   be stale. Before acting on anything in `docs/` that seems inconsistent — check
   the actual source file or running code first. Correct stale docs as part of the
   task.
+- **Read large files in ranges.** `docs/SCRAPER_AUDIT.md` (136KB) and
+  `backend/src/migrations/001_baseline.ts` are known large files. Check file
+  size before opening any file. Never read more than needed — use line ranges or
+  `grep` for targeted lookups.
+- **Do not log credentials raw.** The logger (`backend/src/utils/system/logging/
+  scrubber.ts`) auto-redacts passwords, tokens, and API keys. Never use
+  `console.log` for anything containing user data or secrets. Never bypass the
+  logger to work around scrubbing.
+- **No `as any` or `// @ts-ignore`.** Fix the type error — do not suppress it.
+  If a third-party type definition is wrong, use a minimal local override rather
+  than widening to `any`. TypeScript strict mode is on; escape hatches hide real
+  bugs.
 
 ## Understanding the scraper
 
@@ -129,6 +165,11 @@ Before changing anything in `backend/src/services/scraper/`, read
 [docs/beta/selectors.md](docs/beta/selectors.md) (the selector DSL). The engine is subtle —
 consensus weighting, out-of-stock price nullification, and AI auto-mapping all
 interact. Guessing at it is how extraction bugs get introduced.
+
+The AI auto-mapping flow (Phase 4) and the Voting Modal are how PriceStalker
+*learns* retailer configurations from real scrape results. Do not short-circuit,
+skip, or cache-bust these flows when debugging extraction issues. If a scrape
+looks wrong, check the retailer config and voting history in the Admin UI first.
 
 ---
 
@@ -166,6 +207,10 @@ file and none are found. Do not change the backend build to bundle.
   separate bugs here were invisible in source and only showed up in the compiled
   output or against real data (escaped emoji, null locale, unseeded reference
   tables).
+- Update `CHANGELOG.md` for any user-facing change. Add an entry under
+  `## [Unreleased]` using `### Added`, `### Fixed`, or `### Changed`. The file
+  follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — match the
+  existing format exactly.
 
 ## Deployment context
 
