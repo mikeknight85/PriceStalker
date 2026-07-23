@@ -27,8 +27,8 @@ async function main() {
 
   if (isNaN(amount)) {
     console.error('Error: Amount must be a valid number.');
-    console.error('Usage: npx tsx src/scripts/test-exchange-rates.ts [from] [to] [amount]');
-    console.error('Usage (update DB rates): npx tsx src/scripts/test-exchange-rates.ts --update');
+    console.error('Usage: pnpm --filter pricestalker-backend exec tsx src/scripts/test-exchange-rates.ts [from] [to] [amount]');
+    console.error('Usage (update DB rates): pnpm --filter pricestalker-backend exec tsx src/scripts/test-exchange-rates.ts --update');
     process.exit(1);
   }
 
@@ -48,7 +48,7 @@ async function main() {
       console.log(`✅ Converted Amount: ${amount} ${from} = ${converted} ${to}`);
     } else {
       console.log(`❌ FAILURE: Conversion failed. No exchange rate is defined between ${from} and ${to}.`);
-      console.log('Run with --update to fetch active rates: npx tsx src/scripts/test-exchange-rates.ts --update');
+      console.log('Run with --update to fetch active rates: pnpm --filter pricestalker-backend exec tsx src/scripts/test-exchange-rates.ts --update');
     }
     console.log('====================================');
   } catch (err) {

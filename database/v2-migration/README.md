@@ -155,7 +155,7 @@ believes nothing has run and starts from 001 against a schema already at 022.
 This is masked in normal operation because **the backend never runs migrations
 at startup**: there is no umzug call in the boot path, no `command:` in
 `docker-compose.yaml`, and the Dockerfile is just `node dist/index.js`.
-Migrations are a manual developer tool (`npm run db:migrate`). Steven's live
+Migrations are a manual developer tool (`pnpm run db:migrate`). Steven's live
 database is correct because migrations were applied by hand as they were
 written; the checked-in chain no longer reproduces it.
 

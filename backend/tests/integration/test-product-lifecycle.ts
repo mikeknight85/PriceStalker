@@ -15,7 +15,7 @@ import axios from 'axios';
  * 8. Cascade delete (verifying clean DB cleanup).
  * 
  * Usage:
- *   npx tsx tests/integration/test-product-lifecycle.ts
+ *   pnpm --filter pricestalker-backend exec tsx tests/integration/test-product-lifecycle.ts
  */
 
 const SERVER = "steven@192.168.50.200";

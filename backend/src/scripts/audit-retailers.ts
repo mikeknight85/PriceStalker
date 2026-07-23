@@ -14,7 +14,7 @@ async function main() {
     console.log(`
 PriceStalker Retailer Selector Audit Tool
 ======================================
-Usage: npm run audit-retailers [options]
+Usage: pnpm run audit-retailers [options]
    Or: node dist/scripts/audit-retailers.js [options]
 
 Options:

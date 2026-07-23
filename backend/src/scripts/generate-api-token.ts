@@ -5,7 +5,7 @@ async function main() {
   const label = process.argv[2];
   if (!label) {
     console.log('');
-    console.error('Usage: npm run generate-api-token "Label Name" [description]');
+    console.error('Usage: pnpm run generate-api-token "Label Name" [description]');
     console.log('');
     process.exit(1);
   }

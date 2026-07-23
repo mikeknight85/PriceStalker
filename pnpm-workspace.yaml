@@ -1,0 +1,12 @@
+packages:
+  - backend
+  - frontend
+  - remotescraper
+
+# TypeScript declaration emission must reference portable paths; the default
+# isolated linker exposes pnpm virtual-store paths in inferred Express types.
+nodeLinker: hoisted
+
+allowBuilds:
+  esbuild: true
+  puppeteer: true

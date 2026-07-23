@@ -1,8 +1,10 @@
-name: Verify and Build Images
+name: Publish Docker Images
 
 on:
-  pull_request:
+  push:
     branches: [main]
+    tags:
+      - 'v*.*.*'
     paths:
       - 'backend/**'
       - 'frontend/**'
@@ -10,16 +12,11 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
-      - 'scripts/**'
       - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -30,9 +27,6 @@ jobs:
   changes:
     needs: verify
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
@@ -67,41 +61,44 @@ jobs:
               - 'pnpm-workspace.yaml'
               - '.github/workflows/docker-image.yml'
 
-  build-backend:
+  publish-backend:
     needs: changes
-    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/docker-image.yml
     permissions:
       contents: read
+      packages: write
     with:
       image: ghcr.io/${{ github.repository_owner }}/pricestalker-backend
       dockerfile: ./backend/Dockerfile
       cache-scope: backend
-      publish: false
-      channel: beta
+      publish: true
+      channel: ${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'beta' }}
 
-  build-frontend:
+  publish-frontend:
     needs: changes
-    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/docker-image.yml
     permissions:
       contents: read
+      packages: write
     with:
       image: ghcr.io/${{ github.repository_owner }}/pricestalker-frontend
       dockerfile: ./frontend/Dockerfile
       cache-scope: frontend
-      publish: false
-      channel: beta
+      publish: true
+      channel: ${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'beta' }}
 
-  build-remotescraper:
+  publish-remotescraper:
     needs: changes
-    if: needs.changes.outputs.remotescraper == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.remotescraper == 'true' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/docker-image.yml
     permissions:
       contents: read
+      packages: write
     with:
       image: ghcr.io/${{ github.repository_owner }}/pricestalker-remotescraper
       dockerfile: ./remotescraper/Dockerfile
       cache-scope: remotescraper
-      publish: false
-      channel: beta
+      publish: true
+      channel: ${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'beta' }}

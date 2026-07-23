@@ -6,7 +6,7 @@ change.
 
 PriceStalker is a self-hosted price tracker: a TypeScript/Express backend, a
 React/Vite frontend, an optional Puppeteer "remote scraper", and PostgreSQL.
-It is an npm workspace (`backend`, `frontend`, `remotescraper`).
+It is a pnpm workspace (`backend`, `frontend`, `remotescraper`).
 
 ---
 
@@ -31,12 +31,12 @@ than reaching for an emoji.
 Typographic characters — `→ ← ↑ ↓ ↻` — are acceptable where they are genuine
 text (a "Back" arrow, a sort indicator). Emoji are not.
 
-This is enforced in CI: `npm run lint` (`scripts/check-no-emoji.mjs`) fails the
+This is enforced in CI: `pnpm run lint` (`scripts/check-no-emoji.mjs`) fails the
 build on any emoji — literal or escaped — before anything is published. It runs
 the same locally as in CI, so run it before committing frontend changes:
 
 ```bash
-npm run lint
+pnpm run lint
 ```
 
 ### 2. Locale and currency formatting must survive null
@@ -114,16 +114,16 @@ interact. Guessing at it is how extraction bugs get introduced.
 ## Commands
 
 ```bash
-npm install                      # install all workspaces
+pnpm install --frozen-lockfile    # install all workspaces
 
 # backend
-npm run build   -w backend       # tsc  (NOT a bundler — see below)
-npm test        -w backend       # vitest
-npm run db:migrate:dev -w backend  # run migrations against $DATABASE_URL
+pnpm --filter pricestalker-backend run build  # tsc (NOT a bundler — see below)
+pnpm --filter pricestalker-backend test       # vitest
+pnpm --filter pricestalker-backend run db:migrate:dev  # run migrations against $DATABASE_URL
 
 # frontend
-npm run build   -w frontend      # vite build (also typechecks)
-npm run dev     -w frontend      # dev server
+pnpm --filter pricestalker-frontend run build  # vite build (also typechecks)
+pnpm --filter pricestalker-frontend run dev    # dev server
 ```
 
 The backend image compiles with `tsc`, **not** `build:bundle`. Migrations are
@@ -134,9 +134,9 @@ file and none are found. Do not change the backend build to bundle.
 
 ## Before you commit
 
-- `npm run build -w frontend` — passes, and typechecks.
-- `npm test -w backend` and `npm run build -w backend` — pass.
-- `npm run lint` (the emoji check, rule 1) passes.
+- `pnpm --filter pricestalker-frontend run build` — passes, and typechecks.
+- `pnpm --filter pricestalker-backend test` and `pnpm --filter pricestalker-backend run build` — pass.
+- `pnpm run lint` (the emoji check, rule 1) passes.
 - New migrations tested against a real Postgres, not just `tsc`.
 - Verify against the **built bundle / running app**, not only the source. Three
   separate bugs here were invisible in source and only showed up in the compiled

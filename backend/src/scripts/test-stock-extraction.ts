@@ -12,7 +12,7 @@ async function main() {
 
   if (!fs.existsSync(htmlPath)) {
     console.error(`Error: File does not exist at ${htmlPath}`);
-    console.error(`Usage: npx tsx src/scripts/test-stock-extraction.ts [html-file-path]`);
+    console.error(`Usage: pnpm --filter pricestalker-backend exec tsx src/scripts/test-stock-extraction.ts [html-file-path]`);
     process.exit(1);
   }
 

@@ -11,8 +11,8 @@ async function main() {
   if (!urlArg) {
     console.log('--- PriceStalker Consensus & Scraper Tester ---');
     console.log('Usage:');
-    console.log('  npx tsx src/scripts/test-consensus.ts <url>                # Compare scraping methods');
-    console.log('  npx tsx src/scripts/test-consensus.ts --simulate-vote       # Test Voting & Learning Loop');
+    console.log('  pnpm --filter pricestalker-backend exec tsx src/scripts/test-consensus.ts <url>                # Compare scraping methods');
+    console.log('  pnpm --filter pricestalker-backend exec tsx src/scripts/test-consensus.ts --simulate-vote       # Test Voting & Learning Loop');
     console.log('===========================================================');
     process.exit(0);
   }
