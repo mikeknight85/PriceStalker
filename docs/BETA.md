@@ -62,6 +62,13 @@ When you manually select the correct price in the Voting Modal (or when a scrape
 ---
 
 ## Related Documentation
-* [SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md) — Detailed technical stage-by-stage guide.
-* [product_lifecycle_slides.md](product_lifecycle_slides.md) — Visual flow diagram of the scraper pipeline.
-* [SELECTORS.md](SELECTORS.md) — In-depth guide on scraper selectors.
+* **Scraper Internals**:
+  * [SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md) — Detailed technical stage-by-stage guide.
+  * [product_lifecycle_slides.md](product_lifecycle_slides.md) — Visual flow diagram of the scraper pipeline.
+  * [SELECTORS.md](SELECTORS.md) — In-depth guide on scraper selectors.
+* **Administration & Setup**:
+  * [beta/admin_guide.md](beta/admin_guide.md) — General administration and settings dashboard guide.
+  * [beta/selectors.md](beta/selectors.md) — How to write custom CSS, XPath, and Regex selectors.
+  * [beta/ai_features.md](beta/ai_features.md) — Configuring Gemini auto-mapping and verification.
+  * [beta/tokens.md](beta/tokens.md) — Creating security credentials and API tokens.
+  * [beta/system.md](beta/system.md) — Managing proxies, schedules, and circuit breakers.
