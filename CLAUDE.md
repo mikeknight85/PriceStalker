@@ -136,8 +136,10 @@ Other rules that hold across all three:
 
 ## Agent constraints
 
-- **Never search `node_modules`.** Do not run `find`, `grep`, or `ls` against
-  any `node_modules` directory. It causes tool failures and token spikes.
+- **Never search high-volume directories.** Do not run `find`, `grep`, or `ls`
+  against `node_modules`, `dist`, or `.git`. Always exclude them explicitly:
+  `find backend/src -name "*.ts"` not `find . -name "*.ts"`. Use `-maxdepth 2`
+  for any `find` at the project root.
 - **Treat log files as streams.** The backend writes to `logs/backend.log` and
   `logs/error.log`. Always use `tail -n 100` or `grep` for specific keywords.
   Never `cat` a full log file.
@@ -170,6 +172,34 @@ The AI auto-mapping flow (Phase 4) and the Voting Modal are how PriceStalker
 *learns* retailer configurations from real scrape results. Do not short-circuit,
 skip, or cache-bust these flows when debugging extraction issues. If a scrape
 looks wrong, check the retailer config and voting history in the Admin UI first.
+
+### Debugging scraper HTML
+
+Scraper HTML pages are often large and frequently arrive as a **single line with
+no whitespace or line breaks** (minified). Do not attempt to read them directly.
+
+- **Detect minification first.** If a fetched HTML file appears to be one
+  massive single line, break it before searching:
+  ```bash
+  # Insert a newline after every closing tag
+  sed 's/>/>\'$'\n/g' /path/to/dump.html > /tmp/broken.html
+  # or
+  tr '>' '\n' < /path/to/dump.html > /tmp/broken.html
+  ```
+- **Redirect dumps, never print.** Always write raw HTML to a temp file rather
+  than outputting to the console:
+  ```bash
+  # The backend writes debug HTML here inside the container:
+  # /app/backend/debug_html/<domain>_<timestamp>.html
+  ```
+- **Use targeted grep with small windows.** Pipe through `head` to prevent token
+  spikes:
+  ```bash
+  grep -E -i 'itemprop="price"|data-testid.*price|class=".*price' /tmp/broken.html -C 2 | head -c 2000
+  ```
+- **Focus on high-signal attributes** rather than generic text searches:
+  `itemprop="price"`, `data-testid`, `data-price`, `class="*price*"`,
+  `application/ld+json`.
 
 ---
 

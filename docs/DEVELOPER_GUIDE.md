@@ -156,7 +156,49 @@ These rules protect deliberate architecture designs. Breaking them will fail loc
 
 ---
 
-## 6. Related Developer Documentation
+## 6. Frontend Component Context Patterns
+
+When splitting a large page into modular sub-components, follow these conventions
+to preserve structural context for future developers and AI agents navigating the
+codebase. These are recommended conventions — not yet enforced by tooling.
+
+### Sub-component JSDoc Header
+
+Every sub-component file should start with a context block linking it back to
+its parent shell and CSS:
+
+```typescript
+/**
+ * @component ComponentName
+ * @parentShell ParentName (path/to/parent/index.tsx)
+ * @stylesheet StylesheetName (path/to/parent/ParentName.css)
+ * @stateOwner [Parent|Self|Context] (Which component owns and manages the state)
+ */
+```
+
+### Visual State Tree (Parent Shell)
+
+The main page controller (`index.tsx`) should contain an ASCII tree showing the
+component hierarchy and state bindings, so the ownership model is visible at a
+glance without reading every child file:
+
+```typescript
+/**
+ * ParentShell (state: { activeItem, isLoading })
+ * ├── SubComponentHeader (read-only: activeItem)
+ * ├── SubComponentForm (callbacks: onSubmit)
+ * └── SubComponentFooter (read-only: isLoading)
+ */
+```
+
+> [!TIP]
+> Apply these patterns when breaking apart a component that has grown past ~200
+> lines or has more than 3–4 child sub-components. They are most valuable in
+> feature-heavy pages like product detail and admin settings.
+
+---
+
+## 7. Related Developer Documentation
 
 * **[CLAUDE.md](../CLAUDE.md)**: Developer quick-start cheat sheet for building, linting, and formatting.
 * **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Workspace setup, package manager guidelines (`pnpm`), and development container workflows.
