@@ -150,3 +150,17 @@ These rules protect deliberate architecture designs. Breaking them will fail loc
 * **No Backend Bundling**: The backend compiles with `tsc` to maintain individual output files under `dist/migrations/` so the bootstrapper can glob them dynamically. Do not bundle backend code.
 * **Domain Service Architecture**: SQL query layers must stay within repositories (`backend/src/services/domain/<aggregate>/repositories/`), not in Express routes or service files.
 * **Pin Dependencies**: `axios` is pinned to exactly `1.14.0` in all workspaces and must not be bumped.
+
+---
+
+## 6. Related Developer Documentation
+
+* **[CLAUDE.md](../CLAUDE.md)**: Developer quick-start cheat sheet for building, linting, and formatting.
+* **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Workspace setup, package manager guidelines (`pnpm`), and development container workflows.
+* **[docs/SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md)**: In-depth technical breakdown of the 6-phase scrape lifecycle.
+* **[docs/SELECTORS.md](SELECTORS.md)**: Details on the unified selectors engine syntax, xpath, and regex.
+* **[docs/DATABASE.md](DATABASE.md)**: Information on tables, schema design, and pg_notify cache invalidations.
+* **[docs/I18N_DESIGN.md](I18N_DESIGN.md)**: Guidelines for localizing UI labels and managing translation key JSON files.
+* **[docs/SSO_DESIGN.md](SSO_DESIGN.md)**: Configuration details for OpenID Connect (OIDC) Single Sign-On providers and JWT authentications.
+* **[docs/DESIGN_TOKENS.md](DESIGN_TOKENS.md)**: Developer styling guide mapping global CSS colors, shadows, and spacing tokens.
+
