@@ -171,7 +171,8 @@ interact. Guessing at it is how extraction bugs get introduced.
 The AI auto-mapping flow (Phase 4) and the Voting Modal are how PriceStalker
 *learns* retailer configurations from real scrape results. Do not short-circuit,
 skip, or cache-bust these flows when debugging extraction issues. If a scrape
-looks wrong, check the retailer config and voting history in the Admin UI first.
+looks wrong, check the `retailer_configs` table in the database for the
+domain's selector config and `system_logs` for recent scrape trace history first.
 
 ### Debugging scraper HTML
 
