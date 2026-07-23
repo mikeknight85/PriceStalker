@@ -104,8 +104,8 @@ Winner = highest-confidence candidate where `value !== 'unknown'`.
 
 Triggers when no retailer config exists (or `isShellConfig = true`) AND `ai_auto_mapping_enabled = true`:
 
-1. **DOM Pruner** — `cleanHtml()` strips boilerplate to fit within the 50 KB Gemini context window.
-2. **Config Generation** — Sends pruned HTML + meta tags to Gemini (`RETAILER_GENERATION_PROMPT`).
+1. **DOM Pruner** — `cleanHtml()` strips boilerplate to fit within the lightweight AI context window (typically ≤50 KB).
+2. **Config Generation** — Sends pruned HTML + meta tags to the active AI provider (`RETAILER_GENERATION_PROMPT`).
 3. **Config Save** — Saves generated CSS selectors to `retailer_configs`.
 4. **Re-Scrape** — Full extraction re-runs with the new config.
 
@@ -164,9 +164,9 @@ After `findPriceConsensus` resolves a price, additional checks apply **only when
 
 If `ai_verification_enabled = true` and a price was resolved:
 
-- Sends the resolved price candidate + denoised HTML to Gemini for cross-check.
-- If Gemini disagrees → `needsReview = true`, `aiStatus = 'corrected'`.
-- If Gemini agrees → `aiStatus = 'verified'`.
+- Sends the resolved price candidate + denoised HTML to the active AI provider for cross-check.
+- If the AI disagrees → `needsReview = true`, `aiStatus = 'corrected'`.
+- If the AI agrees → `aiStatus = 'verified'`.
 
 ---
 

@@ -13,7 +13,7 @@ Welcome to the documentation portal for PriceStalker Version 2. This directory c
  How to write and test custom CSS, XPath, and Regex rule paths for parsing product names, prices, and stock statuses.
  
 * **[AI Features & Setup](ai_features.md)** 
- Configuring Gemini AI models to automate store selector mappings and perform price cross-verification.
+ Configuring the AI engine to automate store selector mappings and perform price cross-verification.
  
 * **[Security & API Tokens](tokens.md)** 
  Instructions on generating and managing API keys and utilizing Bearer authorization.

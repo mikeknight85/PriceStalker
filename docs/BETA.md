@@ -33,14 +33,14 @@ Once the HTML is downloaded, the system denoises the page—stripping out heavy 
 ---
 
 ## 4. Where AI Fits In (Enhanced, but Optional)
-PriceStalker is built to be resilient, even without AI. However, enabling Gemini AI unlocks powerful benefits:
+PriceStalker is built to be resilient, even without AI. However, enabling the AI Engine unlocks powerful benefits:
 
 ### AI Auto-Mapping
 * **Without AI**: If a new store is added that doesn't have custom rules yet, PriceStalker relies on generic CSS patterns, which are sometimes less precise.
-* **With AI**: If a store config is missing or incomplete, the system prunes the HTML and sends it to Gemini. Gemini automatically builds the exact CSS rules needed to track prices on that store in the future, saving them back into the database automatically.
+* **With AI**: If a store config is missing or incomplete, the system prunes the HTML and sends it to the configured AI provider. The AI automatically builds the exact CSS rules needed to track prices on that store in the future, saving them back into the database automatically.
 
 ### AI Price Cross-Verification
-* If enabled, Gemini AI double-checks the final price extracted by the system against the raw page layout. If the AI detects an error, it flags the product for human review instead of saving a wrong price.
+* If enabled, the AI engine double-checks the final price extracted by the system against the raw page layout. If the AI detects an error, it flags the product for human review instead of saving a wrong price.
 
 ---
 
@@ -69,10 +69,8 @@ When you manually select the correct price in the Voting Modal (or when a scrape
 * **Administration & Setup**:
  * [beta/admin_guide.md](beta/admin_guide.md) — General administration and settings dashboard guide.
  * [beta/selectors.md](beta/selectors.md) — How to write custom CSS, XPath, and Regex selectors.
- * [beta/ai_features.md](beta/ai_features.md) — Configuring Gemini auto-mapping and verification.
+ * [beta/ai_features.md](beta/ai_features.md) — Configuring AI auto-mapping and verification.
  * [beta/tokens.md](beta/tokens.md) — Creating security credentials and API tokens.
  * [beta/system.md](beta/system.md) — Managing proxies, schedules, and circuit breakers.
  * [beta/admin_api.md](beta/admin_api.md) — Reference of secure HTTP endpoints for programmatic management.
  * [beta/user_notifications.md](beta/user_notifications.md) — How to configure notifications and customized alert types.
-
-
