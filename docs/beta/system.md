@@ -26,3 +26,10 @@ Scrapes are processed at regular intervals in the background:
 If a store is offline or is actively blocking connections, PriceStalker's circuit breaker triggers a cooldown period:
 * **Failure Count**: If a domain accumulates too many sequential connection issues, it goes into a backoff state.
 * **Manual Reset**: To unblock a store, clear the block flags in the store's Retailer Settings.
+
+---
+
+## 4. Database Maintenance
+PriceStalker stores all configurations, historical prices, and credentials in a PostgreSQL database.
+* To perform manual backups, review migrations, or look up schema layouts, see the database guide: [DATABASE.md](../DATABASE.md).
+
