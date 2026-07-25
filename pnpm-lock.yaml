@@ -155,7 +155,7 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@20.19.39)(jsdom@29.1.1)(vite@8.1.5(@types/node@20.19.39)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0))
 
-  remotescraper:
+  scraper:
     dependencies:
       axios:
         specifier: 1.14.0
