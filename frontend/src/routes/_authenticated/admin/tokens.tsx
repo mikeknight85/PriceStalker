@@ -1,0 +1,1 @@
+import { createFileRoute } from '@tanstack/react-router'; import Admin from '../../../pages/Admin'; export const Route = createFileRoute('/_authenticated/admin/tokens')({ component: () => <Admin activeSection="tokens" /> });

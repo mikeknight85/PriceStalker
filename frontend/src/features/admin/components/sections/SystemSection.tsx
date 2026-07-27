@@ -176,7 +176,7 @@ export default function SystemSection() {
           <ToggleSwitch active={systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true'} onToggle={handleToggleRegistration} disabled={isSavingAdmin} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
-          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Enable Public Debug Page (/debug)</span>
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Enable Admin Debug Page</span>
           <ToggleSwitch active={systemSettings?.debug_page_enabled === true || systemSettings?.debug_page_enabled === 'true'} onToggle={handleToggleDebugPage} disabled={isSavingAdmin} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>

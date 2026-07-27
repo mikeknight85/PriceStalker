@@ -4,6 +4,8 @@
  */
 
 export { default as Dashboard } from './pages/dashboard/DashboardPage';
+export { default as AddProductPage } from './pages/dashboard/AddProductPage';
+export { default as InsightsPage } from './pages/dashboard/InsightsPage';
 export { default as ProductDetail } from './pages/product-detail/ProductDetailPage';
 export * from './services/ProductService';
 export * from './hooks/useDashboardState';

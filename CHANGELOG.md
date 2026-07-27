@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Removed legacy dashboard, product-detail, settings, admin, and debug URL
+  redirects. Use the canonical nested frontend routes instead.
+
 ### Added
 
 - Makefile commands for native hot-reload development with a host-accessible
@@ -17,11 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored a persistent Add Product action on the products dashboard.
+- Added the standard mobile web app capability metadata alongside Apple's
+  platform-specific PWA metadata.
 - Native hot-reload development now serves the frontend on port 8080 by
   default, matching the Docker stack and avoiding API connection failures from
   opening the wrong local URL.
 - Native backend development now loads the repository `.env` when pnpm starts
   the backend from its workspace directory.
+
+- Malformed frontend route parameters now fall back safely to the relevant default view.
+
+### Changed
+
+- Product, settings, administration, and debug screens now have canonical nested frontend routes; legacy dashboard URLs redirect safely.
 
 ## [2.0.0-beta.1] - 2026-07-21
 

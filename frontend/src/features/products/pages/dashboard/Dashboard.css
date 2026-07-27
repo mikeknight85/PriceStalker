@@ -160,6 +160,39 @@
   margin-left: auto;
 }
 
+.add-product-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  background: var(--primary);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.add-product-link:hover {
+  background: var(--primary-dark);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.add-product-link:focus-visible {
+  outline: 3px solid rgba(var(--primary-rgb), 0.35);
+  outline-offset: 2px;
+}
+
+.add-product-link svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .sort-select, .filter-select {
   padding: 0.625rem 2rem 0.625rem 0.875rem;
   border: 1px solid var(--border);

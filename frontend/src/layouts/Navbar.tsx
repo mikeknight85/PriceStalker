@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { useAuth } from '../features/auth';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationBell } from '../features/notifications';
@@ -13,7 +13,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <Link to="/" className="navbar-brand">
+        <Link to="/products" className="navbar-brand">
           <img src="/icon.svg" alt="" className="navbar-brand-icon" />
           <span className="navbar-brand-text">
             <span>Price</span>
@@ -22,6 +22,12 @@ const Navbar: React.FC = () => {
         </Link>
 
         <div className="navbar-user">
+          {user && (
+            <Link to="/products/new" className="navbar-add-product" aria-label="Add Product">
+              <Icon name="shoppingBag" />
+              <span>Add Product</span>
+            </Link>
+          )}
           <button
             className="theme-toggle"
             onClick={toggleTheme}

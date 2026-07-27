@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
+import { adminRoute } from '../../../routes/-admin-api';
 import Layout from '../../../layouts/Layout';
-import { useAuth } from '../../auth';
 import Icon from '../../../components/Icon';
 import { SharedService } from '../../../services/SharedService';
 import { GlobalCurrency } from '../../../types/api';
@@ -16,23 +16,26 @@ import LogsSection from '../components/sections/LogsSection';
 import SystemApiTokensSection from '../components/sections/SystemApiTokensSection';
 import AuthSection from '../components/sections/AuthSection';
 
-type AdminSection = 'system' | 'selectors' | 'retailers' | 'users' | 'ai' | 'logs' | 'tokens' | 'auth';
+export type AdminSection = 'system' | 'selectors' | 'retailers' | 'users' | 'ai' | 'logs' | 'tokens' | 'auth';
 
-export default function Admin() {
-  const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeSection = (searchParams.get('tab') as AdminSection) || 'system';
+export default function Admin({ activeSection }: { activeSection: AdminSection }) {
+  const navigate = useNavigate();
+  const { retailer } = adminRoute.useSearch();
   
   const [globalCurrencies, setGlobalCurrencies] = useState<GlobalCurrency[]>([]);
-  const [retailerSearch, setRetailerSearch] = useState('');
+  const [retailerSearch, setRetailerSearch] = useState(retailer || '');
 
-  const setActiveSection = (tab: AdminSection) => {
-    setSearchParams({ tab });
+  const setActiveSection = (section: AdminSection) => {
+    navigate({ to: `/admin/${section}` });
   };
 
   useEffect(() => {
     fetchGlobalData();
   }, []);
+
+  useEffect(() => {
+    setRetailerSearch(retailer || '');
+  }, [retailer]);
 
   const fetchGlobalData = async () => {
     try {
@@ -44,11 +47,8 @@ export default function Admin() {
   };
 
   const handleSearchRetailer = (domain: string) => {
-    setRetailerSearch(domain);
-    setActiveSection('retailers');
+    navigate({ to: '/admin/retailers', search: { retailer: domain } });
   };
-
-  if (!user?.is_admin) return <Navigate to="/" replace />;
 
   return (
     <Layout>

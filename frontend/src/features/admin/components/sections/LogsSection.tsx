@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, Fragment } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { AdminSystemService } from '../../services/AdminSystemService';
 import { useToast } from '../../../../context/ToastContext';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
@@ -202,7 +202,7 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
                                   </>
                                 )}
                                 {log.details?.product_id && (
-                                  <Link to={`/products/${log.details.product_id}`} className="btn btn-secondary btn-sm" style={{ fontSize: '0.65rem', height: '20px', padding: '0 0.5rem', display: 'flex', alignItems: 'center' }}>
+                                  <Link to="/products/$productId" params={{ productId: String(log.details.product_id) }} className="btn btn-secondary btn-sm" style={{ fontSize: '0.65rem', height: '20px', padding: '0 0.5rem', display: 'flex', alignItems: 'center' }}>
                                     Product
                                   </Link>
                                 )}

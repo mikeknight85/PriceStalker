@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { ProductService } from '../services/ProductService';
 import { ProfileService } from '../../settings/services/ProfileService';
 import { Product, PriceReviewResponse } from '../../../types/api';
@@ -11,11 +11,7 @@ import { truncateUrl } from '../../../utils/format';
 
 export function useDashboardState() {
   const { showToast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'products' | 'stats' | 'add'>(() => {
-    const saved = localStorage.getItem('dashboard_active_tab');
-    return (saved as 'products' | 'stats' | 'add') || 'products';
-  });
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userCategories, setUserCategories] = useState<string[]>([]);
@@ -71,10 +67,6 @@ export function useDashboardState() {
     fetchProducts();
   }, [fetchProducts]);
 
-  useEffect(() => {
-    localStorage.setItem('dashboard_active_tab', activeTab);
-  }, [activeTab]);
-
   const handleAddProduct = async (url: string, refreshInterval: number, category: string) => {
     try {
       const response = await ProductService.create({ url, refreshInterval, category: category || null });
@@ -88,12 +80,7 @@ export function useDashboardState() {
 
       const newProduct = response.data as Product;
       setProducts((prev) => [newProduct, ...prev]);
-      setActiveTab('products');
-
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set('product', newProduct.id.toString());
-      nextParams.set('tab', 'products');
-      setSearchParams(nextParams);
+      navigate({ to: '/products/$productId', params: { productId: String(newProduct.id) } });
 
       const displayName = newProduct.name || truncateUrl(newProduct.url);
       const truncatedName = displayName.length > 40 ? displayName.substring(0, 37) + '...' : displayName;
@@ -131,12 +118,7 @@ export function useDashboardState() {
       if (!isPriceReviewResponse(response.data)) {
         const newProduct = response.data as Product;
         setProducts((prev) => [newProduct, ...prev]);
-        setActiveTab('products');
-
-        const nextParams = new URLSearchParams(searchParams);
-        nextParams.set('product', newProduct.id.toString());
-        nextParams.set('tab', 'products');
-        setSearchParams(nextParams);
+        navigate({ to: '/products/$productId', params: { productId: String(newProduct.id) } });
 
         const displayName = newProduct.name || truncateUrl(newProduct.url);
         const truncatedName = displayName.length > 40 ? displayName.substring(0, 37) + '...' : displayName;
@@ -175,8 +157,6 @@ export function useDashboardState() {
   };
 
   return {
-    activeTab,
-    setActiveTab,
     products,
     updateProduct,
     removeProduct,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@tanstack/react-router';
 import { SortOption, SortOrder, PauseFilter, SORT_OPTIONS } from './utils';
 import Icon from '../../../../components/Icon';
 
@@ -100,6 +101,10 @@ const DashboardControls: React.FC<DashboardControlsProps> = ({
               {sortOrder === 'asc' ? '↑' : '↓'}
             </button>
           </div>
+          <Link className="add-product-link" to="/products/new">
+            <Icon name="shoppingBag" />
+            Add Product
+          </Link>
         </div>
 
         <div className="category-row-container">

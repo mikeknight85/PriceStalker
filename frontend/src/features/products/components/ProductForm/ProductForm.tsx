@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import { ProductService } from '../../services/ProductService';
 import { SearchResult } from '../../../../types/api';
@@ -108,7 +108,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
           setError(
             <span>
               {message || 'You are already tracking this product.'}{' '}
-              <Link to={`/?product=${id}`} style={{ color: 'inherit', textDecoration: 'underline' }}>
+              <Link to="/products/$productId" params={{ productId: String(id) }} style={{ color: 'inherit', textDecoration: 'underline' }}>
                 Click here to view it.
               </Link>
             </span>

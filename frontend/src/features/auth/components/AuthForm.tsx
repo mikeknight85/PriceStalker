@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { AuthService, beginSsoLogin, PublicAuthConfig } from '../services/AuthService';
 import { useTheme } from '../../../context/ThemeContext';
 import LoadingSpinner from '../../../components/LoadingSpinner';
@@ -20,7 +20,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
   const [ssoConfig, setSsoConfig] = useState<PublicAuthConfig | null>(null);
   const { theme, toggleTheme } = useTheme();
-  const location = useLocation();
+  const location = useRouterState({ select: (state) => state.location });
 
   useEffect(() => {
     // Check if registration is enabled
@@ -35,7 +35,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
       .catch(() => setSsoConfig(null));
   }, []);
 
-  const forceLocal = new URLSearchParams(location.search).get('local') === '1';
+  const forceLocal = new URLSearchParams(location.searchStr).get('local') === '1';
   const ssoAvailable = mode === 'login' && !!ssoConfig?.oidc_enabled;
   // policy 'oidc' means SSO-only, so the password form is hidden unless the
   // ?local=1 escape hatch is used -- without it a misconfigured or unreachable
@@ -175,18 +175,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
 
         {!showLocalForm && (
           <div className="auth-form-footer">
-            <Link to="/login?local=1">Sign in with a password instead</Link>
+            <Link to="/login" search={{ local: '1' }}>Sign in with a password instead</Link>
           </div>
         )}
 
         {showLocalForm && mode === 'login' && registrationEnabled && (
           <div className="auth-form-footer">
-            Don't have an account? <Link to={`/register${location.search}`} state={location.state}>Sign up</Link>
+            Don't have an account? <Link to="/register" search={{ redirect: new URLSearchParams(location.searchStr).get('redirect') || undefined }}>Sign up</Link>
           </div>
         )}
         {mode === 'register' && (
           <div className="auth-form-footer">
-            Already have an account? <Link to={`/login${location.search}`} state={location.state}>Sign in</Link>
+            Already have an account? <Link to="/login" search={{ redirect: new URLSearchParams(location.searchStr).get('redirect') || undefined }}>Sign in</Link>
           </div>
         )}
       </div>

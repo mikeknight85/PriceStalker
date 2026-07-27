@@ -7,7 +7,7 @@
 // the dashboard on success or show the failure reason.
 
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../hooks/useAuth';
 import './SsoComplete.css';
 
@@ -36,7 +36,7 @@ export default function SsoComplete() {
     }
 
     completeOidcLogin(token)
-      .then(() => navigate('/', { replace: true }))
+      .then(() => navigate({ to: '/products', replace: true }))
       .catch((e) => setError(e instanceof Error ? e.message : 'Sign-in failed'));
   }, [completeOidcLogin, navigate]);
 
@@ -54,12 +54,13 @@ export default function SsoComplete() {
             <p className="sso-complete-error">{error}</p>
             <div className="sso-complete-actions">
               {needsEmailVerifiedFix && (
-                <Link to="/admin?tab=auth" className="btn btn-primary">
+                <Link to="/admin/auth" className="btn btn-primary">
                   Open Authentication settings
                 </Link>
               )}
               <Link
-                to="/login?local=1"
+                to="/login"
+                search={{ local: '1' }}
                 className={needsEmailVerifiedFix ? 'btn btn-secondary' : 'btn btn-primary'}
               >
                 Back to login
