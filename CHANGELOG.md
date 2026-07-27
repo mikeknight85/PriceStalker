@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Native backend development now loads the repository `.env` when pnpm starts
   the backend from its workspace directory.
 
+- Malformed frontend route parameters now fall back safely to the relevant default view.
+
 ## [2.0.0-beta.1] - 2026-07-21
 
 2.0 rebuilds the application on a heavily-reworked branch of the same upstream,

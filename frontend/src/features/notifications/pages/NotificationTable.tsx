@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { NotificationEntry } from '../../../types/api';
 import { formatPrice } from '../../../utils/format';
 import { formatDate, getNotificationIcon, getNotificationTypeLabel, getChannelIcon } from './utils';
@@ -60,7 +60,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
               <div className="notification-product-info">
                 <div className="notification-product-name">
                   {productId ? (
-                    <Link to={`/?product=${productId}`}>
+                    <Link to="/" search={{ product: Number(productId) }}>
                       {productName || notification.title}
                     </Link>
                   ) : (

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../features/auth';
 
 const UserDropdown: React.FC = () => {
@@ -22,7 +22,7 @@ const UserDropdown: React.FC = () => {
   const handleLogout = () => {
     setIsDropdownOpen(false);
     logout();
-    navigate('/login');
+    navigate({ to: '/login' });
   };
 
   if (!user) return null;

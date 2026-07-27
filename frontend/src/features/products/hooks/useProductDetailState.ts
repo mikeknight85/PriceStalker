@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { ProductService } from '../services/ProductService';
 import { ProfileService } from '../../settings/services/ProfileService';
 import { useAsyncAction } from '../../../hooks/useAsyncAction';
@@ -59,7 +59,7 @@ export function useProductDetailState(
     onProductDeleted: () => {
       if (onDeleted) onDeleted(productId);
       if (onBack) onBack();
-      else navigate('/');
+      else navigate({ to: '/' });
     },
     onProductUpdated: (_id, data) => {
       fetchData(30);

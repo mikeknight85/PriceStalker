@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
+import { dashboardRoute } from '../../../routes/-api';
 import { ProductService } from '../services/ProductService';
 import { ProfileService } from '../../settings/services/ProfileService';
 import { Product, PriceReviewResponse } from '../../../types/api';
@@ -11,7 +12,8 @@ import { truncateUrl } from '../../../utils/format';
 
 export function useDashboardState() {
   const { showToast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const search = dashboardRoute.useSearch();
+  const navigate = useNavigate({ from: '/' });
   const [activeTab, setActiveTab] = useState<'products' | 'stats' | 'add'>(() => {
     const saved = localStorage.getItem('dashboard_active_tab');
     return (saved as 'products' | 'stats' | 'add') || 'products';
@@ -90,10 +92,7 @@ export function useDashboardState() {
       setProducts((prev) => [newProduct, ...prev]);
       setActiveTab('products');
 
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.set('product', newProduct.id.toString());
-      nextParams.set('tab', 'products');
-      setSearchParams(nextParams);
+      navigate({ to: '/', search: { ...search, product: newProduct.id, tab: 'products' } });
 
       const displayName = newProduct.name || truncateUrl(newProduct.url);
       const truncatedName = displayName.length > 40 ? displayName.substring(0, 37) + '...' : displayName;
@@ -133,10 +132,7 @@ export function useDashboardState() {
         setProducts((prev) => [newProduct, ...prev]);
         setActiveTab('products');
 
-        const nextParams = new URLSearchParams(searchParams);
-        nextParams.set('product', newProduct.id.toString());
-        nextParams.set('tab', 'products');
-        setSearchParams(nextParams);
+        navigate({ to: '/', search: { ...search, product: newProduct.id, tab: 'products' } });
 
         const displayName = newProduct.name || truncateUrl(newProduct.url);
         const truncatedName = displayName.length > 40 ? displayName.substring(0, 37) + '...' : displayName;

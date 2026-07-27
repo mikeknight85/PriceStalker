@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { Product } from '../../../../types/api';
 import { useAuth } from '../../../auth';
 import { formatPrice, truncateUrl } from '../../../../utils/format';
@@ -127,7 +127,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <div className={`pb-card ${isPaused ? 'paused' : ''} ${isOutOfStock ? 'out-of-stock' : ''} ${isPreOrder ? 'pre-order' : ''} ${isMemberOnly ? 'member-only' : ''} ${isNotAvailable ? 'not-available' : ''}`}>
       <div className="pb-card-main">
         <Link 
-          to={`/?product=${product.id}`} 
+          to="/"
+          search={{ product: product.id }}
           style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
           onClick={handleCardClick}
         >
@@ -227,7 +228,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {isPaused ? <Icon name="play" /> : <Icon name="pause" />}
         </button>
         <Link 
-          to={`/?product=${product.id}`} 
+          to="/"
+          search={{ product: product.id }}
           className="pb-action-btn" 
           title="View Details"
           onClick={handleCardClick}

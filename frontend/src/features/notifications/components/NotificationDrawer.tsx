@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { NotificationService } from '../services/NotificationService';
 import { NotificationEntry } from '../../../types/api';
 import { useAuth } from '../../auth';
@@ -152,7 +152,7 @@ const NotificationDrawer: React.FC = () => {
                 );
 
                 return productId ? (
-                  <Link key={n.id} to={`/?product=${productId}`} className={`drawer-item ${!n.is_read ? 'unread' : ''}`} onClick={() => { handleMarkRead(n.id); setDrawerOpen(false); }}>
+                  <Link key={n.id} to="/" search={{ product: Number(productId) }} className={`drawer-item ${!n.is_read ? 'unread' : ''}`} onClick={() => { handleMarkRead(n.id); setDrawerOpen(false); }}>
                     {content}
                   </Link>
                 ) : (

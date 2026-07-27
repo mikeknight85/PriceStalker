@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
+import { dashboardRoute } from '../../../../routes/-api';
 import Layout from '../../../../layouts/Layout';
 import ProductForm from '../../components/ProductForm';
 import DashboardTabs from '../../components/DashboardTabs';
@@ -48,12 +49,13 @@ const Dashboard: React.FC = () => {
     isRefreshingProduct,
   } = useDashboardState();
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const search = dashboardRoute.useSearch();
+  const navigate = useNavigate({ from: '/' });
 
   // Category select sync effect
   useEffect(() => {
-    const urlTab = searchParams.get('tab');
-    const urlProduct = searchParams.get('product');
+    const urlTab = search.tab;
+    const urlProduct = search.product;
 
     if (urlProduct) {
       if (activeTab !== 'products') {
@@ -63,19 +65,15 @@ const Dashboard: React.FC = () => {
       setActiveTab(urlTab as 'products' | 'stats' | 'add');
     }
 
-    const urlCategory = searchParams.get('category');
+    const urlCategory = search.category || null;
     if (urlCategory !== activeCategory) {
       setActiveCategory(urlCategory);
     }
-  }, [searchParams, activeTab, activeCategory, setActiveTab, setActiveCategory]);
+  }, [search, activeTab, activeCategory, setActiveTab, setActiveCategory]);
 
   const handleTabChange = (tab: 'products' | 'stats' | 'add') => {
     setActiveTab(tab);
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('tab', tab);
-    nextParams.delete('product');
-    nextParams.delete('section');
-    setSearchParams(nextParams);
+    navigate({ to: '/', search: { ...search, tab, product: undefined, section: undefined } });
   };
 
   const handleCategoryClick = (cat: string | null) => {
@@ -85,35 +83,19 @@ const Dashboard: React.FC = () => {
     setSortBy('date_added');
     setSortOrder('desc');
 
-    const nextParams = new URLSearchParams(searchParams);
-    if (cat) {
-      nextParams.set('category', cat);
-    } else {
-      nextParams.delete('category');
-    }
-    nextParams.delete('product');
-    nextParams.delete('section');
-    setSearchParams(nextParams);
+    navigate({ to: '/', search: { ...search, category: cat || undefined, product: undefined, section: undefined } });
   };
 
   const handleSelectProduct = (id: number | null) => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (id !== null) {
-      nextParams.set('product', id.toString());
-    } else {
-      nextParams.delete('product');
-    }
-    nextParams.delete('section');
-    setSearchParams(nextParams);
+    navigate({ to: '/', search: { ...search, product: id || undefined, section: undefined } });
   };
 
   // Active tab selection from URL query param
-  const activeTabFromUrl = searchParams.get('tab') as 'products' | 'stats' | 'add' | null;
+  const activeTabFromUrl = search.tab;
   const currentActiveTab = activeTabFromUrl || activeTab;
 
   // Selected product from URL query param
-  const productFromUrl = searchParams.get('product');
-  const selectedProductId = productFromUrl ? parseInt(productFromUrl, 10) : null;
+  const selectedProductId = search.product || null;
 
   return (
     <Layout>

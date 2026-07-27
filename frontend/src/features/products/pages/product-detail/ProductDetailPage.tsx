@@ -1,5 +1,5 @@
-import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { dashboardRoute } from '../../../../routes/-api';
 import Layout from '../../../../layouts/Layout';
 import DashboardTabs from '../../components/DashboardTabs';
 import PriceSelectionModal from '../../components/PriceSelectionModal';
@@ -28,25 +28,18 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ productIdProp, onBack, onDeleted, onUpdated, hideLayout = false }: ProductDetailProps = {}) {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  useEffect(() => {
-    if (productIdProp === undefined && id) {
-      navigate(`/?product=${id}`, { replace: true });
-    }
-  }, [id, productIdProp, navigate]);
-  
-  const activeSection = searchParams.get('section') || 'overview';
+  const search = dashboardRoute.useSearch();
+  const navigate = useNavigate({ from: '/' });
+  const activeSection = search.section || 'overview';
 
   const handleSectionChange = (section: string) => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('section', section);
-    setSearchParams(nextParams);
+    navigate({
+      to: '/',
+      search: { ...search, section: section as 'overview' | 'chart' | 'stock' | 'notifications' | 'settings' },
+    });
   };
 
-  const productId = productIdProp !== undefined ? productIdProp : parseInt(id || '0', 10);
+  const productId = productIdProp || 0;
   
   const state = useProductDetailState(productId, onBack, onDeleted, onUpdated);
 

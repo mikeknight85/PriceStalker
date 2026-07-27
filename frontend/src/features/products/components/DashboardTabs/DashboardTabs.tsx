@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useEffect, ReactNode } from 'react';
 import Tabs, { Tab } from '../../../../components/Tabs';
 import './DashboardTabs.css';
@@ -11,7 +11,7 @@ interface DashboardTabsProps {
 
 export default function DashboardTabs({ activeTab, onTabChange, children }: DashboardTabsProps) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useRouterState({ select: (state) => state.location });
   const isDashboard = location.pathname === '/';
 
   // Persist active tab when it changes
@@ -25,7 +25,7 @@ export default function DashboardTabs({ activeTab, onTabChange, children }: Dash
     const tab = tabId as 'products' | 'stats' | 'add';
     if (!isDashboard) {
       localStorage.setItem('dashboard_active_tab', tab);
-      navigate('/');
+      navigate({ to: '/' });
     } else if (onTabChange) {
       onTabChange(tab);
     }

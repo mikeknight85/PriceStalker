@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { settingsRoute } from '../../../routes/-api';
 import Layout from '../../../layouts/Layout';
 
 // Section Components
@@ -11,11 +12,12 @@ import Icon from '../../../components/Icon';
 type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
 
 export default function Settings() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeSection = (searchParams.get('tab') as SettingsSection) || 'profile';
+  const { tab } = settingsRoute.useSearch();
+  const navigate = useNavigate({ from: '/settings' });
+  const activeSection = tab || 'profile';
 
   const setActiveSection = (tab: SettingsSection) => {
-    setSearchParams({ tab });
+    navigate({ to: '/settings', search: { tab } });
   };
 
   return (

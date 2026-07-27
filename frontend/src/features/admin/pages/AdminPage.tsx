@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate } from '@tanstack/react-router';
+import { adminRoute } from '../../../routes/-api';
 import Layout from '../../../layouts/Layout';
 import { useAuth } from '../../auth';
 import Icon from '../../../components/Icon';
@@ -20,14 +21,15 @@ type AdminSection = 'system' | 'selectors' | 'retailers' | 'users' | 'ai' | 'log
 
 export default function Admin() {
   const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeSection = (searchParams.get('tab') as AdminSection) || 'system';
+  const { tab } = adminRoute.useSearch();
+  const navigate = useNavigate({ from: '/admin' });
+  const activeSection = tab || 'system';
   
   const [globalCurrencies, setGlobalCurrencies] = useState<GlobalCurrency[]>([]);
   const [retailerSearch, setRetailerSearch] = useState('');
 
   const setActiveSection = (tab: AdminSection) => {
-    setSearchParams({ tab });
+    navigate({ to: '/admin', search: { tab } });
   };
 
   useEffect(() => {
