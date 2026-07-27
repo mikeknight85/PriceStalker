@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Added the standard mobile web app capability metadata alongside Apple's
+  platform-specific PWA metadata.
 - Native hot-reload development now serves the frontend on port 8080 by
   default, matching the Docker stack and avoiding API connection failures from
   opening the wrong local URL.
