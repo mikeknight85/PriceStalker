@@ -1,9 +1,9 @@
-import dotenv from 'dotenv';
 import { startServer } from './app/server';
+import { loadEnvironment } from './config/environment';
 import { logger } from './utils/system/logger';
 
 // Load environment variables
-dotenv.config();
+loadEnvironment();
 
 // Global error handlers to ensure crashes are logged
 process.on('uncaughtException', (err) => {
