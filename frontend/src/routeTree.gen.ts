@@ -9,11 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DebugRouteImport } from './routes/debug'
 import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProductIdRouteImport } from './routes/product/$id'
 import { Route as AuthSsoCompleteRouteImport } from './routes/auth/sso-complete'
 import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
@@ -46,11 +44,6 @@ import { Route as AuthenticatedProductsProductIdSettingsRouteImport } from './ro
 import { Route as AuthenticatedProductsProductIdNotificationsRouteImport } from './routes/_authenticated/products/$productId/notifications'
 import { Route as AuthenticatedProductsProductIdHistoryRouteImport } from './routes/_authenticated/products/$productId/history'
 
-const DebugRoute = DebugRouteImport.update({
-  id: '/debug',
-  path: '/debug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublicRouteRoute = PublicRouteRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
@@ -62,11 +55,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductIdRoute = ProductIdRouteImport.update({
-  id: '/product/$id',
-  path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSsoCompleteRoute = AuthSsoCompleteRouteImport.update({
@@ -247,7 +235,6 @@ const AuthenticatedProductsProductIdHistoryRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/debug': typeof DebugRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/products': typeof AuthenticatedProductsRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -256,7 +243,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
-  '/product/$id': typeof ProductIdRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
@@ -283,13 +269,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/debug': typeof DebugRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
-  '/product/$id': typeof ProductIdRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
   '/admin/debug': typeof AuthenticatedAdminDebugRoute
@@ -318,7 +302,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
-  '/debug': typeof DebugRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/products': typeof AuthenticatedProductsRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -327,7 +310,6 @@ export interface FileRoutesById {
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
-  '/product/$id': typeof ProductIdRoute
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
   '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
   '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
@@ -356,7 +338,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/debug'
     | '/admin'
     | '/products'
     | '/settings'
@@ -365,7 +346,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/auth/sso-complete'
-    | '/product/$id'
     | '/products/$productId'
     | '/admin/ai'
     | '/admin/auth'
@@ -392,13 +372,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/debug'
     | '/insights'
     | '/notifications'
     | '/login'
     | '/register'
     | '/auth/sso-complete'
-    | '/product/$id'
     | '/admin/ai'
     | '/admin/auth'
     | '/admin/debug'
@@ -426,7 +404,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_public'
-    | '/debug'
     | '/_authenticated/admin'
     | '/_authenticated/products'
     | '/_authenticated/settings'
@@ -435,7 +412,6 @@ export interface FileRouteTypes {
     | '/_public/login'
     | '/_public/register'
     | '/auth/sso-complete'
-    | '/product/$id'
     | '/_authenticated/products/$productId'
     | '/_authenticated/admin/ai'
     | '/_authenticated/admin/auth'
@@ -465,20 +441,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   PublicRouteRoute: typeof PublicRouteRouteWithChildren
-  DebugRoute: typeof DebugRoute
   AuthSsoCompleteRoute: typeof AuthSsoCompleteRoute
-  ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/debug': {
-      id: '/debug'
-      path: '/debug'
-      fullPath: '/debug'
-      preLoaderRoute: typeof DebugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_public': {
       id: '/_public'
       path: ''
@@ -498,13 +465,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/product/$id': {
-      id: '/product/$id'
-      path: '/product/$id'
-      fullPath: '/product/$id'
-      preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/sso-complete': {
@@ -865,9 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   PublicRouteRoute: PublicRouteRouteWithChildren,
-  DebugRoute: DebugRoute,
   AuthSsoCompleteRoute: AuthSsoCompleteRoute,
-  ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

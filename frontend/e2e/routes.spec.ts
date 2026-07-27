@@ -82,31 +82,20 @@ test('falls back from an unknown route to the protected products flow', async ({
   await expect(page).toHaveURL(/\/login\?redirect=/);
 });
 
-test('redirects legacy dashboard URLs to their canonical routes', async ({ page }) => {
+test('uses canonical defaults when retired tab state is supplied', async ({ page }) => {
   await page.addInitScript((user) => {
     localStorage.setItem('token', 'acceptance-token');
     localStorage.setItem('user', JSON.stringify(user));
-  }, authenticatedUser);
+  }, adminUser);
 
   await page.goto('/?tab=stats');
-  await expect(page).toHaveURL(/\/insights$/);
+  await expect(page).toHaveURL(/\/products$/);
 
   await page.goto('/settings?tab=security');
-  await expect(page).toHaveURL(/\/settings\/security$/);
+  await expect(page).toHaveURL(/\/settings\/profile$/);
 
-  await page.goto('/?category=Games');
-  await expect(page).toHaveURL(/\/products\?category=Games$/);
-  await expect(page.getByText('Showing 1 product in Games')).toBeVisible();
-});
-
-test('keeps debug routes behind the admin boundary', async ({ page }) => {
-  await page.addInitScript((user) => {
-    localStorage.setItem('token', 'acceptance-token');
-    localStorage.setItem('user', JSON.stringify(user));
-  }, authenticatedUser);
-
-  await page.goto('/debug');
-  await expect(page).toHaveURL(/\/products$/);
+  await page.goto('/admin?tab=logs');
+  await expect(page).toHaveURL(/\/admin\/system$/);
 });
 
 test('preserves product detail state while changing nested sections', async ({ page }) => {
@@ -190,22 +179,4 @@ test('allows admins into every admin section and exposes guarded debug', async (
 
   await page.goto('/admin/debug');
   await expect(page.getByRole('heading', { name: 'Debug Access Restricted' })).toBeVisible();
-});
-
-test('maps legacy product-detail sections to their nested routes', async ({ page }) => {
-  await page.addInitScript((user) => {
-    localStorage.setItem('token', 'acceptance-token');
-    localStorage.setItem('user', JSON.stringify(user));
-  }, authenticatedUser);
-
-  for (const [section, destination] of [
-    ['overview', '/products/1'],
-    ['chart', '/products/1/history'],
-    ['stock', '/products/1/stock'],
-    ['notifications', '/products/1/notifications'],
-    ['settings', '/products/1/settings'],
-  ] as const) {
-    await page.goto(`/product/1?section=${section}`);
-    await expect(page).toHaveURL(new RegExp(`${destination}$`));
-  }
 });

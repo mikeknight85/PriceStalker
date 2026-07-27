@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Removed legacy dashboard, product-detail, settings, admin, and debug URL
+  redirects. Use the canonical nested frontend routes instead.
+
 ### Added
 
 - Makefile commands for native hot-reload development with a host-accessible

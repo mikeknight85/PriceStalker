@@ -1,4 +1,4 @@
-const fallbackDestination = '/?tab=products';
+const fallbackDestination = '/products';
 
 export function postAuthDestination(search: string): string {
   const redirect = new URLSearchParams(search).get('redirect');
