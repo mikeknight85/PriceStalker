@@ -7,6 +7,7 @@ import OverviewSection from './OverviewSection';
 import PriceHistorySection from './PriceHistorySection';
 import StockAvailabilitySection from './StockAvailabilitySection';
 import { useProductDetail } from './ProductDetailContext';
+import './ProductDetail.css';
 
 export type ProductDetailSectionName = 'overview' | 'chart' | 'stock' | 'notifications' | 'settings';
 

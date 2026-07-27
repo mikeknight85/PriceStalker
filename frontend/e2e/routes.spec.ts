@@ -129,6 +129,7 @@ test('preserves product detail state while changing nested sections', async ({ p
   await page.goto('/products/1/settings');
   const pauseTracking = page.getByLabel('Pause Tracking (Disable scheduled checks)');
   await expect(pauseTracking).toBeVisible();
+  await expect(page.locator('.detail-section-tabs')).toHaveCSS('display', 'flex');
   await pauseTracking.check();
 
   await page.getByRole('button', { name: 'Price History' }).click();
