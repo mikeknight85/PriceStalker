@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Native hot-reload development now serves the frontend on port 8080 by
+  default, matching the Docker stack and avoiding API connection failures from
+  opening the wrong local URL.
 - Native backend development now loads the repository `.env` when pnpm starts
   the backend from its workspace directory.
 
