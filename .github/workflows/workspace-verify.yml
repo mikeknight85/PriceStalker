@@ -31,3 +31,9 @@ jobs:
 
       - name: Run backend tests
         run: pnpm --filter pricestalker-backend exec vitest run
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter pricestalker-frontend exec playwright install --with-deps chromium
+
+      - name: Run frontend route acceptance tests
+        run: pnpm --filter pricestalker-frontend run test:routes
