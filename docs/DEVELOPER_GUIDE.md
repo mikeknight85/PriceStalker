@@ -32,9 +32,9 @@ PriceStalker V2 utilizes a monorepo workspace managed with pnpm, separating comp
 │                           #   Enabled per-retailer via the Admin UI. Requires `Remote Scraper URL`
 │                           #   to be configured in Admin > Settings.
 ├── deploy/                 # Docker Swarm configuration stack templates
-├── Makefile                # Unified project runner commands (make up, make verify)
+├── Makefile                # Unified project runner commands (make dev, make up, make verify)
 ├── .env.example            # Baseline environment configurations
-└── docker-compose.yml      # Multi-container local orchestration
+└── docker-compose.yaml     # Multi-container local orchestration
 ```
 
 ---
@@ -79,20 +79,38 @@ For organization repositories, forks, or private registry deployments, configure
 make IMAGE_REGISTRY=ghcr.io IMAGE_NAMESPACE=your-username up
 ```
 
-### Manual Hot-Reload Workflow
-Use this flow if you have a local PostgreSQL instance running natively on your host machine and want to edit and test without containers.
+### Native Hot-Reload Workflow
+Use this workflow to develop with local Node processes, without building or
+running the application containers. `make dev` starts just PostgreSQL in Docker
+and runs the backend and frontend on your host with hot reload. You may instead
+point `DATABASE_URL` at an existing native or remote PostgreSQL server.
 
-1. Configure `DATABASE_URL` and `JWT_SECRET` in your environment or in a local `.env` file.
-2. Run backend migrations and start the hot-reloading backend server:
+1. Install workspace dependencies and create a local configuration:
    ```bash
-   pnpm --filter pricestalker-backend run db:migrate:dev
-   pnpm --filter pricestalker-backend run dev
+   pnpm install --frozen-lockfile
    ```
-3. In a second terminal window, start the frontend Vite development server:
+2. Validate the setup and start both hot-reloading processes:
    ```bash
-   pnpm --filter pricestalker-frontend run dev
+   make dev
    ```
-The frontend is served at `http://localhost:5173`, proxying `/api` requests to the backend API running at `http://localhost:3001`.
+
+`make dev` calls `make dev-env` first. It generates URL-safe local credentials
+and a matching `DATABASE_URL` if they are missing, while preserving configured
+values in an existing `.env`. Run `make dev-env` on its own to populate or
+repair the local configuration without starting services.
+
+`make dev` starts PostgreSQL without building application images, then starts
+the backend on `http://localhost:3001` and the Vite frontend on
+`http://localhost:5173`; Vite proxies `/api` requests to the backend. The
+backend runs pending migrations at startup. Use `make dev-db-up` to start only
+the database, `make dev-db-down` to stop it while keeping its volume,
+`make dev-migrate` to apply migrations without starting the server, and
+`make dev-backend` or `make dev-frontend` to run one process in its own
+terminal. `Ctrl-C` stops `make dev` but leaves the database running.
+
+If you already have an `.env`, `make dev-env` fills only the missing values.
+`DATABASE_URL` must use the same credentials as the Docker database and point
+to `127.0.0.1`; set `LOCAL_POSTGRES_PORT` to use another host port.
 
 ---
 
@@ -208,4 +226,3 @@ glance without reading every child file:
 * **[docs/I18N_DESIGN.md](I18N_DESIGN.md)**: Guidelines for localizing UI labels and managing translation key JSON files.
 * **[docs/SSO_DESIGN.md](SSO_DESIGN.md)**: Configuration details for OpenID Connect (OIDC) Single Sign-On providers and JWT authentications.
 * **[docs/DESIGN_TOKENS.md](DESIGN_TOKENS.md)**: Developer styling guide mapping global CSS colors, shadows, and spacing tokens.
-

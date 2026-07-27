@@ -1,7 +1,7 @@
 import { Pool, types } from 'pg';
-import dotenv from 'dotenv';
+import { loadEnvironment } from './environment';
 
-dotenv.config();
+loadEnvironment();
 
 // Parse PostgreSQL numeric OID 1700 as float
 types.setTypeParser(1700, (val) => parseFloat(val));

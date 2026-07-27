@@ -6,12 +6,16 @@ IMAGE_REGISTRY ?= $(call env_value,IMAGE_REGISTRY)
 IMAGE_NAMESPACE ?= $(call env_value,IMAGE_NAMESPACE)
 IMAGE_TAG ?= local
 FRONTEND_PORT ?= 8080
+LOCAL_POSTGRES_PORT ?= $(call env_value,LOCAL_POSTGRES_PORT)
 
 ifeq ($(IMAGE_REGISTRY),)
 IMAGE_REGISTRY := ghcr.io
 endif
 ifeq ($(IMAGE_NAMESPACE),)
 IMAGE_NAMESPACE := mikeknight85
+endif
+ifeq ($(LOCAL_POSTGRES_PORT),)
+LOCAL_POSTGRES_PORT := 5432
 endif
 HOST_ARCH := $(shell uname -m)
 
@@ -33,10 +37,11 @@ IMAGE_REPOSITORY := $(IMAGE_REGISTRY)/$(IMAGE_NAMESPACE)
 BACKEND_IMAGE := $(IMAGE_REPOSITORY)/pricestalker-backend:$(IMAGE_TAG)
 FRONTEND_IMAGE := $(IMAGE_REPOSITORY)/pricestalker-frontend:$(IMAGE_TAG)
 REMOTESCRAPER_IMAGE := $(IMAGE_REPOSITORY)/pricestalker-remotescraper:$(IMAGE_TAG)
+DEV_COMPOSE := LOCAL_POSTGRES_PORT=$(LOCAL_POSTGRES_PORT) docker compose -f docker-compose.yaml -f docker-compose.dev.yaml
 
 .DEFAULT_GOAL := help
 
-.PHONY: help check-tools check-env build build-backend build-frontend build-remotescraper up up-remotescraper down status logs logs-backend logs-frontend verify diagrams
+.PHONY: help check-tools check-env check-local-tools check-local-env dev-env dev dev-backend dev-frontend dev-migrate dev-db-up dev-db-down dev-db-logs build build-backend build-frontend build-remotescraper up up-remotescraper down status logs logs-backend logs-frontend verify diagrams
 
 define build_image
 	@if docker buildx version >/dev/null 2>&1; then \
@@ -67,6 +72,42 @@ check-env: ## Verify that .env exists and required secrets have been set.
 	@test -f .env || { echo "Missing .env. Copy .env.example to .env and set POSTGRES_PASSWORD and JWT_SECRET."; exit 1; }
 	@grep -qE '^POSTGRES_PASSWORD=.+$$' .env && ! grep -q '^POSTGRES_PASSWORD=replace-with-a-strong-password$$' .env || { echo "Set a non-placeholder POSTGRES_PASSWORD in .env."; exit 1; }
 	@grep -qE '^JWT_SECRET=.+$$' .env && ! grep -q '^JWT_SECRET=replace-with-a-long-random-string$$' .env || { echo "Set a non-placeholder JWT_SECRET in .env."; exit 1; }
+
+check-local-tools: ## Verify Node.js and pnpm needed for host-based development.
+	@command -v node >/dev/null || { echo "Node.js 24 is required for local development."; exit 1; }
+	@command -v pnpm >/dev/null || { echo "pnpm 11 is required for local development. Run: corepack enable"; exit 1; }
+	@node --version
+	@pnpm --version
+
+check-local-env: ## Verify native development configuration in .env or the environment.
+	@test -n "$$DATABASE_URL" || { test -f .env && grep -qE '^DATABASE_URL=.+$$' .env; } || { echo "Set DATABASE_URL in .env or the environment, for example: postgresql://postgres:password@localhost:5432/priceghost"; exit 1; }
+	@test -n "$$JWT_SECRET" && test "$$JWT_SECRET" != "replace-with-a-long-random-string" || { test -f .env && grep -qE '^JWT_SECRET=.+$$' .env && ! grep -q '^JWT_SECRET=replace-with-a-long-random-string$$' .env; } || { echo "Set a non-placeholder JWT_SECRET in .env or the environment."; exit 1; }
+
+dev-env: ## Add missing local-development settings to .env without replacing configured values.
+	@command -v node >/dev/null || { echo "Node.js 24 is required to create the local environment file."; exit 1; }
+	@LOCAL_POSTGRES_PORT=$(LOCAL_POSTGRES_PORT) node scripts/create-local-env.mjs
+
+dev: check-local-tools dev-env check-local-env dev-db-up ## Start backend and frontend with hot reload and a Docker PostgreSQL database.
+	pnpm --parallel --filter pricestalker-backend --filter pricestalker-frontend run dev
+
+dev-backend: check-local-tools check-local-env ## Start only the backend with hot reload on port 3001.
+	pnpm --filter pricestalker-backend run dev
+
+dev-frontend: check-local-tools ## Start only the Vite frontend on port 5173.
+	pnpm --filter pricestalker-frontend run dev
+
+dev-migrate: check-local-tools check-local-env ## Apply migrations to the DATABASE_URL configured for local development.
+	pnpm --filter pricestalker-backend run db:migrate:dev
+
+dev-db-up: check-tools check-env ## Start only PostgreSQL for local development; does not build application images.
+	@$(DEV_COMPOSE) up -d postgres
+	@echo "PostgreSQL is available at 127.0.0.1:$(LOCAL_POSTGRES_PORT)."
+
+dev-db-down: check-tools ## Stop the local-development PostgreSQL container and preserve its data volume.
+	@$(DEV_COMPOSE) stop postgres
+
+dev-db-logs: check-tools ## Follow logs for the local-development PostgreSQL container.
+	@$(DEV_COMPOSE) logs --follow --tail=100 postgres
 
 build: check-tools ## Build local backend and frontend images.
 	@$(MAKE) --no-print-directory build-backend build-frontend

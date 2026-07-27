@@ -195,6 +195,19 @@ default:
 docker compose --profile remotescraper up -d
 ```
 
+### Native application development
+
+For hot reload without building application images, run:
+
+```bash
+make dev
+```
+
+This runs PostgreSQL in Docker on `127.0.0.1:5432` and starts the backend and
+frontend with pnpm. It automatically preserves existing configured values and
+fills missing local-development values in `.env`. See the [Developer Guide](docs/DEVELOPER_GUIDE.md#native-hot-reload-workflow)
+for setup details and database commands.
+
 ### Remote scraper
 
 Some retailers block ordinary scraping, require heavy JavaScript/CSS execution to render prices, or sit behind CDN/bot protection (such as Cloudflare or Imperva). 2.0 can offload those pages to a separate container running a stealth browser with a pooled, recycled Chromium instance. The backend scrapes in-process without it, so it is entirely optional.
