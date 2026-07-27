@@ -101,7 +101,10 @@ repair the local configuration without starting services.
 
 `make dev` starts PostgreSQL without building application images, then starts
 the backend on `http://localhost:3001` and the Vite frontend on
-`http://localhost:5173`; Vite proxies `/api` requests to the backend. The
+`http://localhost:8080` by default; Vite proxies `/api` requests to the backend.
+Set `FRONTEND_PORT` to use another port. Vite fails immediately when that port
+is occupied, so the displayed local-development URL always matches the running
+server. The
 backend runs pending migrations at startup. Use `make dev-db-up` to start only
 the database, `make dev-db-down` to stop it while keeping its volume,
 `make dev-migrate` to apply migrations without starting the server, and

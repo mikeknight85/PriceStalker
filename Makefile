@@ -88,13 +88,13 @@ dev-env: ## Add missing local-development settings to .env without replacing con
 	@LOCAL_POSTGRES_PORT=$(LOCAL_POSTGRES_PORT) node scripts/create-local-env.mjs
 
 dev: check-local-tools dev-env check-local-env dev-db-up ## Start backend and frontend with hot reload and a Docker PostgreSQL database.
-	pnpm --parallel --filter pricestalker-backend --filter pricestalker-frontend run dev
+	VITE_PORT=$(FRONTEND_PORT) pnpm --parallel --filter pricestalker-backend --filter pricestalker-frontend run dev
 
 dev-backend: check-local-tools check-local-env ## Start only the backend with hot reload on port 3001.
 	pnpm --filter pricestalker-backend run dev
 
-dev-frontend: check-local-tools ## Start only the Vite frontend on port 5173.
-	pnpm --filter pricestalker-frontend run dev
+dev-frontend: check-local-tools ## Start only the Vite frontend on FRONTEND_PORT (default: 8080).
+	VITE_PORT=$(FRONTEND_PORT) pnpm --filter pricestalker-frontend run dev
 
 dev-migrate: check-local-tools check-local-env ## Apply migrations to the DATABASE_URL configured for local development.
 	pnpm --filter pricestalker-backend run db:migrate:dev
