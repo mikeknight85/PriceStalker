@@ -1,0 +1,7 @@
+# Local-development override. It exposes only PostgreSQL to the host so the
+# backend and frontend can run with pnpm hot reload instead of application
+# containers. Use with docker-compose.yaml; do not use this for deployment.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${LOCAL_POSTGRES_PORT:-5432}:5432"

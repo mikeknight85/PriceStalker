@@ -5,6 +5,21 @@ All notable changes to PriceStalker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Makefile commands for native hot-reload development with a host-accessible
+  Docker PostgreSQL database and no application image builds.
+- `make dev-env` to generate secure local database and application credentials,
+  filling only missing values in an existing `.env` file.
+- `make dev` now invokes the local environment bootstrap automatically.
+
+### Fixed
+
+- Native backend development now loads the repository `.env` when pnpm starts
+  the backend from its workspace directory.
+
 ## [2.0.0-beta.1] - 2026-07-21
 
 2.0 rebuilds the application on a heavily-reworked branch of the same upstream,
@@ -734,4 +749,3 @@ tightens default security.
 | 1.0.2 | 2026-01-23 | Fixed stock status false positives for in-stock items |
 | 1.0.1 | 2026-01-23 | Bug fixes, JS-rendered price support, pre-order detection |
 | 1.0.0 | 2026-01-23 | Initial public release |
-

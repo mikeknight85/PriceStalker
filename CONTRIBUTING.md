@@ -22,6 +22,21 @@ pnpm install --frozen-lockfile     # install all workspaces
 or `yarn.lock`. [Volta](https://volta.sh/) can automatically select the project's
 pinned Node and pnpm versions if you prefer not to manage them manually.
 
+### Native development
+
+To run the backend and frontend directly on your host:
+
+```bash
+make dev
+```
+
+This starts a host-accessible Docker PostgreSQL service and uses pnpm hot reload
+for the application; it does not build Docker application images. It
+automatically fills missing local-development values in `.env` without replacing
+configured values. See the
+[Developer Guide](docs/DEVELOPER_GUIDE.md#native-hot-reload-workflow) for the
+PostgreSQL requirement and individual development commands.
+
 ---
 
 ## 2. Preparing and Submitting Changes
