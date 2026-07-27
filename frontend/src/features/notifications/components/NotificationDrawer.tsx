@@ -152,7 +152,7 @@ const NotificationDrawer: React.FC = () => {
                 );
 
                 return productId ? (
-                  <Link key={n.id} to="/" search={{ product: Number(productId) }} className={`drawer-item ${!n.is_read ? 'unread' : ''}`} onClick={() => { handleMarkRead(n.id); setDrawerOpen(false); }}>
+                  <Link key={n.id} to="/products/$productId" params={{ productId: String(productId) }} className={`drawer-item ${!n.is_read ? 'unread' : ''}`} onClick={() => { handleMarkRead(n.id); setDrawerOpen(false); }}>
                     {content}
                   </Link>
                 ) : (

@@ -13,7 +13,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <Link to="/" className="navbar-brand">
+        <Link to="/products" className="navbar-brand">
           <img src="/icon.svg" alt="" className="navbar-brand-icon" />
           <span className="navbar-brand-text">
             <span>Price</span>

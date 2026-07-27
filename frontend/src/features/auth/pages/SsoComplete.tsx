@@ -36,7 +36,7 @@ export default function SsoComplete() {
     }
 
     completeOidcLogin(token)
-      .then(() => navigate({ to: '/', replace: true }))
+      .then(() => navigate({ to: '/products', replace: true }))
       .catch((e) => setError(e instanceof Error ? e.message : 'Sign-in failed'));
   }, [completeOidcLogin, navigate]);
 
@@ -54,7 +54,7 @@ export default function SsoComplete() {
             <p className="sso-complete-error">{error}</p>
             <div className="sso-complete-actions">
               {needsEmailVerifiedFix && (
-                <Link to="/admin" search={{ tab: 'auth' }} className="btn btn-primary">
+                <Link to="/admin/auth" className="btn btn-primary">
                   Open Authentication settings
                 </Link>
               )}

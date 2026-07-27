@@ -1,26 +1,17 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { dashboardRoute } from '../../../../routes/-api';
+import { productsRoute } from '../../../../routes/-products-api';
 import Layout from '../../../../layouts/Layout';
-import ProductForm from '../../components/ProductForm';
-import DashboardTabs from '../../components/DashboardTabs';
 import PriceSelectionModal from '../../components/PriceSelectionModal';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
-import ErrorBoundary from '../../../../components/ErrorBoundary';
 import { useDashboardState } from '../../hooks/useDashboardState';
-import DashboardSummary from './DashboardSummary';
 import DashboardControls from './DashboardControls';
 import ProductList from './ProductList';
-import ProductDetailPage from '../product-detail/ProductDetailPage';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const {
-    activeTab,
-    setActiveTab,
     products,
-    updateProduct,
-    removeProduct,
     isLoading,
     searchQuery,
     setSearchQuery,
@@ -33,12 +24,9 @@ const Dashboard: React.FC = () => {
     activeCategory,
     setActiveCategory,
     categories,
-    formCategories,
-    dashboardSummary,
     filteredAndSortedProducts,
     showPriceModal,
     priceReviewData,
-    handleAddProduct,
     handlePriceSelected,
     handlePriceModalClose,
     handleDeleteProduct,
@@ -49,32 +37,14 @@ const Dashboard: React.FC = () => {
     isRefreshingProduct,
   } = useDashboardState();
 
-  const search = dashboardRoute.useSearch();
-  const navigate = useNavigate({ from: '/' });
+  const navigate = useNavigate();
+  const { category } = productsRoute.useSearch();
 
-  // Category select sync effect
   useEffect(() => {
-    const urlTab = search.tab;
-    const urlProduct = search.product;
-
-    if (urlProduct) {
-      if (activeTab !== 'products') {
-        setActiveTab('products');
-      }
-    } else if (urlTab && urlTab !== activeTab) {
-      setActiveTab(urlTab as 'products' | 'stats' | 'add');
+    if (category !== undefined && category !== activeCategory) {
+      setActiveCategory(category);
     }
-
-    const urlCategory = search.category || null;
-    if (urlCategory !== activeCategory) {
-      setActiveCategory(urlCategory);
-    }
-  }, [search, activeTab, activeCategory, setActiveTab, setActiveCategory]);
-
-  const handleTabChange = (tab: 'products' | 'stats' | 'add') => {
-    setActiveTab(tab);
-    navigate({ to: '/', search: { ...search, tab, product: undefined, section: undefined } });
-  };
+  }, [activeCategory, category, setActiveCategory]);
 
   const handleCategoryClick = (cat: string | null) => {
     setActiveCategory(cat);
@@ -83,24 +53,11 @@ const Dashboard: React.FC = () => {
     setSortBy('date_added');
     setSortOrder('desc');
 
-    navigate({ to: '/', search: { ...search, category: cat || undefined, product: undefined, section: undefined } });
+    navigate({ to: '/products', search: { category: cat || undefined } });
   };
-
-  const handleSelectProduct = (id: number | null) => {
-    navigate({ to: '/', search: { ...search, product: id || undefined, section: undefined } });
-  };
-
-  // Active tab selection from URL query param
-  const activeTabFromUrl = search.tab;
-  const currentActiveTab = activeTabFromUrl || activeTab;
-
-  // Selected product from URL query param
-  const selectedProductId = search.product || null;
 
   return (
     <Layout>
-      <DashboardTabs activeTab={currentActiveTab} onTabChange={handleTabChange} />
-
       <ConfirmationModal
         isOpen={!!productToDelete}
         onClose={() => setProductToDelete(null)}
@@ -128,33 +85,9 @@ const Dashboard: React.FC = () => {
         reviewReason={priceReviewData?.reviewReason}
       />
 
-      {currentActiveTab === 'add' ? (
-        <div className="section-container">
-           <div className="settings-card" style={{ maxWidth: '1200px', margin: '0 auto', padding: 0, background: 'transparent', boxShadow: 'none' }}>
-              <ProductForm onSubmit={handleAddProduct} availableCategories={formCategories} />
-           </div>
-        </div>
-      ) : currentActiveTab === 'stats' ? (
-        <div className="section-container">
-          <ErrorBoundary section="the dashboard summary">
-            <DashboardSummary summary={dashboardSummary} />
-          </ErrorBoundary>
-        </div>
-      ) : (
-        <div className="section-container">
-          <main className="dashboard-main">
-            {selectedProductId !== null ? (
-              <div className="inline-product-detail-container">
-                <ProductDetailPage 
-                  productIdProp={selectedProductId}
-                  onBack={() => handleSelectProduct(null)}
-                  onDeleted={removeProduct}
-                  onUpdated={updateProduct}
-                  hideLayout={true}
-                />
-              </div>
-            ) : (
-              <>
+      <div className="section-container">
+        <main className="dashboard-main">
+          <>
                 {!isLoading && products.length > 0 && (
                   <DashboardControls
                     searchQuery={searchQuery}
@@ -181,15 +114,13 @@ const Dashboard: React.FC = () => {
                   }}
                   onRefresh={handleRefreshProduct}
                   onTogglePause={handlePauseToggle}
-                  onAddClick={() => handleTabChange('add')}
+                  onAddClick={() => navigate({ to: '/products/new' })}
                   hasAnyProducts={products.length > 0}
-                  onSelect={handleSelectProduct}
+                  onSelect={(id) => navigate({ to: '/products/$productId', params: { productId: String(id) } })}
                 />
-              </>
-            )}
-          </main>
-        </div>
-      )}
+          </>
+        </main>
+      </div>
     </Layout>
   );
 };

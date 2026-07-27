@@ -127,8 +127,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <div className={`pb-card ${isPaused ? 'paused' : ''} ${isOutOfStock ? 'out-of-stock' : ''} ${isPreOrder ? 'pre-order' : ''} ${isMemberOnly ? 'member-only' : ''} ${isNotAvailable ? 'not-available' : ''}`}>
       <div className="pb-card-main">
         <Link 
-          to="/"
-          search={{ product: product.id }}
+          to="/products/$productId"
+          params={{ productId: String(product.id) }}
           style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
           onClick={handleCardClick}
         >
@@ -228,8 +228,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {isPaused ? <Icon name="play" /> : <Icon name="pause" />}
         </button>
         <Link 
-          to="/"
-          search={{ product: product.id }}
+          to="/products/$productId"
+          params={{ productId: String(product.id) }}
           className="pb-action-btn" 
           title="View Details"
           onClick={handleCardClick}

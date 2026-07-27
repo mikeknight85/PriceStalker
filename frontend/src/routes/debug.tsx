@@ -1,4 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router';
-import Debug from '../pages/Debug';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/debug')({ component: Debug });
+export const Route = createFileRoute('/debug')({ beforeLoad: () => { throw redirect({ to: '/admin/debug', replace: true }); } });

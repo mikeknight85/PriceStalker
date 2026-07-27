@@ -108,7 +108,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
           setError(
             <span>
               {message || 'You are already tracking this product.'}{' '}
-              <Link to="/" search={{ product: id }} style={{ color: 'inherit', textDecoration: 'underline' }}>
+              <Link to="/products/$productId" params={{ productId: String(id) }} style={{ color: 'inherit', textDecoration: 'underline' }}>
                 Click here to view it.
               </Link>
             </span>

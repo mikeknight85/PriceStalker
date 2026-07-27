@@ -9,44 +9,54 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as DebugRouteImport } from './routes/debug'
-import { Route as AdminRouteImport } from './routes/admin'
+import { Route as PublicRouteRouteImport } from './routes/_public/route'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductIdRouteImport } from './routes/product/$id'
 import { Route as AuthSsoCompleteRouteImport } from './routes/auth/sso-complete'
+import { Route as PublicRegisterRouteImport } from './routes/_public/register'
+import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
+import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedProductsRouteRouteImport } from './routes/_authenticated/products/route'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authenticated/products/index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings/security'
+import { Route as AuthenticatedSettingsRegionalRouteImport } from './routes/_authenticated/settings/regional'
+import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
+import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
+import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products/new'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedAdminTokensRouteImport } from './routes/_authenticated/admin/tokens'
+import { Route as AuthenticatedAdminSystemRouteImport } from './routes/_authenticated/admin/system'
+import { Route as AuthenticatedAdminSelectorsRouteImport } from './routes/_authenticated/admin/selectors'
+import { Route as AuthenticatedAdminRetailersRouteImport } from './routes/_authenticated/admin/retailers'
+import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin/logs'
+import { Route as AuthenticatedAdminDebugRouteImport } from './routes/_authenticated/admin/debug'
+import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin/auth'
+import { Route as AuthenticatedAdminAiRouteImport } from './routes/_authenticated/admin/ai'
+import { Route as AuthenticatedProductsProductIdRouteRouteImport } from './routes/_authenticated/products/$productId/route'
+import { Route as AuthenticatedProductsProductIdIndexRouteImport } from './routes/_authenticated/products/$productId/index'
+import { Route as AuthenticatedProductsProductIdStockRouteImport } from './routes/_authenticated/products/$productId/stock'
+import { Route as AuthenticatedProductsProductIdSettingsRouteImport } from './routes/_authenticated/products/$productId/settings'
+import { Route as AuthenticatedProductsProductIdNotificationsRouteImport } from './routes/_authenticated/products/$productId/notifications'
+import { Route as AuthenticatedProductsProductIdHistoryRouteImport } from './routes/_authenticated/products/$productId/history'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DebugRoute = DebugRouteImport.update({
   id: '/debug',
   path: '/debug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const PublicRouteRoute = PublicRouteRouteImport.update({
+  id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -64,119 +74,404 @@ const AuthSsoCompleteRoute = AuthSsoCompleteRouteImport.update({
   path: '/auth/sso-complete',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicRegisterRoute = PublicRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicLoginRoute = PublicLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRouteRoute =
+  AuthenticatedSettingsRouteRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProductsRouteRoute =
+  AuthenticatedProductsRouteRouteImport.update({
+    id: '/products',
+    path: '/products',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedProductsIndexRoute =
+  AuthenticatedProductsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedProductsRouteRoute,
+  } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedSettingsSecurityRoute =
+  AuthenticatedSettingsSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsRegionalRoute =
+  AuthenticatedSettingsRegionalRouteImport.update({
+    id: '/regional',
+    path: '/regional',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsProfileRoute =
+  AuthenticatedSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsNotificationsRoute =
+  AuthenticatedSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedProductsNewRoute =
+  AuthenticatedProductsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedProductsRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminTokensRoute =
+  AuthenticatedAdminTokensRouteImport.update({
+    id: '/tokens',
+    path: '/tokens',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemRoute =
+  AuthenticatedAdminSystemRouteImport.update({
+    id: '/system',
+    path: '/system',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSelectorsRoute =
+  AuthenticatedAdminSelectorsRouteImport.update({
+    id: '/selectors',
+    path: '/selectors',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRetailersRoute =
+  AuthenticatedAdminRetailersRouteImport.update({
+    id: '/retailers',
+    path: '/retailers',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminDebugRoute = AuthenticatedAdminDebugRouteImport.update({
+  id: '/debug',
+  path: '/debug',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminAuthRoute = AuthenticatedAdminAuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminAiRoute = AuthenticatedAdminAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedProductsProductIdRouteRoute =
+  AuthenticatedProductsProductIdRouteRouteImport.update({
+    id: '/$productId',
+    path: '/$productId',
+    getParentRoute: () => AuthenticatedProductsRouteRoute,
+  } as any)
+const AuthenticatedProductsProductIdIndexRoute =
+  AuthenticatedProductsProductIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
+  } as any)
+const AuthenticatedProductsProductIdStockRoute =
+  AuthenticatedProductsProductIdStockRouteImport.update({
+    id: '/stock',
+    path: '/stock',
+    getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
+  } as any)
+const AuthenticatedProductsProductIdSettingsRoute =
+  AuthenticatedProductsProductIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
+  } as any)
+const AuthenticatedProductsProductIdNotificationsRoute =
+  AuthenticatedProductsProductIdNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
+  } as any)
+const AuthenticatedProductsProductIdHistoryRoute =
+  AuthenticatedProductsProductIdHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/debug': typeof DebugRoute
-  '/login': typeof LoginRoute
-  '/notifications': typeof NotificationsRoute
-  '/register': typeof RegisterRoute
-  '/settings': typeof SettingsRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/products': typeof AuthenticatedProductsRouteRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/login': typeof PublicLoginRoute
+  '/register': typeof PublicRegisterRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
   '/product/$id': typeof ProductIdRoute
+  '/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
+  '/admin/ai': typeof AuthenticatedAdminAiRoute
+  '/admin/auth': typeof AuthenticatedAdminAuthRoute
+  '/admin/debug': typeof AuthenticatedAdminDebugRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/retailers': typeof AuthenticatedAdminRetailersRoute
+  '/admin/selectors': typeof AuthenticatedAdminSelectorsRoute
+  '/admin/system': typeof AuthenticatedAdminSystemRoute
+  '/admin/tokens': typeof AuthenticatedAdminTokensRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/profile': typeof AuthenticatedSettingsProfileRoute
+  '/settings/regional': typeof AuthenticatedSettingsRegionalRoute
+  '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/products/': typeof AuthenticatedProductsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/products/$productId/history': typeof AuthenticatedProductsProductIdHistoryRoute
+  '/products/$productId/notifications': typeof AuthenticatedProductsProductIdNotificationsRoute
+  '/products/$productId/settings': typeof AuthenticatedProductsProductIdSettingsRoute
+  '/products/$productId/stock': typeof AuthenticatedProductsProductIdStockRoute
+  '/products/$productId/': typeof AuthenticatedProductsProductIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/debug': typeof DebugRoute
-  '/login': typeof LoginRoute
-  '/notifications': typeof NotificationsRoute
-  '/register': typeof RegisterRoute
-  '/settings': typeof SettingsRoute
+  '/insights': typeof AuthenticatedInsightsRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/login': typeof PublicLoginRoute
+  '/register': typeof PublicRegisterRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
   '/product/$id': typeof ProductIdRoute
+  '/admin/ai': typeof AuthenticatedAdminAiRoute
+  '/admin/auth': typeof AuthenticatedAdminAuthRoute
+  '/admin/debug': typeof AuthenticatedAdminDebugRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/retailers': typeof AuthenticatedAdminRetailersRoute
+  '/admin/selectors': typeof AuthenticatedAdminSelectorsRoute
+  '/admin/system': typeof AuthenticatedAdminSystemRoute
+  '/admin/tokens': typeof AuthenticatedAdminTokensRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/profile': typeof AuthenticatedSettingsProfileRoute
+  '/settings/regional': typeof AuthenticatedSettingsRegionalRoute
+  '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/products': typeof AuthenticatedProductsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/products/$productId/history': typeof AuthenticatedProductsProductIdHistoryRoute
+  '/products/$productId/notifications': typeof AuthenticatedProductsProductIdNotificationsRoute
+  '/products/$productId/settings': typeof AuthenticatedProductsProductIdSettingsRoute
+  '/products/$productId/stock': typeof AuthenticatedProductsProductIdStockRoute
+  '/products/$productId': typeof AuthenticatedProductsProductIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_public': typeof PublicRouteRouteWithChildren
   '/debug': typeof DebugRoute
-  '/login': typeof LoginRoute
-  '/notifications': typeof NotificationsRoute
-  '/register': typeof RegisterRoute
-  '/settings': typeof SettingsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/products': typeof AuthenticatedProductsRouteRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_public/login': typeof PublicLoginRoute
+  '/_public/register': typeof PublicRegisterRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
   '/product/$id': typeof ProductIdRoute
+  '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
+  '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
+  '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
+  '/_authenticated/admin/debug': typeof AuthenticatedAdminDebugRoute
+  '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/_authenticated/admin/retailers': typeof AuthenticatedAdminRetailersRoute
+  '/_authenticated/admin/selectors': typeof AuthenticatedAdminSelectorsRoute
+  '/_authenticated/admin/system': typeof AuthenticatedAdminSystemRoute
+  '/_authenticated/admin/tokens': typeof AuthenticatedAdminTokensRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
+  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
+  '/_authenticated/settings/regional': typeof AuthenticatedSettingsRegionalRoute
+  '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/products/$productId/history': typeof AuthenticatedProductsProductIdHistoryRoute
+  '/_authenticated/products/$productId/notifications': typeof AuthenticatedProductsProductIdNotificationsRoute
+  '/_authenticated/products/$productId/settings': typeof AuthenticatedProductsProductIdSettingsRoute
+  '/_authenticated/products/$productId/stock': typeof AuthenticatedProductsProductIdStockRoute
+  '/_authenticated/products/$productId/': typeof AuthenticatedProductsProductIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/debug'
-    | '/login'
-    | '/notifications'
-    | '/register'
+    | '/admin'
+    | '/products'
     | '/settings'
+    | '/insights'
+    | '/notifications'
+    | '/login'
+    | '/register'
     | '/auth/sso-complete'
     | '/product/$id'
+    | '/products/$productId'
+    | '/admin/ai'
+    | '/admin/auth'
+    | '/admin/debug'
+    | '/admin/logs'
+    | '/admin/retailers'
+    | '/admin/selectors'
+    | '/admin/system'
+    | '/admin/tokens'
+    | '/admin/users'
+    | '/products/new'
+    | '/settings/notifications'
+    | '/settings/profile'
+    | '/settings/regional'
+    | '/settings/security'
+    | '/admin/'
+    | '/products/'
+    | '/settings/'
+    | '/products/$productId/history'
+    | '/products/$productId/notifications'
+    | '/products/$productId/settings'
+    | '/products/$productId/stock'
+    | '/products/$productId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/debug'
-    | '/login'
+    | '/insights'
     | '/notifications'
+    | '/login'
     | '/register'
-    | '/settings'
     | '/auth/sso-complete'
     | '/product/$id'
+    | '/admin/ai'
+    | '/admin/auth'
+    | '/admin/debug'
+    | '/admin/logs'
+    | '/admin/retailers'
+    | '/admin/selectors'
+    | '/admin/system'
+    | '/admin/tokens'
+    | '/admin/users'
+    | '/products/new'
+    | '/settings/notifications'
+    | '/settings/profile'
+    | '/settings/regional'
+    | '/settings/security'
+    | '/admin'
+    | '/products'
+    | '/settings'
+    | '/products/$productId/history'
+    | '/products/$productId/notifications'
+    | '/products/$productId/settings'
+    | '/products/$productId/stock'
+    | '/products/$productId'
   id:
     | '__root__'
     | '/'
-    | '/admin'
+    | '/_authenticated'
+    | '/_public'
     | '/debug'
-    | '/login'
-    | '/notifications'
-    | '/register'
-    | '/settings'
+    | '/_authenticated/admin'
+    | '/_authenticated/products'
+    | '/_authenticated/settings'
+    | '/_authenticated/insights'
+    | '/_authenticated/notifications'
+    | '/_public/login'
+    | '/_public/register'
     | '/auth/sso-complete'
     | '/product/$id'
+    | '/_authenticated/products/$productId'
+    | '/_authenticated/admin/ai'
+    | '/_authenticated/admin/auth'
+    | '/_authenticated/admin/debug'
+    | '/_authenticated/admin/logs'
+    | '/_authenticated/admin/retailers'
+    | '/_authenticated/admin/selectors'
+    | '/_authenticated/admin/system'
+    | '/_authenticated/admin/tokens'
+    | '/_authenticated/admin/users'
+    | '/_authenticated/products/new'
+    | '/_authenticated/settings/notifications'
+    | '/_authenticated/settings/profile'
+    | '/_authenticated/settings/regional'
+    | '/_authenticated/settings/security'
+    | '/_authenticated/admin/'
+    | '/_authenticated/products/'
+    | '/_authenticated/settings/'
+    | '/_authenticated/products/$productId/history'
+    | '/_authenticated/products/$productId/notifications'
+    | '/_authenticated/products/$productId/settings'
+    | '/_authenticated/products/$productId/stock'
+    | '/_authenticated/products/$productId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  PublicRouteRoute: typeof PublicRouteRouteWithChildren
   DebugRoute: typeof DebugRoute
-  LoginRoute: typeof LoginRoute
-  NotificationsRoute: typeof NotificationsRoute
-  RegisterRoute: typeof RegisterRoute
-  SettingsRoute: typeof SettingsRoute
   AuthSsoCompleteRoute: typeof AuthSsoCompleteRoute
   ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/debug': {
       id: '/debug'
       path: '/debug'
@@ -184,11 +479,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DebugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -212,17 +514,358 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSsoCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/register': {
+      id: '/_public/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof PublicRegisterRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/insights': {
+      id: '/_authenticated/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/products/': {
+      id: '/_authenticated/products/'
+      path: '/'
+      fullPath: '/products/'
+      preLoaderRoute: typeof AuthenticatedProductsIndexRouteImport
+      parentRoute: typeof AuthenticatedProductsRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/settings/security': {
+      id: '/_authenticated/settings/security'
+      path: '/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof AuthenticatedSettingsSecurityRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/regional': {
+      id: '/_authenticated/settings/regional'
+      path: '/regional'
+      fullPath: '/settings/regional'
+      preLoaderRoute: typeof AuthenticatedSettingsRegionalRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/profile': {
+      id: '/_authenticated/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/notifications': {
+      id: '/_authenticated/settings/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/products/new': {
+      id: '/_authenticated/products/new'
+      path: '/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
+      parentRoute: typeof AuthenticatedProductsRouteRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/tokens': {
+      id: '/_authenticated/admin/tokens'
+      path: '/tokens'
+      fullPath: '/admin/tokens'
+      preLoaderRoute: typeof AuthenticatedAdminTokensRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/system': {
+      id: '/_authenticated/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AuthenticatedAdminSystemRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/selectors': {
+      id: '/_authenticated/admin/selectors'
+      path: '/selectors'
+      fullPath: '/admin/selectors'
+      preLoaderRoute: typeof AuthenticatedAdminSelectorsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/retailers': {
+      id: '/_authenticated/admin/retailers'
+      path: '/retailers'
+      fullPath: '/admin/retailers'
+      preLoaderRoute: typeof AuthenticatedAdminRetailersRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/logs': {
+      id: '/_authenticated/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/debug': {
+      id: '/_authenticated/admin/debug'
+      path: '/debug'
+      fullPath: '/admin/debug'
+      preLoaderRoute: typeof AuthenticatedAdminDebugRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/auth': {
+      id: '/_authenticated/admin/auth'
+      path: '/auth'
+      fullPath: '/admin/auth'
+      preLoaderRoute: typeof AuthenticatedAdminAuthRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/ai': {
+      id: '/_authenticated/admin/ai'
+      path: '/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AuthenticatedAdminAiRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/products/$productId': {
+      id: '/_authenticated/products/$productId'
+      path: '/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdRouteRouteImport
+      parentRoute: typeof AuthenticatedProductsRouteRoute
+    }
+    '/_authenticated/products/$productId/': {
+      id: '/_authenticated/products/$productId/'
+      path: '/'
+      fullPath: '/products/$productId/'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdIndexRouteImport
+      parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
+    '/_authenticated/products/$productId/stock': {
+      id: '/_authenticated/products/$productId/stock'
+      path: '/stock'
+      fullPath: '/products/$productId/stock'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdStockRouteImport
+      parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
+    '/_authenticated/products/$productId/settings': {
+      id: '/_authenticated/products/$productId/settings'
+      path: '/settings'
+      fullPath: '/products/$productId/settings'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdSettingsRouteImport
+      parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
+    '/_authenticated/products/$productId/notifications': {
+      id: '/_authenticated/products/$productId/notifications'
+      path: '/notifications'
+      fullPath: '/products/$productId/notifications'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdNotificationsRouteImport
+      parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
+    '/_authenticated/products/$productId/history': {
+      id: '/_authenticated/products/$productId/history'
+      path: '/history'
+      fullPath: '/products/$productId/history'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdHistoryRouteImport
+      parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminAiRoute: typeof AuthenticatedAdminAiRoute
+  AuthenticatedAdminAuthRoute: typeof AuthenticatedAdminAuthRoute
+  AuthenticatedAdminDebugRoute: typeof AuthenticatedAdminDebugRoute
+  AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
+  AuthenticatedAdminRetailersRoute: typeof AuthenticatedAdminRetailersRoute
+  AuthenticatedAdminSelectorsRoute: typeof AuthenticatedAdminSelectorsRoute
+  AuthenticatedAdminSystemRoute: typeof AuthenticatedAdminSystemRoute
+  AuthenticatedAdminTokensRoute: typeof AuthenticatedAdminTokensRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminAiRoute: AuthenticatedAdminAiRoute,
+    AuthenticatedAdminAuthRoute: AuthenticatedAdminAuthRoute,
+    AuthenticatedAdminDebugRoute: AuthenticatedAdminDebugRoute,
+    AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
+    AuthenticatedAdminRetailersRoute: AuthenticatedAdminRetailersRoute,
+    AuthenticatedAdminSelectorsRoute: AuthenticatedAdminSelectorsRoute,
+    AuthenticatedAdminSystemRoute: AuthenticatedAdminSystemRoute,
+    AuthenticatedAdminTokensRoute: AuthenticatedAdminTokensRoute,
+    AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedProductsProductIdRouteRouteChildren {
+  AuthenticatedProductsProductIdHistoryRoute: typeof AuthenticatedProductsProductIdHistoryRoute
+  AuthenticatedProductsProductIdNotificationsRoute: typeof AuthenticatedProductsProductIdNotificationsRoute
+  AuthenticatedProductsProductIdSettingsRoute: typeof AuthenticatedProductsProductIdSettingsRoute
+  AuthenticatedProductsProductIdStockRoute: typeof AuthenticatedProductsProductIdStockRoute
+  AuthenticatedProductsProductIdIndexRoute: typeof AuthenticatedProductsProductIdIndexRoute
+}
+
+const AuthenticatedProductsProductIdRouteRouteChildren: AuthenticatedProductsProductIdRouteRouteChildren =
+  {
+    AuthenticatedProductsProductIdHistoryRoute:
+      AuthenticatedProductsProductIdHistoryRoute,
+    AuthenticatedProductsProductIdNotificationsRoute:
+      AuthenticatedProductsProductIdNotificationsRoute,
+    AuthenticatedProductsProductIdSettingsRoute:
+      AuthenticatedProductsProductIdSettingsRoute,
+    AuthenticatedProductsProductIdStockRoute:
+      AuthenticatedProductsProductIdStockRoute,
+    AuthenticatedProductsProductIdIndexRoute:
+      AuthenticatedProductsProductIdIndexRoute,
+  }
+
+const AuthenticatedProductsProductIdRouteRouteWithChildren =
+  AuthenticatedProductsProductIdRouteRoute._addFileChildren(
+    AuthenticatedProductsProductIdRouteRouteChildren,
+  )
+
+interface AuthenticatedProductsRouteRouteChildren {
+  AuthenticatedProductsProductIdRouteRoute: typeof AuthenticatedProductsProductIdRouteRouteWithChildren
+  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
+  AuthenticatedProductsIndexRoute: typeof AuthenticatedProductsIndexRoute
+}
+
+const AuthenticatedProductsRouteRouteChildren: AuthenticatedProductsRouteRouteChildren =
+  {
+    AuthenticatedProductsProductIdRouteRoute:
+      AuthenticatedProductsProductIdRouteRouteWithChildren,
+    AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
+    AuthenticatedProductsIndexRoute: AuthenticatedProductsIndexRoute,
+  }
+
+const AuthenticatedProductsRouteRouteWithChildren =
+  AuthenticatedProductsRouteRoute._addFileChildren(
+    AuthenticatedProductsRouteRouteChildren,
+  )
+
+interface AuthenticatedSettingsRouteRouteChildren {
+  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
+  AuthenticatedSettingsProfileRoute: typeof AuthenticatedSettingsProfileRoute
+  AuthenticatedSettingsRegionalRoute: typeof AuthenticatedSettingsRegionalRoute
+  AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+}
+
+const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
+  {
+    AuthenticatedSettingsNotificationsRoute:
+      AuthenticatedSettingsNotificationsRoute,
+    AuthenticatedSettingsProfileRoute: AuthenticatedSettingsProfileRoute,
+    AuthenticatedSettingsRegionalRoute: AuthenticatedSettingsRegionalRoute,
+    AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
+    AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  }
+
+const AuthenticatedSettingsRouteRouteWithChildren =
+  AuthenticatedSettingsRouteRoute._addFileChildren(
+    AuthenticatedSettingsRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedProductsRouteRoute: typeof AuthenticatedProductsRouteRouteWithChildren
+  AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
+  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedProductsRouteRoute: AuthenticatedProductsRouteRouteWithChildren,
+  AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
+  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface PublicRouteRouteChildren {
+  PublicLoginRoute: typeof PublicLoginRoute
+  PublicRegisterRoute: typeof PublicRegisterRoute
+}
+
+const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicLoginRoute: PublicLoginRoute,
+  PublicRegisterRoute: PublicRegisterRoute,
+}
+
+const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(
+  PublicRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  PublicRouteRoute: PublicRouteRouteWithChildren,
   DebugRoute: DebugRoute,
-  LoginRoute: LoginRoute,
-  NotificationsRoute: NotificationsRoute,
-  RegisterRoute: RegisterRoute,
-  SettingsRoute: SettingsRoute,
   AuthSsoCompleteRoute: AuthSsoCompleteRoute,
   ProductIdRoute: ProductIdRoute,
 }

@@ -54,7 +54,7 @@ const UserDropdown: React.FC = () => {
       {isDropdownOpen && (
         <div className="user-dropdown-menu">
           <Link
-            to="/settings"
+            to="/settings/profile"
             className="user-dropdown-menu-item"
             onClick={() => setIsDropdownOpen(false)}
           >
@@ -67,7 +67,7 @@ const UserDropdown: React.FC = () => {
           {user?.is_admin && (
             <>
               <Link
-                to="/admin"
+                to="/admin/system"
                 className="user-dropdown-menu-item"
                 onClick={() => setIsDropdownOpen(false)}
               >
@@ -79,7 +79,7 @@ const UserDropdown: React.FC = () => {
                 Admin
               </Link>
               <Link
-                to="/debug"
+                to="/admin/debug"
                 className="user-dropdown-menu-item"
                 onClick={() => setIsDropdownOpen(false)}
               >

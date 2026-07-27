@@ -60,7 +60,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
               <div className="notification-product-info">
                 <div className="notification-product-name">
                   {productId ? (
-                    <Link to="/" search={{ product: Number(productId) }}>
+                    <Link to="/products/$productId" params={{ productId: String(productId) }}>
                       {productName || notification.title}
                     </Link>
                   ) : (

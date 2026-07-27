@@ -59,7 +59,7 @@ export function useProductDetailState(
     onProductDeleted: () => {
       if (onDeleted) onDeleted(productId);
       if (onBack) onBack();
-      else navigate({ to: '/' });
+      else navigate({ to: '/products' });
     },
     onProductUpdated: (_id, data) => {
       fetchData(30);

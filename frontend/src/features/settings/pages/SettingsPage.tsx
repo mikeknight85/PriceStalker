@@ -1,5 +1,4 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { settingsRoute } from '../../../routes/-api';
 import Layout from '../../../layouts/Layout';
 
 // Section Components
@@ -9,21 +8,19 @@ import SecuritySection from './SecuritySection';
 import NotificationChannelsSection from './NotificationChannelsSection';
 import Icon from '../../../components/Icon';
 
-type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
+export type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
 
-export default function Settings() {
-  const { tab } = settingsRoute.useSearch();
-  const navigate = useNavigate({ from: '/settings' });
-  const activeSection = tab || 'profile';
+export default function Settings({ activeSection }: { activeSection: SettingsSection }) {
+  const navigate = useNavigate();
 
-  const setActiveSection = (tab: SettingsSection) => {
-    navigate({ to: '/settings', search: { tab } });
+  const setActiveSection = (section: SettingsSection) => {
+    navigate({ to: `/settings/${section}` });
   };
 
   return (
     <Layout>
       <div className="settings-header-new">
-        <Link to="/" className="settings-back-new">← Back to Dashboard</Link>
+        <Link to="/products" className="settings-back-new">← Back to Products</Link>
         <h1 className="settings-title-new">Account Settings</h1>
       </div>
 

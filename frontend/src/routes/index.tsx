@@ -1,6 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
-import Dashboard from '../pages/Dashboard';
-import { ProtectedRoute } from './-guards';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 const dashboardTabs = ['products', 'stats', 'add'] as const;
 const productSections = ['overview', 'chart', 'stock', 'notifications', 'settings'] as const;
@@ -35,9 +33,13 @@ export const Route = createFileRoute('/')({
     category: typeof search.category === 'string' && search.category.length > 0 ? search.category : undefined,
     section: isProductSection(search.section) ? search.section : undefined,
   }),
-  component: () => (
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  ),
+  beforeLoad: ({ search }) => {
+    if (search.product) {
+      const sectionPath = search.section === 'chart' ? '/history' : search.section === 'stock' ? '/stock' : search.section === 'notifications' ? '/notifications' : search.section === 'settings' ? '/settings' : '';
+      throw redirect({ to: `/products/$productId${sectionPath}`, params: { productId: String(search.product) }, replace: true });
+    }
+    if (search.tab === 'stats') throw redirect({ to: '/insights', replace: true });
+    if (search.tab === 'add') throw redirect({ to: '/products/new', replace: true });
+    throw redirect({ to: '/products', search: { category: search.category }, replace: true });
+  },
 });

@@ -130,7 +130,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
           {summary.biggestDrops.length > 0 ? (
             <div className="drops-media-list">
               {summary.biggestDrops.map((p) => (
-                <Link key={p.id} to="/" search={{ product: p.id, tab: 'products' }} className="drop-media-item-link">
+                <Link key={p.id} to="/products/$productId" params={{ productId: String(p.id) }} className="drop-media-item-link">
                   <div className="drop-media-item">
                     <div className="drop-media-image-wrapper">
                       {p.image_url ? (
@@ -177,7 +177,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
                 {summary.atHistoricalLow.length > 0 ? (
                   <div className="quick-products-list">
                     {summary.atHistoricalLow.map((p) => (
-                      <Link key={p.id} to="/" search={{ product: p.id, tab: 'products' }} className="quick-product-item-link">
+                      <Link key={p.id} to="/products/$productId" params={{ productId: String(p.id) }} className="quick-product-item-link">
                         <div className="quick-product-item">
                           <div className="quick-product-image">
                             {p.image_url ? <img src={p.image_url} alt="" /> : <Icon name="package" />}
@@ -214,7 +214,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
                 {summary.atTargetPrice.length > 0 ? (
                   <div className="quick-products-list">
                     {summary.atTargetPrice.map((p) => (
-                      <Link key={p.id} to="/" search={{ product: p.id, tab: 'products' }} className="quick-product-item-link">
+                      <Link key={p.id} to="/products/$productId" params={{ productId: String(p.id) }} className="quick-product-item-link">
                         <div className="quick-product-item">
                           <div className="quick-product-image">
                             {p.image_url ? <img src={p.image_url} alt="" /> : <Icon name="package" />}
