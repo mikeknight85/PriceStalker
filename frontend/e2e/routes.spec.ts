@@ -149,6 +149,18 @@ test('renders each canonical application destination for an authenticated user',
   await expect(page.getByRole('button', { name: 'Session Activity' })).toBeVisible();
 });
 
+test('exposes product creation from the products dashboard', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  await page.goto('/products');
+  const addProductLinks = page.getByRole('link', { name: 'Add Product' });
+  await expect(addProductLinks).toHaveCount(2);
+  await expect(addProductLinks.first()).toHaveAttribute('href', '/products/new');
+});
+
 test('renders every settings section at its canonical path', async ({ page }) => {
   await page.addInitScript((user) => {
     localStorage.setItem('token', 'acceptance-token');

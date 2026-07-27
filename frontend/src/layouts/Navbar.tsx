@@ -22,6 +22,12 @@ const Navbar: React.FC = () => {
         </Link>
 
         <div className="navbar-user">
+          {user && (
+            <Link to="/products/new" className="navbar-add-product" aria-label="Add Product">
+              <Icon name="shoppingBag" />
+              <span>Add Product</span>
+            </Link>
+          )}
           <button
             className="theme-toggle"
             onClick={toggleTheme}

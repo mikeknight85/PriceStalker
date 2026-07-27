@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored a persistent Add Product action on the products dashboard.
 - Added the standard mobile web app capability metadata alongside Apple's
   platform-specific PWA metadata.
 - Native hot-reload development now serves the frontend on port 8080 by

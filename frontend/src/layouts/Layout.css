@@ -78,6 +78,38 @@
   gap: 0.75rem;
 }
 
+.navbar-add-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  background: var(--primary);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.navbar-add-product:hover {
+  background: var(--primary-dark);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.navbar-add-product:focus-visible {
+  outline: 3px solid rgba(var(--primary-rgb), 0.35);
+  outline-offset: 2px;
+}
+
+.navbar-add-product svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .navbar-email {
   color: var(--text-muted);
   font-size: 0.875rem;
@@ -220,6 +252,20 @@
 
 @media (max-width: 640px) {
   .navbar-email, .user-dropdown-email {
+    display: none;
+  }
+
+  .navbar-user {
+    gap: 0.5rem;
+  }
+
+  .navbar-add-product {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .navbar-add-product span {
     display: none;
   }
 }
