@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ProfileService } from '../services/ProfileService';
 import { UserProfile } from '../../../types/api';
@@ -12,6 +12,7 @@ export default function ProfileSection() {
   const { showToast } = useToast();
   const { updateUser } = useAuth();
   const [profileName, setProfileName] = useState('');
+  const initializedProfileId = useRef<number | null>(null);
   const profileResult = useQuery(profileQuery());
   const profile = profileResult.data ?? null;
   const updateProfile = useMutation({
@@ -20,7 +21,9 @@ export default function ProfileSection() {
   });
 
   useEffect(() => {
-    if (profile) setProfileName(profile.name || '');
+    if (!profile || initializedProfileId.current === profile.id) return;
+    initializedProfileId.current = profile.id;
+    setProfileName(profile.name || '');
   }, [profile]);
 
   const handleSaveProfile = async () => {

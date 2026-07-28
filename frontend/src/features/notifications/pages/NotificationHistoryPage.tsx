@@ -108,7 +108,7 @@ export default function NotificationHistory() {
 
             <NotificationTable 
               notifications={filteredNotifications} 
-              loading={historyQuery.isLoading} 
+              loading={historyQuery.isLoading}
               userLocale={user?.locale}
             />
 

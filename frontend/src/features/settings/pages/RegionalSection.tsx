@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ProfileService } from '../services/ProfileService';
 import { UserProfile, GlobalCurrency } from '../../../types/api';
@@ -14,6 +14,7 @@ export default function RegionalSection() {
   const { updateUser } = useAuth();
   const [profileCurrency, setProfileCurrency] = useState('AUD');
   const [profileLocale, setProfileLocale] = useState('en-AU');
+  const initializedProfileId = useRef<number | null>(null);
   const profileResult = useQuery(profileQuery());
   const currenciesResult = useQuery(currenciesQuery());
   const profile = profileResult.data ?? null;
@@ -24,14 +25,15 @@ export default function RegionalSection() {
   });
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile || initializedProfileId.current === profile.id) return;
+    initializedProfileId.current = profile.id;
     setProfileCurrency(profile.currency || 'AUD');
     setProfileLocale(profile.locale || 'en-AU');
   }, [profile]);
 
   const handleSaveRegional = async () => {
     try {
-      const res = await updateProfile.mutateAsync({ 
+      const res = await updateProfile.mutateAsync({
         name: profile?.name || '', 
         currency: profileCurrency, 
         locale: profileLocale, 
