@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Layout from '../../../layouts/Layout';
 import { useAuth } from '../../auth';
 import { useToast } from '../../../context/ToastContext';
+import { apiErrorMessage } from '../../../api/error';
 import { AdminSystemService, RetailerAdminService } from '../../admin';
 
 import { useDebugScraper } from './useDebugScraper';
@@ -79,7 +80,7 @@ export default function Debug() {
       });
       showToast(`Retailer config for ${domain} updated successfully!`);
     } catch (err: any) {
-      showToast('Failed to save config: ' + (err.response?.data?.error || err.message), 'error');
+      showToast('Failed to save config: ' + apiErrorMessage(err), 'error');
     }
   };
 

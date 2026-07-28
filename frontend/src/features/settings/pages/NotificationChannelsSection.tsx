@@ -4,6 +4,9 @@ import { useToast } from '../../../context/ToastContext';
 import PasswordInput from '../../../components/PasswordInput';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import NotificationChannelCard from '../components/NotificationChannelCard';
+import { queryClient } from '../../../api/queryClient';
+import { notificationSettingsQuery, queryKeys } from '../../../api/queries';
+import { NotificationSettings } from '../../../types/api';
 
 const DEFAULT_EMAIL_SUBJECT = 'PriceStalker Alert: {{product_name}}';
 const DEFAULT_EMAIL_BODY = 'Hi,\n\n{{product_name}} has dropped to {{current_price}}!\n\nView it here: {{product_url}}';
@@ -65,8 +68,8 @@ export default function NotificationChannelsSection() {
 
   const fetchSettings = async () => {
     try {
-      const res = await ProfileService.getNotificationSettings();
-      const s = res.data;
+      const res = await queryClient.fetchQuery(notificationSettingsQuery());
+      const s = res;
       setDraftSettings({
         telegram_bot_token: s.telegram_bot_token || '',
         telegram_chat_id: s.telegram_chat_id || '',
@@ -109,7 +112,8 @@ export default function NotificationChannelsSection() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await ProfileService.updateNotificationSettings(draftSettings);
+      const updated = await ProfileService.updateNotificationSettings(draftSettings);
+      queryClient.setQueryData<NotificationSettings>(queryKeys.notificationSettings, updated);
       showToast('Notification settings saved', 'success');
     } catch { 
       showToast('Save failed', 'error'); 

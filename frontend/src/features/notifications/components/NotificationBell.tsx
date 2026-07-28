@@ -1,51 +1,39 @@
-import { useState, useEffect, useRef } from 'react';
-import { NotificationService } from '../services/NotificationService';
+import { useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useToast } from '../../../context/ToastContext';
-import { logger } from '../../../utils/logger';
 import './NotificationBell.css';
 import Icon from '../../../components/Icon';
+import { queryClient } from '../../../api/queryClient';
+import { queryKeys, recentNotificationsQuery } from '../../../api/queries';
 
 export default function NotificationBell() {
   const { setDrawerOpen, showToast } = useToast();
-  const [recentCount, setRecentCount] = useState(0);
   const lastCountRef = useRef(0);
+  const recentQuery = useQuery(recentNotificationsQuery(1));
+  const recentCount = recentQuery.data?.unreadCount ?? 0;
 
   useEffect(() => {
-    fetchStatus();
+    const refreshNotifications = () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.recent(1) });
+    };
+    window.addEventListener('notifications-cleared', refreshNotifications);
+    window.addEventListener('notification-read', refreshNotifications);
 
-    const handleUpdate = () => fetchStatus();
-    window.addEventListener('notifications-cleared', handleUpdate);
-    window.addEventListener('notification-read', handleUpdate);
-
-    // Poll for new notifications every 60 seconds
-    const interval = setInterval(fetchStatus, 60000);
     return () => {
-      clearInterval(interval);
-      window.removeEventListener('notifications-cleared', handleUpdate);
-      window.removeEventListener('notification-read', handleUpdate);
+      window.removeEventListener('notifications-cleared', refreshNotifications);
+      window.removeEventListener('notification-read', refreshNotifications);
     };
   }, []);
 
-  const fetchStatus = async () => {
-    try {
-      const response = await NotificationService.getRecent(1);
-      const data = response.data;
-      const newCount = data.unreadCount || 0;
-      
-      // If we have new unread high-priority alerts, show a toast
-      if (newCount > lastCountRef.current && lastCountRef.current !== 0) {
-        showToast('New notification detected!', 'info', null, {
-          label: 'VIEW',
-          onClick: () => setDrawerOpen(true)
-        });
-      }
-      
-      setRecentCount(newCount);
-      lastCountRef.current = newCount;
-    } catch (error) {
-      logger.error('Failed to fetch notification status', 'Bell', error);
+  useEffect(() => {
+    if (recentCount > lastCountRef.current && lastCountRef.current !== 0) {
+      showToast('New notification detected!', 'info', null, {
+        label: 'VIEW',
+        onClick: () => setDrawerOpen(true),
+      });
     }
-  };
+    lastCountRef.current = recentCount;
+  }, [recentCount, setDrawerOpen, showToast]);
 
   return (
     <div className="notification-bell-wrapper">

@@ -5,17 +5,10 @@ import {
   useEffect,
   ReactNode,
 } from 'react';
-import { AuthService } from '../services/AuthService';
+import { AuthService, type AuthenticatedUser } from '../services/AuthService';
+import { queryClient } from '../../../api/queryClient';
 
-interface User {
-  id: number;
-  email: string;
-  name: string | null;
-  currency: string;
-  locale: string;
-  is_admin: boolean;
-  categories: string[];
-}
+type User = AuthenticatedUser;
 
 export interface AuthContextType {
   user: User | null;
@@ -51,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await AuthService.login(email, password);
-    const { token, user: userData } = response.data;
+    const { token, user: userData } = response;
 
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -60,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string) => {
     const response = await AuthService.register(email, password);
-    const { token, user: userData } = response.data;
+    const { token, user: userData } = response;
 
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -76,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', token);
     try {
       const response = await AuthService.getProfile();
-      const userData = response.data;
+      const userData = response;
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
     } catch (error) {
@@ -91,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    queryClient.clear();
     setUser(null);
   };
 

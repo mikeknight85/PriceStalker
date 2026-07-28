@@ -1,20 +1,25 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import { ProductService } from '../services/ProductService';
-import { ProfileService } from '../../settings/services/ProfileService';
 import { Product, PriceReviewResponse } from '../../../types/api';
 import { useToast } from '../../../context/ToastContext';
 import { isPriceReviewResponse, calculateDashboardSummary } from '../pages/dashboard/utils';
 import { useProductFilters } from './useProductFilters';
 import { useProductActions } from './useProductActions';
 import { truncateUrl } from '../../../utils/format';
+import { productListQuery, profileQuery, queryKeys } from '../../../api/queries';
+import { queryClient } from '../../../api/queryClient';
+import { isApiError } from '../../../api/client';
 
 export function useDashboardState() {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userCategories, setUserCategories] = useState<string[]>([]);
+  const productsQuery = useQuery(productListQuery());
+  const profile = useQuery(profileQuery());
+  const products = productsQuery.data ?? [];
+  const userCategories = profile.data?.categories ?? [];
+  const loadError = productsQuery.error ?? profile.error;
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   // Product Actions Hook
@@ -30,14 +35,14 @@ export function useDashboardState() {
     isRefreshing
   } = useProductActions({
     onProductDeleted: (id) => {
-      setProducts(prev => prev.filter(p => p.id !== id));
+      queryClient.setQueryData<Product[]>(queryKeys.products.all, previous => previous?.filter(p => p.id !== id) ?? []);
       setProductToDelete(null);
     },
     onProductDeleteFailed: () => {
       fetchProducts();
     },
     onProductUpdated: (id, data) => {
-      setProducts(prev => prev.map(p => p.id === id ? data : p));
+      queryClient.setQueryData<Product[]>(queryKeys.products.all, previous => previous?.map(p => p.id === id ? data : p) ?? []);
     }
   });
 
@@ -49,37 +54,22 @@ export function useDashboardState() {
   const filterState = useProductFilters({ products, userCategories });
 
   const fetchProducts = useCallback(async () => {
-    try {
-      const [productsRes, profileRes] = await Promise.all([
-        ProductService.getAll(),
-        ProfileService.getProfile()
-      ]);
-      setProducts(productsRes.data);
-      setUserCategories(profileRes.data.categories || []);
-    } catch {
-      showToast('Failed to load products', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    await Promise.all([productsQuery.refetch(), profile.refetch()]);
+  }, [productsQuery, profile]);
 
   const handleAddProduct = async (url: string, refreshInterval: number, category: string) => {
     try {
       const response = await ProductService.create({ url, refreshInterval, category: category || null });
 
-      if (isPriceReviewResponse(response.data)) {
-        setPriceReviewData(response.data);
+      if (isPriceReviewResponse(response)) {
+        setPriceReviewData(response);
         setPendingRefreshInterval(refreshInterval);
         setShowPriceModal(true);
         return false;
       }
 
-      const newProduct = response.data as Product;
-      setProducts((prev) => [newProduct, ...prev]);
+      const newProduct = response as Product;
+      queryClient.setQueryData<Product[]>(queryKeys.products.all, previous => [newProduct, ...(previous ?? [])]);
       navigate({ to: '/products/$productId', params: { productId: String(newProduct.id) } });
 
       const displayName = newProduct.name || truncateUrl(newProduct.url);
@@ -87,11 +77,11 @@ export function useDashboardState() {
       showToast(`Product added: ${truncatedName}`, 'success');
 
       return true;
-    } catch (err: any) {
-      if (err.response?.status === 409) {
+    } catch (err) {
+      if (isApiError(err) && err.status === 409) {
         showToast('You are already tracking this product.', 'error');
       } else {
-        showToast('Failed to add product', 'error', err.response?.data?.error || err.message);
+        showToast('Failed to add product', 'error', err instanceof Error ? err.message : undefined);
       }
       return false;
     }
@@ -115,9 +105,9 @@ export function useDashboardState() {
         category
       });
 
-      if (!isPriceReviewResponse(response.data)) {
-        const newProduct = response.data as Product;
-        setProducts((prev) => [newProduct, ...prev]);
+      if (!isPriceReviewResponse(response)) {
+        const newProduct = response as Product;
+        queryClient.setQueryData<Product[]>(queryKeys.products.all, previous => [newProduct, ...(previous ?? [])]);
         navigate({ to: '/products/$productId', params: { productId: String(newProduct.id) } });
 
         const displayName = newProduct.name || truncateUrl(newProduct.url);
@@ -128,11 +118,11 @@ export function useDashboardState() {
       setShowPriceModal(false);
       setPriceReviewData(null);
 
-    } catch (err: any) {
-      if (err.response?.status === 409) {
+    } catch (err) {
+      if (isApiError(err) && err.status === 409) {
         showToast('You are already tracking this product.', 'error');
       } else {
-        showToast('Failed to add product', 'error', err.response?.data?.error || err.message);
+        showToast('Failed to add product', 'error', err instanceof Error ? err.message : undefined);
       }
       setShowPriceModal(false);
       setPriceReviewData(null);
@@ -148,19 +138,21 @@ export function useDashboardState() {
     return calculateDashboardSummary(products);
   }, [products]);
 
-  const updateProduct = (id: number, data: any) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  const updateProduct = (id: number, data: Partial<Product>) => {
+    queryClient.setQueryData<Product[]>(queryKeys.products.all, previous => previous?.map(p => p.id === id ? { ...p, ...data } : p) ?? []);
   };
 
   const removeProduct = (id: number) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    queryClient.setQueryData<Product[]>(queryKeys.products.all, previous => previous?.filter(p => p.id !== id) ?? []);
   };
 
   return {
     products,
     updateProduct,
     removeProduct,
-    isLoading: isLoading,
+    isLoading: productsQuery.isLoading || profile.isLoading,
+    loadError,
+    retryLoad: fetchProducts,
     ...filterState,
     dashboardSummary,
     showPriceModal: showPriceModal || showRescanPriceModal,

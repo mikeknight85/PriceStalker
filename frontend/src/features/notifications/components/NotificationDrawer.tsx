@@ -1,29 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { NotificationService } from '../services/NotificationService';
-import { NotificationEntry } from '../../../types/api';
 import { useAuth } from '../../auth';
 import { useToast } from '../../../context/ToastContext';
 import { formatPrice, formatRelativeDate } from '../../../utils/format';
 import LoadingSpinner from '../../../components/LoadingSpinner';
-import { logger } from '../../../utils/logger';
 import './NotificationDrawer.css';
 import { getNotificationIcon } from '../pages/utils';
 import Icon from '../../../components/Icon';
+import { queryClient } from '../../../api/queryClient';
+import { recentNotificationsQuery } from '../../../api/queries';
 
 const NotificationDrawer: React.FC = () => {
   const { user } = useAuth();
   const { isDrawerOpen, setDrawerOpen, activityLog, clearActivityLog } = useToast();
   const [activeTab, setActiveTab] = useState<'activity' | 'alerts'>('activity');
-  const [notifications, setNotifications] = useState<NotificationEntry[]>([]);
-  const [loading, setLoading] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isDrawerOpen) {
-      fetchAlerts();
-    }
-  }, [isDrawerOpen]);
+  const recentQuery = useQuery({ ...recentNotificationsQuery(40), enabled: isDrawerOpen });
+  const notifications = recentQuery.data?.notifications?.filter(n => !['session_activity', 'system_info'].includes(n.type)) ?? [];
+  const invalidateNotifications = () => queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  const markAllRead = useMutation({ mutationFn: NotificationService.markAllAsRead, onSuccess: invalidateNotifications });
+  const markRead = useMutation({ mutationFn: NotificationService.markAsRead, onSuccess: invalidateNotifications });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -37,37 +35,18 @@ const NotificationDrawer: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDrawerOpen, setDrawerOpen]);
 
-  const fetchAlerts = async () => {
-    setLoading(true);
-    try {
-      const response = await NotificationService.getRecent(40);
-      // Alerts are only price/stock/system events
-      setNotifications(response.data.notifications?.filter(n => !['session_activity', 'system_info'].includes(n.type)) || []);
-    } catch (error) {
-      logger.error('Failed to fetch alerts', 'Drawer', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleMarkAllRead = async () => {
     try {
-      await NotificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      await markAllRead.mutateAsync();
       window.dispatchEvent(new CustomEvent('notifications-cleared'));
-    } catch (error) {
-      logger.error('Failed to clear alerts', 'Drawer', error);
-    }
+    } catch { /* the drawer remains usable; the next open can retry */ }
   };
 
   const handleMarkRead = async (id: number) => {
     try {
-      await NotificationService.markAsRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      await markRead.mutateAsync(id);
       window.dispatchEvent(new CustomEvent('notification-read', { detail: { id } }));
-    } catch (error) {
-      logger.error('Failed to mark alert as read', 'Drawer', error);
-    }
+    } catch { /* the notification remains unread until a successful retry */ }
   };
 
   if (!isDrawerOpen) return null;
@@ -120,7 +99,7 @@ const NotificationDrawer: React.FC = () => {
               ))
             )
           ) : (
-            loading && notifications.length === 0 ? (
+            recentQuery.isLoading && notifications.length === 0 ? (
               <div className="drawer-empty"><LoadingSpinner size="1.5rem" centered /></div>
             ) : notifications.length === 0 ? (
               <div className="drawer-empty">

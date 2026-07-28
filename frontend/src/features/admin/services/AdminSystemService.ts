@@ -1,4 +1,4 @@
-import { api } from '../../../api/client';
+import { api, type RequestOptions } from '../../../api/client';
 import { 
   SystemSettings, 
   SystemApiToken, 
@@ -7,7 +7,7 @@ import {
 
 export const AdminSystemService = {
   getDebugStatus: () => api.get<{ enabled: boolean }>('/admin/debug/status'),
-  getSystemSettings: () => api.get<SystemSettings>('/admin/settings'),
+  getSystemSettings: (options?: RequestOptions) => api.get<SystemSettings>('/admin/settings', options),
   updateSystemSettings: (settings: Partial<SystemSettings>) => api.put<SystemSettings>('/admin/settings', settings),
   testSearXNG: (url: string) => api.post<{ success: boolean; message: string; error?: string }>('/admin/command', { command: 'test-searxng', params: { url } }),
   executeCommand: (command: string, params?: any) => api.post('/admin/command', { command, params }),

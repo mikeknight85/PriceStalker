@@ -1,0 +1,84 @@
+import { queryOptions } from '@tanstack/react-query';
+import { ProductService } from '../features/products/services/ProductService';
+import { ProfileService } from '../features/settings/services/ProfileService';
+import { NotificationService } from '../features/notifications/services/NotificationService';
+import { SharedService } from '../services/SharedService';
+import { AdminSystemService } from '../features/admin/services/AdminSystemService';
+
+export const queryKeys = {
+  products: { all: ['products'] as const, detail: (id: number) => ['products', id] as const },
+  discoveryStatus: ['settings', 'discovery-status'] as const,
+  profile: ['profile'] as const,
+  currencies: ['settings', 'currencies'] as const,
+  notificationSettings: ['settings', 'notifications'] as const,
+  adminSystemSettings: ['admin', 'system-settings'] as const,
+  priceHistory: (productId: number, days: number) => ['products', productId, 'price-history', days] as const,
+  stockHistory: (productId: number, days: number) => ['products', productId, 'stock-history', days] as const,
+  notifications: { recent: (limit: number) => ['notifications', 'recent', limit] as const, history: (page: number, limit: number) => ['notifications', 'history', page, limit] as const },
+};
+
+export const productListQuery = () => queryOptions({
+  queryKey: queryKeys.products.all,
+  queryFn: ({ signal }) => ProductService.getAll({ signal }),
+  staleTime: 30_000,
+});
+
+export const productDetailQuery = (id: number) => queryOptions({
+  queryKey: queryKeys.products.detail(id),
+  queryFn: ({ signal }) => ProductService.getById(id, { signal }),
+  staleTime: 30_000,
+});
+
+export const discoveryStatusQuery = () => queryOptions({
+  queryKey: queryKeys.discoveryStatus,
+  queryFn: ({ signal }) => ProductService.getSearchStatus({ signal }),
+  staleTime: 10 * 60_000,
+});
+
+export const profileQuery = () => queryOptions({
+  queryKey: queryKeys.profile,
+  queryFn: ({ signal }) => ProfileService.getProfile({ signal }),
+  staleTime: 10 * 60_000,
+});
+
+export const currenciesQuery = () => queryOptions({
+  queryKey: queryKeys.currencies,
+  queryFn: ({ signal }) => SharedService.getCurrencies({ signal }),
+  staleTime: 10 * 60_000,
+});
+
+export const notificationSettingsQuery = () => queryOptions({
+  queryKey: queryKeys.notificationSettings,
+  queryFn: ({ signal }) => ProfileService.getNotificationSettings({ signal }),
+  staleTime: 10 * 60_000,
+});
+
+export const adminSystemSettingsQuery = () => queryOptions({
+  queryKey: queryKeys.adminSystemSettings,
+  queryFn: ({ signal }) => AdminSystemService.getSystemSettings({ signal }),
+  staleTime: 10 * 60_000,
+});
+
+export const priceHistoryQuery = (productId: number, days = 30) => queryOptions({
+  queryKey: queryKeys.priceHistory(productId, days),
+  queryFn: ({ signal }) => ProductService.getPriceHistory(productId, days, { signal }),
+  staleTime: 5 * 60_000,
+});
+
+export const stockHistoryQuery = (productId: number, days = 30) => queryOptions({
+  queryKey: queryKeys.stockHistory(productId, days),
+  queryFn: ({ signal }) => ProductService.getStockHistory(productId, days, { signal }),
+  staleTime: 5 * 60_000,
+});
+
+export const recentNotificationsQuery = (limit: number) => queryOptions({
+  queryKey: queryKeys.notifications.recent(limit),
+  queryFn: ({ signal }) => NotificationService.getRecent(limit, { signal }),
+  staleTime: 30_000,
+});
+
+export const notificationHistoryQuery = (page: number, limit: number) => queryOptions({
+  queryKey: queryKeys.notifications.history(page, limit),
+  queryFn: ({ signal }) => NotificationService.getHistory(page, limit, { signal }),
+  staleTime: 30_000,
+});

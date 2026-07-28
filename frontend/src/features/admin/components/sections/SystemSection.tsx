@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { AdminSystemService } from '../../services/AdminSystemService';
 import { SystemSettings } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
+import { apiErrorMessage } from '../../../../api/error';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import { 
   CollapsibleCard, 
   ToggleSwitch
 } from '../../components';
 import Icon from '../../../../components/Icon';
+import { queryClient } from '../../../../api/queryClient';
+import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 
 export default function SystemSection() {
   const { showToast } = useToast();
@@ -36,8 +39,8 @@ export default function SystemSection() {
   const fetchSystemData = async () => {
     setIsLoading(true);
     try {
-      const res = await AdminSystemService.getSystemSettings();
-      const settings = res.data;
+      const res = await queryClient.fetchQuery(adminSystemSettingsQuery());
+      const settings = res;
       setSystemSettings(settings);
     } catch {
       showToast('Failed to load system settings', 'error');
@@ -51,7 +54,8 @@ export default function SystemSection() {
       const res = await AdminSystemService.updateSystemSettings({ 
         registration_enabled: !(systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true') 
       });
-      setSystemSettings(res.data);
+      setSystemSettings(res);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
       showToast('Registration toggled', 'success');
     } catch {
       showToast('Update failed', 'error');
@@ -63,7 +67,8 @@ export default function SystemSection() {
       const res = await AdminSystemService.updateSystemSettings({ 
         debug_page_enabled: !(systemSettings?.debug_page_enabled === true || systemSettings?.debug_page_enabled === 'true') 
       });
-      setSystemSettings(res.data);
+      setSystemSettings(res);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
       showToast('Debug page toggled', 'success');
     } catch {
       showToast('Update failed', 'error');
@@ -75,13 +80,13 @@ export default function SystemSection() {
     setIsTestingSearXNG(true);
     try {
       const res = await AdminSystemService.testSearXNG(systemSettings.searxng_url);
-      if (res.data?.success) {
-        showToast(res.data.message, 'success');
+      if (res?.success) {
+        showToast(res.message, 'success');
       } else {
-        showToast(res.data?.error || 'Test failed', 'error');
+        showToast(res?.error || 'Test failed', 'error');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.error || 'Failed to connect to SearXNG', 'error');
+      showToast(apiErrorMessage(err, 'Failed to connect to SearXNG'), 'error');
     } finally {
       setIsTestingSearXNG(false);
     }
@@ -100,7 +105,8 @@ export default function SystemSection() {
       };
 
       const res = await AdminSystemService.updateSystemSettings(payload);
-      setSystemSettings(res.data);
+      setSystemSettings(res);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
       showToast('Admin settings saved', 'success');
     } catch { showToast('Save failed', 'error'); } finally { setIsSavingAdmin(false); }
   };
@@ -187,7 +193,7 @@ export default function SystemSection() {
               const res = await AdminSystemService.updateSystemSettings({ 
                 scheduler_disabled: !(systemSettings?.scheduler_disabled === true || systemSettings?.scheduler_disabled === 'true') 
               });
-              setSystemSettings(res.data);
+              setSystemSettings(res);
             }} 
             disabled={isSavingAdmin} 
           />
@@ -200,7 +206,7 @@ export default function SystemSection() {
               const res = await AdminSystemService.updateSystemSettings({ 
                 retailer_updates_disabled: !(systemSettings?.retailer_updates_disabled === true || systemSettings?.retailer_updates_disabled === 'true') 
               });
-              setSystemSettings(res.data);
+              setSystemSettings(res);
             }} 
             disabled={isSavingAdmin} 
           />

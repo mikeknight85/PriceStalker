@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ProfileService } from '../services/ProfileService';
 import { useToast } from '../../../context/ToastContext';
+import { apiErrorMessage } from '../../../api/error';
 import PasswordInput from '../../../components/PasswordInput';
 
 export default function SecuritySection() {
@@ -21,7 +22,7 @@ export default function SecuritySection() {
       showToast('Password updated', 'success'); 
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword(''); 
     }
-    catch (err: any) { showToast(err.response?.data?.error || 'Failed to update password'); }
+    catch (err) { showToast(apiErrorMessage(err, 'Failed to update password')); }
     finally { setIsSaving(false); }
   };
 

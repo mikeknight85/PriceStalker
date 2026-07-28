@@ -22,7 +22,7 @@ export default function SystemApiTokensSection() {
   const fetchTokens = async () => {
     try {
       const res = await AdminSystemService.getSystemApiTokens();
-      setTokens(res.data);
+      setTokens(res);
     } catch {
       showToast('Failed to load system API tokens', 'error');
     }
@@ -40,7 +40,7 @@ export default function SystemApiTokensSection() {
         label: newTokenLabel,
         description: newTokenDescription
       });
-      setGeneratedToken(res.data.token);
+      setGeneratedToken(res.token);
       showToast('System API token created successfully', 'success');
       fetchTokens();
     } catch (err) {

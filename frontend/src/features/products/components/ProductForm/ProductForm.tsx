@@ -1,4 +1,5 @@
-import React, { useState, useEffect, FormEvent, ReactNode } from 'react';
+import React, { useState, FormEvent, ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import { ProductService } from '../../services/ProductService';
@@ -12,11 +13,14 @@ interface ProductFormProps {
 
 import { REFRESH_INTERVALS } from '../../constants';
 import Icon from '../../../../components/Icon';
+import { isApiError } from '../../../../api/error';
+import { discoveryStatusQuery } from '../../../../api/queries';
 
 const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories }) => {
   const [url, setUrl] = useState('');
   const [mode, setMode] = useState<'url' | 'search'>('url');
-  const [isSearchEnabled, setIsSearchEnabled] = useState(false);
+  const discoveryStatus = useQuery(discoveryStatusQuery());
+  const isSearchEnabled = discoveryStatus.data?.enabled ?? false;
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -27,12 +31,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ReactNode>('');
 
-  useEffect(() => {
-    ProductService.getSearchStatus()
-      .then(res => setIsSearchEnabled(res.data.enabled))
-      .catch(() => setIsSearchEnabled(false));
-  }, []);
-
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -41,9 +39,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
     setError('');
     try {
       const res = await ProductService.search(searchQuery);
-      setSearchResults(res.data);
-    } catch (err: any) {
-      setError('Search failed: ' + (err.response?.data?.error || err.message));
+      setSearchResults(res);
+    } catch (err) {
+      setError('Search failed: ' + (err instanceof Error ? err.message : 'Request failed'));
     } finally {
       setIsSearching(false);
     }
@@ -97,14 +95,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
       }
     } catch (err) {
       if (err instanceof Error) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const axiosError = err as any;
-        const status = axiosError.response?.status;
-        const serverError = axiosError.response?.data?.error;
-        const message = axiosError.response?.data?.message;
+        const apiError = isApiError(err) ? err : undefined;
+        const status = apiError?.status;
+        const body = apiError?.body as { error?: string; message?: string; existingProductId?: number } | undefined;
+        const serverError = body?.error;
+        const message = body?.message;
 
         if (status === 409) {
-          const id = axiosError.response?.data?.existingProductId;
+          const id = body?.existingProductId;
           setError(
             <span>
               {message || 'You are already tracking this product.'}{' '}

@@ -5,6 +5,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import './AuthForm.css';
 import Icon from '../../../components/Icon';
+import { apiErrorMessage } from '../../../api/error';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -25,13 +26,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
   useEffect(() => {
     // Check if registration is enabled
     AuthService.getRegistrationStatus()
-      .then(res => setRegistrationEnabled(res.data.enabled))
+      .then(res => setRegistrationEnabled(res.enabled))
       .catch(() => setRegistrationEnabled(true)); // Default to true on error
 
     // 404s when SSO is disabled on the server; that is the normal
     // local-login-only case, not an error worth surfacing.
     AuthService.getPublicAuthConfig()
-      .then(res => setSsoConfig(res.data))
+      .then(res => setSsoConfig(res))
       .catch(() => setSsoConfig(null));
   }, []);
 
@@ -63,9 +64,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
       await onSubmit(email, password);
     } catch (err) {
       if (err instanceof Error) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const axiosError = err as any;
-        setError(axiosError.response?.data?.error || 'An error occurred');
+        setError(apiErrorMessage(err, 'An error occurred'));
       } else {
         setError('An error occurred');
       }

@@ -1,39 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { ProductService } from '../../services/ProductService';
-import { StockStatusHistoryEntry, StockStatusStats } from '../../../../types/api';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import StockTimeline from '../../components/StockTimeline';
 import StockHistoryList from '../../components/StockHistoryList';
+import { stockHistoryQuery } from '../../../../api/queries';
 
 interface StockAvailabilitySectionProps {
   productId: number;
 }
 
 const StockAvailabilitySection: React.FC<StockAvailabilitySectionProps> = ({ productId }) => {
-  const [history, setHistory] = useState<StockStatusHistoryEntry[]>([]);
-  const [stats, setStats] = useState<StockStatusStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const stockQuery = useQuery(stockHistoryQuery(productId, 30));
+  const history = stockQuery.data?.history ?? [];
+  const stats = stockQuery.data?.stats ?? null;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await ProductService.getStockHistory(productId, 30);
-        setHistory(response.data.history);
-        setStats(response.data.stats);
-        setError(null);
-      } catch {
-        setError('Failed to load stock history');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [productId]);
-
-  if (isLoading) {
+  if (stockQuery.isLoading) {
     return (
       <div className="stock-timeline-loading" style={{ display: 'flex', justifyContent: 'center', padding: '3rem 0' }}>
         <LoadingSpinner centered />
@@ -41,8 +22,12 @@ const StockAvailabilitySection: React.FC<StockAvailabilitySectionProps> = ({ pro
     );
   }
 
-  if (error) {
-    return <div className="alert alert-error">{error}</div>;
+  if (stockQuery.isError) {
+    return (
+      <div className="alert alert-error">
+        Failed to load stock history. <button className="btn btn-secondary btn-sm" onClick={() => void stockQuery.refetch()}>Retry</button>
+      </div>
+    );
   }
 
   if (!stats || history.length === 0) {

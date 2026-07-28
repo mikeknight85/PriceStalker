@@ -76,6 +76,48 @@ test('redirects unauthenticated protected routes to login with a return URL', as
   await expect(page.getByRole('heading', { name: 'PriceStalker' })).toBeVisible();
 });
 
+test('clears an expired session and redirects a protected API request to login', async ({ page }) => {
+  await page.addInitScript((user) => {
+    if (sessionStorage.getItem('expired-session-seeded')) return;
+    sessionStorage.setItem('expired-session-seeded', 'true');
+    localStorage.setItem('token', 'expired-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+  await page.route('**/api/products', async (route) => {
+    await route.fulfill({ status: 401, json: { error: 'Expired token' } });
+  });
+
+  await page.goto('/products');
+
+  await expect(page).toHaveURL(/\/login\?redirect=/);
+  await page.waitForLoadState('domcontentloaded');
+  await expect(page.evaluate(() => localStorage.getItem('token'))).resolves.toBeNull();
+  await expect(page.evaluate(() => localStorage.getItem('user'))).resolves.toBeNull();
+});
+
+test('shows a retryable dashboard error instead of the empty state', async ({ page }) => {
+  let failRequests = true;
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+  await page.route('**/api/products', async (route) => {
+    if (failRequests) {
+      await route.fulfill({ status: 500, json: { error: 'Temporary failure' } });
+      return;
+    }
+    await route.fulfill({ json: [product] });
+  });
+
+  await page.goto('/products');
+  await expect(page.getByText('Failed to load products. Please try again.')).toBeVisible();
+  await expect(page.getByText('No products found')).not.toBeVisible();
+
+  failRequests = false;
+  await page.getByRole('button', { name: 'Retry' }).click();
+  await expect(page.getByText('Acceptance Product')).toBeVisible();
+});
+
 test('falls back from an unknown route to the protected products flow', async ({ page }) => {
   await page.goto('/not-a-route');
 
@@ -98,7 +140,7 @@ test('uses canonical defaults when retired tab state is supplied', async ({ page
   await expect(page).toHaveURL(/\/admin\/system$/);
 });
 
-test('preserves product detail state while changing nested sections', async ({ page }) => {
+test('uses the preloaded detail cache while preserving state across nested sections', async ({ page }) => {
   let productRequests = 0;
   await page.addInitScript((user) => {
     localStorage.setItem('token', 'acceptance-token');
@@ -191,4 +233,50 @@ test('allows admins into every admin section and exposes guarded debug', async (
 
   await page.goto('/admin/debug');
   await expect(page.getByRole('heading', { name: 'Debug Access Restricted' })).toBeVisible();
+});
+
+test('lists notification history and marks every alert as read', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+  let readAllRequests = 0;
+  const alert = { id: 9, user_id: 1, type: 'price_drop', title: 'Price dropped', message: 'Now $20', is_read: false, data: {}, created_at: '2026-01-01T00:00:00.000Z' };
+  await page.route('**/api/notifications/**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (path === '/api/notifications/history') return route.fulfill({ json: { notifications: [alert], pagination: { page: 1, limit: 20, totalCount: 1, totalPages: 1 } } });
+    if (path === '/api/notifications/read-all' && request.method() === 'POST') {
+      readAllRequests += 1;
+      return route.fulfill({ json: {} });
+    }
+    return route.fulfill({ json: { notifications: [], unreadCount: 0 } });
+  });
+
+  await page.goto('/notifications');
+  await page.getByRole('button', { name: 'Alert History' }).click();
+  await expect(page.getByText('Price dropped')).toBeVisible();
+  await page.getByRole('button', { name: 'Mark all read' }).click();
+  await expect.poll(() => readAllRequests).toBe(1);
+});
+
+test('removes a deleted detail product from the dashboard cache', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+  let deleted = false;
+  await page.route('**/api/products/1', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      deleted = true;
+      return route.fulfill({ status: 204 });
+    }
+    return route.fulfill({ json: { ...product, stats: { min_price: 25, max_price: 25, avg_price: 25, price_count: 1 } } });
+  });
+  await page.route('**/api/products', async (route) => route.fulfill({ json: deleted ? [] : [product] }));
+  await page.goto('/products/1');
+  await page.getByRole('button', { name: 'Stop Tracking' }).click();
+  await page.getByRole('button', { name: 'Stop Tracking' }).last().click();
+  await expect(page).toHaveURL(/\/products$/);
+  await expect(page.getByText('Acceptance Product')).not.toBeVisible();
 });

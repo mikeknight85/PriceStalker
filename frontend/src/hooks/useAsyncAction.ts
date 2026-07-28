@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { apiErrorMessage } from '../api/error';
 import { useToast } from '../context/ToastContext';
 
 interface UseAsyncActionOptions {
@@ -26,7 +27,7 @@ export function useAsyncAction(initialLoadingState = false) {
       }
       return result;
     } catch (err: any) {
-      const errorStr = err.response?.data?.error || err.message;
+      const errorStr = apiErrorMessage(err);
       const msg = options?.onErrorMessage 
         ? `${options.onErrorMessage}: ${errorStr}`
         : (options?.onErrorFallback || 'An error occurred');

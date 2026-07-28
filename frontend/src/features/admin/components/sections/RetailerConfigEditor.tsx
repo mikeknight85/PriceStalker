@@ -168,7 +168,7 @@ export default function RetailerConfigEditor({
     };
     
     const res = await RetailerAdminService.testRetailerConfig(config, testUrl);
-    setTestResult(res.data);
+    setTestResult(res);
   }, { onErrorMessage: 'Live test failed' });
 
   return (
