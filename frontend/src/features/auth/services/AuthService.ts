@@ -10,8 +10,8 @@ export interface AuthenticatedUser {
   id: number;
   email: string;
   name: string | null;
-  currency: string;
-  locale: string;
+  currency: string | null;
+  locale: string | null;
   is_admin: boolean;
   categories: string[];
 }

@@ -109,7 +109,7 @@ export default function NotificationHistory() {
             <NotificationTable 
               notifications={filteredNotifications} 
               loading={historyQuery.isLoading}
-              userLocale={user?.locale}
+              userLocale={user?.locale ?? undefined}
             />
 
             {totalPages > 1 && (

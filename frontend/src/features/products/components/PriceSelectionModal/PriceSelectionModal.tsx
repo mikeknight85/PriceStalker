@@ -4,6 +4,8 @@ import { formatPrice } from '../../../../utils/format';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import './PriceSelectionModal.css';
 import Icon from '../../../../components/Icon';
+import { useQuery } from '@tanstack/react-query';
+import { currenciesQuery } from '../../../../api/queries';
 
 export interface PriceCandidate {
   price: number;
@@ -95,7 +97,8 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
   const [activeFilter, setActiveFilter] = useState<PriceTypeFilter>('all');
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualPrice, setManualPrice] = useState('');
-  const [manualCurrency, setManualCurrency] = useState('AUD');
+  const [manualCurrency, setManualCurrency] = useState('');
+  const currenciesResult = useQuery(currenciesQuery());
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -152,8 +155,8 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
   const handleConfirm = async () => {
     if (showManualEntry) {
       const parsed = parseFloat(manualPrice);
-      if (isNaN(parsed) || parsed <= 0) {
-        setWarningMessage('Please enter a valid price greater than $0.00.');
+      if (isNaN(parsed) || parsed <= 0 || !manualCurrency) {
+        setWarningMessage('Please enter a valid price and select its currency.');
         return;
       }
       setIsSubmitting(true);
@@ -167,6 +170,14 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
 
     if (selectedIndex === null || selectedIndex < 0 || isSubmitting) return;
     const selected = filteredCandidates[selectedIndex];
+
+    if (!selected.currency) {
+      setManualPrice(String(selected.price));
+      setManualCurrency('');
+      setShowManualEntry(true);
+      setWarningMessage('Select the currency for this extracted price before tracking it.');
+      return;
+    }
 
     // Submission warnings for low confidence
     if (selected.confidence < 0.3 && !warningMessage) {
@@ -303,11 +314,10 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
                   value={manualCurrency}
                   onChange={(e) => setManualCurrency(e.target.value)}
                 >
-                  <option value="AUD">AUD</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="NZD">NZD</option>
+                  <option value="">Currency</option>
+                  {(currenciesResult.data || []).map((currency) => (
+                    <option key={currency.iso} value={currency.iso}>{currency.iso} — {currency.currency_name}</option>
+                  ))}
                 </select>
               </div>
               <button

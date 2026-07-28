@@ -8,6 +8,7 @@ import PasswordInput from '../../../../components/PasswordInput';
 import SearchableSelect from '../../../../components/SearchableSelect';
 import { ToggleSwitch } from '../../components';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import { AUTOMATIC_CURRENCY_OPTION, AUTOMATIC_LOCALE_OPTION, LOCALE_OPTIONS } from '../../../settings/regionalOptions';
 
 interface UsersSectionProps {
   globalCurrencies: GlobalCurrency[];
@@ -24,8 +25,8 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   // Add User states
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserCurrency, setNewUserCurrency] = useState('AUD');
-  const [newUserLocale, setNewUserLocale] = useState('en-AU');
+  const [newUserCurrency, setNewUserCurrency] = useState('');
+  const [newUserLocale, setNewUserLocale] = useState('');
   const [newUserIsAdmin, setNewUserIsAdmin] = useState(false);
 
   // Edit User states
@@ -48,7 +49,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   const handleAddUser = async () => {
     if (!newUserEmail || !newUserPassword) { showToast('Email and password required', 'error'); return; }
     try {
-      await UserAdminService.createUser(newUserEmail, newUserPassword, newUserIsAdmin, newUserCurrency, newUserLocale);
+      await UserAdminService.createUser(newUserEmail, newUserPassword, newUserIsAdmin, newUserCurrency || undefined, newUserLocale || undefined);
       showToast('User created', 'success');
       setIsAddingUser(false);
       setNewUserEmail(''); setNewUserPassword('');
@@ -61,7 +62,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
     if (editUserPassword && editUserPassword !== editUserConfirmPassword) { showToast('Passwords do not match', 'error'); return; }
     try {
       await UserAdminService.updateUser(editingUser.id, { 
-        name: editingUser.name, email: editingUser.email, currency: editingUser.currency, locale: editingUser.locale, 
+        name: editingUser.name, email: editingUser.email, currency: editingUser.currency || null, locale: editingUser.locale || null,
         is_admin: editingUser.is_admin, disabled: editingUser.disabled, password: editUserPassword || undefined 
       });
       showToast('User updated', 'success');
@@ -153,12 +154,13 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             <div className="form-group">
               <SearchableSelect
                 label="Default Currency"
-                options={globalCurrencies.map(gc => ({
+                options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
                   label: `${gc.iso} (${gc.symbol})`,
                   value: gc.iso,
                   subLabel: gc.currency_name
-                }))}
+                }))]}
                 value={newUserCurrency}
+                placeholder="Choose a currency"
                 onChange={(val) => {
                   setNewUserCurrency(val);
                   const match = globalCurrencies.find(gc => gc.iso === val);
@@ -169,12 +171,9 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             <div className="form-group">
               <SearchableSelect
                 label="Default Locale"
-                options={globalCurrencies.map(gc => ({
-                  label: gc.locale,
-                  value: gc.locale,
-                  subLabel: `${gc.country_territory} (${gc.iso})`
-                }))}
+                options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
                 value={newUserLocale}
+                placeholder="Choose a locale"
                 onChange={setNewUserLocale}
               />
             </div>
@@ -200,11 +199,11 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             <div className="form-group">
               <SearchableSelect
                 label="Currency"
-                options={globalCurrencies.map(gc => ({
+                options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
                   label: `${gc.iso} (${gc.symbol})`,
                   value: gc.iso,
                   subLabel: gc.currency_name
-                }))}
+                }))]}
                 value={editingUser.currency || ''}
                 onChange={(val) => {
                   setEditingUser(prev => prev ? { ...prev, currency: val } : null);
@@ -216,11 +215,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             <div className="form-group">
               <SearchableSelect
                 label="Locale Format"
-                options={globalCurrencies.map(gc => ({
-                  label: gc.locale,
-                  value: gc.locale,
-                  subLabel: `${gc.country_territory} (${gc.iso})`
-                }))}
+                options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
                 value={editingUser.locale || ''}
                 onChange={(val) => setEditingUser(prev => prev ? { ...prev, locale: val } : null)}
               />

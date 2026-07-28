@@ -335,7 +335,7 @@ export default function RetailerConfigEditor({
             onTest={handleTestConfig}
             isTesting={isTestingConfig}
             testResult={testResult}
-            userLocale={user?.locale}
+            userLocale={user?.locale ?? undefined}
             showToast={showToast}
           />
         </CollapsibleCard>

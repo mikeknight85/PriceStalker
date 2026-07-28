@@ -5,7 +5,7 @@
 export function formatPrice(
   price: number | string | null | undefined,
   currency: string | null = 'USD',
-  locale: string | null | undefined = 'en-AU',
+  locale?: string | null,
   fallback: string = 'N/A'
 ): string {
   if (price === null || price === undefined) return fallback;
@@ -64,7 +64,7 @@ export function formatRelativeDate(dateString: string | null): string {
  */
 export function formatDate(
   dateString: string | null | undefined,
-  locale: string | null | undefined = 'en-AU',
+  locale?: string | null,
   includeTime: boolean = false
 ): string {
   if (!dateString) return 'N/A';

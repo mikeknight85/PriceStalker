@@ -145,7 +145,7 @@ export class ProductPersistenceService {
     scrapedData: ScrapedProductWithVoting,
     source: string
   ) {
-    if (!scrapedData.price) return;
+    if (!scrapedData.price?.currency) return;
 
     // A. Standard Price
     const latestStandardPrice = await priceHistoryRepository.getLatest(productId, 'standard');
@@ -153,13 +153,13 @@ export class ProductPersistenceService {
       await priceHistoryRepository.create(
         productId,
         scrapedData.price.price,
-        scrapedData.price.currency || 'AUD',
+        scrapedData.price.currency,
         scrapedData.aiStatus,
         null,
         'standard'
       );
 
-      logger.info(`Product ${productId} | Price | Recorded: ${scrapedData.price.currency || 'AUD'} ${scrapedData.price.price} (${source})`, 'Products', { product_id: productId });
+      logger.info(`Product ${productId} | Price | Recorded: ${scrapedData.price.currency} ${scrapedData.price.price} (${source})`, 'Products', { product_id: productId });
 
       // Update anchor price for drift tracking
       await productRepository.updateAnchorPrice(productId, scrapedData.price.price);
@@ -171,13 +171,13 @@ export class ProductPersistenceService {
     }
 
     // B. Member Price
-    if (scrapedData.memberPrice) {
+    if (scrapedData.memberPrice?.currency) {
       const latestMemberPrice = await priceHistoryRepository.getLatest(productId, 'member-price');
       if (!latestMemberPrice || latestMemberPrice.price !== scrapedData.memberPrice.price) {
         await priceHistoryRepository.create(
           productId,
           scrapedData.memberPrice.price,
-          scrapedData.memberPrice.currency || 'AUD',
+          scrapedData.memberPrice.currency,
           scrapedData.aiStatus,
           null,
           'member-price'
@@ -186,13 +186,13 @@ export class ProductPersistenceService {
     }
 
     // C. Original Price
-    if (scrapedData.originalPrice) {
+    if (scrapedData.originalPrice?.currency) {
       const latestOriginalPrice = await priceHistoryRepository.getLatest(productId, 'original-price');
       if (!latestOriginalPrice || latestOriginalPrice.price !== scrapedData.originalPrice.price) {
         await priceHistoryRepository.create(
           productId,
           scrapedData.originalPrice.price,
-          scrapedData.originalPrice.currency || 'AUD',
+          scrapedData.originalPrice.currency,
           scrapedData.aiStatus,
           null,
           'original-price'

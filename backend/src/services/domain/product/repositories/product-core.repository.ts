@@ -7,7 +7,7 @@ export const productQueryCoreRepository = {
   findByUserId: async (userId: number): Promise<ProductWithLatestPrice[]> => {
     const result = await pool.query(
       `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status,
-              u.currency as converted_currency,
+              u.currency as converted_currency, er.rate_date as conversion_rate_date, er.source as conversion_source,
               CASE 
                 WHEN ph.currency = u.currency THEN ph.price
                 ELSE ph.price * er.rate 
@@ -41,7 +41,7 @@ export const productQueryCoreRepository = {
       `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status,
               ph_m.price as member_price,
               ph_o.price as original_price,
-              u.currency as converted_currency,
+              u.currency as converted_currency, er.rate_date as conversion_rate_date, er.source as conversion_source,
               CASE
                 WHEN ph.currency = u.currency THEN ph.price
                 ELSE ph.price * er.rate

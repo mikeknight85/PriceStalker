@@ -59,15 +59,7 @@ export function print(level: LogLevel, msg: string, context?: string, details?: 
   // Strip common redundant prefixes
   cleanMsg = cleanMsg.replace(/^System [|:] /, '');
 
-  const ts = new Date().toLocaleString('en-AU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).replace(/,/, '');
+  const ts = new Date().toISOString();
   const ctx = context ? ' [' + context + ']' : '';
 
   // Prepare Console-safe version (Strip HTML tags for Docker visibility)

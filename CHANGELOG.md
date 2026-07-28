@@ -9,12 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- New accounts now start with automatic browser locale formatting and no
+  conversion-currency preference; existing regional settings are unchanged.
+- Exchange-rate refreshes now use Frankfurter v2's EUR-based daily reference
+  rates and retain the rate date/source for conversion metadata.
 - Replaced the frontend Axios client with native Fetch and TanStack Query-backed server-state caching.
 - Removed legacy dashboard, product-detail, settings, admin, and debug URL
   redirects. Use the canonical nested frontend routes instead.
 
 ### Added
 
+- Added Icelandic króna support and targeted regional locale formats for
+  PriceStalker's existing shopping markets.
 - Makefile commands for native hot-reload development with a host-accessible
   Docker PostgreSQL database and no application image builds.
 - `make dev-env` to generate secure local database and application credentials,

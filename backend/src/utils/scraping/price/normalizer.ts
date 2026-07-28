@@ -1,18 +1,18 @@
 /**
  * Normalizes a price string using locale-aware separation logic.
  */
-export function normalizePrice(priceStr: string, locale: string): number | null {
+export function normalizePrice(priceStr: string, locale?: string): number | null {
   if (!priceStr) return null;
 
   // Normalize locale: database often uses underscores (en_AU), JS requires hyphens (en-AU)
-  const cleanLocale = locale.replace('_', '-');
+  const cleanLocale = locale?.replace('_', '-');
 
   // Detect separators for the given locale
   try {
     // Intl accepts syntactically valid but unsupported locale tags by silently
     // resolving them to the host default. That would make parsing depend on the
     // operating system's ICU data, so use the locale-independent fallback instead.
-    if (Intl.NumberFormat.supportedLocalesOf([cleanLocale]).length === 0) {
+    if (!cleanLocale || Intl.NumberFormat.supportedLocalesOf([cleanLocale]).length === 0) {
       throw new RangeError(`Unsupported locale: ${cleanLocale}`);
     }
 

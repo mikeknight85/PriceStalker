@@ -28,6 +28,8 @@ export interface ProductWithLatestPrice extends Product {
   currency: string | null;
   converted_price: number | null;
   converted_currency: string | null;
+  conversion_rate_date?: string | null;
+  conversion_source?: string | null;
   retailer_name?: string | null;
 }
 

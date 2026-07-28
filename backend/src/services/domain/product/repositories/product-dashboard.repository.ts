@@ -13,7 +13,7 @@ export const productDashboardRepository = {
       `SELECT p.*, ph.price as current_price, ph.currency, 
               ph_m.price as member_price,
               ph_o.price as original_price,
-              u.currency as converted_currency,
+              u.currency as converted_currency, er.rate_date as conversion_rate_date, er.source as conversion_source,
               CASE 
                 WHEN ph.currency = u.currency THEN ph.price
                 ELSE ph.price * er.rate 

@@ -1,4 +1,3 @@
-import { userRepository } from '../../models';
 import { currencyHelper } from '../../utils/currencyHelper';
 
 export interface ResolvedContext {
@@ -15,17 +14,7 @@ export async function resolveScrapeContext(
   html?: string,
   currencyHint?: string
 ): Promise<ResolvedContext> {
-  let userLocale: string | undefined;
-  let userCurrency: string | undefined;
-
-  if (userId) {
-    const user = await userRepository.findById(userId);
-    if (user) {
-      userLocale = user.locale;
-      userCurrency = user.preferred_currency || user.currency;
-    }
-  }
-
-  const { locale, currency } = await currencyHelper.resolveLocaleAndCurrency(url, html, userLocale, userCurrency, currencyHint);
+  void userId;
+  const { locale, currency } = await currencyHelper.resolveLocaleAndCurrency(url, html, undefined, undefined, currencyHint);
   return { locale, currency };
 }

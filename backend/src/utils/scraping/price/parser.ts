@@ -5,7 +5,7 @@ import { currencyHelper } from '../../currencyHelper';
 /**
  * Parses a price string into a numeric value and currency code.
  */
-export function parsePrice(text: string, currencyHint?: string, localeHint: string = 'en-AU'): ParsedPrice | null {
+export function parsePrice(text: string, currencyHint?: string, localeHint?: string): ParsedPrice | null {
   if (!text) return null;
 
   const cleanText = text.trim().replace(/\s+/g, ' ');
@@ -41,15 +41,18 @@ export function parsePrice(text: string, currencyHint?: string, localeHint: stri
       if (priceStr) {
         const price = normalizePrice(priceStr, localeHint);
         if (price !== null && price > 0) {
-          let currency = 'USD';
+          let currency = currencyHint;
           if (currencySymbol) {
             const resolved = currencyHelper.getCurrencyFromSymbolSync(currencySymbol, localeHint);
-            currency = resolved || CURRENCY_MAP[currencySymbol.toUpperCase()] || currencySymbol.toUpperCase() || 'USD';
+            currency = resolved || CURRENCY_MAP[currencySymbol.toUpperCase()] || currencySymbol.toUpperCase();
           }
           if ((currencySymbol === '$' || !currencySymbol) && currencyHint) {
             currency = currencyHint;
           }
-          return { price, currency };
+          // Keep a numeric candidate even if its currency cannot be inferred.
+          // It must be reviewed before persistence, but dropping it here turns
+          // an otherwise recoverable scrape into a failed product discovery.
+          return { price, currency: currency || '' };
         }
       }
     }
@@ -59,7 +62,7 @@ export function parsePrice(text: string, currencyHint?: string, localeHint: stri
   if (numberMatch) {
     const price = normalizePrice(numberMatch[0], localeHint);
     if (price !== null && price > 0) {
-      return { price, currency: currencyHint || 'USD' };
+      return { price, currency: currencyHint || '' };
     }
   }
 

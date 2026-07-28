@@ -119,15 +119,15 @@ export class CurrencyResolver {
       urlObj = new URL(url);
     } catch (err) {
       logger.warn(`CurrencyResolver | Malformed URL provided: "${url}". Falling back to default locale and currency.`, 'Currency');
-      const fallbackLocale = (userLocale || 'en-AU').replace(/_/g, '-');
-      return { locale: fallbackLocale, currency: userCurrency || 'AUD' };
+      const fallbackLocale = (userLocale || 'en-US').replace(/_/g, '-');
+      return { locale: fallbackLocale, currency: userCurrency || '' };
     }
     const hostname = urlObj.hostname.toLowerCase();
     const path = urlObj.pathname.toLowerCase();
 
     // 0. Prioritize retailer config currency hint if provided
     if (currencyHint) {
-      const locale = await this.getLocaleFromCurrency(currencyHint) || userLocale || 'en-AU';
+      const locale = await this.getLocaleFromCurrency(currencyHint) || userLocale || 'en-US';
       return { locale: locale.replace(/_/g, '-'), currency: currencyHint };
     }
 
@@ -139,13 +139,13 @@ export class CurrencyResolver {
       return regex.test(hostname);
     });
     if (tldMatch) {
-      const locale = await this.getLocaleFromCurrency(tldMatch.currency) || userLocale || 'en-AU';
+      const locale = await this.getLocaleFromCurrency(tldMatch.currency) || userLocale || 'en-US';
       return { locale: locale.replace(/_/g, '-'), currency: tldMatch.currency };
     }
 
     const pathMatch = regionalMappings.find(m => m.match_type === 'path' && path.includes(m.pattern.toLowerCase()));
     if (pathMatch) {
-      const locale = await this.getLocaleFromCurrency(pathMatch.currency) || userLocale || 'en-AU';
+      const locale = await this.getLocaleFromCurrency(pathMatch.currency) || userLocale || 'en-US';
       return { locale: locale.replace(/_/g, '-'), currency: pathMatch.currency };
     }
 
@@ -180,10 +180,10 @@ export class CurrencyResolver {
     }
 
     // 3. Fallback to User Preferences
-    const finalLocale = (userLocale || 'en-AU').replace(/_/g, '-');
+    const finalLocale = (userLocale || 'en-US').replace(/_/g, '-');
     return {
       locale: finalLocale,
-      currency: userCurrency || 'AUD'
+      currency: userCurrency || ''
     };
   }
 }

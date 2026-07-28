@@ -10,8 +10,8 @@ export class UserAccountService {
     email: string;
     password: string;
     is_admin?: boolean;
-    currency?: string;
-    locale?: string;
+    currency?: string | null;
+    locale?: string | null;
   }): Promise<User> {
     const { email, password, is_admin, currency, locale } = data;
 
@@ -25,7 +25,7 @@ export class UserAccountService {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    const user = await userRepository.create(email, passwordHash, currency, locale);
+    const user = await userRepository.create(email, passwordHash, currency || null, locale || null);
 
     if (is_admin) {
       await userRepository.setAdmin(user.id, true);
@@ -51,8 +51,8 @@ export class UserAccountService {
     }
 
     if (name !== undefined) updates.name = name;
-    if (currency !== undefined) updates.currency = currency;
-    if (locale !== undefined) updates.locale = locale;
+    if (currency !== undefined) updates.currency = currency || null;
+    if (locale !== undefined) updates.locale = locale || null;
 
     if (is_admin !== undefined) {
       if (targetId === currentUserId && !is_admin) {

@@ -61,7 +61,7 @@ export default function PriceChart({
     onRangeChange?.(days);
   };
 
-  const formatter = new Intl.NumberFormat('en-AU', {
+  const formatter = new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: currency || 'USD',
     minimumFractionDigits: 2
@@ -118,7 +118,7 @@ export default function PriceChart({
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
   const formatPrice = (value: number) => {
@@ -281,7 +281,7 @@ export default function PriceChart({
                 return [formatPrice(Number(numericValue ?? 0)), String(name ?? '')];
               }}
               labelFormatter={(label) =>
-                new Date(String(label)).toLocaleDateString('en-US', {
+                new Date(String(label)).toLocaleDateString(undefined, {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',

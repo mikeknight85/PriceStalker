@@ -4,8 +4,8 @@ export interface User {
   /** NULL for SSO-provisioned accounts, which have no password. */
   password_hash: string | null;
   name: string | null;
-  currency: string;
-  locale: string;
+  currency: string | null;
+  locale: string | null;
   is_admin: boolean;
   auth_provider: string;
   oidc_subject: string | null;
@@ -43,7 +43,8 @@ export interface User {
   email_to: string | null;
   email_subject_template: string | null;
   email_body_template: string | null;
-  preferred_currency: string;
+  /** @deprecated Currency guessing no longer uses a user preference. */
+  preferred_currency: string | null;
   categories: string[];
   created_at: Date;
 }
@@ -52,9 +53,10 @@ export interface UserProfile {
   id: number;
   email: string;
   name: string | null;
-  currency: string;
-  locale: string;
-  preferred_currency: string;
+  currency: string | null;
+  locale: string | null;
+  /** @deprecated Currency guessing no longer uses a user preference. */
+  preferred_currency: string | null;
   is_admin: boolean;
   disabled: boolean;
   categories: string[];

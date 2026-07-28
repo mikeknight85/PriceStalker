@@ -23,4 +23,6 @@ export interface ExchangeRate {
   to_currency: string;
   rate: number;
   updated_at: Date;
+  rate_date: string | null;
+  source: string | null;
 }

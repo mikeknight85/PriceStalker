@@ -13,8 +13,11 @@ export class ProductDiscoveryService {
       throw new Error('Could not extract price from the provided URL');
     }
 
-    // AUTO-TRACK: Consensus is clear (either we have a price, or it's out of stock / pre-order)
-    if (scrapedData.needsReview === false && (scrapedData.price || scrapedData.stockStatus === 'out_of_stock' || scrapedData.stockStatus === 'pre_order')) {
+    const requiresCurrencyReview = Boolean(scrapedData.price && !scrapedData.price.currency);
+
+    // AUTO-TRACK: Consensus is clear (either we have a price, or it's out of stock / pre-order).
+    // A numeric price without a known currency must be confirmed manually.
+    if (!requiresCurrencyReview && scrapedData.needsReview === false && (scrapedData.price || scrapedData.stockStatus === 'out_of_stock' || scrapedData.stockStatus === 'pre_order')) {
       const product = await productRepository.create(
         userId,
         url,
