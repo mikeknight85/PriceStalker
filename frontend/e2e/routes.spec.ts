@@ -259,3 +259,24 @@ test('lists notification history and marks every alert as read', async ({ page }
   await page.getByRole('button', { name: 'Mark all read' }).click();
   await expect.poll(() => readAllRequests).toBe(1);
 });
+
+test('removes a deleted detail product from the dashboard cache', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+  let deleted = false;
+  await page.route('**/api/products/1', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      deleted = true;
+      return route.fulfill({ status: 204 });
+    }
+    return route.fulfill({ json: { ...product, stats: { min_price: 25, max_price: 25, avg_price: 25, price_count: 1 } } });
+  });
+  await page.route('**/api/products', async (route) => route.fulfill({ json: deleted ? [] : [product] }));
+  await page.goto('/products/1');
+  await page.getByRole('button', { name: 'Stop Tracking' }).click();
+  await page.getByRole('button', { name: 'Stop Tracking' }).last().click();
+  await expect(page).toHaveURL(/\/products$/);
+  await expect(page.getByText('Acceptance Product')).not.toBeVisible();
+});

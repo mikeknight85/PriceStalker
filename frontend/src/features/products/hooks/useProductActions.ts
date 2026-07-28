@@ -6,7 +6,7 @@ import { apiErrorMessage } from '../../../api/error';
 import { queryClient } from '../../../api/queryClient';
 import { queryKeys } from '../../../api/queries';
 import { syncProductCaches } from '../../../api/productCache';
-import { PriceReviewResponse } from '../../../types/api';
+import { PriceReviewResponse, Product } from '../../../types/api';
 
 interface UseProductActionsProps {
   onProductDeleted?: (id: number) => void;
@@ -40,6 +40,9 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
     return runAction(async () => {
       await ProductService.delete(id);
       queryClient.removeQueries({ queryKey: queryKeys.products.detail(id) });
+      queryClient.setQueryData<Product[]>(queryKeys.products.all, (products) =>
+        products?.filter((product) => product.id !== id) ?? [],
+      );
       if (onProductDeleted) onProductDeleted(id);
     }, { 
       onSuccessMessage: 'Product deleted', 
