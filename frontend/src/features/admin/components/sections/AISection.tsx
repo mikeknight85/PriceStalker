@@ -28,8 +28,8 @@ export default function AISection() {
       AIService.getAI(),
       AIService.getGeminiModels(),
     ]);
-    setAiSettings(settingsRes.data);
-    setAiModels(modelsRes.data.models);
+    setAiSettings(settingsRes);
+    setAiModels(modelsRes.models);
   }, { onErrorFallback: 'Failed to load AI settings' });
 
   useEffect(() => {
@@ -70,4 +70,3 @@ export default function AISection() {
     </div>
   );
 }
-

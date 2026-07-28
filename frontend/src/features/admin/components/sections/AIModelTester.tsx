@@ -11,7 +11,7 @@ export default function AIModelTester() {
     if (!aiTestUrl) return;
     setAiTestResult(null);
     const res = await AIService.testAI(aiTestUrl);
-    setAiTestResult(res.data);
+    setAiTestResult(res);
   }, { onSuccessMessage: 'AI extraction complete', onErrorMessage: 'AI Test failed' });
 
   return (

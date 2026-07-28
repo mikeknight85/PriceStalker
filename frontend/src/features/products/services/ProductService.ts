@@ -1,4 +1,4 @@
-import { api } from '../../../api/client';
+import { api, type RequestOptions } from '../../../api/client';
 import { 
   Product, 
   ProductWithStats, 
@@ -11,9 +11,9 @@ import {
 } from '../../../types/api';
 
 export const ProductService = {
-  getAll: () => api.get<Product[]>('/products'),
+  getAll: (options?: RequestOptions) => api.get<Product[]>('/products', options),
 
-  getById: (id: number) => api.get<ProductWithStats>(`/products/${id}`),
+  getById: (id: number, options?: RequestOptions) => api.get<ProductWithStats>(`/products/${id}`, options),
 
   create: (data: {
     url: string,
@@ -62,20 +62,26 @@ export const ProductService = {
   bulkPause: (ids: number[], paused: boolean) => 
     api.post('/products/bulk/pause', { ids, paused }),
 
-  getSearchStatus: () =>
-    api.get<{ enabled: boolean }>('/settings/discovery/status'),
+  getSearchStatus: (options?: RequestOptions) =>
+    api.get<{ enabled: boolean }>('/settings/discovery/status', options),
 
   search: (query: string) => 
     api.get<SearchResult[]>('/products/search', { params: { q: query } }),
 
   // Price related
-  getPriceHistory: (productId: number, days?: number) =>
-    api.get<{ product: Product; prices: PriceHistory[] }>(`/prices/${productId}/history${days ? `?days=${days}` : ''}`),
+  getPriceHistory: (productId: number, days?: number, options?: RequestOptions) =>
+    api.get<{ product: Product; prices: PriceHistory[] }>(`/prices/${productId}/history`, {
+      ...options,
+      params: { ...options?.params, ...(days ? { days } : {}) },
+    }),
 
   refreshPrice: (productId: number) =>
     api.post<{ price: number; currency: string }>(`/prices/${productId}/refresh`),
 
   // Stock related
-  getStockHistory: (productId: number, days?: number) =>
-    api.get<{ history: ProductSourceHistory[], stats: StockStatusStats }>(`/prices/${productId}/stock-history${days ? `?days=${days}` : ''}`),
+  getStockHistory: (productId: number, days?: number, options?: RequestOptions) =>
+    api.get<{ history: ProductSourceHistory[], stats: StockStatusStats }>(`/prices/${productId}/stock-history`, {
+      ...options,
+      params: { ...options?.params, ...(days ? { days } : {}) },
+    }),
 };

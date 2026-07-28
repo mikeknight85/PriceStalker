@@ -3,6 +3,7 @@ import { AdminSystemService, RetailerAdminService } from '../../admin';
 import { ProductService } from '../../products/services/ProductService';
 import { RetailerConfig, SystemSettings } from '../../../types/api';
 import { useToast } from '../../../context/ToastContext';
+import { apiErrorMessage } from '../../../api/error';
 
 export function useDebugScraper() {
   const { showToast } = useToast();
@@ -76,7 +77,7 @@ export function useDebugScraper() {
     const checkStatus = async () => {
       try {
         const res = await AdminSystemService.getDebugStatus();
-        setIsEnabled(res.data.enabled);
+        setIsEnabled(res.enabled);
       } catch {
         setIsEnabled(false);
       }
@@ -86,7 +87,7 @@ export function useDebugScraper() {
     const fetchSystemSettings = async () => {
       try {
         const res = await AdminSystemService.getSystemSettings();
-        setGlobalSettings(res.data);
+        setGlobalSettings(res);
       } catch (e) {
         console.error('Failed to fetch system settings', e);
       }
@@ -170,9 +171,9 @@ export function useDebugScraper() {
     setIsLoading(true);
     try {
       const res = await ProductService.getById(id);
-      if (res.data && res.data.url) {
-        setUrl(res.data.url);
-        showToast(`Loaded product: ${res.data.name || res.data.url}`);
+      if (res && res.url) {
+        setUrl(res.url);
+        showToast(`Loaded product: ${res.name || res.url}`);
         
         // Optionally trigger config fetch if needed, 
         // but url change will likely be enough for the user to then click "Fetch Config" if that's a feature
@@ -180,7 +181,7 @@ export function useDebugScraper() {
         // No, let's keep it simple: just load the URL.
       }
     } catch (err: any) {
-      showToast('Failed to load product: ' + (err.response?.data?.error || err.message), 'error');
+      showToast('Failed to load product: ' + apiErrorMessage(err), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -272,7 +273,7 @@ export function useDebugScraper() {
 
     try {
       const res = await RetailerAdminService.debugExtract(processedUrl, finalConfig, mode, true, useAI, forceAI);
-      setResult(res.data);
+      setResult(res);
       
       // Save to history
       try {
@@ -285,7 +286,7 @@ export function useDebugScraper() {
       } catch {}
       
     } catch (err: any) {
-      showToast(err.response?.data?.error || err.message || 'Failed to run extraction', 'error');
+      showToast(apiErrorMessage(err, 'Failed to run extraction'), 'error');
     } finally {
       setIsLoading(false);
     }

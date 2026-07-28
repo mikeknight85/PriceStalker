@@ -1,8 +1,8 @@
-import { api } from '../../../api/client';
+import { api, type RequestOptions } from '../../../api/client';
 import { UserProfile, NotificationSettings } from '../../../types/api';
 
 export const ProfileService = {
-  getProfile: () => api.get<UserProfile>('/profile'),
+  getProfile: (options?: RequestOptions) => api.get<UserProfile>('/profile', options),
 
   updateProfile: (data: { name?: string; currency?: string; locale?: string; preferred_currency?: string }) =>
     api.put<UserProfile>('/profile', data),
@@ -10,8 +10,8 @@ export const ProfileService = {
   changePassword: (current: string, next: string) => 
     api.put('/profile/password', { current_password: current, new_password: next }),
 
-  getNotificationSettings: () =>
-    api.get<NotificationSettings>('/settings/notifications'),
+  getNotificationSettings: (options?: RequestOptions) =>
+    api.get<NotificationSettings>('/settings/notifications', options),
 
   updateNotificationSettings: (data: Partial<NotificationSettings>) =>
     api.put<NotificationSettings>('/settings/notifications', data),

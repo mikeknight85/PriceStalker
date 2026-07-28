@@ -33,7 +33,7 @@ export default function AIProviderConfig({
     try {
       await AIService.refreshGeminiModels(aiSettings?.gemini_api_key || undefined);
       const res = await AIService.getGeminiModels();
-      setAiModels(res.data.models);
+      setAiModels(res.models);
     } finally {
       setIsRefreshingModels(false);
     }
@@ -67,7 +67,7 @@ export default function AIProviderConfig({
       res = await AIService.testOllama(aiSettings.ollama_base_url);
     }
 
-    const msg = res?.data?.message || `${provider} API connection successful`;
+    const msg = res?.message || `${provider} API connection successful`;
     showToast(msg, 'success');
   }, { onErrorMessage: `${provider} Test failed` });
 

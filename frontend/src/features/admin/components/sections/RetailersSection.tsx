@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { RetailerAdminService } from '../../services/RetailerAdminService';
 import { RetailerConfig, GlobalCurrency } from '../../../../types/api';
 import RetailerConfigEditor from './RetailerConfigEditor';
 import Icon from '../../../../components/Icon';
+import { queryClient } from '../../../../api/queryClient';
+
+const retailersQuery = () => queryOptions({
+  queryKey: ['admin', 'retailers'] as const,
+  queryFn: RetailerAdminService.getRetailers,
+  staleTime: 10 * 60_000,
+});
 
 interface RetailersSectionProps {
   globalCurrencies: GlobalCurrency[];
@@ -10,24 +18,10 @@ interface RetailersSectionProps {
 }
 
 export default function RetailersSection({ globalCurrencies, initialSearch }: RetailersSectionProps) {
-  const [retailers, setRetailers] = useState<RetailerConfig[]>([]);
   const [retailerSearch, setRetailerSearch] = useState(initialSearch || '');
   const [editingRetailer, setEditingRetailer] = useState<Partial<RetailerConfig> | null>(null);
-
-  useEffect(() => {
-    fetchRetailers();
-    let interval = setInterval(fetchRetailers, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchRetailers = async () => {
-    try {
-      const res = await RetailerAdminService.getRetailers();
-      setRetailers(res.data);
-    } catch (err) {
-      console.error('Failed to fetch retailers:', err);
-    }
-  };
+  const retailersResult = useQuery(retailersQuery());
+  const retailers = retailersResult.data ?? [];
 
   const handleEditRetailer = (r: Partial<RetailerConfig>) => {
     setEditingRetailer(r);
@@ -50,7 +44,7 @@ export default function RetailersSection({ globalCurrencies, initialSearch }: Re
 
   const handleSave = () => {
     setEditingRetailer(null);
-    fetchRetailers();
+    void queryClient.invalidateQueries({ queryKey: ['admin', 'retailers'] });
   };
 
   const handleCancel = () => {
@@ -59,11 +53,12 @@ export default function RetailersSection({ globalCurrencies, initialSearch }: Re
 
   const handleDelete = () => {
     setEditingRetailer(null);
-    fetchRetailers();
+    void queryClient.invalidateQueries({ queryKey: ['admin', 'retailers'] });
   };
 
   return (
     <div className="admin-section-wrapper">
+      {retailersResult.isError && <div className="alert alert-error">Failed to load retailers. <button className="btn btn-secondary btn-sm" onClick={() => void retailersResult.refetch()}>Retry</button></div>}
       <div className="settings-card" style={{ marginBottom: editingRetailer ? '2rem' : '1.25rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <h2 className="settings-card-title" style={{ margin: 0 }}>Retailers</h2>

@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Layout from '../../../layouts/Layout';
 import { NotificationService } from '../services/NotificationService';
-import { NotificationEntry } from '../../../types/api';
 import { useAuth } from '../../auth';
 import { useToast } from '../../../context/ToastContext';
-import { logger } from '../../../utils/logger';
 
 import NotificationFilters from './NotificationFilters';
 import NotificationTable from './NotificationTable';
@@ -14,61 +13,36 @@ import Tabs, { Tab } from '../../../components/Tabs';
 
 import './NotificationHistoryPage.css';
 import Icon from '../../../components/Icon';
+import { queryClient } from '../../../api/queryClient';
+import { notificationHistoryQuery } from '../../../api/queries';
 
 export default function NotificationHistory() {
   const { user } = useAuth();
   const { activityLog, clearActivityLog } = useToast();
   const [activeTab, setActiveTab] = useState<'activity' | 'alerts'>('activity');
-  const [notifications, setNotifications] = useState<NotificationEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<string>('all');
-
-  useEffect(() => {
-    if (activeTab === 'alerts') {
-      fetchNotifications();
-    }
-  }, [page, activeTab]);
-
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      const response = await NotificationService.getHistory(page, 20);
-      const data = response.data;
-      // Alerts are only price/stock/system events
-      setNotifications(data.notifications?.filter(n => !['session_activity', 'system_info'].includes(n.type)) || []);
-      if (data.pagination) {
-        setTotalPages(data.pagination.totalPages);
-      }
-    } catch (error) {
-      logger.error('Failed to fetch notification history', 'Notifications', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const historyQuery = useQuery({ ...notificationHistoryQuery(page, 20), enabled: activeTab === 'alerts' });
+  const notifications = historyQuery.data?.notifications?.filter(n => !['session_activity', 'system_info'].includes(n.type)) ?? [];
+  const totalPages = historyQuery.data?.pagination?.totalPages ?? 1;
+  const invalidateNotifications = () => queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  const markAllRead = useMutation({ mutationFn: NotificationService.markAllAsRead, onSuccess: invalidateNotifications });
+  const deleteAll = useMutation({ mutationFn: NotificationService.deleteAll, onSuccess: invalidateNotifications });
 
   const handleMarkAllRead = async () => {
     try {
-      await NotificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      await markAllRead.mutateAsync();
       window.dispatchEvent(new CustomEvent('notifications-cleared'));
-    } catch (error) {
-      logger.error('Failed to mark all as read', 'Notifications', error);
-    }
+    } catch { /* keep the cached state untouched after a failed mutation */ }
   };
 
   const handleClearHistory = async () => {
     if (!window.confirm('Are you sure you want to permanently delete all your alert history?')) return;
     try {
-      await NotificationService.deleteAll();
-      setNotifications([]);
-      setTotalPages(1);
+      await deleteAll.mutateAsync();
       setPage(1);
       window.dispatchEvent(new CustomEvent('notifications-cleared'));
-    } catch (error) {
-      logger.error('Failed to clear notifications', 'Notifications', error);
-    }
+    } catch { /* keep the cached history intact after a failed mutation */ }
   };
 
   const filteredNotifications = useMemo(() => {
@@ -96,14 +70,14 @@ export default function NotificationHistory() {
           <button 
             className="btn btn-secondary btn-sm" 
             onClick={handleMarkAllRead}
-            disabled={loading || notifications.every(n => n.is_read) || notifications.length === 0}
+            disabled={markAllRead.isPending || notifications.every(n => n.is_read) || notifications.length === 0}
           >
             Mark all read
           </button>
           <button 
             className="btn btn-secondary btn-sm" 
             onClick={handleClearHistory}
-            disabled={loading || notifications.length === 0}
+            disabled={deleteAll.isPending || notifications.length === 0}
             style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
           >
             Delete all
@@ -134,7 +108,7 @@ export default function NotificationHistory() {
 
             <NotificationTable 
               notifications={filteredNotifications} 
-              loading={loading} 
+              loading={historyQuery.isLoading} 
               userLocale={user?.locale}
             />
 

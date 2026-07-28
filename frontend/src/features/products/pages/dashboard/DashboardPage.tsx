@@ -13,6 +13,8 @@ const Dashboard: React.FC = () => {
   const {
     products,
     isLoading,
+    loadError,
+    retryLoad,
     searchQuery,
     setSearchQuery,
     pauseFilter,
@@ -87,7 +89,14 @@ const Dashboard: React.FC = () => {
 
       <div className="section-container">
         <main className="dashboard-main">
-          <>
+          {loadError ? (
+            <div className="alert alert-error">
+              <span>Failed to load products. Please try again.</span>
+              <button type="button" className="btn btn-secondary" onClick={() => void retryLoad()}>
+                Retry
+              </button>
+            </div>
+          ) : <>
                 {!isLoading && products.length > 0 && (
                   <DashboardControls
                     searchQuery={searchQuery}
@@ -118,7 +127,7 @@ const Dashboard: React.FC = () => {
                   hasAnyProducts={products.length > 0}
                   onSelect={(id) => navigate({ to: '/products/$productId', params: { productId: String(id) } })}
                 />
-          </>
+          </>}
         </main>
       </div>
     </Layout>

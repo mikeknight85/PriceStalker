@@ -36,11 +36,11 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
         level: logLevel, 
         context: logContext 
       });
-      setLogs(res.data.logs);
-      setTotalCount(res.data.total);
-      setLogPage(res.data.page);
-      setLogPages(res.data.pages);
-      setAvailableContexts(res.data.availableContexts || []);
+      setLogs(res.logs);
+      setTotalCount(res.total);
+      setLogPage(res.page);
+      setLogPages(res.pages);
+      setAvailableContexts(res.availableContexts || []);
     } catch {
       showToast('Failed to load logs', 'error');
     } finally {

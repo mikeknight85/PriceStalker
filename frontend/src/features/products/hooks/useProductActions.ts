@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { ProductService } from '../services/ProductService';
 import { useToast } from '../../../context/ToastContext';
 import { useAsyncAction } from '../../../hooks/useAsyncAction';
+import { apiErrorMessage } from '../../../api/error';
+import { queryClient } from '../../../api/queryClient';
+import { queryKeys } from '../../../api/queries';
+import { syncProductCaches } from '../../../api/productCache';
 import { PriceReviewResponse } from '../../../types/api';
 
 interface UseProductActionsProps {
@@ -21,19 +25,21 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
   const handleRefresh = (id: number) => runAction(async () => {
     await ProductService.refreshPrice(id);
     const updatedProductRes = await ProductService.getById(id);
-    if (onProductUpdated) onProductUpdated(id, updatedProductRes.data);
+    syncProductCaches(updatedProductRes);
+    if (onProductUpdated) onProductUpdated(id, updatedProductRes);
   }, { onSuccessMessage: 'Price refreshed', onErrorFallback: 'Failed to refresh price' });
 
   const handleRescan = (id: number) => runAction(async () => {
     setActiveProductId(id);
     const res = await ProductService.scan(id);
-    setPriceReviewData(res.data);
+    setPriceReviewData(res);
     setShowPriceModal(true);
   }, { onErrorMessage: 'Failed to start re-scan' });
 
   const handleDelete = (id: number) => {
     return runAction(async () => {
       await ProductService.delete(id);
+      queryClient.removeQueries({ queryKey: queryKeys.products.detail(id) });
       if (onProductDeleted) onProductDeleted(id);
     }, { 
       onSuccessMessage: 'Product deleted', 
@@ -47,7 +53,8 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
 
   const handleTogglePause = (id: number, targetPaused: boolean) => runAction(async () => {
     const res = await ProductService.update(id, { checking_paused: targetPaused });
-    if (onProductUpdated) onProductUpdated(id, res.data);
+    syncProductCaches(res);
+    if (onProductUpdated) onProductUpdated(id, res);
   }, { onSuccessMessage: targetPaused ? 'Tracking paused' : 'Tracking resumed', onErrorFallback: 'Failed to toggle pause state' });
 
   const handlePriceSelected = async (selectedPrice: number, selectedMethod: string, selectedCurrency: string, _category: string | null, selector?: string) => {
@@ -65,13 +72,14 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
         selector
       });
       
-      if (onProductUpdated) onProductUpdated(activeProductId, res.data);
+      syncProductCaches(res);
+      if (onProductUpdated) onProductUpdated(activeProductId, res);
       setShowPriceModal(false);
       setPriceReviewData(null);
       setActiveProductId(null);
       showToast('Product updated via re-scan', 'success');
     } catch (err: any) {
-      showToast('Failed to confirm selection', 'error', err.response?.data?.error || err.message);
+      showToast('Failed to confirm selection', 'error', apiErrorMessage(err));
     }
   };
 

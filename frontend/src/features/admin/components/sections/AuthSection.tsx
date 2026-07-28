@@ -11,6 +11,7 @@ import LoadingSpinner from '../../../../components/LoadingSpinner';
 import PasswordInput from '../../../../components/PasswordInput';
 import { CollapsibleCard, ToggleSwitch } from '../../components';
 import Icon from '../../../../components/Icon';
+import { ApiError, apiErrorMessage } from '../../../../api/error';
 
 const toggleRow: React.CSSProperties = {
   display: 'flex',
@@ -64,7 +65,7 @@ export default function AuthSection() {
   const load = async () => {
     setIsLoading(true);
     try {
-      const { data } = await AuthConfigService.get();
+      const data = await AuthConfigService.get();
       applyConfig(data);
     } catch {
       showToast('Failed to load authentication settings', 'error');
@@ -95,12 +96,13 @@ export default function AuthSection() {
     setIsTesting(true);
     setDiscovery(null);
     try {
-      const { data } = await AuthConfigService.testDiscovery(issuerUrl);
+      const data = await AuthConfigService.testDiscovery(issuerUrl);
       setDiscovery(data);
       showToast('Discovery succeeded', 'success');
     } catch (err) {
-      const e = err as { response?: { data?: DiscoveryResult } };
-      const result = e.response?.data ?? { ok: false, error: 'Discovery request failed' };
+      const result = err instanceof ApiError && err.body && typeof err.body === 'object'
+        ? err.body as DiscoveryResult
+        : { ok: false, error: 'Discovery request failed' };
       setDiscovery(result);
       showToast(result.error || 'Discovery failed', 'error');
     } finally {
@@ -123,12 +125,11 @@ export default function AuthSection() {
         oidc_jit_enabled: jitEnabled,
         oidc_require_email_verified: requireEmailVerified,
       };
-      const { data } = await AuthConfigService.update(payload);
+      const data = await AuthConfigService.update(payload);
       applyConfig(data);
       showToast('Authentication settings saved', 'success');
     } catch (err) {
-      const e = err as { response?: { data?: { error?: string } } };
-      showToast(e.response?.data?.error || 'Failed to save authentication settings', 'error');
+      showToast(apiErrorMessage(err, 'Failed to save authentication settings'), 'error');
     } finally {
       setIsSaving(false);
     }

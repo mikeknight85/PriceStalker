@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { adminRoute } from '../../../routes/-admin-api';
 import Layout from '../../../layouts/Layout';
 import Icon from '../../../components/Icon';
-import { SharedService } from '../../../services/SharedService';
-import { GlobalCurrency } from '../../../types/api';
+import { currenciesQuery } from '../../../api/queries';
 
 // Section Components
 import SystemSection from '../components/sections/SystemSection';
@@ -22,29 +22,17 @@ export default function Admin({ activeSection }: { activeSection: AdminSection }
   const navigate = useNavigate();
   const { retailer } = adminRoute.useSearch();
   
-  const [globalCurrencies, setGlobalCurrencies] = useState<GlobalCurrency[]>([]);
   const [retailerSearch, setRetailerSearch] = useState(retailer || '');
+  const currenciesResult = useQuery(currenciesQuery());
+  const globalCurrencies = currenciesResult.data ?? [];
 
   const setActiveSection = (section: AdminSection) => {
     navigate({ to: `/admin/${section}` });
   };
 
   useEffect(() => {
-    fetchGlobalData();
-  }, []);
-
-  useEffect(() => {
     setRetailerSearch(retailer || '');
   }, [retailer]);
-
-  const fetchGlobalData = async () => {
-    try {
-      const res = await SharedService.getCurrencies();
-      setGlobalCurrencies(res.data || []);
-    } catch (err) {
-      console.error('Failed to fetch global currencies:', err);
-    }
-  };
 
   const handleSearchRetailer = (domain: string) => {
     navigate({ to: '/admin/retailers', search: { retailer: domain } });

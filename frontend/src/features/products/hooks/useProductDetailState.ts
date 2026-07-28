@@ -4,6 +4,9 @@ import { ProductService } from '../services/ProductService';
 import { ProfileService } from '../../settings/services/ProfileService';
 import { useAsyncAction } from '../../../hooks/useAsyncAction';
 import { useProductActions } from './useProductActions';
+import { queryClient } from '../../../api/queryClient';
+import { priceHistoryQuery, productDetailQuery, profileQuery } from '../../../api/queries';
+import { syncProductCaches } from '../../../api/productCache';
 import { 
   ProductWithStats, 
   PriceHistory, 
@@ -69,34 +72,34 @@ export function useProductDetailState(
 
   const fetchData = (days?: number) => runFetch(async () => {
     const [productRes, pricesRes, profileRes] = await Promise.all([
-      ProductService.getById(productId),
-      ProductService.getPriceHistory(productId, days),
-      ProfileService.getProfile(),
+      queryClient.fetchQuery(productDetailQuery(productId)),
+      queryClient.fetchQuery(priceHistoryQuery(productId, days ?? 30)),
+      queryClient.fetchQuery(profileQuery()),
     ]);
-    setProduct(productRes.data);
-    setPrices(pricesRes.data.prices);
-    setEditName(productRes.data.name || '');
-    setEditCategories(productRes.data.category ? productRes.data.category.split(',').map((c: string) => c.trim()).filter(Boolean) : []);
-    setEditImageUrl(productRes.data.image_url || '');
+    setProduct(productRes);
+    setPrices(pricesRes.prices);
+    setEditName(productRes.name || '');
+    setEditCategories(productRes.category ? productRes.category.split(',').map((c: string) => c.trim()).filter(Boolean) : []);
+    setEditImageUrl(productRes.image_url || '');
     
-    setAvailableCategories(profileRes.data.categories || []);
+    setAvailableCategories(profileRes.categories || []);
 
-    if (productRes.data.price_drop_threshold !== null && productRes.data.price_drop_threshold !== undefined) {
-      setPriceDropThreshold(productRes.data.price_drop_threshold.toString());
+    if (productRes.price_drop_threshold !== null && productRes.price_drop_threshold !== undefined) {
+      setPriceDropThreshold(productRes.price_drop_threshold.toString());
     }
-    if (productRes.data.target_price !== null && productRes.data.target_price !== undefined) {
-      setTargetPrice(productRes.data.target_price.toString());
+    if (productRes.target_price !== null && productRes.target_price !== undefined) {
+      setTargetPrice(productRes.target_price.toString());
     }
-    setNotifyBackInStock(productRes.data.notify_back_in_stock || false);
-    setAiVerificationDisabled(productRes.data.ai_verification_disabled || false);
-    setAiExtractionDisabled(productRes.data.ai_extraction_disabled || false);
-    setCheckingPaused(productRes.data.checking_paused || false);
+    setNotifyBackInStock(productRes.notify_back_in_stock || false);
+    setAiVerificationDisabled(productRes.ai_verification_disabled || false);
+    setAiExtractionDisabled(productRes.ai_extraction_disabled || false);
+    setCheckingPaused(productRes.checking_paused || false);
   }, { onErrorFallback: 'Failed to load product details' });
 
   const fetchNotificationSettings = async () => {
     try {
       const response = await ProfileService.getNotificationSettings();
-      setNotificationSettings(response.data);
+      setNotificationSettings(response);
     } catch {
       // Silently fail
     }
@@ -115,16 +118,18 @@ export function useProductDetailState(
       setIsEditingName(false);
       return;
     }
-    await ProductService.update(productId, { name: editName });
-    setProduct({ ...product, name: editName });
+    const updated = await ProductService.update(productId, { name: editName });
+    syncProductCaches(updated);
+    setProduct({ ...product, ...updated });
     setIsEditingName(false);
     if (onUpdated) onUpdated(productId, { name: editName });
   }, { onSuccessMessage: 'Product name updated', onErrorFallback: 'Failed to update name' });
 
   const handleSaveImage = () => runSave(async () => {
     if (!product) return;
-    await ProductService.update(productId, { image_url: editImageUrl });
-    setProduct({ ...product, image_url: editImageUrl });
+    const updated = await ProductService.update(productId, { image_url: editImageUrl });
+    syncProductCaches(updated);
+    setProduct({ ...product, ...updated });
     setIsEditingImage(false);
     if (onUpdated) onUpdated(productId, { image_url: editImageUrl });
   }, { onSuccessMessage: 'Image URL updated', onErrorFallback: 'Failed to update image' });
@@ -132,8 +137,9 @@ export function useProductDetailState(
   const handleSaveCategory = () => runSave(async () => {
     if (!product) return;
     const catString = editCategories.join(', ');
-    await ProductService.update(productId, { category: catString });
-    setProduct({ ...product, category: catString });
+    const updated = await ProductService.update(productId, { category: catString });
+    syncProductCaches(updated);
+    setProduct({ ...product, ...updated });
     setIsEditingCategory(false);
     if (onUpdated) onUpdated(productId, { category: catString });
   }, { onSuccessMessage: 'Categories updated', onErrorFallback: 'Failed to update categories' });
@@ -165,8 +171,9 @@ export function useProductDetailState(
       ai_extraction_disabled: aiExtractionDisabled,
       checking_paused: checkingPaused
     };
-    await ProductService.update(productId, data);
-    setProduct({ ...product, ...data });
+    const updated = await ProductService.update(productId, data);
+    syncProductCaches(updated);
+    setProduct({ ...product, ...updated });
     if (onUpdated) onUpdated(productId, data);
   }, { onSuccessMessage: 'Settings updated', onErrorFallback: 'Failed to update settings' });
 
@@ -179,8 +186,9 @@ export function useProductDetailState(
 
   const handleRefreshIntervalChange = (newInterval: number) => runSave(async () => {
     if (!product) return;
-    await ProductService.update(productId, { refresh_interval: newInterval });
-    setProduct({ ...product, refresh_interval: newInterval });
+    const updated = await ProductService.update(productId, { refresh_interval: newInterval });
+    syncProductCaches(updated);
+    setProduct({ ...product, ...updated });
     if (onUpdated) onUpdated(productId, { refresh_interval: newInterval });
   }, { onSuccessMessage: 'Check interval updated', onErrorFallback: 'Failed to update refresh interval' });
 

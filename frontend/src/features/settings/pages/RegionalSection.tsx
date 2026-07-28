@@ -1,63 +1,51 @@
 import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ProfileService } from '../services/ProfileService';
-import { SharedService } from '../../../services/SharedService';
 import { UserProfile, GlobalCurrency } from '../../../types/api';
 import { useToast } from '../../../context/ToastContext';
 import { useAuth } from '../../auth';
 import SearchableSelect from '../../../components/SearchableSelect';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import { queryClient } from '../../../api/queryClient';
+import { currenciesQuery, profileQuery, queryKeys } from '../../../api/queries';
 
 export default function RegionalSection() {
   const { showToast } = useToast();
   const { updateUser } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileCurrency, setProfileCurrency] = useState('AUD');
   const [profileLocale, setProfileLocale] = useState('en-AU');
-  const [globalCurrencies, setGlobalCurrencies] = useState<GlobalCurrency[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const profileResult = useQuery(profileQuery());
+  const currenciesResult = useQuery(currenciesQuery());
+  const profile = profileResult.data ?? null;
+  const globalCurrencies: GlobalCurrency[] = currenciesResult.data ?? [];
+  const updateProfile = useMutation({
+    mutationFn: ProfileService.updateProfile,
+    onSuccess: (profile) => queryClient.setQueryData<UserProfile>(queryKeys.profile, profile),
+  });
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [profileRes, currenciesRes] = await Promise.all([
-        ProfileService.getProfile(),
-        SharedService.getCurrencies(),
-      ]);
-      setProfile(profileRes.data);
-      setProfileCurrency(profileRes.data.currency || 'AUD');
-      setProfileLocale(profileRes.data.locale || 'en-AU');
-      setGlobalCurrencies(currenciesRes.data || []);
-    } catch {
-      showToast('Failed to load regional settings', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    if (!profile) return;
+    setProfileCurrency(profile.currency || 'AUD');
+    setProfileLocale(profile.locale || 'en-AU');
+  }, [profile]);
 
   const handleSaveRegional = async () => {
-    setIsSaving(true);
     try {
-      const res = await ProfileService.updateProfile({ 
+      const res = await updateProfile.mutateAsync({ 
         name: profile?.name || '', 
         currency: profileCurrency, 
         locale: profileLocale, 
         preferred_currency: profileCurrency 
       });
-      setProfile(res.data);
-      updateUser({ name: res.data.name, currency: res.data.currency, locale: res.data.locale });
+      updateUser({ name: res.name, currency: res.currency, locale: res.locale });
       showToast('Regional settings updated', 'success');
     } catch {
       showToast('Failed to update regional settings', 'error');
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  if (isLoading) return <LoadingSpinner centered />;
+  if (profileResult.isLoading || currenciesResult.isLoading) return <LoadingSpinner centered />;
+  if (profileResult.isError || currenciesResult.isError || !profile) return <div className="alert alert-error">Failed to load regional settings. <button className="btn btn-secondary btn-sm" onClick={() => { void profileResult.refetch(); void currenciesResult.refetch(); }}>Retry</button></div>;
 
   return (
     <section className="settings-card">
@@ -98,9 +86,9 @@ export default function RegionalSection() {
       </div>
 
       <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={fetchData}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSaveRegional} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Regional Settings'}
+        <button className="btn btn-secondary" onClick={() => { setProfileCurrency(profile.currency || 'AUD'); setProfileLocale(profile.locale || 'en-AU'); }}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSaveRegional} disabled={updateProfile.isPending}>
+          {updateProfile.isPending ? 'Saving...' : 'Save Regional Settings'}
         </button>
       </div>
     </section>

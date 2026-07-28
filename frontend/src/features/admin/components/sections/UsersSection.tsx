@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { UserAdminService } from '../../services/UserAdminService';
 import { UserProfile, GlobalCurrency } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
+import { apiErrorMessage } from '../../../../api/error';
 import { useAuth } from '../../../auth';
 import PasswordInput from '../../../../components/PasswordInput';
 import SearchableSelect from '../../../../components/SearchableSelect';
@@ -38,7 +39,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   const fetchUsers = async () => {
     try {
       const res = await UserAdminService.getUsers();
-      setUsers(res.data);
+      setUsers(res);
     } catch {
       showToast('Failed to load users', 'error');
     }
@@ -52,7 +53,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
       setIsAddingUser(false);
       setNewUserEmail(''); setNewUserPassword('');
       fetchUsers();
-    } catch (err: any) { showToast(err.response?.data?.error || 'Failed to create user'); }
+    } catch (err) { showToast(apiErrorMessage(err, 'Failed to create user')); }
   };
 
   const handleUpdateUser = async () => {

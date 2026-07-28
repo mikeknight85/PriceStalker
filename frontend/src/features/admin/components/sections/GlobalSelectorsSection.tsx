@@ -7,6 +7,8 @@ import {
   UnifiedSelectorManager 
 } from '../../components';
 import Icon from '../../../../components/Icon';
+import { queryClient } from '../../../../api/queryClient';
+import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 
 export default function GlobalSelectorsSection() {
   const { showToast } = useToast();
@@ -56,8 +58,8 @@ export default function GlobalSelectorsSection() {
   const fetchSelectorData = async () => {
     setIsLoading(true);
     try {
-      const res = await AdminSystemService.getSystemSettings();
-      const settings = res.data;
+      const res = await queryClient.fetchQuery(adminSystemSettingsQuery());
+      const settings = res;
       
       try { setGlobalPriceSelectors(JSON.parse(settings.generic_price_selectors || '[]')); } catch { setGlobalPriceSelectors([]); }
       try { setGlobalDealPriceSelectors(JSON.parse(settings.generic_deal_price_selectors || '[]')); } catch { setGlobalDealPriceSelectors([]); }
@@ -97,7 +99,8 @@ export default function GlobalSelectorsSection() {
         generic_pre_order_phrases: JSON.stringify(globalPreOrderPhrases),
       };
 
-      await AdminSystemService.updateSystemSettings(payload);
+      const updated = await AdminSystemService.updateSystemSettings(payload);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, updated);
       showToast('Global selectors saved successfully', 'success');
     } catch {
       showToast('Failed to save selectors', 'error');
