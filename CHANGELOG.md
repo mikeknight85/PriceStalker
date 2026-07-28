@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the frontend Axios client with native Fetch and TanStack Query-backed server-state caching.
 - Removed legacy dashboard, product-detail, settings, admin, and debug URL
   redirects. Use the canonical nested frontend routes instead.
 

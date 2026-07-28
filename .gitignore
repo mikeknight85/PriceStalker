@@ -36,6 +36,7 @@ test-results/
 # Misc
 *.tgz
 .cache/
+.pnpm-store/
 
 # From the v2 (PriceGhost) tree
 out/
