@@ -64,7 +64,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
       await onSubmit(email, password);
     } catch (err) {
       if (err instanceof Error) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setError(apiErrorMessage(err, 'An error occurred'));
       } else {
         setError('An error occurred');

@@ -95,7 +95,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
       }
     } catch (err) {
       if (err instanceof Error) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const apiError = isApiError(err) ? err : undefined;
         const status = apiError?.status;
         const body = apiError?.body as { error?: string; message?: string; existingProductId?: number } | undefined;
