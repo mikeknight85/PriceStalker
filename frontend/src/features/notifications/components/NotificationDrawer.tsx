@@ -10,7 +10,7 @@ import './NotificationDrawer.css';
 import { getNotificationIcon } from '../pages/utils';
 import Icon from '../../../components/Icon';
 import { queryClient } from '../../../api/queryClient';
-import { queryKeys, recentNotificationsQuery } from '../../../api/queries';
+import { recentNotificationsQuery } from '../../../api/queries';
 
 const NotificationDrawer: React.FC = () => {
   const { user } = useAuth();
