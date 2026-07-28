@@ -6,12 +6,27 @@ export interface PublicAuthConfig {
   oidc_provider_name: string | null;
 }
 
+export interface AuthenticatedUser {
+  id: number;
+  email: string;
+  name: string | null;
+  currency: string;
+  locale: string;
+  is_admin: boolean;
+  categories: string[];
+}
+
+export interface AuthResponse {
+  token: string;
+  user: AuthenticatedUser;
+}
+
 export const AuthService = {
   register: (email: string, password: string) =>
-    api.post('/auth/register', { email, password }),
+    api.post<AuthResponse>('/auth/register', { email, password }),
 
   login: (email: string, password: string) =>
-    api.post('/auth/login', { email, password }),
+    api.post<AuthResponse>('/auth/login', { email, password }),
 
   getRegistrationStatus: () =>
     api.get<{ enabled: boolean }>('/auth/registration-status'),
@@ -25,7 +40,7 @@ export const AuthService = {
     api.get<PublicAuthConfig>('/auth/oidc/config/public'),
 
   /** Fetch the current user with an existing token, after an SSO redirect. */
-  getProfile: () => api.get('/profile'),
+  getProfile: () => api.get<AuthenticatedUser>('/profile'),
 };
 
 /** Full-page navigation: the OIDC flow is a browser redirect, not an XHR. */

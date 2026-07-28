@@ -1,57 +1,96 @@
-import axios from 'axios';
 import { logger } from '../utils/logger';
+import { queryClient } from './queryClient';
+import { ApiError } from './error';
+
+export { ApiError, isApiError } from './error';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+type QueryParams = Record<string, string | number | boolean | null | undefined>;
+export interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
+  params?: QueryParams;
+  signal?: AbortSignal;
+}
 
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+function requestUrl(path: string, params?: QueryParams): string {
+  const base = API_BASE_URL.startsWith('http') ? API_BASE_URL : `${window.location.origin}${API_BASE_URL}`;
+  const url = new URL(`${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
+    }
   }
+  return API_BASE_URL.startsWith('http') ? url.toString() : url.pathname + url.search;
+}
 
-  // Track start time for performance logging
-  (config as any).metadata = { startTime: new Date() };
-  return config;
-});
+async function parseBody(response: Response): Promise<unknown> {
+  if (response.status === 204) return undefined;
+  const text = await response.text();
+  if (!text) return undefined;
+  try { return JSON.parse(text); } catch { return text; }
+}
 
-// Handle authentication errors and log responses
-api.interceptors.response.use(
-  (response) => {
-    const startTime = (response.config as any).metadata.startTime;
-    const duration = new Date().getTime() - startTime.getTime();
-    logger.info(response.config.method?.toUpperCase() + ' ' + response.config.url + ' ' + response.status + ' (' + duration + 'ms)', 'API');
-    return response;
-  },
-  (error) => {
-    const duration = error.config?.metadata ? new Date().getTime() - error.config.metadata.startTime.getTime() : 0;
-    const status = error.response?.status || 'Error';
-    const msg = error.config?.method?.toUpperCase() + ' ' + error.config?.url + ' ' + status + ' (' + duration + 'ms)';
+function errorMessage(body: unknown, status: number): string {
+  if (body && typeof body === 'object') {
+    const candidate = body as { error?: unknown; message?: unknown };
+    if (typeof candidate.error === 'string') return candidate.error;
+    if (typeof candidate.message === 'string') return candidate.message;
+  }
+  return `Request failed (${status})`;
+}
 
-    if (error.response?.status === 401) {
+function isAuthRequest(path: string): boolean {
+  return path.includes('/auth/login') || path.includes('/auth/register');
+}
+
+async function request<T>(method: string, path: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
+  const { params, headers, ...init } = options;
+  const url = requestUrl(path, params);
+  const started = performance.now();
+  const token = localStorage.getItem('token');
+  const response = await fetch(url, {
+    ...init,
+    method,
+    headers: {
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const duration = Math.round(performance.now() - started);
+  const responseBody = await parseBody(response);
+  const message = `${method} ${url} ${response.status} (${duration}ms)`;
+
+  if (!response.ok) {
+    const error = new ApiError(errorMessage(responseBody, response.status), response.status, responseBody, method, url);
+    if (response.status === 401 && !isAuthRequest(path)) {
       localStorage.removeItem('token');
-      
-      const url = error.config?.url || '';
-      const isAuthRequest = url.includes('/auth/login') || url.includes('/auth/register');
-      const isAlreadyOnAuthPage = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register');
-
-      if (!isAuthRequest && !isAlreadyOnAuthPage) {
-        logger.warn(msg + ': Unauthorized, logging out', 'API');
+      localStorage.removeItem('user');
+      queryClient.clear();
+      const onAuthPage = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register');
+      if (!onAuthPage) {
+        logger.warn(`${message}: Unauthorized, logging out`, 'API');
         const currentPath = window.location.pathname + window.location.search + window.location.hash;
         window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
-      } else {
-        logger.warn(msg + ': Unauthorized request (auth page or auth endpoint), bypassing redirect', 'API');
       }
     } else {
-      logger.error(msg, 'API', error);
+      logger.error(message, 'API', error);
     }
-    return Promise.reject(error);
+    throw error;
   }
-);
+
+  logger.info(message, 'API');
+  return responseBody as T;
+}
+
+export const api = {
+  get: <T>(path: string, options?: RequestOptions) => request<T>('GET', path, undefined, options),
+  post: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('POST', path, body, options),
+  put: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, body, options),
+  patch: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, body, options),
+  delete: <T>(path: string, options?: RequestOptions & { data?: unknown }) => {
+    const { data, ...requestOptions } = options ?? {};
+    return request<T>('DELETE', path, data, requestOptions);
+  },
+};
