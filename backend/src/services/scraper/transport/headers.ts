@@ -1,19 +1,5 @@
 import { settingsCache } from '../../../utils/cache';
 
-export const STEALTH_REFERRERS = [
-  'https://www.google.com/',
-  'https://www.bing.com/',
-  'https://www.facebook.com/',
-  'https://www.instagram.com/',
-  'https://t.co/', // Twitter shortener
-  'https://www.reddit.com/',
-  'https://duckduckgo.com/'
-];
-
-export function getRandomReferrer(): string {
-  return STEALTH_REFERRERS[Math.floor(Math.random() * STEALTH_REFERRERS.length)];
-}
-
 export async function getHeaders(userAgent?: string): Promise<Record<string, string>> {
   const ua = userAgent || await settingsCache.getDefaultUserAgent();
   const headers: Record<string, string> = {
