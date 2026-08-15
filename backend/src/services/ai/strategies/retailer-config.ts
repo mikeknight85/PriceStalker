@@ -106,22 +106,31 @@ export async function generateRetailerConfig(
       }
     }
 
-    const resultConfig: Partial<RetailerConfig> = {
-      name: data.retailer_name || null,
-      currency_hint: finalCurrency,
-      name_selectors: cleanAndValidateSelectors(data.name_selectors, url),
-      price_selectors: cleanAndValidateSelectors(data.price_selectors, url),
-      deal_price_selectors: cleanAndValidateSelectors(data.deal_price_selectors, url),
-      member_price_selectors: cleanAndValidateSelectors(data.member_price_selectors, url),
-      pre_order_price_selectors: cleanAndValidateSelectors(data.pre_order_price_selectors, url),
-      original_price_selectors: cleanAndValidateSelectors(data.original_price_selectors, url),
-      image_selectors: cleanAndValidateSelectors(data.image_selectors, url),
-      stock_selectors: cleanAndValidateSelectors(data.stock_selectors, url),
-      jsonld_name_key: data.jsonld_name_key || null,
-      jsonld_price_key: data.jsonld_price_key || null,
-      jsonld_image_key: data.jsonld_image_key || null,
-      active: true,
-    };
+    // Only include fields the AI actually produced values for. The upsert
+    // treats a present-but-empty field as an explicit clear (issue #32), so
+    // including empty lists here would wipe previously learned selectors.
+    const resultConfig: Partial<RetailerConfig> = { active: true };
+    if (data.retailer_name) resultConfig.name = data.retailer_name;
+    if (finalCurrency) resultConfig.currency_hint = finalCurrency;
+
+    const selectorFields = [
+      ['name_selectors', data.name_selectors],
+      ['price_selectors', data.price_selectors],
+      ['deal_price_selectors', data.deal_price_selectors],
+      ['member_price_selectors', data.member_price_selectors],
+      ['pre_order_price_selectors', data.pre_order_price_selectors],
+      ['original_price_selectors', data.original_price_selectors],
+      ['image_selectors', data.image_selectors],
+      ['stock_selectors', data.stock_selectors],
+    ] as const;
+    for (const [field, raw] of selectorFields) {
+      const cleaned = cleanAndValidateSelectors(raw, url);
+      if (cleaned.length > 0) resultConfig[field] = cleaned;
+    }
+
+    if (data.jsonld_name_key) resultConfig.jsonld_name_key = data.jsonld_name_key;
+    if (data.jsonld_price_key) resultConfig.jsonld_price_key = data.jsonld_price_key;
+    if (data.jsonld_image_key) resultConfig.jsonld_image_key = data.jsonld_image_key;
 
     // Quality gate: require at least one valid price selector or a JSON-LD price key
     const hasPriceSelector = resultConfig.price_selectors && resultConfig.price_selectors.length > 0;
