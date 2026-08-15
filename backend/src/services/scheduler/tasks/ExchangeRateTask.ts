@@ -15,7 +15,14 @@ export async function checkInitialExchangeRates(): Promise<void> {
     const rates = await exchangeRateRepository.getAll();
     if (rates.length === 0) {
       logger.info('System | Scheduler | Initial exchange rate fetch triggered', 'Scheduler');
-      await updateExchangeRates();
+      // An empty table means every conversion is unavailable until the next
+      // scheduled run, so retry the boot fetch instead of giving up on one failure.
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        await currencyConversionService.updateRates().catch(() => null);
+        if ((await exchangeRateRepository.getAll()).length > 0) return;
+        logger.warn(`Currency | Initial rate fetch attempt ${attempt}/3 left the table empty${attempt < 3 ? ', retrying in 30s' : ''}.`, 'Currency');
+        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 30_000));
+      }
     } else {
       // Check for staleness (older than 36 hours)
       const oldestRate = rates.reduce((oldest, current) => {

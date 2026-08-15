@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added Icelandic króna support and targeted regional locale formats for
   PriceStalker's existing shopping markets.
+- Prices whose currency cannot be determined now go through a manual currency
+  confirmation step instead of being silently recorded as USD; scheduled
+  refreshes flag such products for review rather than freezing their history.
 - Makefile commands for native hot-reload development with a host-accessible
   Docker PostgreSQL database and no application image builds.
 - `make dev-env` to generate secure local database and application credentials,
@@ -29,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Currency conversion now triangulates via the EUR reference base, so
+  conversions between two non-EUR currencies keep working after the switch to
+  EUR-based reference rates.
+- Conversion tooltips now show the rate date in the user's locale instead of a
+  raw timestamp, and the price chart follows the user's saved locale.
 - Restored a persistent Add Product action on the products dashboard.
 - Added the standard mobile web app capability metadata alongside Apple's
   platform-specific PWA metadata.

@@ -45,9 +45,11 @@ export function extractJsonLdCandidates(
         if (isOffer) {
           const val = obj[jsonLdPriceKey] || obj.price || obj.lowPrice;
           if (val) {
-            let currency = obj.priceCurrency || currencyHint || 'USD';
+            // No fabricated fallback: an unresolvable currency stays '' so the
+            // candidate is routed through manual currency review downstream.
+            let currency = obj.priceCurrency || currencyHint || '';
             if (currency === "$") {
-              currency = currencyHint || 'USD';
+              currency = currencyHint || '';
             } else {
               currency = CURRENCY_MAP[currency] || currency;
             }
@@ -70,9 +72,9 @@ export function extractJsonLdCandidates(
           for (const spec of specs) {
             const specVal = spec[jsonLdPriceKey] || spec.price;
             if (specVal) {
-              let currency = spec.priceCurrency || obj.priceCurrency || currencyHint || 'USD';
+              let currency = spec.priceCurrency || obj.priceCurrency || currencyHint || '';
               if (currency === "$") {
-                currency = currencyHint || 'USD';
+                currency = currencyHint || '';
               } else {
                 currency = CURRENCY_MAP[currency] || currency;
               }

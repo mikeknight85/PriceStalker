@@ -67,7 +67,7 @@ export interface SearchResult {
   isSupported: boolean;
 }
 
-export type ReviewReason = 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan' | 'first_scan';
+export type ReviewReason = 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan' | 'first_scan' | 'missing_currency';
 
 export interface PriceReviewResponse {
   needsReview: true;

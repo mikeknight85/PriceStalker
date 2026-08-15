@@ -145,28 +145,33 @@ export class ProductPersistenceService {
     scrapedData: ScrapedProductWithVoting,
     source: string
   ) {
-    if (!scrapedData.price?.currency) return;
-
     // A. Standard Price
-    const latestStandardPrice = await priceHistoryRepository.getLatest(productId, 'standard');
-    if (!latestStandardPrice || latestStandardPrice.price !== scrapedData.price.price) {
-      await priceHistoryRepository.create(
-        productId,
-        scrapedData.price.price,
-        scrapedData.price.currency,
-        scrapedData.aiStatus,
-        null,
-        'standard'
-      );
+    if (scrapedData.price && !scrapedData.price.currency) {
+      // A price without a resolved currency must never enter history, but the
+      // skip has to be loud: arbitration flags it for review, and this log is
+      // the trace for why the history did not advance.
+      logger.warn(`Product ${productId} | Price | Skipped recording ${scrapedData.price.price}: no currency resolved (${source})`, 'Products', { product_id: productId });
+    } else if (scrapedData.price?.currency) {
+      const latestStandardPrice = await priceHistoryRepository.getLatest(productId, 'standard');
+      if (!latestStandardPrice || latestStandardPrice.price !== scrapedData.price.price) {
+        await priceHistoryRepository.create(
+          productId,
+          scrapedData.price.price,
+          scrapedData.price.currency,
+          scrapedData.aiStatus,
+          null,
+          'standard'
+        );
 
-      logger.info(`Product ${productId} | Price | Recorded: ${scrapedData.price.currency} ${scrapedData.price.price} (${source})`, 'Products', { product_id: productId });
+        logger.info(`Product ${productId} | Price | Recorded: ${scrapedData.price.currency} ${scrapedData.price.price} (${source})`, 'Products', { product_id: productId });
 
-      // Update anchor price for drift tracking
-      await productRepository.updateAnchorPrice(productId, scrapedData.price.price);
+        // Update anchor price for drift tracking
+        await productRepository.updateAnchorPrice(productId, scrapedData.price.price);
 
-      // Record extraction method if we're moving to a stable one
-      if (scrapedData.selectedMethod) {
-        await productRepository.updateExtractionMethod(productId, scrapedData.selectedMethod);
+        // Record extraction method if we're moving to a stable one
+        if (scrapedData.selectedMethod) {
+          await productRepository.updateExtractionMethod(productId, scrapedData.selectedMethod);
+        }
       }
     }
 

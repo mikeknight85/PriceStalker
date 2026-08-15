@@ -26,7 +26,8 @@ export function parseVerificationResponse(
     if (data.suggestedPrice !== undefined && data.suggestedPrice !== null) {
       suggestedPrice = {
         price: Number(data.suggestedPrice),
-        currency: data.suggestedCurrency || currencyContext || 'USD'
+        // '' (not a fabricated 'USD') keeps unresolved currencies in the manual review flow.
+        currency: data.suggestedCurrency || currencyContext || ''
       };
     }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Product } from '../../../../types/api';
 import { useAuth } from '../../../auth';
-import { formatPrice, truncateUrl } from '../../../../utils/format';
+import { formatPrice, formatDate, truncateUrl } from '../../../../utils/format';
 import Sparkline from '../Sparkline';
 import ProductBadges from '../ProductBadges';
 import './ProductCard.css';
@@ -124,7 +124,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isPaused = product.checking_paused;
   const conversionRequested = Boolean(user?.currency && product.currency && user.currency !== product.currency);
   const conversionDetails = product.conversion_rate_date
-    ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${product.conversion_rate_date}.`
+    ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${formatDate(product.conversion_rate_date, user?.locale)}.`
     : 'Converted using the latest available reference exchange rate.';
 
   return (

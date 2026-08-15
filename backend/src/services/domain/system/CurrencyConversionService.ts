@@ -19,17 +19,19 @@ class CurrencyConversionService {
         params: { base }
       });
 
-      if (response.data.length > 0) {
-        const promises = response.data.map(({ base: rateBase, quote, rate, date }) =>
-          exchangeRateRepository.upsert(rateBase, quote, rate, date, this.SOURCE)
-        );
-        const inversePromises = response.data.map(({ base: rateBase, quote, rate, date }) =>
-          exchangeRateRepository.upsert(quote, rateBase, 1 / rate, date, this.SOURCE)
-        );
-
-        await Promise.all([...promises, ...inversePromises]);
-        logger.info(`Currency | Successfully updated ${response.data.length * 2} exchange rates.`, 'Currency');
+      if (!Array.isArray(response.data) || response.data.length === 0) {
+        throw new Error(`Unexpected rates response (status ${response.status}): ${JSON.stringify(response.data).slice(0, 300)}`);
       }
+
+      const promises = response.data.map(({ base: rateBase, quote, rate, date }) =>
+        exchangeRateRepository.upsert(rateBase, quote, rate, date, this.SOURCE)
+      );
+      const inversePromises = response.data.map(({ base: rateBase, quote, rate, date }) =>
+        exchangeRateRepository.upsert(quote, rateBase, 1 / rate, date, this.SOURCE)
+      );
+
+      await Promise.all([...promises, ...inversePromises]);
+      logger.info(`Currency | Successfully updated ${response.data.length * 2} exchange rates.`, 'Currency');
     } catch (error: any) {
       logger.error(`Currency | Failed to update exchange rates: ${error.message}`, 'Currency', error);
       throw error;

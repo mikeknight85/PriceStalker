@@ -65,6 +65,7 @@ const METHOD_TIERS: Record<string, number> = {
 
 const REVIEW_REASON_COPY: Record<string, string> = {
   no_consensus: 'Our scrapers found multiple conflicting prices. Please confirm the correct price.',
+  missing_currency: 'We found a price but could not determine its currency. Please confirm the price and select its currency.',
   ai_correction: 'Our AI suggested a different price from the raw layout. Please review and confirm.',
   oos_guardrail: 'This item appears to be out of stock. Please confirm the last known price.',
   manual_rescan: 'You requested a manual re-scan. Please verify the current price.',
@@ -98,6 +99,9 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualPrice, setManualPrice] = useState('');
   const [manualCurrency, setManualCurrency] = useState('');
+  // Candidate that seeded manual entry (currency-only completion): its
+  // method/selector must survive so the retailer config still learns from it.
+  const [manualSource, setManualSource] = useState<PriceCandidate | null>(null);
   const currenciesResult = useQuery(currenciesQuery());
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,7 +165,14 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
       }
       setIsSubmitting(true);
       try {
-        await onSelect(parsed, 'manual', manualCurrency, category || null);
+        // If manual entry only supplied the missing currency for an extracted
+        // candidate, keep that candidate's method and selector so the backend
+        // can still learn the retailer configuration.
+        if (manualSource && parsed === manualSource.price) {
+          await onSelect(parsed, manualSource.method, manualCurrency, category || null, manualSource.selector);
+        } else {
+          await onSelect(parsed, 'manual', manualCurrency, category || null);
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -174,6 +185,7 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
     if (!selected.currency) {
       setManualPrice(String(selected.price));
       setManualCurrency('');
+      setManualSource(selected);
       setShowManualEntry(true);
       setWarningMessage('Select the currency for this extracted price before tracking it.');
       return;
@@ -325,6 +337,7 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
                 style={{ textAlign: 'left', marginTop: '0.25rem' }}
                 onClick={() => {
                   setShowManualEntry(false);
+                  setManualSource(null);
                   setWarningMessage(null);
                 }}
               >
@@ -383,6 +396,7 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
               )}
 
               <button className="manual-entry-link" onClick={() => {
+                setManualSource(null);
                 setShowManualEntry(true);
                 setWarningMessage(null);
               }}>

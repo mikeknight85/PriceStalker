@@ -13,7 +13,7 @@ export const productDashboardRepository = {
       `SELECT p.*, ph.price as current_price, ph.currency, 
               ph_m.price as member_price,
               ph_o.price as original_price,
-              u.currency as converted_currency, er.rate_date as conversion_rate_date, er.source as conversion_source,
+              u.currency as converted_currency, er.rate_date::text as conversion_rate_date, er.source as conversion_source,
               CASE 
                 WHEN ph.currency = u.currency THEN ph.price
                 ELSE ph.price * er.rate 
@@ -40,7 +40,22 @@ export const productDashboardRepository = {
          ORDER BY recorded_at DESC
          LIMIT 1
        ) ph_o ON true
-       LEFT JOIN exchange_rates er ON er.from_currency = ph.currency AND er.to_currency = u.currency
+       -- Rates are stored as EUR<->X pairs only; cross pairs triangulate via EUR.
+       LEFT JOIN LATERAL (
+         SELECT r.rate, r.rate_date, r.source
+         FROM (
+           SELECT d.rate, d.rate_date, d.source, 1 AS priority
+           FROM exchange_rates d
+           WHERE d.from_currency = ph.currency AND d.to_currency = u.currency
+           UNION ALL
+           SELECT ef.rate * et.rate, LEAST(ef.rate_date, et.rate_date), et.source, 2
+           FROM exchange_rates ef
+           JOIN exchange_rates et ON et.from_currency = 'EUR' AND et.to_currency = u.currency
+           WHERE ef.from_currency = ph.currency AND ef.to_currency = 'EUR'
+         ) r
+         ORDER BY r.priority
+         LIMIT 1
+       ) er ON ph.currency IS NOT NULL AND ph.currency <> '' AND ph.currency <> u.currency
        LEFT JOIN LATERAL (
          SELECT name, domain FROM retailer_configs
          WHERE p.url LIKE '%' || domain || '%'

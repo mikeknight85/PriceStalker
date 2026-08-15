@@ -11,6 +11,8 @@ import {
   Legend,
 } from 'recharts';
 import { PriceHistory } from '../../../../types/api';
+import { useAuth } from '../../../auth';
+import { formatPrice as formatPriceUtil, formatDateWithOptions } from '../../../../utils/format';
 
 const getThemeColors = () => {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -42,6 +44,7 @@ export default function PriceChart({
   targetPrice,
   onRangeChange,
 }: PriceChartProps) {
+  const { user } = useAuth();
   const [selectedRange, setSelectedRange] = useState<number | undefined>(30);
   const [themeColors, setThemeColors] = useState(getThemeColors);
 
@@ -60,12 +63,6 @@ export default function PriceChart({
     setSelectedRange(days);
     onRangeChange?.(days);
   };
-
-  const formatter = new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: currency || 'USD',
-    minimumFractionDigits: 2
-  });
 
   // Group price history by timestamp (within a 5-second window)
   const groupedData: {
@@ -116,14 +113,12 @@ export default function PriceChart({
     ? standardPrices.reduce((sum, p) => sum + p, 0) / standardPrices.length
     : 0;
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  };
+  const formatDate = (timestamp: number) =>
+    formatDateWithOptions(timestamp, user?.locale, { month: 'short', day: 'numeric' });
 
   const formatPrice = (value: number) => {
     if (value === null || value === undefined || isNaN(value)) return 'N/A';
-    return formatter.format(value);
+    return formatPriceUtil(value, currency, user?.locale);
   };
 
   if (prices.length === 0) {
@@ -281,7 +276,7 @@ export default function PriceChart({
                 return [formatPrice(Number(numericValue ?? 0)), String(name ?? '')];
               }}
               labelFormatter={(label) =>
-                new Date(String(label)).toLocaleDateString(undefined, {
+                formatDateWithOptions(Number(label), user?.locale, {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',

@@ -22,7 +22,9 @@ export class ProductConfirmationService {
       originalPrice
     } = options;
     if (typeof selectedPrice !== 'number' || !selectedCurrency) {
-      throw new Error('A price and currency are required to confirm a product');
+      const err: Error & { statusCode?: number } = new Error('A price and currency are required to confirm a product');
+      err.statusCode = 400;
+      throw err;
     }
 
     const product = await productRepository.create(
@@ -63,7 +65,9 @@ export class ProductConfirmationService {
 
     const { selectedPrice, selectedCurrency, selectedMethod, memberPrice, originalPrice } = selection;
     if (selectedPrice !== undefined && !selectedCurrency) {
-      throw new Error('A currency is required when confirming a price');
+      const err: Error & { statusCode?: number } = new Error('A currency is required when confirming a price');
+      err.statusCode = 400;
+      throw err;
     }
 
     await productPersistenceService.saveScrapeResult(

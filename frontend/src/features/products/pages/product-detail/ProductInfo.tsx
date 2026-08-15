@@ -1,6 +1,6 @@
 import React from 'react';
 import ProductBadges from '../../components/ProductBadges';
-import { formatPrice } from '../../../../utils/format';
+import { formatPrice, formatDate } from '../../../../utils/format';
 
 interface ProductImageProps {
   product: any;
@@ -81,7 +81,7 @@ export const ProductPriceStatus: React.FC<ProductPriceStatusProps> = ({
   const fallbackLabel = isPreOrder ? 'TBD' : 'Price unavailable';
   const conversionRequested = Boolean(user?.currency && product.currency && user.currency !== product.currency);
   const conversionDetails = product.conversion_rate_date
-    ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${product.conversion_rate_date}.`
+    ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${formatDate(product.conversion_rate_date, user?.locale)}.`
     : 'Converted using the latest available reference exchange rate.';
 
   return (
