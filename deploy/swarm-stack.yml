@@ -52,6 +52,12 @@ services:
     networks:
       - pricestalker-internal
     deploy:
+      # The data volume is node-local and lives on the macmini. Without this
+      # pin a redeploy can reschedule the task to another node, where it
+      # silently starts a fresh empty database on a new volume.
+      placement:
+        constraints:
+          - node.hostname == macmini
       restart_policy:
         condition: on-failure
 
