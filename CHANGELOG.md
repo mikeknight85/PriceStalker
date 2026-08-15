@@ -54,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Original Price (RRP) values below the resolved standard price (or absurdly
+  above it) are now discarded as stray selector matches instead of being
+  recorded, so the RRP history stops jumping to unrelated page numbers.
+- Confirming a price in the troubleshoot/re-scan flow now always records a
+  fresh price-history entry — including when the confirmed price is unchanged
+  — so stale products are repopulated by a manual confirmation.
 - Price selection dialog layout on small screens: candidate rows now wrap
   instead of colliding with the selection check, the manual-entry currency
   dropdown is wide enough for full currency names, and the dialog uses the
