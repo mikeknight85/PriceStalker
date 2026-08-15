@@ -33,6 +33,7 @@ export interface BrowserSession {
   proxyUrl: string | null;
   userAgent: string | null;
   lastActivity: number;
+  userDataDir: string | null;
 }
 
 export interface ScrapeResult {

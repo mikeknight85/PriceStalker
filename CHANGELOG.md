@@ -41,6 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The browser scraper no longer leaks Chromium profile directories in /tmp:
+  profiles are pinned per session and removed when the browser closes,
+  crashes, or the container stops, stale profiles are swept at startup, and
+  the container's /tmp is backed by a capped tmpfs so nothing accumulates in
+  the writable layer.
 - Currency conversion now triangulates via the EUR reference base, so
   conversions between two non-EUR currencies keep working after the switch to
   EUR-based reference rates.

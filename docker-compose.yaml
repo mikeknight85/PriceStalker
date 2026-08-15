@@ -108,6 +108,14 @@ services:
       default:
         aliases:
           - remotescraper
+    # Chromium writes its per-session profiles to /tmp. Backing it with a
+    # capped tmpfs keeps leaked profiles out of the container's writable layer
+    # and clears them on restart (issue #52).
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 1073741824
 
 volumes:
   postgres_data:

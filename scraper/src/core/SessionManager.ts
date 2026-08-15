@@ -1,6 +1,9 @@
 import puppeteerExtra from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { log } from '../utils/logger.js';
 import type { Browser } from 'puppeteer';
 import type { BrowserSession, ScrapeOptions } from '../types.js';
@@ -26,18 +29,67 @@ export const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 export const sessions: BrowserSession[] = [];
 
+// Chromium profiles live under a dedicated base directory so leaked ones can
+// be identified and swept. Without an explicit userDataDir Puppeteer creates
+// /tmp/puppeteer_dev_profile-* directories that are only removed on a clean
+// browser.close() — crashed browsers and container stops leaked them until
+// /tmp filled up (issue #52).
+export const PROFILE_BASE = path.join(os.tmpdir(), 'scraper-profiles');
+
+/**
+ * Deletes a session's Chromium profile directory. Safe to call repeatedly;
+ * failures are logged and left for the startup sweep.
+ */
+async function removeProfileDir(session: BrowserSession) {
+  const dir = session.userDataDir;
+  if (!dir) return;
+  session.userDataDir = null;
+  try {
+    await fs.rm(dir, { recursive: true, force: true });
+  } catch (error) {
+    log(`Failed to remove profile dir for ${session.id}: ${errorMessage(error)}`, 'WARN');
+  }
+}
+
+/**
+ * Removes profile directories that no live session owns: leftovers in
+ * PROFILE_BASE from a previous process, plus legacy puppeteer_dev_profile-*
+ * directories created before profiles were pinned to PROFILE_BASE.
+ */
+export async function cleanupStaleProfiles() {
+  const live = new Set(sessions.map(s => s.userDataDir).filter(Boolean));
+  for (const [base, prefix] of [[PROFILE_BASE, 'session_'], [os.tmpdir(), 'puppeteer_dev_profile-']] as const) {
+    let entries: string[] = [];
+    try {
+      entries = await fs.readdir(base);
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(base, entry);
+      if (!entry.startsWith(prefix) || live.has(full)) continue;
+      try {
+        await fs.rm(full, { recursive: true, force: true });
+        log(`Removed stale browser profile ${full}`, 'INFO');
+      } catch (error) {
+        log(`Failed to remove stale profile ${full}: ${errorMessage(error)}`, 'WARN');
+      }
+    }
+  }
+}
+
 /**
  * Forcefully closes a browser session and removes it from the pool
  */
 export async function closeSession(session: BrowserSession) {
   const index = sessions.indexOf(session);
   if (index > -1) sessions.splice(index, 1);
-  
+
   if (session.idleTimer) {
     clearTimeout(session.idleTimer);
     session.idleTimer = null;
   }
-  
+
   try {
     log(`Closing browser session ${session.id} (Total Scrapes: ${session.totalScrapes})`, 'INFO');
     if (session.browser && session.browser.connected) {
@@ -46,6 +98,14 @@ export async function closeSession(session: BrowserSession) {
   } catch (error) {
     log(`Error closing browser ${session.id}: ${errorMessage(error)}`, 'ERROR');
   }
+  await removeProfileDir(session);
+}
+
+/**
+ * Closes every session (used on process shutdown so no profile survives).
+ */
+export async function shutdownAllSessions() {
+  await Promise.all([...sessions].map(session => closeSession(session)));
 }
 
 /**
@@ -76,6 +136,8 @@ export function startWatchdog() {
 export async function createNewSession(proxyUrl: string | null = null, userAgent: string | null = null): Promise<BrowserSession> {
   const id = `session_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
   
+  const userDataDir = path.join(PROFILE_BASE, id);
+
   const session: BrowserSession = {
     id,
     browser: null,
@@ -85,7 +147,8 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     idleTimer: null,
     proxyUrl,
     userAgent,
-    lastActivity: Date.now()
+    lastActivity: Date.now(),
+    userDataDir
   };
 
   const args = [
@@ -106,18 +169,21 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
 
   log(`Launching new browser instance for ${id} (Proxy: ${proxyUrl || 'None'}, UA: ${userAgent ? 'Custom' : 'Default'})`, 'INFO');
   
-  session.launchPromise = puppeteer.launch({
+  session.launchPromise = fs.mkdir(userDataDir, { recursive: true }).then(() => puppeteer.launch({
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
     headless: 'new',
+    userDataDir,
     args
-  }).then((browser: Browser) => {
+  })).then((browser: Browser) => {
     session.browser = browser;
     session.launchPromise = null;
-    
+
     browser.on('disconnected', () => {
       log(`Browser session ${session.id} disconnected`, 'WARN');
       const idx = sessions.indexOf(session);
       if (idx > -1) sessions.splice(idx, 1);
+      // A crashed browser never reaches closeSession, so reap its profile here.
+      void removeProfileDir(session);
     });
 
     return browser;
@@ -125,6 +191,7 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     log(`Failed to launch browser for ${id}: ${errorMessage(error)}`, 'ERROR');
     const idx = sessions.indexOf(session);
     if (idx > -1) sessions.splice(idx, 1);
+    void removeProfileDir(session);
     throw error;
   });
 

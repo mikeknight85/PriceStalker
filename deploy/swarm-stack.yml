@@ -122,6 +122,14 @@ services:
       pricestalker-internal:
         aliases:
           - remotescraper
+    # Chromium writes its per-session profiles to /tmp. Backing it with a
+    # capped tmpfs keeps leaked profiles out of the node's overlay storage and
+    # clears them on restart (issue #52).
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 1073741824
     deploy:
       restart_policy:
         condition: on-failure
