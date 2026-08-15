@@ -113,6 +113,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  /* Keep the confidence pill clear of the absolutely-positioned check icon. */
+  padding-right: 2.25rem;
   margin-bottom: 0.5rem;
 }
 
@@ -191,6 +195,8 @@
   align-items: flex-start;
   padding: 0.25rem 0.5rem;
   border-left: 3px solid var(--border);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .price-context-item.deal {
@@ -304,7 +310,12 @@
 
 .manual-entry-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.manual-entry-row .manual-entry-input {
+  min-width: 140px;
 }
 
 .manual-entry-input {
@@ -322,7 +333,9 @@
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  width: 80px;
+  flex: 1;
+  min-width: 160px;
+  max-width: 100%;
 }
 
 .warning-banner {
@@ -335,3 +348,26 @@
   color: #b45309;
 }
 
+
+@media (max-width: 480px) {
+  .price-modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .price-modal {
+    max-height: 96vh;
+  }
+
+  .price-modal-header,
+  .price-modal-product,
+  .price-modal-body,
+  .price-modal-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .price-filter-tabs {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
