@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Password reset via email: a "Forgot password?" link on the login page sends
+  a single-use, one-hour reset link using the system SMTP settings
+  (`SMTP_FALLBACK_*`). Admins can disable the feature under Admin -> System ->
+  Security & Access; it is hidden automatically when SMTP is not configured.
 - Theme can now be set to Auto (follow the operating system), Light, or Dark
   under Settings -> Regional -> Appearance; previously a single manual toggle
   permanently overrode the OS preference with no way back to automatic.

@@ -31,6 +31,15 @@ export const AuthService = {
   getRegistrationStatus: () =>
     api.get<{ enabled: boolean }>('/auth/registration-status'),
 
+  getPasswordResetStatus: () =>
+    api.get<{ enabled: boolean }>('/auth/password-reset-status'),
+
+  requestPasswordReset: (email: string) =>
+    api.post<{ message: string }>('/auth/forgot-password', { email }),
+
+  resetPassword: (token: string, password: string) =>
+    api.post<{ message: string }>('/auth/reset-password', { token, password }),
+
   /**
    * Public auth config, used by the login page to decide what to render.
    * 404s when SSO is disabled on the server; callers treat that as

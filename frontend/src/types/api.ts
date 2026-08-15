@@ -225,6 +225,7 @@ export interface RetailerConfig {
 
 export interface SystemSettings {
   registration_enabled: boolean | string;
+  password_reset_enabled?: boolean | string;
   debug_page_enabled?: boolean | string;
   scheduler_disabled?: boolean | string;
   retailer_updates_disabled?: boolean | string;

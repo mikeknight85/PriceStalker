@@ -1,6 +1,6 @@
 import pool from '../../../config/database';
 import { logger } from '../../../utils/system/logger';
-import nodemailer from 'nodemailer';
+import { isSystemMailerConfigured, sendSystemEmail } from '../../../utils/system/mailer';
 
 export type DBState = 'HEALTHY' | 'DEGRADED' | 'FAILED';
 
@@ -115,41 +115,19 @@ export class DatabaseHealthMonitor {
 
   async sendAlertEmail(subject: string, text: string) {
     const toEmail = this.cachedAdminEmail || process.env.ADMIN_ALERT_EMAIL || 'admin@localhost';
-    const smtpHost = process.env.SMTP_FALLBACK_HOST;
-    const smtpPort = parseInt(process.env.SMTP_FALLBACK_PORT || '587', 10);
-    const smtpUser = process.env.SMTP_FALLBACK_USER;
-    const smtpPass = process.env.SMTP_FALLBACK_PASS;
-    const emailFrom = process.env.SMTP_FALLBACK_FROM || 'pricestalker-monitor@localhost';
 
-    if (!smtpHost) {
+    if (!isSystemMailerConfigured()) {
       logger.error('DatabaseHealthMonitor | Cannot send alert email: SMTP_FALLBACK_HOST is not set in environment', 'Database');
       return { success: false, error: 'SMTP_FALLBACK_HOST is not set' };
     }
 
-    try {
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465,
-        auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
-        tls: {
-          rejectUnauthorized: false,
-        }
-      });
-
-      await transporter.sendMail({
-        from: emailFrom,
-        to: toEmail,
-        subject,
-        text,
-      });
-
+    const result = await sendSystemEmail(toEmail, subject, text);
+    if (result.success) {
       logger.info(`DatabaseHealthMonitor | Outage alert email successfully sent to ${toEmail}`, 'Database');
       return { success: true, to: toEmail };
-    } catch (emailErr: any) {
-      logger.error('DatabaseHealthMonitor | Failed to deliver alert email', 'Database', emailErr);
-      return { success: false, error: emailErr.message };
     }
+    logger.error('DatabaseHealthMonitor | Failed to deliver alert email', 'Database', result.error);
+    return { success: false, error: result.error };
   }
 }
 
