@@ -258,6 +258,7 @@ deploy**. See `deploy/swarm-stack.yml` and `CHANGELOG.md`.
 - `product_groups`, `site_configs`, `user_memberships` tables exist but are
   unused by current code. Leave them; do not build against them without checking
   first.
-- OpenRouter, the daily update-check, per-product currency override and
+- The daily update-check, per-product currency override and
   notify-on-any-change were dropped from 1.x. Do not "restore" them without
-  asking — their absence is deliberate.
+  asking — their absence is deliberate. (OpenRouter was also dropped, but was
+  deliberately reinstated via issue #39.)

@@ -76,6 +76,22 @@ router.post('/test-mistral', handleAiTest('Mistral', (ai, k, m) =>
 router.post('/test-openai', handleAiTest('OpenAI', (ai, k, m) => 
   ai.testOpenAICompatibleConnection({ apiKey: k, model: m || 'gpt-4o-mini' })));
 
+router.post('/test-openrouter', handleAiTest('OpenRouter', (ai, k, m) =>
+  ai.testOpenAICompatibleConnection({ apiKey: k, baseUrl: 'https://openrouter.ai/api/v1', model: m || 'meta-llama/llama-3.1-8b-instruct:free' })));
+
+// OpenAI-compatible local servers (vLLM, LM Studio, LocalAI, ...): base_url
+// is required, the API key is optional.
+router.post('/test-openai-compatible', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { api_key, base_url, model } = req.body;
+  if (!base_url || !model) {
+    res.status(400).json({ error: 'Base URL and model are required' });
+    return;
+  }
+  const { testOpenAICompatibleConnection } = await import('../../../../services/ai');
+  await testOpenAICompatibleConnection({ apiKey: api_key || 'not-needed', baseUrl: base_url, model });
+  res.json({ success: true, message: 'Successfully connected to the OpenAI-compatible endpoint' });
+}, 'Admin | OpenAI-Compatible Test', 'Admin', 'Connection failed'));
+
 // Specialized Test for Ollama (base_url instead of api_key)
 router.post('/test-ollama', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { base_url } = req.body;

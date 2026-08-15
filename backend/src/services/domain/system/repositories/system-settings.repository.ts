@@ -45,6 +45,11 @@ export const systemSettingsRepository = {
       groq_model: all.groq_model || null,
       mistral_api_key: all.mistral_api_key || null,
       mistral_model: all.mistral_model || null,
+      openrouter_api_key: all.openrouter_api_key || null,
+      openrouter_model: all.openrouter_model || null,
+      openai_compatible_base_url: all.openai_compatible_base_url || null,
+      openai_compatible_api_key: all.openai_compatible_api_key || null,
+      openai_compatible_model: all.openai_compatible_model || null,
       jsonld_image_key: all.jsonld_image_key || 'image',
       jsonld_price_key: all.jsonld_price_key || 'price',
       jsonld_name_key: all.jsonld_name_key || 'name',
@@ -77,6 +82,11 @@ export const systemSettingsRepository = {
     if (settings.groq_model !== undefined) await systemSettingsRepository.set('groq_model', settings.groq_model || '');
     if (settings.mistral_api_key !== undefined) await systemSettingsRepository.set('mistral_api_key', settings.mistral_api_key || '');
     if (settings.mistral_model !== undefined) await systemSettingsRepository.set('mistral_model', settings.mistral_model || '');
+    if (settings.openrouter_api_key !== undefined) await systemSettingsRepository.set('openrouter_api_key', settings.openrouter_api_key || '');
+    if (settings.openrouter_model !== undefined) await systemSettingsRepository.set('openrouter_model', settings.openrouter_model || '');
+    if (settings.openai_compatible_base_url !== undefined) await systemSettingsRepository.set('openai_compatible_base_url', settings.openai_compatible_base_url || '');
+    if (settings.openai_compatible_api_key !== undefined) await systemSettingsRepository.set('openai_compatible_api_key', settings.openai_compatible_api_key || '');
+    if (settings.openai_compatible_model !== undefined) await systemSettingsRepository.set('openai_compatible_model', settings.openai_compatible_model || '');
     if (settings.jsonld_image_key !== undefined) await systemSettingsRepository.set('jsonld_image_key', settings.jsonld_image_key || 'image');
     if (settings.jsonld_price_key !== undefined) await systemSettingsRepository.set('jsonld_price_key', settings.jsonld_price_key || 'price');
     if (settings.jsonld_name_key !== undefined) await systemSettingsRepository.set('jsonld_name_key', settings.jsonld_name_key || 'name');

@@ -17,4 +17,6 @@ export const AIService = {
   testMistral: (api_key: string, model?: string) => api.post('/admin/settings/ai/test-mistral', { api_key, model }),
   testAnthropic: (api_key: string, model?: string) => api.post('/admin/settings/ai/test-anthropic', { api_key, model }),
   testOpenAI: (api_key: string, model?: string) => api.post('/admin/settings/ai/test-openai', { api_key, model }),
+  testOpenRouter: (api_key: string, model?: string) => api.post('/admin/settings/ai/test-openrouter', { api_key, model }),
+  testOpenAICompatible: (base_url: string, model: string, api_key?: string) => api.post('/admin/settings/ai/test-openai-compatible', { base_url, model, api_key }),
 };

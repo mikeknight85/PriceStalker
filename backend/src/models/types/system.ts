@@ -2,7 +2,7 @@ export interface AISettings {
   ai_enabled: boolean;
   ai_verification_enabled: boolean;
   ai_auto_mapping_enabled: boolean;
-  ai_provider: 'anthropic' | 'openai' | 'ollama' | 'gemini' | 'deepseek' | 'groq' | 'mistral' | 'vertex' | null;
+  ai_provider: 'anthropic' | 'openai' | 'ollama' | 'gemini' | 'deepseek' | 'groq' | 'mistral' | 'vertex' | 'openrouter' | 'openai_compatible' | null;
   anthropic_api_key: string | null;
   anthropic_model: string | null;
   openai_api_key: string | null;
@@ -21,6 +21,11 @@ export interface AISettings {
   groq_model: string | null;
   mistral_api_key: string | null;
   mistral_model: string | null;
+  openrouter_api_key: string | null;
+  openrouter_model: string | null;
+  openai_compatible_base_url: string | null;
+  openai_compatible_api_key: string | null;
+  openai_compatible_model: string | null;
   jsonld_image_key: string | null;
   jsonld_price_key: string | null;
   jsonld_name_key: string | null;

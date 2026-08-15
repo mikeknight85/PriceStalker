@@ -22,6 +22,10 @@ export function getAIProvider(settings: AISettings): AIProvider {
       return new OpenAIProvider(settings, 'groq');
     case 'mistral':
       return new OpenAIProvider(settings, 'mistral');
+    case 'openrouter':
+      return new OpenAIProvider(settings, 'openrouter');
+    case 'openai_compatible':
+      return new OpenAIProvider(settings, 'openai_compatible');
     case 'ollama':
       return new OllamaProvider(settings);
     case 'gemini':

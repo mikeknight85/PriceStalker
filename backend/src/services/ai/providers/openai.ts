@@ -8,6 +8,7 @@ const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo-0125';
 const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
 const DEFAULT_GROQ_MODEL = 'llama3-8b-8192';
 const DEFAULT_MISTRAL_MODEL = 'mistral-small-latest';
+const DEFAULT_OPENROUTER_MODEL = 'meta-llama/llama-3.1-8b-instruct:free';
 
 export class OpenAIProvider implements AIProvider {
   private client: OpenAI;
@@ -15,7 +16,7 @@ export class OpenAIProvider implements AIProvider {
   private settings: AISettings;
   private providerName: string;
 
-  constructor(settings: AISettings, provider: 'openai' | 'deepseek' | 'groq' | 'mistral' = 'openai') {
+  constructor(settings: AISettings, provider: 'openai' | 'deepseek' | 'groq' | 'mistral' | 'openrouter' | 'openai_compatible' = 'openai') {
     this.providerName = provider;
     let apiKey = settings.openai_api_key;
     this.model = settings.openai_model || DEFAULT_OPENAI_MODEL;
@@ -33,6 +34,16 @@ export class OpenAIProvider implements AIProvider {
       apiKey = settings.mistral_api_key;
       this.model = settings.mistral_model || DEFAULT_MISTRAL_MODEL;
       baseURL = 'https://api.mistral.ai/v1';
+    } else if (provider === 'openrouter') {
+      apiKey = settings.openrouter_api_key;
+      this.model = settings.openrouter_model || DEFAULT_OPENROUTER_MODEL;
+      baseURL = 'https://openrouter.ai/api/v1';
+    } else if (provider === 'openai_compatible') {
+      // Local OpenAI-compatible servers (vLLM, LM Studio, LocalAI, ...) often
+      // run without authentication; the SDK still requires a non-empty key.
+      apiKey = settings.openai_compatible_api_key || 'not-needed';
+      this.model = settings.openai_compatible_model || '';
+      baseURL = settings.openai_compatible_base_url || undefined;
     }
 
     this.client = new OpenAI({
