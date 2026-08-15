@@ -70,6 +70,18 @@ export default function AIProviderConfig({
     } else if (provider === 'mistral') {
       if (!aiSettings?.mistral_api_key) return;
       res = await AIService.testMistral(aiSettings.mistral_api_key, aiSettings.mistral_model || undefined);
+    } else if (provider === 'openrouter') {
+      if (!aiSettings?.openrouter_api_key) {
+        showToast('Enter an OpenRouter API key before verifying.', 'error');
+        return;
+      }
+      res = await AIService.testOpenRouter(aiSettings.openrouter_api_key, aiSettings.openrouter_model || undefined);
+    } else if (provider === 'openai_compatible') {
+      if (!aiSettings?.openai_compatible_base_url || !aiSettings?.openai_compatible_model) {
+        showToast('Enter the endpoint base URL and a model name before verifying.', 'error');
+        return;
+      }
+      res = await AIService.testOpenAICompatible(aiSettings.openai_compatible_base_url, aiSettings.openai_compatible_model, aiSettings.openai_compatible_api_key || undefined);
     } else if (provider === 'ollama') {
       if (!aiSettings?.ollama_base_url) return;
       res = await AIService.testOllama(aiSettings.ollama_base_url);
@@ -117,6 +129,8 @@ export default function AIProviderConfig({
             <option value="deepseek">DeepSeek</option>
             <option value="groq">Groq (Llama 3)</option>
             <option value="mistral">Mistral AI</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="openai_compatible">OpenAI-Compatible (vLLM, LM Studio, ...)</option>
             <option value="ollama">Local Ollama</option>
         </select>
       </div>
@@ -329,6 +343,63 @@ export default function AIProviderConfig({
           <div className="form-group">
             <label>Mistral Model</label>
             <input type="text" className="form-control" value={aiSettings?.mistral_model || ''} onChange={e => setAiSettings(s => s ? { ...s, mistral_model: e.target.value } : null)} placeholder="mistral-large-latest" />
+          </div>
+        </>
+      )}
+
+      {aiSettings?.ai_provider === 'openrouter' && (
+        <>
+          <form onSubmit={(e) => e.preventDefault()} className="form-group">
+            <label htmlFor="openrouter-api-key">OpenRouter API Key</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <PasswordInput 
+                  id="openrouter-api-key"
+                  name="openrouter-api-key"
+                  value={aiSettings?.openrouter_api_key || ''} 
+                  onChange={e => setAiSettings(s => s ? { ...s, openrouter_api_key: e.target.value } : null)} 
+                  placeholder="sk-or-..." 
+                  autoComplete="new-password"
+                  allowReveal={!aiSettings?.redact_api_keys}
+                />
+              </div>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('openrouter')}>Verify</button>
+            </div>
+          </form>
+          <div className="form-group">
+            <label>OpenRouter Model</label>
+            <input type="text" className="form-control" value={aiSettings?.openrouter_model || ''} onChange={e => setAiSettings(s => s ? { ...s, openrouter_model: e.target.value } : null)} placeholder="meta-llama/llama-3.1-8b-instruct:free" />
+          </div>
+        </>
+      )}
+
+      {aiSettings?.ai_provider === 'openai_compatible' && (
+        <>
+          <div className="form-group">
+            <label>Endpoint Base URL</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input className="form-control" style={{ flex: 1 }} value={aiSettings?.openai_compatible_base_url || ''} onChange={e => setAiSettings(s => s ? { ...s, openai_compatible_base_url: e.target.value } : null)} placeholder="http://localhost:8000/v1" autoComplete="off" />
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('openai_compatible')}>Verify</button>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              Any server speaking the OpenAI chat-completions protocol: vLLM, LM Studio, LocalAI, text-generation-webui, ...
+            </div>
+          </div>
+          <form onSubmit={(e) => e.preventDefault()} className="form-group">
+            <label htmlFor="openai-compatible-api-key">API Key (optional)</label>
+            <PasswordInput 
+              id="openai-compatible-api-key"
+              name="openai-compatible-api-key"
+              value={aiSettings?.openai_compatible_api_key || ''} 
+              onChange={e => setAiSettings(s => s ? { ...s, openai_compatible_api_key: e.target.value } : null)} 
+              placeholder="Leave empty for unauthenticated local servers" 
+              autoComplete="new-password"
+              allowReveal={!aiSettings?.redact_api_keys}
+            />
+          </form>
+          <div className="form-group">
+            <label>Model</label>
+            <input type="text" className="form-control" value={aiSettings?.openai_compatible_model || ''} onChange={e => setAiSettings(s => s ? { ...s, openai_compatible_model: e.target.value } : null)} placeholder="e.g. Qwen/Qwen2.5-7B-Instruct" />
           </div>
         </>
       )}

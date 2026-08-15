@@ -19,6 +19,8 @@ export class AISettingsService {
       settings.deepseek_api_key = settings.deepseek_api_key ? maskKey(settings.deepseek_api_key) : null;
       settings.groq_api_key = settings.groq_api_key ? maskKey(settings.groq_api_key) : null;
       settings.mistral_api_key = settings.mistral_api_key ? maskKey(settings.mistral_api_key) : null;
+      settings.openrouter_api_key = settings.openrouter_api_key ? maskKey(settings.openrouter_api_key) : null;
+      settings.openai_compatible_api_key = settings.openai_compatible_api_key ? maskKey(settings.openai_compatible_api_key) : null;
     }
 
     return {
@@ -41,6 +43,8 @@ export class AISettingsService {
       if (isMasked(updates.deepseek_api_key)) delete updates.deepseek_api_key;
       if (isMasked(updates.groq_api_key)) delete updates.groq_api_key;
       if (isMasked(updates.mistral_api_key)) delete updates.mistral_api_key;
+      if (isMasked(updates.openrouter_api_key)) delete updates.openrouter_api_key;
+      if (isMasked(updates.openai_compatible_api_key)) delete updates.openai_compatible_api_key;
     }
 
     const settings = await systemSettingsRepository.updateAISettings(updates);
