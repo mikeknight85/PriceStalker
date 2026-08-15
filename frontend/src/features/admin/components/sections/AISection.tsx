@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AIService } from '../../services/AIService';
 import { AISettings } from '../../../../types/api';
 import { useAsyncAction } from '../../../../hooks/useAsyncAction';
+import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import AIStatusBadge from '../../../../components/AIStatusBadge';
 import { CollapsibleCard } from '../../components';
@@ -13,6 +14,7 @@ export default function AISection() {
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
   const [aiModels, setAiModels] = useState<any[]>([]);
   const { execute: runFetchAIData, isLoading } = useAsyncAction(true);
+  const { showToast } = useToast();
   const { execute: runSaveAISettings, isLoading: isSavingAI } = useAsyncAction();
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
 
@@ -38,6 +40,12 @@ export default function AISection() {
 
   const handleSaveAISettings = () => runSaveAISettings(async () => {
     if (!aiSettings) return;
+    // A Gemini configuration without a selected model cannot extract anything;
+    // require a model (synced from the API) before allowing the save.
+    if (aiSettings.ai_provider === 'gemini' && !aiSettings.gemini_model) {
+      showToast('Select a Gemini model before saving — press Sync next to the model dropdown to load the list.', 'error');
+      return;
+    }
     await AIService.updateAI(aiSettings);
   }, { onSuccessMessage: 'AI settings saved', onErrorFallback: 'Save failed' });
 

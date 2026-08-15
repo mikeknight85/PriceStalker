@@ -58,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sites) on discovery. The referrer is now the retailer config's value, then
   the system default, then none — matching how a user refreshing an open tab
   looks to the site.
+- The AI Engine admin page now explains when no Gemini model list is cached,
+  blocks Verify and saving until a model is selected, and the cached model
+  list refreshes automatically every day.
 - Currency conversion now triangulates via the EUR reference base, so
   conversions between two non-EUR currencies keep working after the switch to
   EUR-based reference rates.
