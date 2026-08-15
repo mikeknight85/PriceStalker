@@ -41,6 +41,9 @@ export interface ScrapedProductWithVoting extends ScrapedProduct {
   needsReview: boolean;
   selectedMethod?: string;
   reviewReason?: ReviewReason;
+  // Flags learned during acquisition (e.g. the page only rendered via the
+  // browser scraper), persisted to the retailer config on save.
+  learnedFlags?: { use_browser_scraper?: boolean };
 }
 
 export type ExtractionMethod = 'json-ld' | 'site-specific' | 'generic-css' | 'custom-css' | 'custom-regex' | 'ai' | 'generic' | 'deal-price' | 'member-price' | 'pre-order-price' | 'original-price';

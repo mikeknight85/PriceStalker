@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value deletes the stored one instead of being silently ignored, and AI
   auto-mapping no longer overwrites learned selector metadata with an empty
   object.
+- Retailer configs created or updated without AI auto-mapping now record the
+  learned "Browser Scraper" flag when acquisition had to fall back to the
+  browser scraper; previously only the AI auto-mapping path persisted it.
 - Currency conversion now triangulates via the EUR reference base, so
   conversions between two non-EUR currencies keep working after the switch to
   EUR-based reference rates.
