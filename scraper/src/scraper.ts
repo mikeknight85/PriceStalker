@@ -15,5 +15,5 @@ app.use('/', router);
 startWatchdog();
 
 app.listen(PORT, '0.0.0.0', () => {
-  log(`Remotescraper API listening at http://0.0.0.0:${PORT}`, 'INFO');
+  log(`Scraper API listening at http://0.0.0.0:${PORT}`, 'INFO');
 });
