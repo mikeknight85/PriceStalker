@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   crashes, or the container stops, stale profiles are swept at startup, and
   the container's /tmp is backed by a capped tmpfs so nothing accumulates in
   the writable layer.
+- Retailer selector lists and text fields (description, user agent, currency
+  hint, JSON-LD keys) can now be cleared from the admin UI: a submitted empty
+  value deletes the stored one instead of being silently ignored, and AI
+  auto-mapping no longer overwrites learned selector metadata with an empty
+  object.
 - Currency conversion now triangulates via the EUR reference base, so
   conversions between two non-EUR currencies keep working after the switch to
   EUR-based reference rates.
