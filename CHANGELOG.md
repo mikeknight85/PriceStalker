@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Theme can now be set to Auto (follow the operating system), Light, or Dark
+  under Settings -> Regional -> Appearance; previously a single manual toggle
+  permanently overrode the OS preference with no way back to automatic.
 - Added Icelandic króna support and targeted regional locale formats for
   PriceStalker's existing shopping markets.
 - Prices whose currency cannot be determined now go through a manual currency

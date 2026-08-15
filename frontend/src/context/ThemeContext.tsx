@@ -1,50 +1,56 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Theme = 'light' | 'dark';
+export type ThemeMode = 'auto' | Theme;
 
 interface ThemeContextType {
   theme: Theme;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [mode, setModeState] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark') {
-      return saved;
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return saved === 'light' || saved === 'dark' ? saved : 'auto';
   });
+  const [systemDark, setSystemDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  const theme: Theme = mode === 'auto' ? (systemDark ? 'dark' : 'light') : mode;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      const saved = localStorage.getItem('theme');
-      if (!saved) {
-        setTheme(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  const setMode = (next: ThemeMode) => {
+    // 'auto' is represented by the absence of a saved preference, so the OS
+    // scheme takes over again (and keeps working for pre-existing sessions).
+    if (next === 'auto') {
+      localStorage.removeItem('theme');
+    } else {
+      localStorage.setItem('theme', next);
+    }
+    setModeState(next);
+  };
 
   const toggleTheme = () => {
-    setTheme((prev) => {
-      const newTheme = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', newTheme);
-      return newTheme;
-    });
+    setMode(theme === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, mode, setMode, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
