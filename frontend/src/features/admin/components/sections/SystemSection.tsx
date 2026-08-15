@@ -62,6 +62,19 @@ export default function SystemSection() {
     }
   };
 
+  const handleTogglePasswordReset = async () => {
+    try {
+      const res = await AdminSystemService.updateSystemSettings({ 
+        password_reset_enabled: !(systemSettings?.password_reset_enabled === undefined || systemSettings?.password_reset_enabled === true || systemSettings?.password_reset_enabled === 'true') 
+      });
+      setSystemSettings(res);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
+      showToast('Password reset toggled', 'success');
+    } catch {
+      showToast('Update failed', 'error');
+    }
+  };
+
   const handleToggleDebugPage = async () => {
     try {
       const res = await AdminSystemService.updateSystemSettings({ 
@@ -180,6 +193,10 @@ export default function SystemSection() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Allow User Registration</span>
           <ToggleSwitch active={systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true'} onToggle={handleToggleRegistration} disabled={isSavingAdmin} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Allow Password Reset via Email</span>
+          <ToggleSwitch active={systemSettings?.password_reset_enabled === undefined || systemSettings?.password_reset_enabled === true || systemSettings?.password_reset_enabled === 'true'} onToggle={handleTogglePasswordReset} disabled={isSavingAdmin} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Enable Admin Debug Page</span>

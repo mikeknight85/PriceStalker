@@ -13,8 +13,10 @@ import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthSsoCompleteRouteImport } from './routes/auth/sso-complete'
+import { Route as PublicResetPasswordRouteImport } from './routes/_public/reset-password'
 import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as PublicForgotPasswordRouteImport } from './routes/_public/forgot-password'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
@@ -62,6 +64,11 @@ const AuthSsoCompleteRoute = AuthSsoCompleteRouteImport.update({
   path: '/auth/sso-complete',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicResetPasswordRoute = PublicResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const PublicRegisterRoute = PublicRegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -70,6 +77,11 @@ const PublicRegisterRoute = PublicRegisterRouteImport.update({
 const PublicLoginRoute = PublicLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicForgotPasswordRoute = PublicForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => PublicRouteRoute,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -240,8 +252,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/insights': typeof AuthenticatedInsightsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/forgot-password': typeof PublicForgotPasswordRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/reset-password': typeof PublicResetPasswordRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
   '/admin/ai': typeof AuthenticatedAdminAiRoute
@@ -271,8 +285,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/insights': typeof AuthenticatedInsightsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/forgot-password': typeof PublicForgotPasswordRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/reset-password': typeof PublicResetPasswordRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
@@ -307,8 +323,10 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_public/forgot-password': typeof PublicForgotPasswordRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
+  '/_public/reset-password': typeof PublicResetPasswordRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
   '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
@@ -343,8 +361,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/insights'
     | '/notifications'
+    | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/auth/sso-complete'
     | '/products/$productId'
     | '/admin/ai'
@@ -374,8 +394,10 @@ export interface FileRouteTypes {
     | '/'
     | '/insights'
     | '/notifications'
+    | '/forgot-password'
     | '/login'
     | '/register'
+    | '/reset-password'
     | '/auth/sso-complete'
     | '/admin/ai'
     | '/admin/auth'
@@ -409,8 +431,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/insights'
     | '/_authenticated/notifications'
+    | '/_public/forgot-password'
     | '/_public/login'
     | '/_public/register'
+    | '/_public/reset-password'
     | '/auth/sso-complete'
     | '/_authenticated/products/$productId'
     | '/_authenticated/admin/ai'
@@ -474,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSsoCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/reset-password': {
+      id: '/_public/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof PublicResetPasswordRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
     '/_public/register': {
       id: '/_public/register'
       path: '/register'
@@ -486,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof PublicLoginRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/forgot-password': {
+      id: '/_public/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof PublicForgotPasswordRouteImport
       parentRoute: typeof PublicRouteRoute
     }
     '/_authenticated/notifications': {
@@ -808,13 +846,17 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface PublicRouteRouteChildren {
+  PublicForgotPasswordRoute: typeof PublicForgotPasswordRoute
   PublicLoginRoute: typeof PublicLoginRoute
   PublicRegisterRoute: typeof PublicRegisterRoute
+  PublicResetPasswordRoute: typeof PublicResetPasswordRoute
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicForgotPasswordRoute: PublicForgotPasswordRoute,
   PublicLoginRoute: PublicLoginRoute,
   PublicRegisterRoute: PublicRegisterRoute,
+  PublicResetPasswordRoute: PublicResetPasswordRoute,
 }
 
 const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(

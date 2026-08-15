@@ -14,7 +14,8 @@ export class SystemSettingsService {
   async updateSettings(updates: Record<string, any>, userId: number): Promise<Record<string, string>> {
     const updatedKeys: string[] = [];
     const validKeys = [
-      'registration_enabled', 
+      'registration_enabled',
+      'password_reset_enabled',
       'browser_timeout', 
       'browser_delay', 
       'scraper_proxy', 

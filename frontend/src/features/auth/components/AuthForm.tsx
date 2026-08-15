@@ -19,6 +19,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+  const [passwordResetEnabled, setPasswordResetEnabled] = useState(false);
   const [ssoConfig, setSsoConfig] = useState<PublicAuthConfig | null>(null);
   const { theme, toggleTheme } = useTheme();
   const location = useRouterState({ select: (state) => state.location });
@@ -28,6 +29,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
     AuthService.getRegistrationStatus()
       .then(res => setRegistrationEnabled(res.enabled))
       .catch(() => setRegistrationEnabled(true)); // Default to true on error
+
+    // Hidden unless the server confirms reset is available (toggle + SMTP).
+    AuthService.getPasswordResetStatus()
+      .then(res => setPasswordResetEnabled(res.enabled))
+      .catch(() => setPasswordResetEnabled(false));
 
     // 404s when SSO is disabled on the server; that is the normal
     // local-login-only case, not an error worth surfacing.
@@ -178,6 +184,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onSubmit }) => {
           </div>
         )}
 
+        {showLocalForm && mode === 'login' && passwordResetEnabled && (
+          <div className="auth-form-footer">
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
+        )}
         {showLocalForm && mode === 'login' && registrationEnabled && (
           <div className="auth-form-footer">
             Don't have an account? <Link to="/register" search={{ redirect: new URLSearchParams(location.searchStr).get('redirect') || undefined }}>Sign up</Link>
