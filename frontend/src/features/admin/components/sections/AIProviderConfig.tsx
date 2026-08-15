@@ -2,6 +2,7 @@ import { AISettings } from '../../../../types/api';
 import { ToggleSwitch } from '../../components';
 import { AIService } from '../../services/AIService';
 import PasswordInput from '../../../../components/PasswordInput';
+import Icon from '../../../../components/Icon';
 import { useAsyncAction } from '../../../../hooks/useAsyncAction';
 import { useToast } from '../../../../context/ToastContext';
 
@@ -42,8 +43,15 @@ export default function AIProviderConfig({
   const handleTestProvider = (provider: string) => runTestProvider(async () => {
     let res: any;
     if (provider === 'gemini') {
-      if (!aiSettings?.gemini_api_key) return;
-      res = await AIService.testGemini(aiSettings.gemini_api_key, aiSettings.gemini_model || undefined);
+      if (!aiSettings?.gemini_api_key) {
+        showToast('Enter a Gemini API key before verifying.', 'error');
+        return;
+      }
+      if (!aiSettings.gemini_model) {
+        showToast('Verify needs a model: press Sync to load the model list, then select one.', 'error');
+        return;
+      }
+      res = await AIService.testGemini(aiSettings.gemini_api_key, aiSettings.gemini_model);
     } else if (provider === 'vertex') {
       if (!aiSettings?.vertex_api_key || !aiSettings?.vertex_project_id || !aiSettings?.vertex_location || !aiSettings?.vertex_model) return;
       res = await AIService.testVertex(aiSettings.vertex_api_key, aiSettings.vertex_project_id, aiSettings.vertex_location, aiSettings.vertex_model);
@@ -132,6 +140,12 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('gemini')}>Verify</button>
             </div>
           </form>
+          {aiModels.length === 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 0.75rem', borderRadius: '0.5rem', background: 'var(--background)', border: '1px solid var(--warning, #f59e0b)', color: 'var(--text)', fontSize: '0.8rem' }}>
+              <Icon name="alertTriangle" /> No cached Gemini model list. Enter your API key and press
+              Sync to load the available models — model selection, Verify, and saving need it.
+            </div>
+          )}
           <div className="form-group">
             <label style={{ display: 'flex', justifyContent: 'space-between' }}>
               Primary Model
