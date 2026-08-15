@@ -153,7 +153,10 @@ export class ProductPersistenceService {
       logger.warn(`Product ${productId} | Price | Skipped recording ${scrapedData.price.price}: no currency resolved (${source})`, 'Products', { product_id: productId });
     } else if (scrapedData.price?.currency) {
       const latestStandardPrice = await priceHistoryRepository.getLatest(productId, 'standard');
-      if (!latestStandardPrice || latestStandardPrice.price !== scrapedData.price.price) {
+      // A manual confirmation always records, even at an unchanged price: the
+      // user explicitly verified it, and the fresh row is what repopulates a
+      // stale product's history and anchor (issue #55).
+      if (source === 'manual-confirm' || !latestStandardPrice || latestStandardPrice.price !== scrapedData.price.price) {
         await priceHistoryRepository.create(
           productId,
           scrapedData.price.price,

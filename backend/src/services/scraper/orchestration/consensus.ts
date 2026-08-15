@@ -66,6 +66,20 @@ export async function runConsensusPhase(
     extractionSteps.push('Consensus | Review | Winning price has no resolved currency');
   }
 
+  // RRP sanity guardrail: original-price candidates come partly from generic
+  // strikethrough/"was"-style selectors, which can match unrelated numbers
+  // (financing text, bundle offers, related-product cards). A real RRP is
+  // never below the resolved standard price and not absurdly above it — drop
+  // anything else so it cannot pollute the original-price history (issue #55).
+  if (result.price?.price && result.originalPrice?.price) {
+    const standard = result.price.price;
+    const original = result.originalPrice.price;
+    if (original < standard || original > standard * 10) {
+      extractionSteps.push(`Consensus | Guardrail | Discarded implausible original price ${original} (standard ${standard})`);
+      result.originalPrice = null;
+    }
+  }
+
   // Out of Stock (OOS) price guardrails
   if (result.stockStatus === 'out_of_stock' || result.stockStatus === 'not_available') {
     if (result.price) {
