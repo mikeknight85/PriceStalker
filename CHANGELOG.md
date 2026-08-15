@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Price selection dialog layout on small screens: candidate rows now wrap
+  instead of colliding with the selection check, the manual-entry currency
+  dropdown is wide enough for full currency names, and the dialog uses the
+  viewport fully on phones.
 - The browser scraper no longer leaks Chromium profile directories in /tmp:
   profiles are pinned per session and removed when the browser closes,
   crashes, or the container stops, stale profiles are swept at startup, and
