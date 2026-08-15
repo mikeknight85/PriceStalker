@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Theme can now be set to Auto (follow the operating system), Light, or Dark
   under Settings -> Regional -> Appearance; previously a single manual toggle
   permanently overrode the OS preference with no way back to automatic.
+- Restored the OpenRouter AI provider, configured under Admin -> AI Engine
+  with its own API key, model, and connection test.
+- New "OpenAI-Compatible" AI provider with a user-set base URL, covering vLLM,
+  LM Studio, LocalAI, and any other server speaking the OpenAI
+  chat-completions protocol; the API key is optional for unauthenticated
+  local servers.
 - Added Icelandic króna support and targeted regional locale formats for
   PriceStalker's existing shopping markets.
 - Prices whose currency cannot be determined now go through a manual currency
