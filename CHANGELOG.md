@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Theme can now be set to Auto (follow the operating system), Light, or Dark
+  under Settings -> Regional -> Appearance; previously a single manual toggle
+  permanently overrode the OS preference with no way back to automatic.
 - Restored the OpenRouter AI provider, configured under Admin -> AI Engine
   with its own API key, model, and connection test.
 - New "OpenAI-Compatible" AI provider with a user-set base URL, covering vLLM,
