@@ -21,6 +21,11 @@ export class ProductConfirmationService {
       memberPrice,
       originalPrice
     } = options;
+    if (typeof selectedPrice !== 'number' || !selectedCurrency) {
+      const err: Error & { statusCode?: number } = new Error('A price and currency are required to confirm a product');
+      err.statusCode = 400;
+      throw err;
+    }
 
     const product = await productRepository.create(
       userId,
@@ -38,7 +43,7 @@ export class ProductConfirmationService {
       userId, 
       {
         ...options,
-        price: { price: selectedPrice, currency: selectedCurrency || 'AUD' },
+        price: { price: selectedPrice, currency: selectedCurrency },
         memberPrice,
         originalPrice,
         selectedMethod,
@@ -59,13 +64,18 @@ export class ProductConfirmationService {
     if (!product) throw new Error('Product not found');
 
     const { selectedPrice, selectedCurrency, selectedMethod, memberPrice, originalPrice } = selection;
+    if (selectedPrice !== undefined && !selectedCurrency) {
+      const err: Error & { statusCode?: number } = new Error('A currency is required when confirming a price');
+      err.statusCode = 400;
+      throw err;
+    }
 
     await productPersistenceService.saveScrapeResult(
       productId,
       userId,
       {
         ...selection,
-        price: selectedPrice !== undefined ? { price: selectedPrice, currency: selectedCurrency || 'AUD' } : undefined,
+        price: selectedPrice !== undefined ? { price: selectedPrice, currency: selectedCurrency } : undefined,
         memberPrice,
         originalPrice,
         selectedMethod

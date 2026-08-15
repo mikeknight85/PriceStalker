@@ -4,7 +4,7 @@ import { UserProfile, NotificationSettings } from '../../../types/api';
 export const ProfileService = {
   getProfile: (options?: RequestOptions) => api.get<UserProfile>('/profile', options),
 
-  updateProfile: (data: { name?: string; currency?: string; locale?: string; preferred_currency?: string }) =>
+  updateProfile: (data: { name?: string; currency?: string | null; locale?: string | null }) =>
     api.put<UserProfile>('/profile', data),
 
   changePassword: (current: string, next: string) => 

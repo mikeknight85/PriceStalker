@@ -9,12 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- New accounts now start with automatic browser locale formatting and no
+  conversion-currency preference; existing regional settings are unchanged.
+- Exchange-rate refreshes now use Frankfurter v2's EUR-based daily reference
+  rates and retain the rate date/source for conversion metadata.
 - Replaced the frontend Axios client with native Fetch and TanStack Query-backed server-state caching.
 - Removed legacy dashboard, product-detail, settings, admin, and debug URL
   redirects. Use the canonical nested frontend routes instead.
 
 ### Added
 
+- Added Icelandic króna support and targeted regional locale formats for
+  PriceStalker's existing shopping markets.
+- Prices whose currency cannot be determined now go through a manual currency
+  confirmation step instead of being silently recorded as USD; scheduled
+  refreshes flag such products for review rather than freezing their history.
 - Makefile commands for native hot-reload development with a host-accessible
   Docker PostgreSQL database and no application image builds.
 - `make dev-env` to generate secure local database and application credentials,
@@ -23,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Currency conversion now triangulates via the EUR reference base, so
+  conversions between two non-EUR currencies keep working after the switch to
+  EUR-based reference rates.
+- Conversion tooltips now show the rate date in the user's locale instead of a
+  raw timestamp, and the price chart follows the user's saved locale.
 - Restored a persistent Add Product action on the products dashboard.
 - Added the standard mobile web app capability metadata alongside Apple's
   platform-specific PWA metadata.

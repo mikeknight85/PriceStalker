@@ -58,6 +58,14 @@ export async function runConsensusPhase(
     if (arbResult.imageUrl && !result.imageUrl) result.imageUrl = arbResult.imageUrl;
   }
 
+  // A winning price without a resolved currency cannot be persisted, so flag
+  // it for manual confirmation on both the add and refresh paths.
+  if (result.price && !result.price.currency) {
+    result.needsReview = true;
+    result.reviewReason = result.reviewReason || 'missing_currency';
+    extractionSteps.push('Consensus | Review | Winning price has no resolved currency');
+  }
+
   // Out of Stock (OOS) price guardrails
   if (result.stockStatus === 'out_of_stock' || result.stockStatus === 'not_available') {
     if (result.price) {

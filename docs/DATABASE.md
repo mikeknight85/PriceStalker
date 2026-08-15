@@ -30,7 +30,10 @@ Stores user profile information, authentication hashes, locale/currency settings
 * **Key Fields**:
  - `email` (unique) & `password_hash`
  - `is_admin`: Grants access to backend administrative endpoints.
- - `preferred_currency` & `locale` (defaults to `AUD` and `en-AU`).
+ - `currency` & `locale` are optional display preferences. A null locale uses
+   the browser format and a null currency leaves prices in the retailer's
+   original currency. `preferred_currency` is retained only for compatibility
+   and is no longer read by scraping.
  - **Notification Integrations**: Stores activation state, webhook tokens, and customizable templates for `telegram`, `discord`, `pushover`, `ntfy`, `gotify`, `webhook`, and `email`.
  - **AI Model Keys**: Encapsulates keys/models configuration for `anthropic`, `openai`, `gemini`, and `ollama`.
 

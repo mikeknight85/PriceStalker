@@ -29,7 +29,8 @@ export function parseAIResponse(responseText: string, productId?: number): AIExt
 
     return {
       name: data.name || null,
-      price: data.price ? { price: data.price, currency: data.currency || 'USD' } : null,
+      // '' (not a fabricated 'USD') keeps unresolved currencies in the manual review flow.
+      price: data.price ? { price: data.price, currency: data.currency || '' } : null,
       imageUrl: data.imageUrl || null,
       stockStatus,
       confidence: data.confidence || 0,

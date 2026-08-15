@@ -145,39 +145,44 @@ export class ProductPersistenceService {
     scrapedData: ScrapedProductWithVoting,
     source: string
   ) {
-    if (!scrapedData.price) return;
-
     // A. Standard Price
-    const latestStandardPrice = await priceHistoryRepository.getLatest(productId, 'standard');
-    if (!latestStandardPrice || latestStandardPrice.price !== scrapedData.price.price) {
-      await priceHistoryRepository.create(
-        productId,
-        scrapedData.price.price,
-        scrapedData.price.currency || 'AUD',
-        scrapedData.aiStatus,
-        null,
-        'standard'
-      );
+    if (scrapedData.price && !scrapedData.price.currency) {
+      // A price without a resolved currency must never enter history, but the
+      // skip has to be loud: arbitration flags it for review, and this log is
+      // the trace for why the history did not advance.
+      logger.warn(`Product ${productId} | Price | Skipped recording ${scrapedData.price.price}: no currency resolved (${source})`, 'Products', { product_id: productId });
+    } else if (scrapedData.price?.currency) {
+      const latestStandardPrice = await priceHistoryRepository.getLatest(productId, 'standard');
+      if (!latestStandardPrice || latestStandardPrice.price !== scrapedData.price.price) {
+        await priceHistoryRepository.create(
+          productId,
+          scrapedData.price.price,
+          scrapedData.price.currency,
+          scrapedData.aiStatus,
+          null,
+          'standard'
+        );
 
-      logger.info(`Product ${productId} | Price | Recorded: ${scrapedData.price.currency || 'AUD'} ${scrapedData.price.price} (${source})`, 'Products', { product_id: productId });
+        logger.info(`Product ${productId} | Price | Recorded: ${scrapedData.price.currency} ${scrapedData.price.price} (${source})`, 'Products', { product_id: productId });
 
-      // Update anchor price for drift tracking
-      await productRepository.updateAnchorPrice(productId, scrapedData.price.price);
+        // Update anchor price for drift tracking
+        await productRepository.updateAnchorPrice(productId, scrapedData.price.price);
 
-      // Record extraction method if we're moving to a stable one
-      if (scrapedData.selectedMethod) {
-        await productRepository.updateExtractionMethod(productId, scrapedData.selectedMethod);
+        // Record extraction method if we're moving to a stable one
+        if (scrapedData.selectedMethod) {
+          await productRepository.updateExtractionMethod(productId, scrapedData.selectedMethod);
+        }
       }
     }
 
     // B. Member Price
-    if (scrapedData.memberPrice) {
+    if (scrapedData.memberPrice?.currency) {
       const latestMemberPrice = await priceHistoryRepository.getLatest(productId, 'member-price');
       if (!latestMemberPrice || latestMemberPrice.price !== scrapedData.memberPrice.price) {
         await priceHistoryRepository.create(
           productId,
           scrapedData.memberPrice.price,
-          scrapedData.memberPrice.currency || 'AUD',
+          scrapedData.memberPrice.currency,
           scrapedData.aiStatus,
           null,
           'member-price'
@@ -186,13 +191,13 @@ export class ProductPersistenceService {
     }
 
     // C. Original Price
-    if (scrapedData.originalPrice) {
+    if (scrapedData.originalPrice?.currency) {
       const latestOriginalPrice = await priceHistoryRepository.getLatest(productId, 'original-price');
       if (!latestOriginalPrice || latestOriginalPrice.price !== scrapedData.originalPrice.price) {
         await priceHistoryRepository.create(
           productId,
           scrapedData.originalPrice.price,
-          scrapedData.originalPrice.currency || 'AUD',
+          scrapedData.originalPrice.currency,
           scrapedData.aiStatus,
           null,
           'original-price'

@@ -5,6 +5,7 @@ import { Product } from '../../../../types/api';
 import { STOCK_COLORS } from '../../constants';
 import './DashboardSummary.css';
 import Icon from '../../../../components/Icon';
+import { formatPrice } from '../../../../utils/format';
 
 interface DashboardSummaryProps {
   summary: {
@@ -60,10 +61,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
   // Format price helper
   const formatValue = (val: number | null, currency: string | null) => {
     if (val === null) return '-';
-    return new Intl.NumberFormat('en-AU', {
-      style: 'currency',
-      currency: currency || 'AUD'
-    }).format(val);
+    return formatPrice(val, currency, undefined, '-');
   };
 
   // Truncate name helper

@@ -30,6 +30,8 @@ export interface Product {
   currency: string | null;
   converted_price: number | null;
   converted_currency: string | null;
+  conversion_rate_date?: string | null;
+  conversion_source?: string | null;
   ai_status: AIStatus;
   price_type?: 'standard' | 'member-price' | 'deal-price' | 'pre-order' | null;
   preferred_extraction_method?: string | null;
@@ -65,7 +67,7 @@ export interface SearchResult {
   isSupported: boolean;
 }
 
-export type ReviewReason = 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan' | 'first_scan';
+export type ReviewReason = 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan' | 'first_scan' | 'missing_currency';
 
 export interface PriceReviewResponse {
   needsReview: true;
@@ -138,9 +140,9 @@ export interface UserProfile {
   id: number;
   email: string;
   name: string | null;
-  currency: string;
-  locale: string;
-  preferred_currency: string;
+  currency: string | null;
+  locale: string | null;
+  preferred_currency: string | null;
   is_admin: boolean;
   disabled: boolean;
   categories: string[];

@@ -3,35 +3,35 @@ import { exchangeRateRepository } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 
 class CurrencyConversionService {
-  private readonly API_URL = 'https://api.frankfurter.app/latest';
-  private readonly DEFAULT_BASE = 'AUD';
+  private readonly API_URL = 'https://api.frankfurter.dev/v2/rates';
+  private readonly DEFAULT_BASE = 'EUR';
+  private readonly SOURCE = 'frankfurter-v2-blended';
 
   /**
    * Fetches latest exchange rates and updates the database.
-   * By default, fetches rates relative to AUD.
+   * Fetches the provider's complete daily reference-rate set relative to EUR.
    */
   async updateRates(base: string = this.DEFAULT_BASE): Promise<void> {
     try {
       logger.info(`Currency | Updating rates relative to ${base}...`, 'Currency');
       
-      const response = await axios.get(this.API_URL, {
-        params: { from: base }
+      const response = await axios.get<Array<{ date: string; base: string; quote: string; rate: number }>>(this.API_URL, {
+        params: { base }
       });
 
-      if (response.data && response.data.rates) {
-        const rates = response.data.rates;
-        const promises = Object.keys(rates).map(currency => 
-          exchangeRateRepository.upsert(base, currency, rates[currency])
-        );
-        
-        // Also add the inverse rates for easier lookups
-        const inversePromises = Object.keys(rates).map(currency => 
-          exchangeRateRepository.upsert(currency, base, 1 / rates[currency])
-        );
-
-        await Promise.all([...promises, ...inversePromises]);
-        logger.info(`Currency | Successfully updated ${Object.keys(rates).length * 2} exchange rates.`, 'Currency');
+      if (!Array.isArray(response.data) || response.data.length === 0) {
+        throw new Error(`Unexpected rates response (status ${response.status}): ${JSON.stringify(response.data).slice(0, 300)}`);
       }
+
+      const promises = response.data.map(({ base: rateBase, quote, rate, date }) =>
+        exchangeRateRepository.upsert(rateBase, quote, rate, date, this.SOURCE)
+      );
+      const inversePromises = response.data.map(({ base: rateBase, quote, rate, date }) =>
+        exchangeRateRepository.upsert(quote, rateBase, 1 / rate, date, this.SOURCE)
+      );
+
+      await Promise.all([...promises, ...inversePromises]);
+      logger.info(`Currency | Successfully updated ${response.data.length * 2} exchange rates.`, 'Currency');
     } catch (error: any) {
       logger.error(`Currency | Failed to update exchange rates: ${error.message}`, 'Currency', error);
       throw error;

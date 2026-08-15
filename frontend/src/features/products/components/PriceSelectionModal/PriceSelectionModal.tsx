@@ -4,6 +4,8 @@ import { formatPrice } from '../../../../utils/format';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import './PriceSelectionModal.css';
 import Icon from '../../../../components/Icon';
+import { useQuery } from '@tanstack/react-query';
+import { currenciesQuery } from '../../../../api/queries';
 
 export interface PriceCandidate {
   price: number;
@@ -63,6 +65,7 @@ const METHOD_TIERS: Record<string, number> = {
 
 const REVIEW_REASON_COPY: Record<string, string> = {
   no_consensus: 'Our scrapers found multiple conflicting prices. Please confirm the correct price.',
+  missing_currency: 'We found a price but could not determine its currency. Please confirm the price and select its currency.',
   ai_correction: 'Our AI suggested a different price from the raw layout. Please review and confirm.',
   oos_guardrail: 'This item appears to be out of stock. Please confirm the last known price.',
   manual_rescan: 'You requested a manual re-scan. Please verify the current price.',
@@ -95,7 +98,11 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
   const [activeFilter, setActiveFilter] = useState<PriceTypeFilter>('all');
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualPrice, setManualPrice] = useState('');
-  const [manualCurrency, setManualCurrency] = useState('AUD');
+  const [manualCurrency, setManualCurrency] = useState('');
+  // Candidate that seeded manual entry (currency-only completion): its
+  // method/selector must survive so the retailer config still learns from it.
+  const [manualSource, setManualSource] = useState<PriceCandidate | null>(null);
+  const currenciesResult = useQuery(currenciesQuery());
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -152,13 +159,20 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
   const handleConfirm = async () => {
     if (showManualEntry) {
       const parsed = parseFloat(manualPrice);
-      if (isNaN(parsed) || parsed <= 0) {
-        setWarningMessage('Please enter a valid price greater than $0.00.');
+      if (isNaN(parsed) || parsed <= 0 || !manualCurrency) {
+        setWarningMessage('Please enter a valid price and select its currency.');
         return;
       }
       setIsSubmitting(true);
       try {
-        await onSelect(parsed, 'manual', manualCurrency, category || null);
+        // If manual entry only supplied the missing currency for an extracted
+        // candidate, keep that candidate's method and selector so the backend
+        // can still learn the retailer configuration.
+        if (manualSource && parsed === manualSource.price) {
+          await onSelect(parsed, manualSource.method, manualCurrency, category || null, manualSource.selector);
+        } else {
+          await onSelect(parsed, 'manual', manualCurrency, category || null);
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -167,6 +181,15 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
 
     if (selectedIndex === null || selectedIndex < 0 || isSubmitting) return;
     const selected = filteredCandidates[selectedIndex];
+
+    if (!selected.currency) {
+      setManualPrice(String(selected.price));
+      setManualCurrency('');
+      setManualSource(selected);
+      setShowManualEntry(true);
+      setWarningMessage('Select the currency for this extracted price before tracking it.');
+      return;
+    }
 
     // Submission warnings for low confidence
     if (selected.confidence < 0.3 && !warningMessage) {
@@ -303,11 +326,10 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
                   value={manualCurrency}
                   onChange={(e) => setManualCurrency(e.target.value)}
                 >
-                  <option value="AUD">AUD</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="NZD">NZD</option>
+                  <option value="">Currency</option>
+                  {(currenciesResult.data || []).map((currency) => (
+                    <option key={currency.iso} value={currency.iso}>{currency.iso} — {currency.currency_name}</option>
+                  ))}
                 </select>
               </div>
               <button
@@ -315,6 +337,7 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
                 style={{ textAlign: 'left', marginTop: '0.25rem' }}
                 onClick={() => {
                   setShowManualEntry(false);
+                  setManualSource(null);
                   setWarningMessage(null);
                 }}
               >
@@ -373,6 +396,7 @@ const PriceSelectionModal: React.FC<PriceSelectionModalProps> = ({
               )}
 
               <button className="manual-entry-link" onClick={() => {
+                setManualSource(null);
                 setShowManualEntry(true);
                 setWarningMessage(null);
               }}>

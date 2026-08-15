@@ -44,6 +44,9 @@ router.post('/:id/confirm', async (req: AuthRequest, res: Response) => {
     if (error.message === 'Product not found') {
       return res.status(404).json({ error: error.message });
     }
+    if (error.statusCode && error.statusCode < 500) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
     logger.error(`Product ${req.params.id} | Confirm Failed | ${error}`, 'Products');
     res.status(500).json({ error: 'Failed to confirm selection' });
   }

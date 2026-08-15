@@ -16,10 +16,10 @@ export class UserProfileService {
    * User: Update personal profile
    */
   async updateProfile(userId: number, data: any): Promise<UserProfile | null> {
-    const { name, currency, locale, preferred_currency } = data;
+    const { name, currency, locale } = data;
 
     const oldProfile = await userRepository.getProfile(userId);
-    const profile = await userRepository.updateProfile(userId, { name, currency, locale, preferred_currency });
+    const profile = await userRepository.updateProfile(userId, { name, currency, locale });
 
     if (!profile) return null;
 

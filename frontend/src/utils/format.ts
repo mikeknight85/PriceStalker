@@ -5,18 +5,31 @@
 export function formatPrice(
   price: number | string | null | undefined,
   currency: string | null = 'USD',
-  locale: string | null | undefined = 'en-AU',
+  locale?: string | null,
   fallback: string = 'N/A'
 ): string {
   if (price === null || price === undefined) return fallback;
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
   if (isNaN(numPrice)) return fallback;
 
+  // An unknown currency ('' from the scraper's review flow, or null) must not
+  // masquerade as USD — show a plain localized number instead.
+  if (!currency) {
+    try {
+      return new Intl.NumberFormat(locale ?? undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(numPrice);
+    } catch {
+      return numPrice.toFixed(2);
+    }
+  }
+
   try {
     // Intl throws on an explicit null; undefined means "use the runtime default".
     const formatter = new Intl.NumberFormat(locale ?? undefined, {
       style: 'currency',
-      currency: currency || 'USD',
+      currency,
       currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -60,11 +73,29 @@ export function formatRelativeDate(dateString: string | null): string {
 }
 
 /**
+ * Localized date formatting with caller-supplied Intl options (e.g. compact
+ * chart axis labels). Normalises a null locale so Intl never throws on it.
+ */
+export function formatDateWithOptions(
+  value: string | number | Date,
+  locale: string | null | undefined,
+  options: Intl.DateTimeFormatOptions
+): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return 'N/A';
+  try {
+    return date.toLocaleDateString(locale ?? undefined, options);
+  } catch {
+    return date.toLocaleDateString(undefined, options);
+  }
+}
+
+/**
  * Format a date string into a localized, human-readable format
  */
 export function formatDate(
   dateString: string | null | undefined,
-  locale: string | null | undefined = 'en-AU',
+  locale?: string | null,
   includeTime: boolean = false
 ): string {
   if (!dateString) return 'N/A';

@@ -2,6 +2,19 @@ import { PriceCandidate } from '../../../types/scraper';
 import { groupPriceCandidates, pricesMatch } from './utils';
 
 /**
+ * Returns the group's first candidate, backfilling its currency from another
+ * group member when the first one could not resolve a currency. Candidates
+ * group by price alone, so a currency-less candidate can otherwise win a group
+ * whose other members positively identified the currency.
+ */
+function withGroupCurrency(group: PriceCandidate[]): PriceCandidate {
+  const first = group[0];
+  if (first.currency) return first;
+  const donor = group.find(c => c.currency);
+  return donor ? { ...first, currency: donor.currency } : first;
+}
+
+/**
  * Arbitrates between multiple price candidates to find a consensus value.
  * Splits results into Primary (Normal) price, Member price, and Original price.
  */
@@ -18,7 +31,7 @@ export function findPriceConsensus(candidates: PriceCandidate[]) {
   if (memberCandidates.length > 0) {
     const groups = groupPriceCandidates(memberCandidates);
     groups.sort((a, b) => b.length - a.length);
-    memberPrice = groups[0][0];
+    memberPrice = withGroupCurrency(groups[0]);
   }
 
   // --- 2. Find Original Price Consensus ---
@@ -26,7 +39,7 @@ export function findPriceConsensus(candidates: PriceCandidate[]) {
   if (originalCandidates.length > 0) {
     const groups = groupPriceCandidates(originalCandidates);
     groups.sort((a, b) => b.length - a.length);
-    originalPrice = groups[0][0];
+    originalPrice = withGroupCurrency(groups[0]);
   }
 
   // --- 3. Find Primary (Normal) Price Consensus ---
@@ -41,7 +54,7 @@ export function findPriceConsensus(candidates: PriceCandidate[]) {
     groups.sort((a, b) => b.length - a.length);
     const hasConsensus = !(groups.length > 1 && groups[0].length === groups[1].length);
     const winningGroupSources = new Set(groups[0].map(c => `${c.method}:${c.selector || ''}`));
-    return { price: groups[0][0], memberPrice, originalPrice, hasConsensus, winningGroupSources };
+    return { price: withGroupCurrency(groups[0]), memberPrice, originalPrice, hasConsensus, winningGroupSources };
   }
 
   // 2. Next Priority: Pre-order Prices (Public)
@@ -51,7 +64,7 @@ export function findPriceConsensus(candidates: PriceCandidate[]) {
      groups.sort((a, b) => b.length - a.length);
      const hasConsensus = !(groups.length > 1 && groups[0].length === groups[1].length);
      const winningGroupSources = new Set(groups[0].map(c => `${c.method}:${c.selector || ''}`));
-     return { price: groups[0][0], memberPrice, originalPrice, hasConsensus, winningGroupSources };
+     return { price: withGroupCurrency(groups[0]), memberPrice, originalPrice, hasConsensus, winningGroupSources };
   }
 
   // 3. Weighted Fallback (Custom CSS > JSON-LD > Generic)
@@ -98,8 +111,8 @@ export function findPriceConsensus(candidates: PriceCandidate[]) {
     hasConsensus = false;
   }
 
-  return { 
-    price: topGroup.candidates[0], 
+  return {
+    price: withGroupCurrency(topGroup.candidates),
     memberPrice,
     originalPrice,
     hasConsensus,

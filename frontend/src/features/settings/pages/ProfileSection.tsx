@@ -30,9 +30,8 @@ export default function ProfileSection() {
     try {
       const res = await updateProfile.mutateAsync({
         name: profileName,
-        currency: profile?.currency || 'AUD',
-        locale: profile?.locale || 'en-AU',
-        preferred_currency: profile?.currency || 'AUD'
+        currency: profile?.currency ?? null,
+        locale: profile?.locale ?? null,
       });
       updateUser({ name: res.name, currency: res.currency, locale: res.locale });
       showToast('Profile updated', 'success');

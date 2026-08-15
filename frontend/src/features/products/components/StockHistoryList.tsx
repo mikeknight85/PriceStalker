@@ -12,7 +12,7 @@ interface StockHistoryListProps {
 
 const StockHistoryList: React.FC<StockHistoryListProps> = ({ 
   history, 
-  locale = 'en-US' 
+  locale
 }) => {
   const [page, setPage] = useState(1);
   const [isExpanded, setIsExpanded] = useState(false);

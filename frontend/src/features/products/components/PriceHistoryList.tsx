@@ -15,7 +15,7 @@ interface PriceHistoryListProps {
 const PriceHistoryList: React.FC<PriceHistoryListProps> = ({ 
   history, 
   currency, 
-  locale = 'en-US' 
+  locale
 }) => {
   const [page, setPage] = useState(1);
   const [isExpanded, setIsExpanded] = useState(false);

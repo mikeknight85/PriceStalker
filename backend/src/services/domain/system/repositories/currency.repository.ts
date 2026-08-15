@@ -44,14 +44,16 @@ export const globalCurrencyRepository = {
 
 
 export const exchangeRateRepository = {
-  upsert: async (from: string, to: string, rate: number): Promise<void> => {
+  upsert: async (from: string, to: string, rate: number, rateDate: string, source: string): Promise<void> => {
     await pool.query(
-      `INSERT INTO exchange_rates (from_currency, to_currency, rate, updated_at)
-       VALUES ($1, $2, $3, NOW())
+      `INSERT INTO exchange_rates (from_currency, to_currency, rate, rate_date, source, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
        ON CONFLICT (from_currency, to_currency) DO UPDATE SET
          rate = EXCLUDED.rate,
+         rate_date = EXCLUDED.rate_date,
+         source = EXCLUDED.source,
          updated_at = NOW()`,
-      [from.toUpperCase(), to.toUpperCase(), rate]
+      [from.toUpperCase(), to.toUpperCase(), rate, rateDate, source]
     );
   },
 

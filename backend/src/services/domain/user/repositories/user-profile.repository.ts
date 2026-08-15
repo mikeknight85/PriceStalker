@@ -30,10 +30,10 @@ export const userProfileRepository = {
 
   updateProfile: async (
     id: number,
-    updates: { name?: string; currency?: string; locale?: string; preferred_currency?: string }
+    updates: { name?: string; currency?: string | null; locale?: string | null; preferred_currency?: string | null }
   ): Promise<UserProfile | null> => {
     const fields: string[] = [];
-    const values: (string | number)[] = [];
+    const values: (string | number | null)[] = [];
     let paramIndex = 1;
 
     if (updates.name !== undefined) {

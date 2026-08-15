@@ -1,6 +1,6 @@
 import React from 'react';
 import ProductBadges from '../../components/ProductBadges';
-import { formatPrice } from '../../../../utils/format';
+import { formatPrice, formatDate } from '../../../../utils/format';
 
 interface ProductImageProps {
   product: any;
@@ -79,6 +79,10 @@ export const ProductPriceStatus: React.FC<ProductPriceStatusProps> = ({
   const isOutOfStock = product.stock_status === 'out_of_stock' || product.stock_status === 'not_available';
   const isPreOrder = product.stock_status === 'pre_order';
   const fallbackLabel = isPreOrder ? 'TBD' : 'Price unavailable';
+  const conversionRequested = Boolean(user?.currency && product.currency && user.currency !== product.currency);
+  const conversionDetails = product.conversion_rate_date
+    ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${formatDate(product.conversion_rate_date, user?.locale)}.`
+    : 'Converted using the latest available reference exchange rate.';
 
   return (
     <div className="product-detail-info-right">
@@ -105,9 +109,14 @@ export const ProductPriceStatus: React.FC<ProductPriceStatusProps> = ({
         ) : (
           <span>{formatPrice(product.current_price, product.currency, user?.locale, fallbackLabel)}</span>
         )}
-        {product.converted_price && product.converted_currency !== product.currency && (
-          <span style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+        {product.converted_price !== null && product.converted_currency !== product.currency && (
+          <span title={conversionDetails} aria-label={conversionDetails} style={{ fontSize: '1.25rem', color: 'var(--text-muted)', fontWeight: 600 }}>
             (~{formatPrice(product.converted_price, product.converted_currency, user?.locale)})
+          </span>
+        )}
+        {conversionRequested && product.converted_price === null && (
+          <span title="No exchange rate is available for this currency pair." style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+            Conversion unavailable
           </span>
         )}
       </div>

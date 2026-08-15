@@ -18,7 +18,7 @@ export const userAccountRepository = {
     return result.rows[0] || null;
   },
 
-  create: async (email: string, passwordHash: string, currency: string = 'AUD', locale: string = 'en-AU'): Promise<User> => {
+  create: async (email: string, passwordHash: string, currency: string | null = null, locale: string | null = null): Promise<User> => {
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, currency, locale) VALUES ($1, $2, $3, $4) RETURNING *',
       [email, passwordHash, currency, locale]
@@ -56,8 +56,8 @@ export const userAccountRepository = {
    */
   createOidc: async (
     params: { email: string; name: string | null; issuer: string; subject: string },
-    currency: string = 'AUD',
-    locale: string = 'en-AU'
+    currency: string | null = null,
+    locale: string | null = null
   ): Promise<User> => {
     const result = await pool.query(
       `INSERT INTO users (email, name, oidc_issuer, oidc_subject, auth_provider, currency, locale)
@@ -107,7 +107,7 @@ export const userAccountRepository = {
 
   adminUpdateUser: async (
     id: number,
-    updates: { email?: string; name?: string; currency?: string; locale?: string; password_hash?: string; is_admin?: boolean; disabled?: boolean }
+    updates: { email?: string; name?: string; currency?: string | null; locale?: string | null; password_hash?: string; is_admin?: boolean; disabled?: boolean }
   ): Promise<UserProfile | null> => {
     const fields: string[] = [];
     const values: (string | boolean | number | null)[] = [];

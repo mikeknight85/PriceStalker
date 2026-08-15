@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Product } from '../../../../types/api';
 import { useAuth } from '../../../auth';
-import { formatPrice, truncateUrl } from '../../../../utils/format';
+import { formatPrice, formatDate, truncateUrl } from '../../../../utils/format';
 import Sparkline from '../Sparkline';
 import ProductBadges from '../ProductBadges';
 import './ProductCard.css';
@@ -122,6 +122,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isMemberOnly = product.stock_status === 'member_only';
   const isNotAvailable = product.stock_status === 'not_available';
   const isPaused = product.checking_paused;
+  const conversionRequested = Boolean(user?.currency && product.currency && user.currency !== product.currency);
+  const conversionDetails = product.conversion_rate_date
+    ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${formatDate(product.conversion_rate_date, user?.locale)}.`
+    : 'Converted using the latest available reference exchange rate.';
 
   return (
     <div className={`pb-card ${isPaused ? 'paused' : ''} ${isOutOfStock ? 'out-of-stock' : ''} ${isPreOrder ? 'pre-order' : ''} ${isMemberOnly ? 'member-only' : ''} ${isNotAvailable ? 'not-available' : ''}`}>
@@ -172,9 +176,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {formatPrice(product.original_price, product.currency, user?.locale)}
                   </span>
                 )}
-                {product.converted_price && product.converted_currency !== product.currency && (
-                  <span className="pb-card-price-converted" title="Converted Price">
+                {product.converted_price !== null && product.converted_currency !== product.currency && (
+                  <span className="pb-card-price-converted" title={conversionDetails} aria-label={conversionDetails}>
                     (~{formatPrice(product.converted_price, product.converted_currency, user?.locale)})
+                  </span>
+                )}
+                {conversionRequested && product.converted_price === null && (
+                  <span className="pb-card-price-converted" title="No exchange rate is available for this currency pair.">
+                    Conversion unavailable
                   </span>
                 )}
                 <span className="pb-card-meta">

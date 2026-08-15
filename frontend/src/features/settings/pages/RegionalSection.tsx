@@ -8,12 +8,13 @@ import SearchableSelect from '../../../components/SearchableSelect';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import { queryClient } from '../../../api/queryClient';
 import { currenciesQuery, profileQuery, queryKeys } from '../../../api/queries';
+import { AUTOMATIC_CURRENCY_OPTION, AUTOMATIC_LOCALE_OPTION, LOCALE_OPTIONS } from '../regionalOptions';
 
 export default function RegionalSection() {
   const { showToast } = useToast();
   const { updateUser } = useAuth();
-  const [profileCurrency, setProfileCurrency] = useState('AUD');
-  const [profileLocale, setProfileLocale] = useState('en-AU');
+  const [profileCurrency, setProfileCurrency] = useState('');
+  const [profileLocale, setProfileLocale] = useState('');
   const initializedProfileId = useRef<number | null>(null);
   const profileResult = useQuery(profileQuery());
   const currenciesResult = useQuery(currenciesQuery());
@@ -27,17 +28,16 @@ export default function RegionalSection() {
   useEffect(() => {
     if (!profile || initializedProfileId.current === profile.id) return;
     initializedProfileId.current = profile.id;
-    setProfileCurrency(profile.currency || 'AUD');
-    setProfileLocale(profile.locale || 'en-AU');
+    setProfileCurrency(profile.currency || '');
+    setProfileLocale(profile.locale || '');
   }, [profile]);
 
   const handleSaveRegional = async () => {
     try {
       const res = await updateProfile.mutateAsync({
         name: profile?.name || '', 
-        currency: profileCurrency, 
-        locale: profileLocale, 
-        preferred_currency: profileCurrency 
+        currency: profileCurrency || null,
+        locale: profileLocale || null,
       });
       updateUser({ name: res.name, currency: res.currency, locale: res.locale });
       showToast('Regional settings updated', 'success');
@@ -60,12 +60,13 @@ export default function RegionalSection() {
         <div className="form-group">
           <SearchableSelect
             label="Preferred Currency"
-            options={globalCurrencies.map(gc => ({
+            options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
               label: `${gc.iso} (${gc.symbol})`,
               value: gc.iso,
               subLabel: gc.currency_name
-            }))}
+            }))]}
             value={profileCurrency}
+            placeholder="Choose a currency"
             onChange={(val) => {
               setProfileCurrency(val);
               const match = globalCurrencies.find(gc => gc.iso === val);
@@ -76,19 +77,16 @@ export default function RegionalSection() {
         <div className="form-group">
           <SearchableSelect
             label="Locale Format"
-            options={globalCurrencies.map(gc => ({
-              label: gc.locale,
-              value: gc.locale,
-              subLabel: `${gc.country_territory} (${gc.iso})`
-            }))}
+            options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
             value={profileLocale}
+            placeholder="Choose a locale"
             onChange={setProfileLocale}
           />
         </div>
       </div>
 
       <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={() => { setProfileCurrency(profile.currency || 'AUD'); setProfileLocale(profile.locale || 'en-AU'); }}>Cancel</button>
+        <button className="btn btn-secondary" onClick={() => { setProfileCurrency(profile.currency || ''); setProfileLocale(profile.locale || ''); }}>Cancel</button>
         <button className="btn btn-primary" onClick={handleSaveRegional} disabled={updateProfile.isPending}>
           {updateProfile.isPending ? 'Saving...' : 'Save Regional Settings'}
         </button>
