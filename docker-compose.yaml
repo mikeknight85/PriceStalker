@@ -8,8 +8,8 @@
 #   cp .env.example .env && $EDITOR .env
 #   docker compose up -d
 #
-# The remote scraper is optional and off by default:
-#   docker compose --profile remotescraper up -d
+# The browser scraper is optional and off by default:
+#   docker compose --profile scraper up -d
 
 services:
   postgres:
@@ -101,6 +101,13 @@ services:
       TZ: ${TZ:-UTC}
     expose:
       - "5100"
+    # Existing installs store http://remotescraper:5100/scrape as the Remote
+    # Scraper URL in system_settings; the alias keeps that hostname resolving
+    # after the service rename.
+    networks:
+      default:
+        aliases:
+          - remotescraper
 
 volumes:
   postgres_data:

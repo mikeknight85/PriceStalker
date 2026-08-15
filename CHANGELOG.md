@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** the three per-retailer scraper toggles (`use_browser`,
+  `is_js_heavy`, `use_remote_scraper`) are consolidated into a single
+  "Browser Scraper" flag; existing configurations migrate automatically.
+- **Breaking:** the scraper service, container, and image are renamed from
+  `remotescraper` to `scraper` (image `pricestalker-scraper`, compose profile
+  `--profile scraper`). A network alias keeps a stored
+  `http://remotescraper:5100/scrape` Remote Scraper URL working, but new
+  installs should use `http://scraper:5100/scrape`.
+
 - New accounts now start with automatic browser locale formatting and no
   conversion-currency preference; existing regional settings are unchanged.
 - Exchange-rate refreshes now use Frankfurter v2's EUR-based daily reference

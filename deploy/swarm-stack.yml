@@ -106,18 +106,22 @@ services:
         traefik.http.services.pricestalker.loadbalancer.server.port: "80"
 
   # Optional stealth scraper, used only by retailers configured with
-  # `use_remote_scraper`. Point Admin -> System -> Remote Scraper URL at
-  # http://remotescraper:5100/scrape once deployed. Remove this service if
+  # `use_browser_scraper`. Point Admin -> System -> Remote Scraper URL at
+  # http://scraper:5100/scrape once deployed. Remove this service if
   # unused; the backend scrapes in-process without it.
-  remotescraper:
-    image: ghcr.io/mikeknight85/pricestalker-remotescraper:${PRICESTALKER_TAG:-beta}
+  scraper:
+    image: ghcr.io/mikeknight85/pricestalker-scraper:${PRICESTALKER_TAG:-beta}
     environment:
       PORT: "5100"
     # Chromium needs more than the default 64MB of shared memory or it crashes
     # on content-heavy pages.
     shm_size: 2gb
+    # The alias keeps a stored http://remotescraper:5100/scrape URL resolving
+    # for stacks deployed before the service rename.
     networks:
-      - pricestalker-internal
+      pricestalker-internal:
+        aliases:
+          - remotescraper
     deploy:
       restart_policy:
         condition: on-failure

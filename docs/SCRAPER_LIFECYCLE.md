@@ -15,7 +15,7 @@ This document is the canonical reference for how PriceStalker processes a produc
 
 ```
 Phase 0: initScrapeSession → Load domain config, AI settings, currency/locale hints
-Phase 1: acquireHtml → HTTP fetch (axios) → remote Puppeteer browser fallback (the remotescraper service)
+Phase 1: acquireHtml → HTTP fetch (axios) → remote Puppeteer browser fallback (the scraper service)
 Phase 2: runExtractionPhase → DOM denoise → metadata (stock/title/image) → price candidates
 Phase 3: Validation → handleRetailerMaintenance (bot/maintenance detection)
 Phase 4: handleAutoMapping → AI auto-generates retailer config if none exists
