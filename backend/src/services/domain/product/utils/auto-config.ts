@@ -179,7 +179,12 @@ export async function runAutoRetailerConfig(params: {
         original_price_selectors: sortAndCapSelectorArray(originalPriceSelectors),
         active: true,
         selector_metadata: metadata,
-        description: getRetailerDescription(existing, source === 'manual-add' ? 'scan' : (source === 'manual-confirm' ? 're-scan' : source))
+        description: getRetailerDescription(existing, source === 'manual-add' ? 'scan' : (source === 'manual-confirm' ? 're-scan' : source)),
+        // Acquisition learned that this domain needs the browser scraper
+        // (plain HTTP failed, remote fallback succeeded). Persist it here so
+        // the flag is set even without AI auto-mapping (issue #45). Only ever
+        // learned positively — absence means "leave the stored value alone".
+        ...(scrapedData?.learnedFlags?.use_browser_scraper ? { use_browser_scraper: true } : {})
       };
 
       await retailerRepository.upsert(finalUpsertData, client);

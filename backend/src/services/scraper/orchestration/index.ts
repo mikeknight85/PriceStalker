@@ -86,6 +86,12 @@ export async function scrapeProductWithVoting(
     $ = acqResult.$;
     let challenge = acqResult.challengeReason;
 
+    // Surface acquisition-learned flags on the result so the retailer config
+    // is updated on save even when AI auto-mapping is disabled (issue #45).
+    if (acqResult.learnedFlags?.use_browser_scraper) {
+      result.learnedFlags = { use_browser_scraper: true };
+    }
+
     // --- Phase 2: Extraction ---
     const extResults = await runExtractionPhase({
       url,
