@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retailer configs created or updated without AI auto-mapping now record the
   learned "Browser Scraper" flag when acquisition had to fall back to the
   browser scraper; previously only the AI auto-mapping path persisted it.
+- Scrapes no longer send a random fabricated referrer (search engines, social
+  sites) on discovery. The referrer is now the retailer config's value, then
+  the system default, then none — matching how a user refreshing an open tab
+  looks to the site.
 - Currency conversion now triangulates via the EUR reference base, so
   conversions between two non-EUR currencies keep working after the switch to
   EUR-based reference rates.

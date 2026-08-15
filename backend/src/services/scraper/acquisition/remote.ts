@@ -2,7 +2,6 @@ import { logger } from '../../../utils/system/logger';
 import { settingsCache } from '../../../utils/cache';
 import { 
   fetchRemoteHtml, 
-  getRandomReferrer,
   PageNotAvailableError
 } from '../transport';
 import { RetailerConfig } from '../../../models';
@@ -46,10 +45,10 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
       remoteOptions.proxyUrl = currentProxy;
     }
 
+    // Referrer policy: retailer config, then the system default, then none —
+    // never a fabricated random one (issue #44).
     if (domainConfig?.referrer) {
       remoteOptions.referrer = domainConfig.referrer;
-    } else if (isDiscovery) {
-      remoteOptions.referrer = getRandomReferrer();
     } else {
       const defaultReferrer = await settingsCache.getDefaultReferrer();
       if (defaultReferrer) remoteOptions.referrer = defaultReferrer;

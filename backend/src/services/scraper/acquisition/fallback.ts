@@ -4,8 +4,7 @@ import { settingsCache } from '../../../utils/cache';
 import { 
   detectBotChallenge, 
   fetchRemoteHtml, 
-  fetchBrowserHtml, 
-  getRandomReferrer
+  fetchBrowserHtml
 } from '../transport';
 
 export interface FallbackOptions {
@@ -39,8 +38,10 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
     try {
       const isDiscovery = !productId;
       const remoteOptions: any = { productId, isDiscovery };
+      // Referrer policy: system default or none — never a fabricated random
+      // one (issue #44).
       const defaultReferrer = await settingsCache.getDefaultReferrer();
-      remoteOptions.referrer = isDiscovery ? getRandomReferrer() : (defaultReferrer || undefined);
+      remoteOptions.referrer = defaultReferrer || undefined;
 
       html = await fetchRemoteHtml(url, rsUrl, remoteOptions);
       logger.info(`Scraper | Fallback | Remote success for ${domain}`, 'Scraper', { product_id: productId });
@@ -57,7 +58,7 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
   } else {
     try {
       logger.warn(`Scraper | Fallback | Local browser fallback for ${domain}`, 'Scraper', { product_id: productId });
-      html = await fetchBrowserHtml(url, undefined, undefined, undefined, productId, !productId);
+      html = await fetchBrowserHtml(url, undefined, undefined, undefined, productId);
       if (html) logger.info(`Scraper | Fallback | Local success for ${domain}`, 'Scraper', { product_id: productId });
       extractionSteps.push(html ? `Scraper | Fallback | Local Success` : `Scraper | Fallback | Local Failed`);
       

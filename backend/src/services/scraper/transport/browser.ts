@@ -1,6 +1,5 @@
 import { logger } from '../../../utils/system/logger';
 import { settingsCache } from '../../../utils/cache';
-import { getRandomReferrer } from './headers';
 import { fetchRemoteHtml } from './remote';
 import { PageNotAvailableError } from './errors';
 
@@ -8,12 +7,11 @@ import { PageNotAvailableError } from './errors';
  * Orchestrates a browser-rendered fetch, offloading to the remote scraper.
  */
 export async function fetchBrowserHtml(
-  url: string, 
-  userAgent?: string, 
-  proxyServer?: string, 
-  referrer?: string, 
-  productId?: number, 
-  isDiscovery: boolean = false
+  url: string,
+  userAgent?: string,
+  proxyServer?: string,
+  referrer?: string,
+  productId?: number
 ): Promise<string> {
   const rsUrl = await settingsCache.getRemoteScraperUrl();
   if (!rsUrl) {
@@ -31,11 +29,11 @@ export async function fetchBrowserHtml(
       options.proxyUrl = proxyServer;
     }
     
-    // Identity & Stealth Logic
+    // Referrer policy: retailer config, then the system default, then none.
+    // A fabricated random referrer (search engines, social sites) looks less
+    // like a user refreshing an open tab and some sites reject it (issue #44).
     if (referrer) {
       options.referrer = referrer;
-    } else if (isDiscovery) {
-      options.referrer = getRandomReferrer();
     } else {
       const defaultReferrer = await settingsCache.getDefaultReferrer();
       if (defaultReferrer) options.referrer = defaultReferrer;
