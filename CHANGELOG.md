@@ -54,6 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Retailer display names are no longer learned from a product's brand: the
+  seeded generic retailer-name selectors included two [itemprop="brand"]
+  selectors, which made shops without an og:site_name take the first scraped
+  product's brand as their name (digitec.ch showed as "Lian-Li").
+- Product images now self-heal: a scraped image URL that differs from the
+  stored one replaces it, so images survive retailers rotating their CDN
+  asset URLs (stored URLs previously went dead permanently).
 - Retailer robot-check interstitials (e.g. digitec's "Are you a robot?") are
   now recognized as bot challenges instead of dead pages, a scrape that
   cannot determine stock no longer overwrites a known stock status with

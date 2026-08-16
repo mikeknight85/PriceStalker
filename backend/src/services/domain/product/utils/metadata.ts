@@ -37,6 +37,10 @@ export function sanitizeProductName(name: string | null | undefined): string | n
 export function sanitizeProductImage(imageUrl: string | null | undefined, currentImageUrl: string | null): string | null {
   if (!imageUrl) return null;
   if (imageUrl.includes('placeholder')) return null;
-  if (currentImageUrl && !currentImageUrl.includes('placeholder')) return null; // Only update if currently placeholder
+  if (currentImageUrl === imageUrl) return null; // unchanged
+  // A differing scraped image replaces the stored one: retailers rotate CDN
+  // asset URLs, and a stored URL that is never refreshed 404s forever once
+  // the old asset disappears. Blocked/challenged scrapes extract no image,
+  // so they cannot overwrite a good URL with junk.
   return imageUrl;
 }
