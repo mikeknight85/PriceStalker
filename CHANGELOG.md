@@ -54,6 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Retailer robot-check interstitials (e.g. digitec's "Are you a robot?") are
+  now recognized as bot challenges instead of dead pages, a scrape that
+  cannot determine stock no longer overwrites a known stock status with
+  "unknown", and the browser scraper waits out auto-resolving challenge
+  pages before returning them.
 - A bot-protection wall served with a 404 status (e.g. Akamai "Access
   Denied") is no longer mistaken for a deleted product page: the response
   body is checked against the bot-challenge detector, and a product is only

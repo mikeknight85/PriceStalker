@@ -11,6 +11,13 @@ export function detectBotChallenge(html: string, $: CheerioAPI): string | null {
     return 'Akamai Access Denied';
   }
 
+  // Retailer-specific robot interstitials (e.g. digitec/galaxus "Are you a
+  // robot?"). These pages carry robots-noindex and no product data, so
+  // without this check they are misread as soft-404 dead pages.
+  if (title.includes('are you a robot') || title.includes('robot check') || title.includes('verify you are human') || title.includes('bot verification')) {
+    return 'Robot Check Interstitial';
+  }
+
   // Cloudflare
   if (title.includes('just a moment') || title.includes('cloudflare') || html.includes('cloudflare-static') || html.includes('cf-browser-verification')) {
     return 'Cloudflare Challenge';

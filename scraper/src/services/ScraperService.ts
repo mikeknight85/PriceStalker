@@ -102,7 +102,20 @@ export class ScraperService {
       }
 
       if (abortSignal?.aborted) return null;
-      const html = await page.content();
+      let html = await page.content();
+
+      // Some challenge interstitials ("Are you a robot?", "Just a moment...")
+      // auto-resolve after their JS fingerprinting finishes. Give them a
+      // couple of chances before returning the wall page.
+      const challengePattern = /are you a robot|just a moment|access denied|verify you are human/i;
+      for (let attempt = 1; attempt <= 2 && challengePattern.test(html); attempt++) {
+        log(`Challenge interstitial detected, waiting for auto-resolve (${attempt}/2)...`, 'INFO', context);
+        await new Promise(resolve => setTimeout(resolve, 8000));
+        if (abortSignal?.aborted) return null;
+        await performHumanLikeActions(page, context);
+        html = await page.content();
+      }
+
       let screenshotBase64 = null;
 
       if (options.captureScreenshot) {
