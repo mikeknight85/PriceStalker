@@ -129,6 +129,14 @@ export class ProductPersistenceService {
     product: Product,
     scrapedData: ScrapedProductWithVoting
   ) {
+    // 'unknown' means the scrape could not determine anything (blocked page,
+    // failed extraction) — it is not an observation, so never let it
+    // overwrite a real previously-known status.
+    if (scrapedData.stockStatus === 'unknown' && product.stock_status && product.stock_status !== 'unknown') {
+      logger.debug(`Product ${productId} | Stock | Scrape returned unknown; keeping '${product.stock_status}'`, 'Products', { product_id: productId });
+      return;
+    }
+
     if (scrapedData.stockStatus !== product.stock_status) {
       await productRepository.updateStockStatus(productId, scrapedData.stockStatus, scrapedData.aiStatus);
       await stockHistoryRepository.recordChange(productId, scrapedData.stockStatus);
