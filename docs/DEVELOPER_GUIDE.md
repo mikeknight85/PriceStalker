@@ -70,8 +70,11 @@ Use these commands to manage your local container stack:
 * **`make status`**: View container status and port mappings.
 * **`make logs`**: Stream all container logs.
 * **`make logs-backend`**: Stream logs for the backend container only.
+* **`make logs-frontend`**: Stream logs for the frontend container only.
+* **`make dev-db-logs`**: Stream logs for the local PostgreSQL development container.
 * **`make up-scraper`**: Start the stack including the optional browser scraper.
 * **`make down`**: Stop and remove active containers (preserves database volumes).
+
 
 ### Building with Custom Registries
 For organization repositories, forks, or private registry deployments, configure custom registry targets:
@@ -114,6 +117,21 @@ terminal. `Ctrl-C` stops `make dev` but leaves the database running.
 If you already have an `.env`, `make dev-env` fills only the missing values.
 `DATABASE_URL` must use the same credentials as the Docker database and point
 to `127.0.0.1`; set `LOCAL_POSTGRES_PORT` to use another host port.
+
+### Workspace Validation & Utilities
+These helpers verify codebase sanity, formatting, and generate developer assets:
+* **`make verify`**: Performs a clean installation, compiles all workspace sub-packages, and executes backend tests natively on the host.
+* **`make diagrams`**: Rebuilds the SVG and PNG product lifecycle flowcharts from `assets/product_lifecycle.dot`. *(Requires Graphviz `dot` installed on host)*.
+* **`pnpm run lint`**: Checks for codebase compliance with visual formatting rules (such as checking for forbidden emojis).
+* **`pnpm run test:dev-env`**: Runs the unit test suite verifying the credentials auto-generation script.
+* **`pnpm run tree`**: Prints an updated ASCII folder layout tree for documentation updates.
+
+### Building Docker Images Locally
+If you need to manually compile Docker container images locally to verify builds:
+* **`make build`**: Builds local container images for both the frontend and backend services.
+* **`make build-backend`**: Builds only the local backend image using multi-stage compilations (`pricestalker-backend:local`).
+* **`make build-frontend`**: Compiles the Vite build and packages the Nginx frontend image (`pricestalker-frontend:local`).
+* **`make build-scraper`**: Builds the optional Puppeteer/Chromium remote browser scraper service image (`pricestalker-scraper:local`).
 
 ---
 
