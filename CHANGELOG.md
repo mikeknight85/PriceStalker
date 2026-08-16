@@ -54,6 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A bot-protection wall served with a 404 status (e.g. Akamai "Access
+  Denied") is no longer mistaken for a deleted product page: the response
+  body is checked against the bot-challenge detector, and a product is only
+  marked unavailable, paused, and notified after three consecutive page-gone
+  scrapes instead of one.
 - Original Price (RRP) values below the resolved standard price (or absurdly
   above it) are now discarded as stray selector matches instead of being
   recorded, so the RRP history stops jumping to unrelated page numbers.

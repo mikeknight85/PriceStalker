@@ -3,6 +3,13 @@ import { StockStatus, AIStatus } from '../../../../models/types';
 import { calculateNextCheckSeconds } from '../../../../utils/system/scheduler-helpers';
 
 export const productConfigRepository = {
+  setPageGoneStreak: async (id: number, streak: number): Promise<void> => {
+    await pool.query(
+      'UPDATE products SET page_gone_streak = $2 WHERE id = $1',
+      [id, streak]
+    );
+  },
+
   updateLastChecked: async (id: number, refreshInterval: number): Promise<void> => {
     const nextCheckSeconds = calculateNextCheckSeconds(refreshInterval);
 

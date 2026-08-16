@@ -66,9 +66,12 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
       const status = error.response?.status;
       const msg = error.response?.data?.error || error.message;
 
-      // SPECIFIC: 404/410 means the page is gone.
+      // The scraper service itself never responds 404/410 (it maps page
+      // failures to 500/503), so this status means the configured Remote
+      // Scraper URL endpoint does not exist — a configuration problem, never
+      // evidence that the product page is gone.
       if (status === 404 || status === 410) {
-        throw new PageNotAvailableError(`Page not found (${status}): ${url}`);
+        throw new Error(`Remote Scraper endpoint not found (${status}) — check the Remote Scraper URL setting`);
       }
 
       // Handle Rate Limiting (503) with Exponential Backoff
