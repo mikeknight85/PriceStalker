@@ -11,6 +11,10 @@ import { execSync } from 'child_process';
  *   pnpm --filter pricestalker-backend exec tsx tests/integration/test-extraction-priority.ts --remote
  */
 
+const SSH_TARGET = process.env.TEST_SSH_TARGET;
+const MOCK_HOST = process.env.TEST_MOCK_HOST || '127.0.0.1:5080';
+const VODKA_DIR = process.env.TEST_VODKA_DIR || '/opt/usb/docker-compose/pricestalker/source';
+
 async function runTest() {
   const isRemote = process.argv.includes('--remote');
   
@@ -19,15 +23,21 @@ async function runTest() {
     process.exit(1);
   }
 
+  if (!SSH_TARGET) {
+    console.error('Error: TEST_SSH_TARGET environment variable not set.');
+    console.error('Please configure TEST_SSH_TARGET (e.g. user@192.168.1.50) to run remote tests.');
+    process.exit(1);
+  }
+
   const tests = [
     {
       name: 'Red Hot Deal (Deal Priority over Standard)',
-      url: 'http://192.168.50.200:5080/shop/red-hot-deal.html',
+      url: `http://${MOCK_HOST}/shop/red-hot-deal.html`,
       expected: 135
     },
     {
       name: 'Deal vs Member (Deal Priority over Member)',
-      url: 'http://192.168.50.200:5080/shop/deal-v-member.html',
+      url: `http://${MOCK_HOST}/shop/deal-v-member.html`,
       expected: 90
     }
   ];
@@ -67,18 +77,18 @@ execute().catch(console.error);
   try {
     // Write runner.js to vodka host
     console.log('Transferring runner to vodka...');
-    execSync(`ssh steven@192.168.50.200 "cat <<EOF > /opt/usb/docker-compose/pricestalker/source/backend/tests/integration/runner.js\n${runnerJs}\nEOF"`);
+    execSync(`ssh ${SSH_TARGET} "cat <<EOF > ${VODKA_DIR}/backend/tests/integration/runner.js\n${runnerJs}\nEOF"`);
     
     // Copy runner.js into container
     console.log('Copying runner into container...');
-    execSync(`ssh steven@192.168.50.200 "docker cp /opt/usb/docker-compose/pricestalker/source/backend/tests/integration/runner.js pricestalker-backend:/app/runner-temp.js"`);
+    execSync(`ssh ${SSH_TARGET} "docker cp ${VODKA_DIR}/backend/tests/integration/runner.js pricestalker-backend:/app/runner-temp.js"`);
 
     // Run it
     console.log('Executing inside container...\n');
-    execSync(`ssh steven@192.168.50.200 "docker exec -w /app pricestalker-backend node runner-temp.js"`, { stdio: 'inherit' });
+    execSync(`ssh ${SSH_TARGET} "docker exec -w /app pricestalker-backend node runner-temp.js"`, { stdio: 'inherit' });
 
     // Cleanup
-    execSync(`ssh steven@192.168.50.200 "docker exec pricestalker-backend rm /app/runner-temp.js"`);
+    execSync(`ssh ${SSH_TARGET} "docker exec pricestalker-backend rm /app/runner-temp.js"`);
   } catch (error: any) {
     console.error('Execution failed:', error.message);
   }

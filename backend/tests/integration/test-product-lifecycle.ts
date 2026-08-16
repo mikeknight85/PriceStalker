@@ -18,10 +18,18 @@ import axios from 'axios';
  *   pnpm --filter pricestalker-backend exec tsx tests/integration/test-product-lifecycle.ts
  */
 
-const SERVER = "steven@192.168.50.200";
-const DEV_SITE_DIR = "/opt/usb/dev-home/html/shop";
-const BACKEND_URL = "http://192.168.50.200:3003";
-const ADMIN_TOKEN = "supersecret-pricestalker-admin-token-2026";
+const SERVER = process.env.TEST_SSH_TARGET;
+const DEV_SITE_DIR = process.env.TEST_DEV_SITE_DIR || "/opt/usb/dev-home/html/shop";
+const BACKEND_URL = process.env.TEST_API_URL || "http://127.0.0.1:3001";
+const ADMIN_TOKEN = process.env.TEST_ADMIN_TOKEN || "supersecret-pricestalker-admin-token-2026";
+const MOCK_HOST = process.env.TEST_MOCK_HOST || "127.0.0.1:5080";
+const VODKA_DIR = process.env.TEST_VODKA_DIR || "/opt/usb/docker-compose/pricestalker/source";
+
+if (!SERVER) {
+  console.error('Error: TEST_SSH_TARGET environment variable not set.');
+  console.error('Please configure TEST_SSH_TARGET (e.g. user@192.168.1.50) to run remote integration tests.');
+  process.exit(1);
+}
 
 const headers = {
   'Authorization': `Bearer ${ADMIN_TOKEN}`,
@@ -43,7 +51,7 @@ async function run() {
   const testId = Math.floor(Math.random() * 1000000);
   const mockFilename = `lifecycle-test-${testId}.html`;
   const mockFilePath = `${DEV_SITE_DIR}/${mockFilename}`;
-  const mockUrl = `http://192.168.50.200:5080/shop/${mockFilename}`;
+  const mockUrl = `http://${MOCK_HOST}/shop/${mockFilename}`;
 
   console.log(`\n🚀 Starting End-to-End Product Lifecycle Test (ID: ${testId})`);
   console.log(`Mock URL: ${mockUrl}`);
@@ -89,7 +97,7 @@ async function run() {
     selectedMethod: 'custom-css',
     selectedCurrency: 'AUD',
     name: 'LifeCycle Test Product',
-    imageUrl: 'http://192.168.50.200:5080/images/lifecycle.jpg',
+    imageUrl: `http://${MOCK_HOST}/images/lifecycle.jpg`,
     stockStatus: 'in_stock',
     html: initialHtml,
     selector: '.amount'
@@ -148,8 +156,8 @@ async function execute() {
 execute().catch(e => { console.error(e); process.exit(1); });
 `;
   
-  runRemoteCommand(`cat <<'EOF' > /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js\n${inContainerRunner}\nEOF`);
-  runRemoteCommand(`docker cp /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js pricestalker-backend:/app/backend/runner-temp.js`);
+  runRemoteCommand(`cat <<'EOF' > ${VODKA_DIR}/backend/runner-temp.js\n${inContainerRunner}\nEOF`);
+  runRemoteCommand(`docker cp ${VODKA_DIR}/backend/runner-temp.js pricestalker-backend:/app/backend/runner-temp.js`);
   runRemoteCommand(`docker exec pricestalker-backend node runner-temp.js`);
   console.log('✅ Refresh completed inside container.');
 
@@ -240,7 +248,7 @@ execute().catch(e => { console.error(e); process.exit(1); });
   // ==========================================
   console.log('\n--- Cleaning up temporary files ---');
   runRemoteCommand(`docker exec pricestalker-backend rm -f runner-temp.js`);
-  runRemoteCommand(`rm -f /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js`);
+  runRemoteCommand(`rm -f ${VODKA_DIR}/backend/runner-temp.js`);
   console.log('✅ Temporary files cleared.');
 
   console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! E2E Lifecycle is structurally sound! 🎉\n');
@@ -251,7 +259,7 @@ run().catch(error => {
   // Attempt remote temp cleanup in case of crash
   try {
     runRemoteCommand(`docker exec pricestalker-backend rm -f runner-temp.js`);
-    runRemoteCommand(`rm -f /opt/usb/docker-compose/pricestalker/source/backend/runner-temp.js`);
+    runRemoteCommand(`rm -f ${VODKA_DIR}/backend/runner-temp.js`);
   } catch {}
   process.exit(1);
 });

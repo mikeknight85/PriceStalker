@@ -4,9 +4,9 @@ import { scrubSensitiveData, scrubUrlCredentials } from '../../src/utils/system/
 describe('Scrubber Unit Tests', () => {
   describe('scrubUrlCredentials', () => {
     it('should mask credentials in proxy URLs', () => {
-      const url = 'http://steven:supersecretpassword@192.168.50.200:8080/some/path';
+      const url = 'http://user:pass123@example.com:8080/some/path';
       const scrubbed = scrubUrlCredentials(url);
-      expect(scrubbed).toBe('http://[REDACTED]:[REDACTED]@192.168.50.200:8080/some/path');
+      expect(scrubbed).toBe('http://[REDACTED]:[REDACTED]@example.com:8080/some/path');
     });
 
     it('should mask credentials in https target URLs', () => {
@@ -37,7 +37,7 @@ describe('Scrubber Unit Tests', () => {
 
     it('should scrub credentials in proxy key but preserve the proxy host', () => {
       const data = {
-        proxyUrl: 'http://steven:pass123@proxy.com:3128',
+        proxyUrl: 'http://user:pass123@proxy.com:3128',
         nonSensitive: 'keepme'
       };
       const scrubbed = scrubSensitiveData(data);
