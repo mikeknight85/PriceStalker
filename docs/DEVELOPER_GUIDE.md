@@ -224,6 +224,7 @@ glance without reading every child file:
 * **[CLAUDE.md](../CLAUDE.md)**: Developer quick-start cheat sheet for building, linting, and formatting.
 * **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Workspace setup, package manager guidelines (`pnpm`), and development container workflows.
 * **[docs/SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md)**: In-depth technical breakdown of the 6-phase scrape lifecycle.
+* **[docs/LOGGING.md](LOGGING.md)**: Configuration reference and developer guide for the multi-target logging system.
 * **[docs/SELECTORS.md](SELECTORS.md)**: Details on the unified selectors engine syntax, xpath, and regex.
 * **[docs/DATABASE.md](DATABASE.md)**: Information on tables, schema design, and pg_notify cache invalidations.
 * **[docs/I18N_DESIGN.md](I18N_DESIGN.md)**: Guidelines for localizing UI labels and managing translation key JSON files.

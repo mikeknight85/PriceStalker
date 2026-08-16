@@ -36,7 +36,7 @@ Used to customize the database connection and volume persistence.
 | `IMAGE_NAMESPACE` | GitHub container namespace or owner. | `mikeknight85` |
 | `IMAGE_TAG` | Image release tag. Set to `beta` to test pre-release builds. | `latest` |
 | `TZ` | System timezone. This affects log timestamps and cron job schedule targets. | `UTC` |
-| `LOG_LEVEL` | Verbosity of the system logger: `debug`, `info`, `warn`, or `error`. | `info` |
+| `LOG_LEVEL` | Verbosity of the system logger: `debug`, `info`, `warn`, or `error`. See [LOGGING.md](LOGGING.md) for detailed configuration options. | `info` |
 | `BACKEND_MEM_LIMIT` | Docker container memory constraint for the backend service. | `1g` |
 | `REDACT_API_KEYS` | When set to `true`, AI API credentials stored in settings are masked (`sk-...xxxx`) in the Admin panel and cannot be revealed via the UI. | `false` |
 
