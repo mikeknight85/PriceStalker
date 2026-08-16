@@ -58,7 +58,7 @@ async function execute() {
       const actual = result.price?.price;
       const success = actual === t.expected;
       console.log('URL:    ' + t.url);
-      console.log('Result: ' + (success ? '✅ PASS' : '❌ FAIL') + ' (Actual: ' + actual + ', Expected: ' + t.expected + ')');
+      console.log('Result: ' + (success ? 'PASS' : 'FAIL') + ' (Actual: ' + actual + ', Expected: ' + t.expected + ')');
       console.log('Method: ' + result.selectedMethod);
       console.log('Candidates:');
       result.priceCandidates.forEach(c => {

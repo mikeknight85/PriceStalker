@@ -53,7 +53,7 @@ async function run() {
   const mockFilePath = `${DEV_SITE_DIR}/${mockFilename}`;
   const mockUrl = `http://${MOCK_HOST}/shop/${mockFilename}`;
 
-  console.log(`\n🚀 Starting End-to-End Product Lifecycle Test (ID: ${testId})`);
+  console.log(`\nStarting End-to-End Product Lifecycle Test (ID: ${testId})`);
   console.log(`Mock URL: ${mockUrl}`);
 
   // ==========================================
@@ -73,7 +73,7 @@ async function run() {
 </html>`;
 
   runRemoteCommand(`cat <<'EOF' > ${mockFilePath}\n${initialHtml}\nEOF`);
-  console.log('✅ Mock page created.');
+  console.log('Mock page created.');
 
   // ==========================================
   // STEP 2: Initial Add / Scan
@@ -84,7 +84,7 @@ async function run() {
   if (!scanResponse.data.needsReview) {
     throw new Error('Expected needsReview: true due to price conflict ($199.99 vs $150.00)');
   }
-  console.log('✅ Correctly triggered needsReview: true.');
+  console.log('Correctly triggered needsReview: true.');
   console.log('Price candidates:', scanResponse.data.priceCandidates.map((c: any) => `${c.method}: ${c.price}`));
 
   // ==========================================
@@ -108,7 +108,7 @@ async function run() {
   if (!productId) {
     throw new Error('Product creation failed, no ID returned');
   }
-  console.log(`✅ Product confirmed and created. ID: ${productId}`);
+  console.log(`Product confirmed and created. ID: ${productId}`);
 
   // ==========================================
   // STEP 4: Inspect DB state of confirmed product
@@ -126,7 +126,7 @@ async function run() {
   if (parts[3] === '' || parts[3] === 'null') throw new Error('Expected last_checked to be set');
   if (parts[4] === '' || parts[4] === 'null') throw new Error('Expected next_check_at to be scheduled');
   if (parts[5] !== 'in_stock') throw new Error('Expected stock status to be "in_stock"');
-  console.log('✅ Database properties matches verified confirmation schema.');
+  console.log('Database properties matches verified confirmation schema.');
 
   // ==========================================
   // STEP 5: Simulate Price Change (Refresh)
@@ -159,7 +159,7 @@ execute().catch(e => { console.error(e); process.exit(1); });
   runRemoteCommand(`cat <<'EOF' > ${VODKA_DIR}/backend/runner-temp.js\n${inContainerRunner}\nEOF`);
   runRemoteCommand(`docker cp ${VODKA_DIR}/backend/runner-temp.js pricestalker-backend:/app/backend/runner-temp.js`);
   runRemoteCommand(`docker exec pricestalker-backend node runner-temp.js`);
-  console.log('✅ Refresh completed inside container.');
+  console.log('Refresh completed inside container.');
 
   // Verify DB price history record and anchor price drift
   const priceHistoryResult = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT price FROM price_history WHERE product_id = ${productId} ORDER BY recorded_at DESC LIMIT 1;"`);
@@ -173,7 +173,7 @@ execute().catch(e => { console.error(e); process.exit(1); });
   if (parseFloat(updatedAnchorResult) !== 99.99) {
     throw new Error('Expected anchor price to drift to $99.99');
   }
-  console.log('✅ Price change detected and recorded. Anchor price drifted correctly.');
+  console.log('Price change detected and recorded. Anchor price drifted correctly.');
 
   // ==========================================
   // STEP 6: Simulate Stock Status Change
@@ -206,7 +206,7 @@ execute().catch(e => { console.error(e); process.exit(1); });
   if (stockHistoryInspect.trim() !== 'out_of_stock') {
     throw new Error('Expected stock status history entry for "out_of_stock"');
   }
-  console.log('✅ Stock status change recorded in history correctly.');
+  console.log('Stock status change recorded in history correctly.');
 
   // ==========================================
   // STEP 7: Simulate Page Gone (404/Soft 404)
@@ -224,14 +224,14 @@ execute().catch(e => { console.error(e); process.exit(1); });
   const goneParts = goneInspectResult.split('|').map(s => s.trim());
   if (goneParts[0] !== 'not_available') throw new Error('Expected stock status to be "not_available"');
   if (goneParts[1] !== 't') throw new Error('Expected checking_paused to be true (t)');
-  console.log('✅ Soft 404 / Gone Page handled correctly: paused checks and updated status.');
+  console.log('Soft 404 / Gone Page handled correctly: paused checks and updated status.');
 
   // ==========================================
   // STEP 8: Cascade Deletion
   // ==========================================
   console.log('\n--- Step 8: Verifying deletion and cascade cleanup ---');
   await axios.delete(`${BACKEND_URL}/api/products/${productId}`, { headers });
-  console.log('✅ Delete API call made.');
+  console.log('Delete API call made.');
 
   const productCount = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT count(*) FROM products WHERE id = ${productId};"`);
   const priceHistoryCount = runRemoteCommand(`docker exec pricestalker-db psql -U postgres -d pricestalker -t -c "SELECT count(*) FROM price_history WHERE product_id = ${productId};"`);
@@ -241,7 +241,7 @@ execute().catch(e => { console.error(e); process.exit(1); });
   if (parseInt(productCount) !== 0) throw new Error('Expected product to be deleted');
   if (parseInt(priceHistoryCount) !== 0) throw new Error('Expected price history to be cascaded');
   if (parseInt(stockHistoryCount) !== 0) throw new Error('Expected stock history to be cascaded');
-  console.log('✅ Cascade deletion verified successfully.');
+  console.log('Cascade deletion verified successfully.');
 
   // ==========================================
   // CLEANUP MOCKS & TEMPS
@@ -249,13 +249,13 @@ execute().catch(e => { console.error(e); process.exit(1); });
   console.log('\n--- Cleaning up temporary files ---');
   runRemoteCommand(`docker exec pricestalker-backend rm -f runner-temp.js`);
   runRemoteCommand(`rm -f ${VODKA_DIR}/backend/runner-temp.js`);
-  console.log('✅ Temporary files cleared.');
+  console.log('Temporary files cleared.');
 
-  console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! E2E Lifecycle is structurally sound! 🎉\n');
+  console.log('\nALL TESTS PASSED SUCCESSFULLY! E2E Lifecycle is structurally sound!\n');
 }
 
 run().catch(error => {
-  console.error('\n❌ TEST FAILED:', error.stack || error);
+  console.error('\nTEST FAILED:', error.stack || error);
   // Attempt remote temp cleanup in case of crash
   try {
     runRemoteCommand(`docker exec pricestalker-backend rm -f runner-temp.js`);

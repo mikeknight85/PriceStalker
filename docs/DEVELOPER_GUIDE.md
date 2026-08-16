@@ -157,7 +157,35 @@ Do not run live scrapes during unit tests. Instead, capture raw web pages:
 
 ---
 
-## 4. Live Scraper Debugging & Tracing
+## 4. Integration & E2E Testing
+
+PriceStalker contains integration test scripts that execute against a remote test environment via SSH and Docker.
+
+### Configuration
+To run these integration scripts, you must configure target variables in your terminal shell or local environment:
+* **`TEST_SSH_TARGET`**: The user and host IP address of the target testing server (e.g. `user@192.168.1.50`).
+* **`TEST_MOCK_HOST`**: The IP and port hosting the test web server files (default: `127.0.0.1:5080`).
+* **`TEST_API_URL`**: The base URL of the running backend API (default: `http://127.0.0.1:3001`).
+* **`TEST_VODKA_DIR`**: The workspace root directory path on the remote host (default: `/opt/usb/docker-compose/pricestalker/source`).
+* **`TEST_DEV_SITE_DIR`**: The directory path serving mock HTML files on the remote web host (default: `/opt/usb/dev-home/html/shop`).
+
+### Running the Integration Tests
+
+* **Extraction Priority Test**:
+  Verifies that the scraper parses candidate elements matching the correct priority hierarchy (e.g. deal-price vs standard-price). Runs inside the target container:
+  ```bash
+  TEST_SSH_TARGET=user@host pnpm --filter pricestalker-backend exec tsx tests/integration/test-extraction-priority.ts --remote
+  ```
+
+* **E2E Product Lifecycle Test**:
+  Simulates a complete tracking lifecycle (creating mock pages on a web server, importing/scanning products, confirming selectors, updating prices/stock, simulating 404 page-gone triggers, and checking database cascades):
+  ```bash
+  TEST_SSH_TARGET=user@host pnpm --filter pricestalker-backend exec tsx tests/integration/test-product-lifecycle.ts
+  ```
+
+---
+
+## 5. Live Scraper Debugging & Tracing
 
 You can trigger live scraper trace runs without committing database changes using the debug endpoint.
 
@@ -181,7 +209,7 @@ You can trigger live scraper trace runs without committing database changes usin
 
 ---
 
-## 5. Development Code Rules
+## 6. Development Code Rules
 
 These rules protect deliberate architecture designs. Breaking them will fail local validations and CI workflows:
 
@@ -195,7 +223,7 @@ These rules protect deliberate architecture designs. Breaking them will fail loc
 
 ---
 
-## 6. Frontend Component Context Patterns
+## 7. Frontend Component Context Patterns
 
 When splitting a large page into modular sub-components, follow these conventions
 to preserve structural context for future developers and AI agents navigating the
@@ -237,7 +265,7 @@ glance without reading every child file:
 
 ---
 
-## 7. Related Developer Documentation
+## 8. Related Developer Documentation
 
 * **[CLAUDE.md](../CLAUDE.md)**: Developer quick-start cheat sheet for building, linting, and formatting.
 * **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Workspace setup, package manager guidelines (`pnpm`), and development container workflows.
