@@ -1,7 +1,7 @@
 digraph PriceStalkerProductLifecycle {
     // Graph-level styling
     graph [
-        label="PriceStalker End-to-End Product Lifecycle & Scraper Engine (v1.8.2+)",
+        label="PriceStalker Scrape Engine & Product Monitoring Overview (v2.0.0-beta.1)",
         labelloc="t",
         fontname="Segoe UI, Arial, sans-serif",
         fontsize=22,
@@ -64,25 +64,28 @@ digraph PriceStalkerProductLifecycle {
         style="dashed,rounded,filled";
         bgcolor="#0b1329";
 
-        Axios_Fetch    [label="Standard HTTP Fetch\n(axios + optional proxy + circuit-breaker)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+        Configured_Browser [label="Configured Browser Attempt?\n(use_browser_scraper)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Axios_Fetch    [label="Standard HTTP Fetch\n(axios + optional proxy + retry)", fillcolor="#4f46e5", fontcolor="#ffffff"];
         Bot_Check      [label="Bot Challenge Detected?\n(Cloudflare / Imperva)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
         Soft404_Check  [label="Soft-404 Detected?\n(redirect / no PDP wrapper / robots.txt)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-        Remote_Browser [label="Stealth Puppeteer Fallback\n('ruski' container — use_remote_scraper)", fillcolor="#4f46e5", fontcolor="#ffffff"];
-        Remote_Fail    [label="Remote Fail → Increment Failures\n(Backoff & retry next scheduler cycle)", fillcolor="#dc2626", fontcolor="#ffffff"];
-        Set_Stealth    [label="Set use_remote_scraper = true\n(Saved to retailer_configs)"];
-        Maintenance    [label="Flag is_blocked = true\n(Retailer maintenance / bot-blocked)", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Remote_Browser [label="Remote/Local Browser Fallback\n(only for eligible challenge paths)", fillcolor="#4f46e5", fontcolor="#ffffff"];
+        Remote_Fail    [label="Browser/HTTP Failure\n(Return unknown or not_available result)", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Set_Stealth    [label="Learn use_browser_scraper = true\n(Persisted with scrape result)"];
     }
 
-    Currency_Init  -> Axios_Fetch;
+    Currency_Init  -> Configured_Browser;
+    Configured_Browser -> Remote_Browser [label="Yes"];
+    Configured_Browser -> Axios_Fetch [label="No"];
+    Remote_Browser -> DOM_Denoise [label="HTML returned"];
+    Remote_Browser -> Axios_Fetch [label="No HTML"];
     Axios_Fetch    -> Bot_Check;
-    Bot_Check      -> Remote_Browser [label="Yes"];
-    Bot_Check      -> Soft404_Check  [label="No"];
-    Soft404_Check  -> Maintenance    [label="Yes"];
-    Soft404_Check  -> DOM_Denoise    [label="No — HTML OK"];
-    Remote_Browser -> Set_Stealth    [label="Success"];
-    Remote_Browser -> Remote_Fail    [label="Fail"];
+    Bot_Check      -> Remote_Browser [label="Challenge + no retailer config"];
+    Bot_Check      -> Soft404_Check  [label="No challenge"];
+    Soft404_Check  -> Remote_Fail    [label="404/410 or soft 404"];
+    Soft404_Check  -> DOM_Denoise    [label="HTML OK"];
+    Remote_Browser -> Set_Stealth    [label="Challenge fallback succeeds"];
+    Remote_Browser -> Remote_Fail    [label="Fails"];
     Set_Stealth    -> DOM_Denoise;
-    Maintenance    -> Remote_Browser [label="Retry via browser"];
 
     // ─────────────────────────────────────────────────────
     // PHASE 2: DATA EXTRACTION
@@ -95,7 +98,7 @@ digraph PriceStalkerProductLifecycle {
         bgcolor="#061813";
 
         DOM_Denoise   [label="denoiseDomForExtraction()\n(Strip script/style/nav/footer/header/aside)"];
-        Meta_Extract  [label="Metadata Extraction\n(name, image, stock via 4-layer cascade)"];
+        Meta_Extract  [label="Metadata Extraction\n(name, retailer, image, stock candidates)"];
 
         // Price cascade
         subgraph cluster_price_cascade {
@@ -122,9 +125,23 @@ digraph PriceStalkerProductLifecycle {
 
     // ─────────────────────────────────────────────────────
     // PHASE 3: BOT / MAINTENANCE VALIDATION
-    // (success-first: skip if price data already found)
+    // (success-first: ignore a challenge if useful price evidence exists)
     // ─────────────────────────────────────────────────────
-    // (Handled inline in Phase 1 above via Maintenance node)
+    subgraph cluster_validation {
+        label="PHASE 3 — CHALLENGE / MAINTENANCE VALIDATION";
+        color="#78350f";
+        fontcolor="#fbbf24";
+        style="dashed,rounded,filled";
+        bgcolor="#1c1208";
+
+        Success_First [label="Useful price candidates found?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Maintenance [label="Flag retailer as blocked / under maintenance\n(page-unavailable errors exit separately)", fillcolor="#dc2626", fontcolor="#ffffff"];
+    }
+
+    Gather_All -> Success_First;
+    Success_First -> Has_Config_P4 [label="Yes — ignore partial challenge"];
+    Success_First -> Maintenance [label="No + challenge remains"];
+    Maintenance -> Has_Config_P4 [label="Skip auto-mapping"];
 
     // ─────────────────────────────────────────────────────
     // PHASE 4: AI AUTO-MAPPING
@@ -144,7 +161,6 @@ digraph PriceStalkerProductLifecycle {
         Re_Scrape     [label="Re-run Extraction with New Config", fillcolor="#4f46e5", fontcolor="#ffffff"];
     }
 
-    Gather_All    -> Has_Config_P4;
     Has_Config_P4 -> Run_Consensus [label="Yes → proceed"];
     Has_Config_P4 -> AI_Map_Enabled [label="No"];
     AI_Map_Enabled -> Clean_Html   [label="Yes"];
@@ -281,13 +297,13 @@ digraph PriceStalkerProductLifecycle {
         style="dashed,rounded,filled";
         bgcolor="#071a12";
 
-        Persist_Price  [label="saveScrapeResult()\n(price_history, stock_status_history, product row)", fillcolor="#059669", fontcolor="#ffffff"];
+        Persist_Price  [label="saveScrapeResult()\n(metadata, price/stock history, product row)", fillcolor="#059669", fontcolor="#ffffff"];
         Auto_Config    [label="runAutoRetailerConfig()\n(resolveWinningSelector → unshift to priority 0)"];
         Stale_Track    [label="Update selector_metadata\n(match_count++  consecutive_failures++\nlast_matched_at = now())"];
         Score_Evict    [label="Score-Based Eviction\n(cap at 10; evict score=match_count−failures×2)"];
         Clean_Generic  [label="cleanSelectorArray()\n(Remove generic selectors from custom array)"];
         Cache_Bust     [label="configCache.invalidate(domain)\n(Post-commit cache refresh)"];
-        Active_Track   [label="Product → Active Monitoring\n(needs_price_review cleared)", fillcolor="#059669", fontcolor="#ffffff"];
+        Active_Track   [label="Persisted Result\n(next check scheduled; review may remain)", fillcolor="#059669", fontcolor="#ffffff"];
     }
 
     Persist_Price -> Auto_Config -> Stale_Track -> Score_Evict -> Clean_Generic -> Cache_Bust -> Active_Track;
@@ -302,23 +318,25 @@ digraph PriceStalkerProductLifecycle {
         style="dashed,rounded,filled";
         bgcolor="#041a0c";
 
-        Scheduler      [label="Scheduler Cron Job\n(Every refresh_interval hours per product)", fillcolor="#059669", fontcolor="#ffffff"];
-        Notify_Drop    [label="Price-Drop Notification\n(Discord / Telegram / Email)", fillcolor="#059669", fontcolor="#ffffff"];
-        Soft_Hard_404  [label="Hard 404 / Soft 404?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Scheduler      [label="Scheduler\nDue by next_check_at\n(max 3 concurrent; jitter)", fillcolor="#059669", fontcolor="#ffffff"];
+        Compare_State  [label="Compare persisted result\n(price + stock transitions)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Notify_Events  [label="Notification events\n(price / target / stock / unavailable)", fillcolor="#059669", fontcolor="#ffffff"];
+        Page_Gone      [label="Page-gone result?\n(three consecutive threshold)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
         Pause_Product  [label="checking_paused = true\nstock_status = not_available", fillcolor="#dc2626", fontcolor="#ffffff"];
-        Alert_User     [label="NotificationService Alert\n(Product unavailable)", fillcolor="#dc2626", fontcolor="#ffffff"];
-        Transient_Err  [label="Transient Error?\n(503 / timeout)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-        Backoff        [label="Increment failures\nBackoff → retry next cycle"];
+        Alert_User     [label="Unavailable notification\n(reason should identify failure)", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Unknown_Result [label="Generic acquisition error\nPreserve known status; next due check", fillcolor="#92400e", fontcolor="#ffffff"];
+        Backoff        [label="Internal HTTP retry only\nNo product-level exponential backoff"];
     }
 
     Active_Track   -> Scheduler;
-    Scheduler      -> Axios_Fetch [label="Re-scrape loop", color="#10b981", penwidth=1.6, style=bold];
-    Scheduler      -> Notify_Drop [label="Price changed"];
-    Scheduler      -> Soft_Hard_404 [label="Scrape failed"];
-    Soft_Hard_404  -> Pause_Product [label="Yes"];
-    Soft_Hard_404  -> Transient_Err [label="No"];
+    Scheduler      -> Axios_Fetch [label="Refresh", color="#10b981", penwidth=1.6, style=bold];
+    Scheduler      -> Compare_State [label="Refresh result"];
+    Compare_State  -> Notify_Events [label="Eligible transition"];
+    Compare_State  -> Page_Gone [label="not_available"];
+    Page_Gone      -> Pause_Product [label="Threshold reached"];
+    Page_Gone      -> Active_Track [label="Below threshold; retain prior status"];
     Pause_Product  -> Alert_User;
-    Transient_Err  -> Backoff [label="Yes"];
-    Transient_Err  -> Pause_Product [label="No (limit exceeded)"];
-    Backoff        -> Scheduler;
+    Compare_State  -> Unknown_Result [label="Generic error"];
+    Unknown_Result -> Backoff;
+    Backoff        -> Scheduler [label="Next due check"];
 }

@@ -1,6 +1,6 @@
 # PriceStalker Scraper Lifecycle Overview
 
-Visual representation of the end-to-end pipeline. For the full written reference, see [SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md).
+High-level visual representation of the scrape engine and product monitoring hand-off. For the current implementation details and the separate onboarding/monitoring boundaries, see [SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md).
 
 ![PriceStalker Product Lifecycle](../assets/product_lifecycle.svg)
 

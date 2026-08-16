@@ -1,6 +1,6 @@
 # PriceStalker Product Scraper Lifecycle
 
-This document is the canonical reference for how PriceStalker processes a product from initial URL submission through to scheduled monitoring. It supersedes all older flow diagrams (see `old_docs/`).
+This document is the canonical reference for the scrape engine and its hand-off into product monitoring. It supersedes all older flow diagrams (see `old_docs/`). Product onboarding, scheduled monitoring, selector learning, and notifications are described as separate concerns below because they do not follow one linear path.
 
 > For the visual end-to-end diagram, see [product_lifecycle_slides.md](product_lifecycle_slides.md). 
 
@@ -11,14 +11,14 @@ This document is the canonical reference for how PriceStalker processes a produc
 
 ## Pipeline Overview
 
-`scrapeProductWithVoting()` in `orchestration/index.ts` executes **six sequential phases**:
+`scrapeProductWithVoting()` in `orchestration/index.ts` executes **seven stages, numbered 0–6**:
 
 ```
 Phase 0: initScrapeSession → Load domain config, AI settings, currency/locale hints
-Phase 1: acquireHtml → HTTP fetch (axios) → remote Puppeteer browser fallback (the scraper service)
+Phase 1: acquireHtml → configured browser/remote attempt → standard HTTP → conditional browser fallback
 Phase 2: runExtractionPhase → DOM denoise → metadata (stock/title/image) → price candidates
-Phase 3: Validation → handleRetailerMaintenance (bot/maintenance detection)
-Phase 4: handleAutoMapping → AI auto-generates retailer config if none exists
+Phase 3: Validation → success-first challenge handling → retailer maintenance state
+Phase 4: handleAutoMapping → active AI provider may generate a retailer config
 Phase 5: runConsensusPhase → findPriceConsensus → weighted arbitration → OOS guardrails
 Phase 6: runVerificationPhase → Optional AI cross-verification of selected price
  → Result returned to caller (ProductRefreshService / ProductDiscoveryService)
@@ -28,9 +28,9 @@ Phase 6: runVerificationPhase → Optional AI cross-verification of selected pri
 
 ## Phase 0 — Session Initialisation
 
-**File:** `orchestration/init.ts`
+**File:** `backend/src/services/scraper/orchestration/init.ts`
 
-- Loads `retailer_configs` row by domain (via `getUrlLookup` canonical key — strips `www.`, trailing slashes, lowercases).
+- Loads the `retailer_configs` row by canonical lookup domain (normalised URL/domain lookup, including `www.` and trailing-slash normalisation).
 - Loads global AI settings, proxy configuration, and currency/locale hints from `settingsCache`.
 - Sets `finalSkipAiExtraction` flag based on config and global settings.
 
@@ -38,12 +38,15 @@ Phase 6: runVerificationPhase → Optional AI cross-verification of selected pri
 
 ## Phase 1 — HTML Acquisition
 
-**File:** `orchestration/acquisition.ts`
+**Files:** `backend/src/services/scraper/acquisition/`, `backend/src/services/scraper/transport/`
 
-1. **Standard Axios fetch** — Uses configured headers, optional proxy, and circuit-breaker backoff.
-2. **Soft-404 detection** — Checks for redirect-to-homepage, title-mismatch, robots.txt exclusion.
-3. **Bot-challenge detection** — Flags Imperva/Cloudflare challenge responses.
-4. **Remote Puppeteer fallback** (the `scraper` service) — If standard request fails or `use_browser_scraper=true`, renders via stealth browser. On success, sets `use_browser_scraper=true` in config for future runs.
+1. **Configured browser attempt** — If `use_browser_scraper=true`, request the remote browser/scraper service first.
+2. **Standard Axios fetch** — If the browser attempt did not produce HTML, use configured headers, optional proxy, and the Axios retry policy.
+3. **Challenge detection** — Detect known bot/challenge pages in returned HTML and selected HTTP errors.
+4. **Conditional browser fallback** — If standard HTTP encounters a challenge and there is no existing retailer configuration, use the configured remote scraper or local browser fallback.
+5. **Page-unavailable detection** — HTTP 404/410, error/root redirects, soft-404 titles, no-index pages without product evidence, and known error selectors raise `PageNotAvailableError`.
+
+Generic acquisition errors are returned to the orchestration error path. They do not currently create a product-level exponential backoff counter; normal scheduling continues through `next_check_at` and `refresh_interval`.
 
 > **When to use the browser scraper:** Enable `use_browser_scraper` per-retailer (Admin > Retailer Settings) for sites that:
 > - Require JavaScript execution to render prices (React/Vue SPAs, lazy-loaded price elements)
@@ -59,12 +62,12 @@ Phase 6: runVerificationPhase → Optional AI cross-verification of selected pri
 
 ## Phase 2 — Data Extraction
 
-**Files:** `orchestration/extraction.ts`, `extractors/`
+**Files:** `backend/src/services/scraper/orchestration/extraction.ts`, `backend/src/services/scraper/extractors/`
 
 Runs in this order:
 
 1. **DOM Denoiser** — `denoiseDomForExtraction()` strips `<script>`, `<style>`, `<noscript>`, `<footer>`, `<nav>`, `<header>`, `<aside>` etc. from the Cheerio DOM. Preserves nodes matching any retailer price/stock/name selector to avoid destroying evidence.
-2. **Metadata extraction** — Name, image, stock status (see Stock Extraction below).
+2. **Metadata extraction** — Product name, retailer name, image, stock status, and extraction candidates (see Stock Extraction below).
 3. **Price candidate collection** — Seven-layer cascade (see Price Extraction below).
 
 ### Stock Extraction Order
@@ -77,7 +80,7 @@ Runs in this order:
 | 3b | Global system stock selectors | 0.85 | `stock/custom.ts` |
 | 4 | Generic phrase matching (`main`, fallback `body`) | 0.50 | `stock/generic.ts` |
 
-Winner = highest-confidence candidate where `value !== 'unknown'`.
+Winner = highest-confidence candidate where `value !== 'unknown'`. Supported final statuses are `in_stock`, `out_of_stock`, `pre_order`, `member_only`, `not_available`, and `unknown`. An `unknown` result does not overwrite an existing known product status during persistence.
 
 ### Price Extraction Cascade
 
@@ -97,32 +100,39 @@ Winner = highest-confidence candidate where `value !== 'unknown'`.
 
 ## Phase 3 — Bot/Maintenance Validation
 
-**File:** `orchestration/maintenance.ts`
+**Files:** `backend/src/services/scraper/orchestration/index.ts`, `backend/src/services/scraper/orchestration/maintenance.ts`
 
-- Checks for known bot-challenge patterns in the fetched HTML.
-- Flags `retailer_config.is_blocked = true` if site is under maintenance.
-- **Success-first logic:** If Phase 2 returned valid price data despite a partial bot challenge, the challenge is ignored.
+- Checks the acquisition challenge result after extraction.
+- **Success-first logic:** If extraction produced price candidates despite a challenge, the challenge is ignored for that scrape.
+- Otherwise, flags the retailer configuration as blocked/under maintenance when a configured retailer is affected.
+- A page-unavailable error is handled by the top-level orchestration and becomes `stockStatus = not_available`; it does not pass through retailer maintenance handling.
 
 ---
 
 ## Phase 4 — AI Auto-Mapping
 
-**File:** `orchestration/auto-mapping.ts`
+**File:** `backend/src/services/scraper/orchestration/maintenance.ts`
 
-Triggers when no retailer config exists (or `isShellConfig = true`) AND `ai_auto_mapping_enabled = true`:
+Triggers only when all of these are true:
+
+- no retailer config exists, or the config is considered a shell config;
+- there is no active acquisition challenge;
+- the result is not definitively unavailable;
+- no standard price was resolved; and
+- `ai_auto_mapping_enabled = true`.
 
 1. **DOM Pruner** — `cleanHtml()` strips boilerplate to fit within the lightweight AI context window (typically ≤50 KB).
 2. **Config Generation** — Sends pruned HTML + meta tags to the active AI provider (`RETAILER_GENERATION_PROMPT`).
 3. **Config Save** — Saves generated CSS selectors to `retailer_configs`.
 4. **Re-Scrape** — Full extraction re-runs with the new config.
 
-> `isShellConfig` currently does NOT include `pre_order_price_selectors` or `original_price_selectors` in its guard check — a config with only those fields set would trigger unnecessary AI mapping. upstream audit issue **X-2**.
+> The shell-config test should remain aligned with every selector category. At present, pre-order and original-price selector fields are not included in that test, so a config containing only those fields may still be treated as a shell configuration.
 
 ---
 
 ## Phase 5 — Price Consensus & OOS Guardrails
 
-**Files:** `arbitrators/consensus.ts`, `orchestration/consensus.ts`
+**Files:** `backend/src/services/scraper/arbitrators/consensus.ts`, `backend/src/services/scraper/orchestration/consensus.ts`
 
 ### Consensus Algorithm
 
@@ -161,15 +171,15 @@ After `findPriceConsensus` resolves a price, additional checks apply **only when
 | Low-confidence generic | Score < 0.85 and method is generic | Nullify price, `needsReview = true` |
 | Anchor drift | Price < 50% of anchor (last known price) | Nullify price, `needsReview = true` |
 
-`highConfidenceMethods` whitelist (retains OOS price): `['custom-css', 'custom-regex', 'deal-price', 'member-price', 'pre-order-price', 'original-price']` plus any `expert-*` prefix.
+`highConfidenceMethods` whitelist (retains an out-of-stock price) includes `json-ld`, `custom-css`, `custom-regex`, `deal-price`, `member-price`, `pre-order-price`, `expert-ai`, `ai-extraction`, `manual-selector`, and `ai`, plus any `expert-*` prefix.
 
 ---
 
 ## Phase 6 — AI Verification
 
-**File:** `orchestration/verification.ts`
+**File:** `backend/src/services/scraper/orchestration/verification.ts`
 
-If `ai_verification_enabled = true` and a price was resolved:
+If a price was resolved, HTML and a user ID are available, no prior AI status exists, and verification has not been skipped:
 
 - Sends the resolved price candidate + denoised HTML to the active AI provider for cross-check.
 - If the AI disagrees → `needsReview = true`, `aiStatus = 'corrected'`.
@@ -184,7 +194,7 @@ When `needsReview = true`, the API response includes a `PriceReviewResponse` blo
 ```
 POST /api/products (new product add)
  └─ productDiscoveryService.initiateProductDiscovery()
- └─ if needsReview=true → returns PriceReviewResponse (nothing written to DB yet)
+ └─ if needsReview=true → returns PriceReviewResponse (no product row is written yet)
  └─ Frontend shows PriceSelectionModal
  └─ User confirms → POST /api/products (with selectedPrice + selectedMethod)
 
@@ -194,7 +204,7 @@ POST /api/products/:id/scan (re-scan existing product)
  └─ Frontend shows PriceSelectionModal
  └─ User confirms → POST /api/products/:id/confirm
  └─ confirmation.ts → saveScrapeResult('manual-confirm')
- → runAutoRetailerConfig() → promotes selector to priority 0 in DB
+ → runAutoRetailerConfig() → may promote selector to priority 0 in DB
  → productRepository.update({ needs_price_review: false, ai_status: 'confirmed' })
 ```
 
@@ -211,20 +221,33 @@ This gives the frontend a unified candidate list for the modal's tab-based pill 
 
 ## Scheduler & Refresh Monitoring
 
-**Files:** `ProductRefreshService.ts`, `SchedulerService.ts`
+**Files:** `backend/src/services/domain/product/ProductRefreshService.ts`, `backend/src/services/scheduler/tasks/PriceCheckTask.ts`
 
-- Cron job runs on configurable interval (default every 12 hours per product, based on `refresh_interval`).
-- Triggers `scrapeProductWithVoting()` for each active, non-paused product.
-- On success: `saveScrapeResult('refresh')` → price history, stock history, notifications if price changed.
-- On persistent 404/410: `checking_paused = true`, stock set to `not_available`, user alerted.
-- On transient error (503, timeout): exponential backoff, retry in next scheduler cycle.
-- On `needsReview = true` from refresh: `products.needs_price_review = true` is written to DB (as of v1.0.55), surfacing the product in the review queue.
+- The scheduler finds products due by `next_check_at`, skips paused products, and refreshes up to three products concurrently. A small random delay is added after each refresh.
+- Each refresh calls `scrapeProductWithVoting()` and then `saveScrapeResult('refresh')`, which can update metadata, stock history, price history, selector learning, review state, and the next scheduled check.
+- Price notifications are evaluated after persistence. The current event types include price drops, target-price hits, price announcements for pre-orders, stock transitions, and product-unavailable alerts.
+- A `not_available` result is debounced using three consecutive page-gone results before the product is marked unavailable, paused, and notified. Before the threshold, the previous stock status is retained.
+- A paused product is not normally scheduled. If a later manual or forced refresh finds the page available, the refresh flow can clear the pause.
+- Generic network, timeout, proxy, and other acquisition errors are not currently represented by a product-level exponential backoff state. They normally preserve a known stock status and leave the product for its next scheduled check.
+- On `needsReview = true` from refresh, `products.needs_price_review = true` is written to the database so the product can surface in the review queue.
+
+### Product state transitions
+
+The scraper result and the product monitoring state are separate concerns:
+
+| Scrape result | Product effect |
+|---|---|
+| `in_stock`, `out_of_stock`, `pre_order`, or `member_only` | Persist a stock transition if it differs from the previous status; evaluate relevant notifications. |
+| `unknown` | Preserve a previously known stock status rather than treating uncertainty as a real observation. |
+| `not_available` below the page-gone threshold | Increment the page-gone streak and retain the previous status. |
+| `not_available` at the threshold | Persist unavailable status, pause checking, and notify the user. |
+| Available result after a paused product is manually/forcibly refreshed | Clear the pause and resume monitoring. |
 
 ---
 
 ## Auto-Config Learning Loop
 
-After a successful scrape (or user confirmation via the Voting Modal), `runAutoRetailerConfig()` updates `retailer_configs`:
+After persistence of a scrape result (or user confirmation via the Voting Modal), `runAutoRetailerConfig()` may update `retailer_configs`:
 
 1. **`resolveWinningSelector()`** — Finds the candidate whose price matches the saved price and whose method is in the allowed whitelist (`custom-css`, `deal-price`, `member-price`, `pre-order-price`, `original-price`, `custom-regex`).
 2. **Selector promotion** — Winning selector is `unshift`ed to index 0 of the relevant selector array in `retailer_configs`.
@@ -233,7 +256,7 @@ After a successful scrape (or user confirmation via the Voting Modal), `runAutoR
 5. **Generic selector cleaning** — `cleanSelectorArray()` removes any generic/global selectors that are now in the domain-specific array to prevent redundancy.
 6. **Cache invalidation** — `configCache.invalidate(domain)` fires after the DB upsert commits.
 
-> `runAutoRetailerConfig` currently runs **outside** the outer persistence transaction — a partial-failure risk. upstream audit issue **V-1** (FIXED in v1.8.2).
+The persistence service passes its active transaction client into this operation. The cache is invalidated after the persistence transaction commits.
 
 ---
 
@@ -242,11 +265,35 @@ After a successful scrape (or user confirmation via the Voting Modal), `runAutoR
 | Table | Purpose |
 |-------|---------|
 | `products` | Core product row: URL, `needs_price_review`, `checking_paused`, `ai_status` |
-| `price_history` | Append-only log of all price changes per product |
+| `price_history` | Change-based history for standard, member, and original prices per product |
 | `stock_status_history` | Append-only log of all stock status changes |
 | `retailer_configs` | Domain-keyed scraping configs: selectors, `selector_metadata`, booleans |
 | `system_logs` | Structured scrape/notification logs (14-day retention) |
 | `exchange_rates` | Daily FX rates updated at 4 AM via cron |
+
+## Product lifecycle boundaries
+
+The scrape engine is reused by several entry points:
+
+- product discovery when a new URL is submitted;
+- manual rescan of an existing product;
+- confirmation of a candidate from the voting modal;
+- scheduled product refresh;
+- administrative or diagnostic test runs.
+
+Only the discovery and refresh paths automatically proceed into product persistence. A discovery or rescan result that requires review is returned to the frontend without being persisted until the user confirms a candidate. Scheduled refreshes can persist a result while also setting `needs_price_review` for later review.
+
+## Notifications
+
+Notifications are side effects of persisted product state and price comparisons, not part of the extraction engine itself. The refresh service currently evaluates:
+
+- price drops;
+- target-price hits;
+- back-in-stock transitions from `out_of_stock`, `pre_order`, or `not_available` to `in_stock` when enabled;
+- price announcements when a pre-order product receives its first price; and
+- page-unavailable events after the page-gone threshold.
+
+The event payload, delivery-provider behaviour, and frontend presentation are documented separately because one persisted event can fan out to multiple notification channels.
 
 ---
 

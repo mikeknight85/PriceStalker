@@ -33,6 +33,6 @@ Welcome to the documentation portal for PriceStalker Version 2. This directory c
 
 ## Related Documentation
 * **[Upstream User Guide](../BETA.md)**: Simplified flow reference for scraping, voting, and the scheduler queue.
-* **[Technical Scraper Lifecycle](../SCRAPER_LIFECYCLE.md)**: Technical overview of the pipeline's six sequential execution phases.
+* **[Technical Scraper Lifecycle](../SCRAPER_LIFECYCLE.md)**: Technical overview of the scraper's seven execution stages and its product-monitoring hand-off.
 * **[SSO / OIDC Setup Guide](../SSO_DESIGN.md)**: Details on single sign-on authentication configuration.
 * **[Database Schema Guide](../DATABASE.md)**: Overview of PostgreSQL tables, schemas, and backup targets.
