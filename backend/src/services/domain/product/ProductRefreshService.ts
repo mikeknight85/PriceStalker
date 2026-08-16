@@ -9,6 +9,10 @@ import { logger } from '../../../utils/system/logger';
 import { productNotificationService } from './notifications/index';
 import { productPersistenceService } from './ProductPersistenceService';
 
+// Consecutive page-gone (404/410) scrapes required before a product is
+// marked not_available, monitoring is paused, and the user is notified.
+const PAGE_GONE_THRESHOLD = 3;
+
 export class ProductRefreshService {
   /**
    * Refreshes a product by scraping its URL and updating its state.
@@ -37,6 +41,21 @@ export class ProductRefreshService {
       undefined,
       productId
     );
+
+    // 1.5 Debounce page-gone results: bot walls can serve 404 for a while,
+    // so a product is only flagged not_available (paused + notified) after
+    // several consecutive page-gone scrapes. Until then the previous status
+    // is kept and only the streak advances.
+    if (scrapedData.stockStatus === 'not_available' && product.stock_status !== 'not_available') {
+      const streak = (product.page_gone_streak || 0) + 1;
+      await productRepository.setPageGoneStreak(productId, streak);
+      if (streak < PAGE_GONE_THRESHOLD) {
+        logger.warn(`Product ${productId} | Status | Page gone (${streak}/${PAGE_GONE_THRESHOLD} consecutive). Keeping status '${product.stock_status}' until the streak completes.`, 'Products', { product_id: productId });
+        scrapedData.stockStatus = product.stock_status;
+      }
+    } else if (product.page_gone_streak) {
+      await productRepository.setPageGoneStreak(productId, 0);
+    }
 
     // 2. Persist results (DB State Sync)
     await productPersistenceService.saveScrapeResult(productId, userId, scrapedData, 'refresh');

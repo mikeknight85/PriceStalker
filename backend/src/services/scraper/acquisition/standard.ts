@@ -1,9 +1,11 @@
 import axios, { AxiosError } from 'axios';
+import { load } from 'cheerio';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { logger } from '../../../utils/system/logger';
 import { settingsCache } from '../../../utils/cache';
-import { 
-  getHeaders, 
+import {
+  getHeaders,
+  detectBotChallenge,
   PageNotAvailableError
 } from '../transport';
 import { RetailerConfig } from '../../../models';
@@ -114,6 +116,23 @@ function handleAxiosError(err: any, url: string, extractionSteps: string[], requ
   logger.debug(`Scraper | Axios | [${requestId || 'N/A'}] | Error Code: ${errCode}`, 'Scraper', { requestId });
   
   if (status === 404 || status === 410) {
+    // Bot walls (Akamai, Cloudflare, ...) sometimes serve their block page
+    // with a 404 status. Inspect the body before declaring the page gone —
+    // a blocked scrape must be treated as a challenge, not a deleted product.
+    const body = typeof err.response?.data === 'string' ? err.response.data : '';
+    if (body) {
+      try {
+        const challenge = detectBotChallenge(body, load(body));
+        if (challenge) {
+          extractionSteps.push(`Request | Challenge | ${challenge} served as HTTP ${status}`);
+          throw new BotChallengeError(`${challenge} (served as HTTP ${status})`);
+        }
+      } catch (detectErr) {
+        if (detectErr instanceof BotChallengeError) throw detectErr;
+        // A body we cannot parse is not evidence the page is gone or blocked;
+        // fall through to the plain 404 handling.
+      }
+    }
     throw new PageNotAvailableError(`Page not found (${status}): ${url}`);
   }
 

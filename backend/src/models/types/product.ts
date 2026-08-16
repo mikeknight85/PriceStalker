@@ -10,6 +10,7 @@ export interface Product {
   last_checked: Date | null;
   next_check_at: Date | null;
   stock_status: StockStatus;
+  page_gone_streak?: number;
   price_drop_threshold: number | null;
   target_price: number | null;
   notify_back_in_stock: boolean;
