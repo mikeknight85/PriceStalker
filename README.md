@@ -16,9 +16,11 @@
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/Home.png" alt="Dashboard" width="48%">
+  <img src="assets/screenshots/Home-v2.png" alt="Dashboard" width="48%">
   &nbsp;
-  <img src="assets/screenshots/ProductDetail.png" alt="Product detail" width="48%">
+  <img src="assets/screenshots/ProductDetail-v2.png" alt="Product detail" width="48%">
+  <br>
+  <sub>Note: Screenshots show the v2/beta interface. See the <a href="assets/screenshots/">screenshots directory</a> for more.</sub>
 </p>
 
 ---
