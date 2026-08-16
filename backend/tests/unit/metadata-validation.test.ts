@@ -43,8 +43,12 @@ describe('Product Metadata Utilities', () => {
       expect(sanitizeProductImage('http://example.com/real.jpg', 'placeholder.png')).toBe('http://example.com/real.jpg');
     });
 
-    it('should return null if current image is already a real image', () => {
-      expect(sanitizeProductImage('http://example.com/new.jpg', 'http://example.com/old.jpg')).toBe(null);
+    it('should replace a differing stored image (retailers rotate CDN asset URLs)', () => {
+      expect(sanitizeProductImage('http://example.com/new.jpg', 'http://example.com/old.jpg')).toBe('http://example.com/new.jpg');
+    });
+
+    it('should return null when the scraped image is unchanged', () => {
+      expect(sanitizeProductImage('http://example.com/same.jpg', 'http://example.com/same.jpg')).toBe(null);
     });
   });
 });
