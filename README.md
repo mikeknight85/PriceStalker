@@ -51,21 +51,11 @@ moving any data.
 
 ## You choose the price. Always.
 
-Most price trackers silently pick a single number off the page and hope for the best. PriceStalker extracts prices using a robust 7-layer cascade and arbitrates candidates using a weighted consensus engine:
+Product pages often contain several prices: sale prices, member prices, financing amounts, bundle prices, and recommended retail prices.
 
-| Strategy | How it works | Reliability |
-|--------|--------------|-------------|
-| **JSON-LD** | Parses `schema.org` structured data embedded by the retailer | Highest |
-| **Site-Specific Rules** | Evaluates custom CSS, deal, member, pre-order, or original price rules | High |
-| **Generic CSS** | Uses fallback selectors that detect price patterns on any site | Medium |
-| **AI Fallback** | Invokes Claude / GPT / Gemini to analyze the page context if selectors fail | High |
+PriceStalker compares the available candidates and saves a clear result automatically. When the correct price is uncertain, it shows you the candidates and lets you choose which one to track. Confirmed selections can also improve future checks for that retailer.
 
-When the extraction layers resolve a clear winner, the price is saved automatically. When they produce a tie, or if the price is suspicious, the **Price Selection Modal** displays all candidates with confidence scores and context so you can select the correct one. No more accidentally tracking:
-
-- `Save $200` discount amounts instead of the actual price
-- `$49/mo` financing plans instead of the real $1,999 price
-- Bundle prices when you wanted the single item
-- A "suggested retail" strike-through instead of the live price
+For more detail, see [How price selection works](docs/BETA.md#5-price-consensus--the-voting-modal).
 
 ---
 
@@ -165,6 +155,7 @@ setting and catches the most embarrassing extraction errors.
 PriceStalker features comprehensive user and administrator guides:
 
 * **[User Guide](docs/BETA.md)**: A simple, non-technical overview of how product scraping, consensus voting, out-of-stock safety rails, and AI auto-mapping work.
+* **[Administration Guide](docs/beta/README.md)**: Configure retailers, selectors, AI, notifications, system settings, and API access.
 * **[Developer & System Administration Portal](docs/README.md)**: The technical documentation index covering database schemas, backups, developer watch-outs, OIDC Single Sign-On (SSO) setups, and advanced configuration.
 * **[Environment Configuration Guide](docs/ENVIRONMENT_VARIABLES.md)**: Details on required and optional environment variables and settings overrides.
 

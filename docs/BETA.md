@@ -1,6 +1,6 @@
-# PriceStalker Beta: How Product Scraping Works
+# PriceStalker User Guide: How Product Tracking Works
 
-Welcome to the new version of PriceStalker! This document provides a simple, high-level overview of how PriceStalker tracks product prices, uses AI to adapt to new stores, and ensures data accuracy.
+This guide provides a simple, high-level overview of how PriceStalker tracks product prices, uses AI to adapt to new stores, and helps ensure data accuracy.
 
 ---
 
