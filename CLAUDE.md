@@ -243,6 +243,33 @@ file and none are found. Do not change the backend build to bundle.
   follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — match the
   existing format exactly.
 
+## Git workflow
+
+- Do not commit or push unless the user explicitly requests it.
+- Treat committing and pushing as separate actions. A request to commit does
+  not automatically authorise pushing to a remote.
+- Before committing, run the relevant verification commands and
+  `git diff --check`.
+- Use short Conventional Commit-style messages, following the conventions
+  already established in this repository:
+  - `feat:` — new functionality
+  - `fix:` — bug fixes
+  - `docs:` — documentation
+  - `test:` — tests
+  - `refactor:` — code restructuring
+  - `chore:` — maintenance
+  - `ci:` — CI or build workflow changes
+- Use descriptive branch names such as
+  `feat/<short-description>`, `fix/<short-description>`,
+  `refactor/<short-description>`, `docs/<short-description>`,
+  `test/<short-description>`, `chore/<short-description>`, or
+  `ci/<short-description>`.
+- Link implementation work to its GitHub issue or pull request when one
+  exists, and report the commit hash and verification results after committing.
+- These commit and branch conventions are currently project practice, not
+  enforced by commit-lint tooling. Do not claim that a commit is valid solely
+  because it matches the prefix convention.
+
 ## Deployment context
 
 Images build in GitHub Actions and publish to GHCR. `main` publishes the `:beta`

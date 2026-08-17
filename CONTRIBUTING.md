@@ -70,3 +70,25 @@ pnpm run lint
 * **Keep Secrets Local**: Never commit `.env` files, API keys, or private credential strings to the repository.
 * **Write Idempotent Migrations**: Any schema updates must go through a new numbered database migration under `backend/src/migrations/`.
 * **Include Unit Tests**: If your pull request introduces a new feature or corrects a bug, please write or update a corresponding unit test inside `backend/tests/unit/` using Vitest.
+
+## 4. Git and GitHub workflow
+
+Recent repository history uses short Conventional Commit-style messages:
+
+```text
+feat: add a capability
+fix(scraper): correct extraction behaviour
+docs: clarify a workflow
+test: cover an edge case
+refactor: restructure an implementation
+chore: update maintenance files
+ci: update build automation
+```
+
+Use a matching branch prefix where practical, such as
+`feat/short-description`, `fix/short-description`, or
+`docs/short-description`. These are established project conventions rather
+than currently enforced commit-lint rules.
+
+For agent-specific operational rules—including explicit approval before
+committing or pushing—see [AGENTS.md](AGENTS.md).
