@@ -4,9 +4,9 @@
 
 <p align="center">
   <strong>We stalk prices so you don't have to.</strong><br>
-  Self-hosted price tracking that watches product pages across the web and
-  tells you when a price drops, hits your target, or an out-of-stock item
-  comes back.
+  Open-source, self-hosted price tracking with Docker that watches product
+  pages across the web and tells you when a price drops, hits your target, or
+  an out-of-stock item comes back.
 </p>
 
 <p align="center">
@@ -22,6 +22,12 @@
   <br>
   <sub>Note: Screenshots show the v2/beta interface. See the <a href="assets/screenshots/">screenshots directory</a> for more.</sub>
 </p>
+
+PriceStalker is a self-hosted price tracker for monitoring products across
+different retailers. It supports multi-currency price alerts, stock tracking,
+retailer-specific selectors, AI-assisted extraction, notification channels,
+and Docker-based deployment. It is a modern fork and v2 rebuild of
+[PriceGhost](https://github.com/clucraft/PriceGhost).
 
 ---
 
