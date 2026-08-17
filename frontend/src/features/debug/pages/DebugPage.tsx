@@ -194,6 +194,7 @@ export default function Debug() {
                         id="debug-iframe"
                         title="Rendered Source"
                         className="iframe-viewer"
+                        sandbox="allow-same-origin"
                         srcDoc={`
                           <style>
                             /* PriceStalker Debug Overrides: Prevent layout blowouts & Aggressive Flattening */
