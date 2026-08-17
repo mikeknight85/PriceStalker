@@ -23,6 +23,7 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
   const res = await scrapeProductWithVoting(url, userId);
   return { 
     name: res.name, 
+    retailerName: res.retailerName,
     price: res.price, 
     memberPrice: res.memberPrice,
     originalPrice: res.originalPrice,

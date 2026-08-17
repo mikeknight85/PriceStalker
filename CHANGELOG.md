@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The simplified scraper result now preserves the retailer name resolved during
+  extraction, so callers can use it for store identification and configuration.
 - Retailer display names are no longer learned from a product's brand: the
   seeded generic retailer-name selectors included two [itemprop="brand"]
   selectors, which made shops without an og:site_name take the first scraped
