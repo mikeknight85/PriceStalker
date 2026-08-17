@@ -6,22 +6,22 @@ Reference documentation for PriceStalker users, administrators, and developers.
 
 | I want to... | Read |
 |---|---|
-| Install and use PriceStalker | [User Guide](BETA.md) |
-| Configure retailers, selectors, AI, or notifications | [Admin Guide](beta/README.md) |
-| Develop or debug the application | [Developer Guide](DEVELOPER_GUIDE.md) |
-| Understand the scraper pipeline | [Scraper Lifecycle](SCRAPER_LIFECYCLE.md) |
-| Work with the database and deployment | [Database Guide](DATABASE.md) |
+| Install and use PriceStalker | [User Guide](user/README.md) |
+| Configure retailers, selectors, AI, or notifications | [Admin Guide](admin/README.md) |
+| Develop or debug the application | [Developer Guide](developer/DEVELOPER_GUIDE.md) |
+| Understand the scraper pipeline | [Scraper Lifecycle](developer/SCRAPER_LIFECYCLE.md) |
+| Work with the database and deployment | [Database Guide](developer/DATABASE.md) |
 | Investigate known issues and audits | [Audit material](audit/) |
 
 ## User & Administration Guides
 
 | Doc | Covers |
 |---|---|
-| [BETA.md](BETA.md) | **User Guide**: High-level overview of product tracking, price selection, stock monitoring, and notifications. |
-| [beta/README.md](beta/README.md) | **Admin Guide**: Guides for managing retailers, custom selectors, AI settings, API security tokens, and proxies. |
-| [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) | **Environment Configuration**: Reference guide for all optional and required `.env` file variables. |
-| [LOGGING.md](LOGGING.md) | **Logging System**: Detailed guide on logging configurations, targets (console/files/database), and data scrubbing. |
-| [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | **Developer Guide**: Codebase directory structure, Vitest runner, live debugger, and backend compilation rules. |
+| [user/README.md](user/README.md) | **User Guide**: High-level overview of product tracking, price selection, stock monitoring, and notifications. |
+| [admin/README.md](admin/README.md) | **Admin Guide**: Guides for managing retailers, custom selectors, AI settings, API security tokens, and proxies. |
+| [developer/ENVIRONMENT_VARIABLES.md](developer/ENVIRONMENT_VARIABLES.md) | **Environment Configuration**: Reference guide for all optional and required `.env` file variables. |
+| [developer/LOGGING.md](developer/LOGGING.md) | **Logging System**: Detailed guide on logging configurations, targets (console/files/database), and data scrubbing. |
+| [developer/DEVELOPER_GUIDE.md](developer/DEVELOPER_GUIDE.md) | **Developer Guide**: Codebase directory structure, Vitest runner, live debugger, and backend compilation rules. |
 
 
 ## Engine internals (adapted from upstream)
@@ -33,19 +33,28 @@ noted. Docs drift; trust the code for specifics.
 
 | Doc | Covers |
 |---|---|
-| [SCRAPER_LIFECYCLE.md](SCRAPER_LIFECYCLE.md) | The seven-stage product scrape pipeline: initialisation → acquisition → extraction → validation → auto-mapping → consensus → verification. Monitoring and persistence boundaries are also documented. |
-| [product_lifecycle_slides.md](product_lifecycle_slides.md) | Overview and detailed visual diagrams for acquisition, extraction, review, monitoring, and notifications. |
-| [SELECTORS.md](SELECTORS.md) | The selector DSL — CSS/XPath/Regex engines, `::attr()` and `->status` modifiers, staleness scoring and eviction. |
+| [developer/SCRAPER_LIFECYCLE.md](developer/SCRAPER_LIFECYCLE.md) | The seven-stage product scrape pipeline and product-monitoring boundaries. |
+| [developer/product_lifecycle_slides.md](developer/product_lifecycle_slides.md) | Overview and detailed visual diagrams for acquisition, extraction, review, monitoring, and notifications. |
+| [developer/SELECTORS.md](developer/SELECTORS.md) | The selector DSL — CSS/XPath/Regex engines, `::attr()` and `->status` modifiers, staleness scoring and eviction. |
 | [SCRAPER_AUDIT.md](SCRAPER_AUDIT.md) | Large scraper audit and issue register. Findings should be checked against the current source before acting on them. |
-| [DATABASE.md](DATABASE.md) | Core tables, the `pg_notify` cache-invalidation triggers, backup. |
-| [DESIGN_TOKENS.md](DESIGN_TOKENS.md) | Frontend CSS design tokens. Verified against `frontend/src/index.css`. |
+| [developer/DATABASE.md](developer/DATABASE.md) | Core tables, the `pg_notify` cache-invalidation triggers, backup. |
+| [design/DESIGN_TOKENS.md](design/DESIGN_TOKENS.md) | Frontend CSS design tokens. Verified against `frontend/src/index.css`. |
 
 ## PriceStalker-specific
 
 | Doc | Covers |
 |---|---|
-| [SSO_DESIGN.md](SSO_DESIGN.md) | OIDC/SSO design (a PriceStalker feature, ported forward). |
-| [I18N_DESIGN.md](I18N_DESIGN.md) | Internationalisation design. |
+| [design/SSO_DESIGN.md](design/SSO_DESIGN.md) | OIDC/SSO design (a PriceStalker feature, ported forward). |
+| [design/I18N_DESIGN.md](design/I18N_DESIGN.md) | Internationalisation design. |
+
+## Design and audit material
+
+| Area | Entry point |
+|---|---|
+| Authentication and SSO | [SSO design](design/SSO_DESIGN.md) |
+| Internationalisation | [I18N design](design/I18N_DESIGN.md) |
+| Frontend visual system | [Design tokens](design/DESIGN_TOKENS.md) |
+| Investigations and historical audits | [Audit index](audit/README.md) |
 
 ## Audit note
 

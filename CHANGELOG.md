@@ -482,7 +482,7 @@ prod see the most recent README on the GitHub release page.
 - **Single Sign-On via OIDC (BETA)** — PriceStalker can now act as an OIDC
   Relying Party against any compliant provider (Authentik, Keycloak,
   Google, Okta, Auth0, …) using the Authorization Code + PKCE flow. Full
-  design doc at [`docs/SSO_DESIGN.md`](docs/SSO_DESIGN.md).
+  design doc at [`docs/design/SSO_DESIGN.md`](docs/design/SSO_DESIGN.md).
 
   **Feature-flagged off by default** — set `ENABLE_SSO=true` on the
   backend + configure a provider in Settings → Authentication before any

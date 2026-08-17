@@ -7,7 +7,7 @@ change.
 For a 60-second overview of the directory layout and key backend paths, see the **[AI Agent Quick-Start](docs/AGENT_QUICKSTART.md)**.
 
 Before searching the codebase or running discovery commands, check `CLAUDE.md`,
-`docs/AGENT_QUICKSTART.md`, and `docs/SCRAPER_LIFECYCLE.md` first. Grepping the
+`docs/AGENT_QUICKSTART.md`, and `docs/developer/SCRAPER_LIFECYCLE.md` first. Grepping the
 entire codebase for answers that are already documented wastes time and misses
 context.
 
@@ -163,8 +163,8 @@ Other rules that hold across all three:
 ## Understanding the scraper
 
 Before changing anything in `backend/src/services/scraper/`, read
-[docs/SCRAPER_LIFECYCLE.md](docs/SCRAPER_LIFECYCLE.md) (the 6-phase pipeline) and
-[docs/beta/selectors.md](docs/beta/selectors.md) (the selector DSL). The engine is subtle —
+[docs/developer/SCRAPER_LIFECYCLE.md](docs/developer/SCRAPER_LIFECYCLE.md) (the seven-stage pipeline) and
+[docs/admin/selectors.md](docs/admin/selectors.md) (the selector DSL). The engine is subtle —
 consensus weighting, out-of-stock price nullification, and AI auto-mapping all
 interact. Guessing at it is how extraction bugs get introduced.
 

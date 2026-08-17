@@ -6,7 +6,7 @@ We welcome contributions to PriceStalker. This document provides general guideli
 
 ## 1. Development & Setup Guide
 For detailed instructions on setting up your local workspace, running tests natively or in containers, and understanding the codebase architecture, please refer to the:
-* **[PriceStalker Developer Guide](docs/DEVELOPER_GUIDE.md)**
+* **[PriceStalker Developer Guide](docs/developer/DEVELOPER_GUIDE.md)**
 
 ### Package manager
 PriceStalker uses **pnpm** for faster, disk-efficient, strict workspace installs.
@@ -34,7 +34,7 @@ This starts a host-accessible Docker PostgreSQL service and uses pnpm hot reload
 for the application; it does not build Docker application images. It
 automatically fills missing local-development values in `.env` without replacing
 configured values. See the
-[Developer Guide](docs/DEVELOPER_GUIDE.md#native-hot-reload-workflow) for the
+[Developer Guide](docs/developer/DEVELOPER_GUIDE.md#native-hot-reload-workflow) for the
 PostgreSQL requirement and individual development commands.
 
 ---

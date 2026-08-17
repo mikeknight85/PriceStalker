@@ -11,9 +11,9 @@ This file provides a 60-second orientation and architectural rules for AI coding
 | **Backend Source** | `backend/src/` |
 | **Frontend Source** | `frontend/src/` |
 | **Stealth Browser Scraper** | `scraper/` |
-| **Developer Workflows** | [docs/DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
-| **Scraper Lifecycle** | [docs/SCRAPER_LIFECYCLE.md](docs/SCRAPER_LIFECYCLE.md) |
-| **Database Schema Details** | [docs/DATABASE.md](DATABASE.md) |
+| **Developer Workflows** | [docs/developer/DEVELOPER_GUIDE.md](developer/DEVELOPER_GUIDE.md) |
+| **Scraper Lifecycle** | [docs/developer/SCRAPER_LIFECYCLE.md](developer/SCRAPER_LIFECYCLE.md) |
+| **Database Schema Details** | [docs/developer/DATABASE.md](developer/DATABASE.md) |
 | **Unified Selectors Guide** | [docs/beta/selectors.md](beta/selectors.md) |
 
 ---

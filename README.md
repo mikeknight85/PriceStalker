@@ -55,7 +55,7 @@ Product pages often contain several prices: sale prices, member prices, financin
 
 PriceStalker compares the available candidates and saves a clear result automatically. When the correct price is uncertain, it shows you the candidates and lets you choose which one to track. Confirmed selections can also improve future checks for that retailer.
 
-For more detail, see [How price selection works](docs/BETA.md#5-price-consensus--the-voting-modal).
+For more detail, see [How price selection works](docs/user/README.md#5-price-consensus--the-voting-modal).
 
 ---
 
@@ -154,10 +154,10 @@ setting and catches the most embarrassing extraction errors.
 
 PriceStalker features comprehensive user and administrator guides:
 
-* **[User Guide](docs/BETA.md)**: A simple, non-technical overview of how product scraping, consensus voting, out-of-stock safety rails, and AI auto-mapping work.
-* **[Administration Guide](docs/beta/README.md)**: Configure retailers, selectors, AI, notifications, system settings, and API access.
+* **[User Guide](docs/user/README.md)**: A simple, non-technical overview of how product scraping, consensus voting, out-of-stock safety rails, and AI auto-mapping work.
+* **[Administration Guide](docs/admin/README.md)**: Configure retailers, selectors, AI, notifications, system settings, and API access.
 * **[Developer & System Administration Portal](docs/README.md)**: The technical documentation index covering database schemas, backups, developer watch-outs, OIDC Single Sign-On (SSO) setups, and advanced configuration.
-* **[Environment Configuration Guide](docs/ENVIRONMENT_VARIABLES.md)**: Details on required and optional environment variables and settings overrides.
+* **[Environment Configuration Guide](docs/developer/ENVIRONMENT_VARIABLES.md)**: Details on required and optional environment variables and settings overrides.
 
 
 ---
@@ -198,7 +198,7 @@ make dev
 
 This runs PostgreSQL in Docker on `127.0.0.1:5432` and starts the backend and
 frontend with pnpm. It automatically preserves existing configured values and
-fills missing local-development values in `.env`. See the [Developer Guide](docs/DEVELOPER_GUIDE.md#native-hot-reload-workflow)
+fills missing local-development values in `.env`. See the [Developer Guide](docs/developer/DEVELOPER_GUIDE.md#native-hot-reload-workflow)
 for setup details and database commands.
 
 ### Browser scraper
@@ -281,7 +281,7 @@ image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.11
 ## Development
 
 For local setup, prerequisites, container workflows, and testing — see
-**[CONTRIBUTING.md](CONTRIBUTING.md)** and **[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)**.
+**[CONTRIBUTING.md](CONTRIBUTING.md)** and **[docs/developer/DEVELOPER_GUIDE.md](docs/developer/DEVELOPER_GUIDE.md)**.
 
 ---
 
@@ -303,7 +303,7 @@ For local setup, prerequisites, container workflows, and testing — see
 ## Project structure
 
 For a full breakdown of the directory layout and key source paths, see
-**[docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)**.
+**[docs/developer/DEVELOPER_GUIDE.md](docs/developer/DEVELOPER_GUIDE.md)**.
 
 ---
 
