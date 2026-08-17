@@ -34,7 +34,7 @@ Used to customize the database connection and volume persistence.
 | `FRONTEND_PORT` | The host machine port exposed to access the PriceStalker Web UI. | `80` |
 | `IMAGE_REGISTRY` | Docker image registry URL. | `ghcr.io` |
 | `IMAGE_NAMESPACE` | GitHub container namespace or owner. | `mikeknight85` |
-| `IMAGE_TAG` | Image release tag. Set to `beta` to test pre-release builds. | `latest` |
+| `IMAGE_TAG` | Image release tag. Use `beta` for the current v2 overhaul, `latest` for the stable release line, or pin a version. | `latest` |
 | `TZ` | System timezone. This affects log timestamps and cron job schedule targets. | `UTC` |
 | `LOG_LEVEL` | Verbosity of the system logger: `debug`, `info`, `warn`, or `error`. See [LOGGING.md](LOGGING.md) for detailed configuration options. | `info` |
 | `BACKEND_MEM_LIMIT` | Docker container memory constraint for the backend service. | `1g` |

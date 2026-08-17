@@ -34,9 +34,11 @@
 #   docker exec $(docker ps -q -f name=pricestalker_postgres) \
 #     pg_dump -U postgres --no-owner --no-privileges priceghost | gzip > backup.sql.gz
 #
-# The tag below defaults to `beta`, which is what this stack has been running.
-# Once v2 merges to main, `beta` becomes v2 — so pin PRICESTALKER_TAG to a
-# specific version if you want to choose your upgrade moment.
+# The tag below defaults to `beta`, which currently contains the ongoing v2
+# overhaul from main. The stable `latest` tag is published only for versioned
+# releases and may still represent the previous stable line. Pin
+# PRICESTALKER_TAG to a specific version if you want to choose your upgrade
+# moment.
 
 services:
   postgres:

@@ -67,10 +67,10 @@ When you manually select the correct price in the Voting Modal (or when a scrape
  * [Lifecycle Diagrams](../developer/product_lifecycle_slides.md) — Visual flow diagrams for the scraper pipeline.
  * [Selector Guide](../developer/SELECTORS.md) — In-depth guide on scraper selectors.
 * **Administration & Setup**:
- * [beta/admin_guide.md](beta/admin_guide.md) — General administration and settings dashboard guide.
- * [beta/selectors.md](beta/selectors.md) — How to write custom CSS, XPath, and Regex selectors.
- * [beta/ai_features.md](beta/ai_features.md) — Configuring AI auto-mapping and verification.
- * [beta/tokens.md](beta/tokens.md) — Creating security credentials and API tokens.
- * [beta/system.md](beta/system.md) — Managing proxies, schedules, and circuit breakers.
- * [beta/admin_api.md](beta/admin_api.md) — Reference of secure HTTP endpoints for programmatic management.
- * [beta/user_notifications.md](beta/user_notifications.md) — How to configure notifications and customized alert types.
+ * [Admin Guide](../admin/admin_guide.md) — General administration and settings dashboard guide.
+ * [Selector Rules](../admin/selectors.md) — How to write custom CSS, XPath, and Regex selectors.
+ * [AI Features](../admin/ai_features.md) — Configuring AI auto-mapping and verification.
+ * [API Tokens](../admin/tokens.md) — Creating security credentials and API tokens.
+ * [System Settings](../admin/system.md) — Managing proxies, schedules, and circuit breakers.
+ * [Admin API](../admin/admin_api.md) — Reference of secure HTTP endpoints for programmatic management.
+ * [Notifications](../admin/user_notifications.md) — How to configure notifications and customized alert types.

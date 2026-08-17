@@ -27,25 +27,25 @@
 
 ## About this fork
 
-PriceStalker is a friendly fork of
-[clucraft/PriceGhost](https://github.com/clucraft/PriceGhost), which has been
-inactive since early 2026. Full credit to [@clucraft](https://github.com/clucraft)
-for the original work — upstream commits are preserved in this repo's history
-and the MIT license is intact.
+PriceStalker is an actively developed fork of
+[clucraft/PriceGhost](https://github.com/clucraft/PriceGhost). It retains the
+original project's MIT licence and credits [@clucraft](https://github.com/clucraft)
+for the upstream foundation.
 
-**2.0 is a substantial rebuild.** v2 is an almost complete rewrite based on a
-fork of the original PriceGhost by [@stevene1919](https://github.com/stevene1919).
-The application was
-rebuilt on a heavily-reworked branch of the same upstream, contributed by a
-collaborator, and brings a far more capable scraping engine, per-retailer
-configuration, live currency conversion, and an optional stealth-browser
-service. The 1.x identity layer (OIDC/SSO) and release engineering were carried
-forward. See [Upgrading to 2.0](#upgrading-to-20) — the upgrade migrates your
-schema automatically and is one-way, so take a backup first.
+The 2.0 rebuild was carried forward by
+[@stevene1919](https://github.com/stevene1919) on a heavily reworked branch of
+the original project. It introduces a rebuilt scraping pipeline, per-retailer
+configuration, consensus price selection, live currency conversion, optional
+stealth-browser scraping, expanded notifications, and OIDC/SSO support. The
+reworked design is deliberately database-backed and configurable: retailer
+rules, monitoring state, price and stock history, notification preferences,
+and operational settings can evolve without baking each site into the code.
 
-**Already running PriceGhost?** See [Migrating from PriceGhost](#migrating-from-priceghost)
-— you can attach this fork to your existing database and volume without
-moving any data.
+PriceStalker remains compatible with the existing PriceGhost database format.
+If you are migrating from PriceGhost, see
+[Migrating from PriceGhost](#migrating-from-priceghost). If you are upgrading
+to 2.0, take a database backup first because the migration is automatic and
+one-way. See [Upgrading to 2.0](#upgrading-to-20) for details.
 
 ---
 
@@ -170,9 +170,14 @@ PriceStalker features comprehensive user and administrator guides:
 git clone https://github.com/mikeknight85/PriceStalker.git
 cd PriceStalker
 cp .env.example .env
-$EDITOR .env                      # set POSTGRES_PASSWORD and JWT_SECRET
+$EDITOR .env                      # set secrets; use IMAGE_TAG=beta for current v2
 docker compose up -d
 ```
+
+> **Important for v2 testing:** The default `latest` image is the stable release
+> line and does not currently contain the full v2 overhaul. Set `IMAGE_TAG=beta`
+> in `.env` to run the current v2 beta. The `beta` channel follows `main` and
+> may contain unfinished or breaking changes.
 
 Access at <http://localhost>. Create your first account, add a product URL, done.
 
@@ -265,9 +270,9 @@ Three rolling tags are published, in order of stability:
 
 | Tag | When it updates | Use for |
 |-----|-----------------|---------|
-| `:latest` | Every tagged release (`vX.Y.Z`) | Production. Sticks until the next release. |
+| `:latest` | Every tagged release (`vX.Y.Z`) | Latest stable release; currently not the full v2 overhaul. |
 | `:1.2` | Same as `:latest`, but only within the 1.2.x line | Production with auto-patch but no minor bumps. |
-| `:beta` | Every merge to `main` | Pre-release / staging instances. May break. |
+| `:beta` | Every merge to `main` | Current v2 overhaul / pre-release staging. May break. |
 
 Pin to an immutable version for absolute stability:
 
