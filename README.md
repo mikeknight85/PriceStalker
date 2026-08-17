@@ -4,9 +4,7 @@
 
 <p align="center">
   <strong>We stalk prices so you don't have to.</strong><br>
-  Open-source, self-hosted price tracking with Docker that watches product
-  pages across the web and tells you when a price drops, hits your target, or
-  an out-of-stock item comes back.
+  Open-source, self-hosted price tracking with Docker.
 </p>
 
 <p align="center">
@@ -23,35 +21,29 @@
   <sub>Note: Screenshots show the v2/beta interface. See the <a href="assets/screenshots/">screenshots directory</a> for more.</sub>
 </p>
 
-PriceStalker is a self-hosted price tracker for monitoring products across
-different retailers. It supports multi-currency price alerts, stock tracking,
-retailer-specific selectors, AI-assisted extraction, notification channels,
-and Docker-based deployment. It is a modern fork and v2 rebuild of
-[PriceGhost](https://github.com/clucraft/PriceGhost).
+PriceStalker tracks prices and stock across retailers, with multi-currency
+alerts, retailer-specific selectors, AI-assisted extraction, notifications,
+and optional stealth-browser scraping.
 
 ---
 
 ## About this fork
 
-PriceStalker is an actively developed fork of
-[clucraft/PriceGhost](https://github.com/clucraft/PriceGhost). It retains the
-original project's MIT licence and credits [@clucraft](https://github.com/clucraft)
-for the upstream foundation.
+PriceStalker is an actively developed v2 fork of
+[PriceGhost](https://github.com/clucraft/PriceGhost), retaining the upstream MIT
+licence and crediting the original project.
 
 The 2.0 rebuild was carried forward by
-[@stevene1919](https://github.com/stevene1919) on a heavily reworked branch of
-the original project. It introduces a rebuilt scraping pipeline, per-retailer
-configuration, consensus price selection, live currency conversion, optional
-stealth-browser scraping, expanded notifications, and OIDC/SSO support. The
-reworked design is deliberately database-backed and configurable: retailer
-rules, monitoring state, price and stock history, notification preferences,
-and operational settings can evolve without baking each site into the code.
+[@stevene1919](https://github.com/stevene1919) on a heavily reworked branch. It
+introduces a rebuilt scraping pipeline, per-retailer configuration, consensus
+price selection, live currency conversion, optional stealth-browser scraping,
+expanded notifications, and OIDC/SSO support.
 
 PriceStalker remains compatible with the existing PriceGhost database format.
 If you are migrating from PriceGhost, see
-[Migrating from PriceGhost](#migrating-from-priceghost). If you are upgrading
-to 2.0, take a database backup first because the migration is automatic and
-one-way. See [Upgrading to 2.0](#upgrading-to-20) for details.
+[Migrating from PriceGhost](#migrating-from-priceghost). Before upgrading to
+2.0, take a database backup because migrations are automatic and one-way. See
+[Upgrading to 2.0](#upgrading-to-20).
 
 ---
 
