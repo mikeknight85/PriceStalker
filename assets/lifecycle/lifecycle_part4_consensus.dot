@@ -1,0 +1,41 @@
+digraph LifecyclePart4 {
+  graph [label="Part 4 — Consensus, Arbitration & Price Guardrails", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.4, ranksep=.65, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  In [label="PriceCandidate[]", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Deal [label="Two agreeing deal-price candidates?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Member [label="Two agreeing member-price candidates?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Pre [label="Two agreeing pre-order candidates?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Original [label="Two agreeing original-price candidates?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Weighted [label="Weighted arbitration\nexpert-* 5.0 | json-ld 2.0\ncustom-regex 1.6 | custom-css 1.5\ngeneric-css .2 | others 1.0"]
+  Tie [label="Tie/no clear winner\nneedsReview = true", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Resolved [label="Resolved standard/member/original result", fillcolor="#059669", fontcolor="#ffffff"]
+  Stock [label="out_of_stock or not_available?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Guard [label="Out-of-stock guardrails\nuncorroborated JSON-LD\nlow-confidence method\nprice below 50% of anchor", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Null [label="Nullify price\nneedsReview = true", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Verify [label="Proceed to AI verification\nor persistence", fillcolor="#059669", fontcolor="#ffffff"]
+  Sanity [label="Original-price sanity check\nnot below standard; not >10× standard"]
+
+  In -> Deal
+  Deal -> Resolved [label="yes"]
+  Deal -> Member [label="no"]
+  Member -> Resolved [label="yes"]
+  Member -> Pre [label="no"]
+  Pre -> Resolved [label="yes"]
+  Pre -> Original [label="no"]
+  Original -> Resolved [label="yes"]
+  Original -> Weighted [label="no"]
+  Weighted -> Resolved
+  Deal -> Tie [label="tie"]
+  Member -> Tie [label="tie"]
+  Pre -> Tie [label="tie"]
+  Original -> Tie [label="tie"]
+  Tie -> Verify
+  Resolved -> Sanity -> Stock
+  Stock -> Verify [label="no"]
+  Stock -> Guard [label="yes"]
+  Guard -> Null [label="guard fails"]
+  Guard -> Verify [label="passes"]
+  Null -> Tie
+}

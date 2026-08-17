@@ -147,6 +147,22 @@ verify: ## Run a clean install, all builds, and backend tests.
 	pnpm run build:all
 	pnpm --filter pricestalker-backend exec vitest run
 
-diagrams: ## Rebuild product lifecycle diagrams from .dot file.
+diagrams: ## Rebuild product lifecycle overview and detailed diagrams from .dot files.
 	dot -Tsvg assets/product_lifecycle.dot -o assets/product_lifecycle.svg
 	dot -Tpng assets/product_lifecycle.dot -o assets/product_lifecycle.png
+	dot -Tsvg assets/lifecycle/lifecycle_part1_init_acquisition.dot -o assets/lifecycle/lifecycle_part1_init_acquisition.svg
+	dot -Tpng assets/lifecycle/lifecycle_part1_init_acquisition.dot -o assets/lifecycle/lifecycle_part1_init_acquisition.png
+	dot -Tsvg assets/lifecycle/lifecycle_part2_extraction.dot -o assets/lifecycle/lifecycle_part2_extraction.svg
+	dot -Tpng assets/lifecycle/lifecycle_part2_extraction.dot -o assets/lifecycle/lifecycle_part2_extraction.png
+	dot -Tsvg assets/lifecycle/lifecycle_part3_validation_automapping.dot -o assets/lifecycle/lifecycle_part3_validation_automapping.svg
+	dot -Tpng assets/lifecycle/lifecycle_part3_validation_automapping.dot -o assets/lifecycle/lifecycle_part3_validation_automapping.png
+	dot -Tsvg assets/lifecycle/lifecycle_part4_consensus.dot -o assets/lifecycle/lifecycle_part4_consensus.svg
+	dot -Tpng assets/lifecycle/lifecycle_part4_consensus.dot -o assets/lifecycle/lifecycle_part4_consensus.png
+	dot -Tsvg assets/lifecycle/lifecycle_part5_verification_review.dot -o assets/lifecycle/lifecycle_part5_verification_review.svg
+	dot -Tpng assets/lifecycle/lifecycle_part5_verification_review.dot -o assets/lifecycle/lifecycle_part5_verification_review.png
+	dot -Tsvg assets/lifecycle/lifecycle_part6_persistence_learning.dot -o assets/lifecycle/lifecycle_part6_persistence_learning.svg
+	dot -Tpng assets/lifecycle/lifecycle_part6_persistence_learning.dot -o assets/lifecycle/lifecycle_part6_persistence_learning.png
+	dot -Tsvg assets/lifecycle/lifecycle_part7_onboarding_monitoring.dot -o assets/lifecycle/lifecycle_part7_onboarding_monitoring.svg
+	dot -Tpng assets/lifecycle/lifecycle_part7_onboarding_monitoring.dot -o assets/lifecycle/lifecycle_part7_onboarding_monitoring.png
+	dot -Tsvg assets/lifecycle/lifecycle_part8_notifications.dot -o assets/lifecycle/lifecycle_part8_notifications.svg
+	dot -Tpng assets/lifecycle/lifecycle_part8_notifications.dot -o assets/lifecycle/lifecycle_part8_notifications.png

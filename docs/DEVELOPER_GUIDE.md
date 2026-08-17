@@ -121,7 +121,7 @@ to `127.0.0.1`; set `LOCAL_POSTGRES_PORT` to use another host port.
 ### Workspace Validation & Utilities
 These helpers verify codebase sanity, formatting, and generate developer assets:
 * **`make verify`**: Performs a clean installation, compiles all workspace sub-packages, and executes backend tests natively on the host.
-* **`make diagrams`**: Rebuilds the SVG and PNG product lifecycle flowcharts from `assets/product_lifecycle.dot`. *(Requires Graphviz `dot` installed on host)*.
+* **`make diagrams`**: Rebuilds the overview and detailed SVG/PNG product lifecycle flowcharts from the DOT files under `assets/` and `assets/lifecycle/`. *(Requires Graphviz `dot` installed on host)*.
 * **`pnpm run lint`**: Checks for codebase compliance with visual formatting rules (such as checking for forbidden emojis).
 * **`pnpm run test:dev-env`**: Runs the unit test suite verifying the credentials auto-generation script.
 * **`pnpm run tree`**: Prints an updated ASCII folder layout tree for documentation updates.

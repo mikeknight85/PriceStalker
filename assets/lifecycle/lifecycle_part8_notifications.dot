@@ -1,0 +1,34 @@
+digraph LifecyclePart8 {
+  graph [label="Part 8 — Monitoring Events & Notifications", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.45, ranksep=.7, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  Refresh [label="Scheduled/manual refresh result", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Persist [label="Persist product, price, and stock state\nthen compare pre-refresh state"]
+  Event [label="Classify eligible event", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Drop [label="Price drop\nthreshold eligible", fillcolor="#059669", fontcolor="#ffffff"]
+  Target [label="Target price reached", fillcolor="#059669", fontcolor="#ffffff"]
+  Back [label="Back in stock\nfrom OOS/pre-order/not_available\nwhen enabled", fillcolor="#059669", fontcolor="#ffffff"]
+  Announce [label="Pre-order price announced\nfirst recorded price", fillcolor="#059669", fontcolor="#ffffff"]
+  Unavailable [label="Product unavailable\npage-gone threshold reached", fillcolor="#dc2626", fontcolor="#ffffff"]
+  None [label="No eligible event\ncontinue monitoring"]
+  Payload [label="Build event payload\nproduct, price, old/new status, reason, action"]
+  Channels [label="Check user preferences\nand configured providers"]
+  Deliver [label="External delivery\nTelegram, Discord, email, etc."]
+  History [label="Persist in-app notification\nand delivery result", fillcolor="#7c3aed", fontcolor="#ffffff"]
+  UI [label="Toast / notification drawer / history page", fillcolor="#7c3aed", fontcolor="#ffffff"]
+
+  Refresh -> Persist -> Event
+  Event -> Drop [label="price changed"]
+  Event -> Target [label="target crossed"]
+  Event -> Back [label="stock transition"]
+  Event -> Announce [label="pre-order price"]
+  Event -> Unavailable [label="page unavailable"]
+  Event -> None [label="none"]
+  Drop -> Payload
+  Target -> Payload
+  Back -> Payload
+  Announce -> Payload
+  Unavailable -> Payload
+  Payload -> Channels -> Deliver -> History -> UI
+}

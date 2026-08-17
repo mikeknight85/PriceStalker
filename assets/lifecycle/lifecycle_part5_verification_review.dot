@@ -1,0 +1,34 @@
+digraph LifecyclePart5 {
+  graph [label="Part 5 — AI Verification & Human Review", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.45, ranksep=.7, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  In [label="Resolved price or needsReview result", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Eligible [label="AI verification eligible?\nprice + HTML + userId\nno prior AI status, not skipped", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Verify [label="Active AI provider cross-checks\nresolved price against denoised HTML", fillcolor="#7c3aed", fontcolor="#ffffff"]
+  Agree [label="AI agrees?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Verified [label="ai_status = verified", fillcolor="#059669", fontcolor="#ffffff"]
+  Corrected [label="Replace suggested price\nai_status = corrected\nneedsReview = true", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Review [label="Review required\nno consensus, guardrail, correction,\nmissing currency, first scan, or rescan", fillcolor="#db2777", fontcolor="#ffffff"]
+  Candidates [label="Enrich candidate list\nmember-price + original-price entries"]
+  Modal [label="Frontend PriceSelectionModal\nuser chooses candidate", fillcolor="#db2777", fontcolor="#ffffff"]
+  New [label="New product confirmation\ncreate product + persist", fillcolor="#db2777", fontcolor="#ffffff"]
+  Existing [label="Existing product confirmation\nPOST /products/:id/confirm", fillcolor="#db2777", fontcolor="#ffffff"]
+  Persist [label="Persist selected result\nmanual-add or manual-confirm", fillcolor="#059669", fontcolor="#ffffff"]
+  Queue [label="Scheduled refresh review\nproduct row persists; needs_price_review=true"]
+
+  In -> Eligible
+  Eligible -> Verify [label="yes"]
+  Eligible -> Review [label="no / already review"]
+  Verify -> Agree
+  Agree -> Verified [label="yes"]
+  Agree -> Corrected [label="no"]
+  Verified -> Persist
+  Corrected -> Review
+  Review -> Candidates -> Modal
+  Modal -> New [label="new discovery"]
+  Modal -> Existing [label="rescan"]
+  New -> Persist
+  Existing -> Persist
+  Review -> Queue [label="scheduled refresh"]
+}

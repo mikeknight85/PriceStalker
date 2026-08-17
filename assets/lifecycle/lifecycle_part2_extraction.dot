@@ -1,0 +1,38 @@
+digraph LifecyclePart2 {
+  graph [label="Part 2 — DOM Denoising & Candidate Extraction", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.4, ranksep=.65, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  HTML [label="HTML + Cheerio document", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Context [label="Re-resolve currency and locale\nusing URL, config, HTML, user context"]
+  Denoise [label="denoiseDomForExtraction()\nremove boilerplate\nprotect configured evidence nodes"]
+  Meta [label="Metadata extraction\nproduct name, retailer name, image\nstock candidates and extraction trace", fillcolor="#059669", fontcolor="#ffffff"]
+
+  subgraph cluster_stock { label="Stock candidate layers"; color="#065f46"; fontcolor="#6ee7b7"; style="rounded,filled"; bgcolor="#052e24"
+    S1 [label="Pre-order price selectors\nimplicit high confidence"]
+    S2 [label="Retailer stock selectors\n+ phrase/status matching"]
+    S3 [label="Schema.org / JSON-LD availability"]
+    S4 [label="Global stock selectors"]
+    S5 [label="Generic targeted phrases\nmain/product area, then body"]
+    SW [label="Choose highest-confidence\nnon-unknown status", fillcolor="#047857", fontcolor="#ffffff"]
+    S1 -> S2 -> S3 -> S4 -> S5 -> SW
+  }
+
+  subgraph cluster_price { label="Seven-layer price candidate cascade"; color="#065f46"; fontcolor="#6ee7b7"; style="rounded,filled"; bgcolor="#052e24"
+    P1 [label="1. JSON-LD / Schema.org\nconf .95, weight 2.0"]
+    P2 [label="2. Deal price selectors\nconf .95"]
+    P3 [label="3. Member price selectors\nconf .95"]
+    P4 [label="4. Pre-order price selectors\nconf .95"]
+    P5 [label="5. Original/RRP selectors\nconf .95"]
+    P6 [label="6. Retailer custom selectors\nconf .90, weight 1.5"]
+    P7 [label="7. Generic/global selectors\nmax 40, conf .60, weight .2"]
+    P1 -> P2 -> P3 -> P4 -> P5 -> P6 -> P7
+  }
+
+  Candidates [label="ScrapedProductWithVoting\nmetadata + stock + PriceCandidate[]\nselector, method, currency, confidence", fillcolor="#059669", fontcolor="#ffffff"]
+  HTML -> Context -> Denoise -> Meta
+  Meta -> S1
+  Meta -> P1
+  SW -> Candidates
+  P7 -> Candidates
+}

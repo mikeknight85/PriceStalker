@@ -1,0 +1,37 @@
+digraph LifecyclePart7 {
+  graph [label="Part 7 — Product Onboarding & Monitoring State", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.5, ranksep=.75, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  URL [label="User submits product URL", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Discovery [label="Discovery scrape"]
+  Clear [label="Clear price/status result?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Active [label="Create product\nstart scheduled monitoring", fillcolor="#059669", fontcolor="#ffffff"]
+  Review [label="No product row yet\nreturn review candidates", fillcolor="#db2777", fontcolor="#ffffff"]
+  Confirm [label="User confirms candidate\ncreate and persist product", fillcolor="#db2777", fontcolor="#ffffff"]
+  Monitor [label="Active monitoring\nnext_check_at due", fillcolor="#059669", fontcolor="#ffffff"]
+  OOS [label="Stock transitions\nin_stock / out_of_stock / pre_order / member_only"]
+  Gone [label="Page-gone result", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Streak [label="Three consecutive page-gone results?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Paused [label="not_available\nchecking_paused=true", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Manual [label="Manual/forced refresh\nwhile paused", fillcolor="#92400e", fontcolor="#ffffff"]
+  Restored [label="Page available again\nunpause and resume monitoring", fillcolor="#059669", fontcolor="#ffffff"]
+  Unknown [label="Unknown/transient error\npreserve known state; next due check"]
+
+  URL -> Discovery -> Clear
+  Clear -> Active [label="yes"]
+  Clear -> Review [label="no"]
+  Review -> Confirm -> Active
+  Active -> Monitor
+  Monitor -> OOS
+  OOS -> Gone
+  Gone -> Streak [label="not_available"]
+  Gone -> Unknown [label="network/unknown"]
+  Streak -> Monitor [label="below threshold"]
+  Streak -> Paused [label="threshold reached"]
+  Paused -> Manual
+  Manual -> Restored [label="available"]
+  Restored -> Monitor
+  Manual -> Paused [label="still unavailable"]
+  Unknown -> Monitor
+}

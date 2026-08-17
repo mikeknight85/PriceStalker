@@ -1,0 +1,23 @@
+digraph LifecyclePart6 {
+  graph [label="Part 6 — Persistence & Selector Learning", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.45, ranksep=.7, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  In [label="saveScrapeResult(source)\nmanual-add, manual-confirm, refresh, auto-track", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Tx [label="Transaction + product advisory lock\nfetch current product state"]
+  Meta [label="Update metadata when valid\nname and image sanitisation"]
+  Stock [label="Update stock status/history\nignore unknown over known status"]
+  Prices [label="Record changed prices\nstandard, member, original\nupdate anchor/preferred method"]
+  Review [label="Refresh + needsReview?\nset needs_price_review=true"]
+  Learn [label="runAutoRetailerConfig()\nresolve winning selector"]
+  Promote [label="Promote selector\nmatch/failure metadata"]
+  Evict [label="Evict low-scoring selectors\nwhen array exceeds 10"]
+  Clean [label="Remove duplicated generic selectors\nthen invalidate config cache"]
+  Next [label="Update last_checked / next_check_at", fillcolor="#059669", fontcolor="#ffffff"]
+  Commit [label="Commit transaction", fillcolor="#059669", fontcolor="#ffffff"]
+  Confirm [label="manual-confirm only\nclear review + set ai_status=confirmed"]
+
+  In -> Tx -> Meta -> Stock -> Prices -> Review -> Learn -> Promote -> Evict -> Clean -> Next -> Commit
+  Review -> Confirm [label="manual-confirm"]
+  Confirm -> Learn
+}

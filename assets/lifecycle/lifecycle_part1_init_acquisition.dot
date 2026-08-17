@@ -1,0 +1,33 @@
+digraph LifecyclePart1 {
+  graph [label="Part 1 — Session Initialisation & HTML Acquisition", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.45, ranksep=.7, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  Start [label="Scrape request\n(discovery, refresh, rescan, admin test)", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Init [label="initScrapeSession()\ncanonical domain lookup\nretailer config + AI/settings cache"]
+  Context [label="Resolve context\ncurrency hint, locale, proxy, AI skip flags"]
+  Browser [label="use_browser_scraper?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Remote [label="Remote browser / local browser\nconfigured scraper service"]
+  HTTP [label="Standard Axios fetch\nheaders, proxy, retry policy"]
+  Challenge [label="Bot challenge detected?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Fallback [label="Challenge fallback eligible?\nmainly no existing retailer config", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Gone [label="404/410, error redirect, or soft 404", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Fail [label="Acquisition error\nreturn unknown or not_available result", fillcolor="#dc2626", fontcolor="#ffffff"]
+  HTML [label="HTML + Cheerio document\npass to extraction", fillcolor="#059669", fontcolor="#ffffff"]
+  Learned [label="Fallback succeeded\nlearn use_browser_scraper=true", fillcolor="#4f46e5", fontcolor="#ffffff"]
+
+  Start -> Init -> Context -> Browser
+  Browser -> Remote [label="yes"]
+  Browser -> HTTP [label="no"]
+  Remote -> HTML [label="HTML"]
+  Remote -> HTTP [label="failed"]
+  HTTP -> Challenge
+  Challenge -> Fallback [label="yes"]
+  Challenge -> Gone [label="no"]
+  Fallback -> Remote [label="yes"]
+  Fallback -> Fail [label="no"]
+  Gone -> Fail [label="page unavailable"]
+  Gone -> HTML [label="valid page"]
+  Remote -> Learned [label="fallback success"]
+  Learned -> HTML
+}

@@ -1,0 +1,30 @@
+digraph LifecyclePart3 {
+  graph [label="Part 3 — Challenge Validation & AI Auto-Mapping", labelloc=t, rankdir=TB, bgcolor="#0f172a", fontname="Segoe UI", fontsize=20, fontcolor="#f8fafc", nodesep=.45, ranksep=.7, compound=true]
+  node [shape=box, style="filled,rounded", fillcolor="#1e293b", color="#334155", fontcolor="#cbd5e1", fontname="Segoe UI", fontsize=10, penwidth=1.2]
+  edge [color="#64748b", fontcolor="#94a3b8", fontname="Segoe UI", fontsize=9, arrowsize=.8]
+
+  In [label="Extracted candidates + acquisition challenge", fillcolor="#2563eb", fontcolor="#ffffff"]
+  Success [label="Useful price candidates found?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Ignore [label="Success-first\nignore partial challenge for this scrape", fillcolor="#059669", fontcolor="#ffffff"]
+  Block [label="Persistent challenge\nflag retailer blocked/maintenance", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Config [label="Retailer config exists\nand is not shell config?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Eligible [label="Auto-map eligible?\nno challenge, not unavailable,\nno standard price, AI enabled", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Generic [label="Use existing/generic extraction\ncontinue to consensus"]
+  Clean [label="cleanHtml()\nprune boilerplate for AI context", fillcolor="#7c3aed", fontcolor="#ffffff"]
+  Generate [label="Active AI provider\nRETAILER_GENERATION_PROMPT", fillcolor="#7c3aed", fontcolor="#ffffff"]
+  Save [label="Save retailer config\nselectors, phrases, hints", fillcolor="#7c3aed", fontcolor="#ffffff"]
+  Rescrape [label="Re-run extraction\nwith new domain config", fillcolor="#4f46e5", fontcolor="#ffffff"]
+  Consensus [label="Proceed to consensus", fillcolor="#059669", fontcolor="#ffffff"]
+
+  In -> Success
+  Success -> Ignore [label="yes"]
+  Success -> Block [label="no + challenge"]
+  Ignore -> Config
+  Block -> Config [label="skip auto-map"]
+  Config -> Consensus [label="yes"]
+  Config -> Eligible [label="no/shell"]
+  Eligible -> Generic [label="no"]
+  Eligible -> Clean [label="yes"]
+  Clean -> Generate -> Save -> Rescrape -> Consensus
+  Generic -> Consensus
+}
