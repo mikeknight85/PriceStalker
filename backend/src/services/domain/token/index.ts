@@ -8,7 +8,7 @@ export class SystemApiTokenService {
    * Generates a new secure random token
    */
   private generateSecureToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return `ps_${crypto.randomBytes(32).toString('hex')}`;
   }
 
   /**
