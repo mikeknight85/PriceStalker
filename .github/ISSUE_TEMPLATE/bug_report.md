@@ -2,7 +2,7 @@
 name: Bug Report
 about: Create a report to help us improve PriceStalker
 title: '[BUG] '
-labels: bug
+labels: bug, needs-triage
 assignees: ''
 
 ---
@@ -31,3 +31,6 @@ If applicable, add screenshots or console output/logs to help explain your probl
 
 **Additional context**
 Add any other context about the problem here (e.g. specific product URL, retailer domain, whether proxies or remote scrapers are enabled).
+
+**Area**
+If known, add the relevant area label, such as `backend`, `frontend`, `scraper`, `notifications`, or `database`.

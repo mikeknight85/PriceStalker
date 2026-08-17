@@ -2,7 +2,7 @@
 name: Feature Request
 about: Suggest an idea or enhancement for PriceStalker
 title: '[FEATURE] '
-labels: enhancement
+labels: enhancement, needs-triage
 assignees: ''
 
 ---
@@ -18,3 +18,6 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Additional context**
 Add any other context or screenshots about the feature request here (e.g. proposed UI mockups, database schema suggestions).
+
+**Area**
+If known, add the relevant area label, such as `backend`, `frontend`, `scraper`, `notifications`, or `database`.
