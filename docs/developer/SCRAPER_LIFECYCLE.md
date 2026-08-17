@@ -5,7 +5,7 @@ This document is the canonical reference for the scrape engine and its hand-off 
 > For the visual end-to-end diagram, see [product_lifecycle_slides.md](product_lifecycle_slides.md). 
 
 > For the extraction system internals, see [SELECTORS.md](SELECTORS.md). 
-> For the consensus weighting table and arbitration audit, see the upstream audit register (not yet imported).
+> For the consensus weighting details and known issues, see the [upstream audit register](../audit/upstream_scraping_consensus_audit.md). The audit contains inherited findings from multiple upstream forks, so its status is checked against the current source below.
 
 ---
 
@@ -94,7 +94,7 @@ Winner = highest-confidence candidate where `value !== 'unknown'`. Supported fin
 | 6 | Custom CSS selectors | 0.90 | 1.5 |
 | 7 | Generic CSS selectors (capped at 40 candidates) | 0.60 | 0.2 |
 
-\* Deal/member/pre-order/original candidates bypass the weight system via short-circuit in `findPriceConsensus` (see Phase 5).
+\* Deal and pre-order candidates use a priority path in `findPriceConsensus`; they do not participate in the weighted fallback. Member and original candidates are collected separately as metadata and do not become the primary price through this function.
 
 ---
 
@@ -136,19 +136,23 @@ Triggers only when all of these are true:
 
 ### Consensus Algorithm
 
-`findPriceConsensus(candidates)` uses a **two-stage hybrid** approach:
+`findPriceConsensus(candidates)` uses a **priority-plus-weighted** approach. It is important to distinguish a selected candidate from a corroborated consensus: the weighted phase can accept a single sufficiently weighted source.
 
-**Stage A — Method short-circuit (highest structural priority):**
+**Stage A — Separate price types and priority paths:**
 
-1. Deal prices (`deal-price`) → if ≥2 candidates agree → immediate consensus, skip weight phase.
-2. Member prices (`member-price`) → same.
-3. Pre-order prices (`pre-order-price`) → same.
-4. Original prices (`original-price`) → same.
-5. If any stage produces a tie → `hasConsensus = false`, flag `needsReview = true`.
+1. Member prices (`member-price`) are grouped separately and the largest approximate-price group is retained as `memberPrice`.
+2. Original prices (`original-price`) are grouped separately and the largest approximate-price group is retained as `originalPrice`.
+3. If any deal-price candidate exists, the largest deal-price group is selected as the primary price and the weighted fallback is skipped.
+4. Otherwise, if any pre-order-price candidate exists, the largest pre-order-price group is selected as the primary price and the weighted fallback is skipped.
+5. Member/original ties are not currently surfaced as ambiguity, and deal/pre-order selection does not require two agreeing candidates. These are known follow-up issues.
 
-**Stage B — Weighted arbitration (fallback):**
+**Stage B — Weighted fallback:**
 
-Candidates are grouped by source key (method + selector). Each group accumulates `weight × count`. The highest-scoring group wins. Weights:
+Standard candidates are grouped by approximate numeric price. Each distinct source key (`method + selector`) contributes its method weight once to the group. Repeated candidates from the same source do not increase the score. The highest-scoring group wins.
+
+The candidate `confidence` value is not multiplied into this score and is not used to break weighted ties.
+
+Weights:
 
 | Method | Weight |
 |--------|--------|
@@ -159,7 +163,9 @@ Candidates are grouped by source key (method + selector). Each group accumulates
 | `generic-css` | 0.2 |
 | All others | 1.0 |
 
-Tie-breaking within a group: highest confidence → lowest price ( see audit issue **C-3**).
+If the top two groups have effectively equal scores, `hasConsensus` is false and arbitration may be attempted. The no-AI/no-anchor fallback then sorts by candidate confidence and chooses the lowest price when confidence is tied. This remains a known issue; it is not a median or anchor-aware tie-breaker.
+
+Price grouping currently uses a 5% relative tolerance, compares candidates against the first candidate in each group, and does not include currency in the grouping key. Grouping can therefore depend on candidate order and can combine equal numeric prices expressed in different currencies.
 
 ### OOS Guardrails (`runConsensusPhase`)
 
@@ -170,6 +176,8 @@ After `findPriceConsensus` resolves a price, additional checks apply **only when
 | Single-source isolation | Only 1 JSON-LD candidate, no corroboration | Nullify price, `needsReview = true` |
 | Low-confidence generic | Score < 0.85 and method is generic | Nullify price, `needsReview = true` |
 | Anchor drift | Price < 50% of anchor (last known price) | Nullify price, `needsReview = true` |
+
+The current drift guard only detects extreme downward movement. Upward drift is not currently checked. Corroboration metadata is produced by the deterministic consensus phase and is not fully recalculated if AI or anchor arbitration selects a different candidate; see audit item **O-8**.
 
 `highConfidenceMethods` whitelist (retains an out-of-stock price) includes `json-ld`, `custom-css`, `custom-regex`, `deal-price`, `member-price`, `pre-order-price`, `expert-ai`, `ai-extraction`, `manual-selector`, and `ai`, plus any `expert-*` prefix.
 
