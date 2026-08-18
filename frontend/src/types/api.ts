@@ -319,6 +319,36 @@ export interface CreateSystemApiTokenResponse {
   systemToken: SystemApiToken;
 }
 
+export interface SystemLogDetails {
+  tokens?: {
+    input: number;
+    output: number;
+  };
+  product_id?: number;
+  retailer_domain?: string;
+  trace?: string[];
+  steps?: string[];
+  error?: unknown;
+  stack?: string;
+  [key: string]: unknown;
+}
+
+export interface SystemLog {
+  id: number;
+  level: string;
+  context: string;
+  message: string;
+  details: SystemLogDetails | null;
+  created_at: string;
+}
+
+export interface SystemLogsResponse {
+  logs: SystemLog[];
+  total: number;
+  pages: number;
+  contexts: string[];
+}
+
 export interface TestRetailerConfigResult {
   success: boolean;
   name?: string | null;

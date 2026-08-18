@@ -2,7 +2,8 @@ import { api, type RequestOptions } from '../../../api/client';
 import { 
   SystemSettings, 
   SystemApiToken, 
-  CreateSystemApiTokenResponse 
+  CreateSystemApiTokenResponse,
+  SystemLogsResponse
 } from '../../../types/api';
 
 export const AdminSystemService = {
@@ -14,7 +15,7 @@ export const AdminSystemService = {
 
   // Logs
   getLogs: (params: { page?: number; limit?: number; level?: string; context?: string; search?: string }) => 
-    api.get<any>('/admin/logs', { params }),
+    api.get<SystemLogsResponse>('/admin/logs', { params }),
   deleteLogs: (ids: number[]) => api.delete('/admin/logs', { data: { ids } }),
   clearLogs: (level?: string, context?: string) => api.delete('/admin/logs/clear', { params: { level, context } }),
 
