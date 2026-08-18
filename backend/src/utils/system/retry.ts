@@ -67,9 +67,10 @@ export async function withRetry<T>(
       const errorMsg = error.response?.data?.error?.message || error.message || 'Unknown error';
       const status = error.response?.status ? ` (${error.response.status})` : '';
       
+      const logContext = context || 'Retry';
       logger.warn(
-        `AI | ${context} | Attempt ${attempt} failed${status}: ${errorMsg}. Retrying in ${currentDelay}ms...`,
-        'AI'
+        `${logContext} | Attempt ${attempt} failed${status}: ${errorMsg}. Retrying in ${currentDelay}ms...`,
+        logContext
       );
 
       await new Promise(resolve => setTimeout(resolve, currentDelay));

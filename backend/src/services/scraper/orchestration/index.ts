@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { logger } from '../../../utils/system/logger';
 import { 
   ScrapedProduct, 
@@ -47,7 +48,7 @@ export async function scrapeProductWithVoting(
   overrideConfig?: Partial<RetailerConfig>,
   productId?: number
 ): Promise<ScrapedProductWithVoting> {
-  const requestId = `REQ-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const requestId = `REQ-${randomUUID()}`;
   const result: ScrapedProductWithVoting = { 
     name: null, 
     price: null, 
@@ -124,7 +125,8 @@ export async function scrapeProductWithVoting(
       (!domainConfig.member_price_selectors || domainConfig.member_price_selectors.length === 0) &&
       (!domainConfig.name_selectors || domainConfig.name_selectors.length === 0) &&
       (!domainConfig.image_selectors || domainConfig.image_selectors.length === 0) &&
-      (!domainConfig.stock_selectors || domainConfig.stock_selectors.length === 0);
+      (!domainConfig.stock_selectors || domainConfig.stock_selectors.length === 0) &&
+      !domainConfig.jsonld_price_key;
 
     const isDefinitivelyUnavailable = result.stockStatus === 'out_of_stock' || result.stockStatus === 'not_available';
     const priceExtracted = result.price !== null;

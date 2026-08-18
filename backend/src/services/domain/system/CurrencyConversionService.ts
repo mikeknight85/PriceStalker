@@ -16,7 +16,8 @@ class CurrencyConversionService {
       logger.info(`Currency | Updating rates relative to ${base}...`, 'Currency');
       
       const response = await axios.get<Array<{ date: string; base: string; quote: string; rate: number }>>(this.API_URL, {
-        params: { base }
+        params: { base },
+        timeout: 10000
       });
 
       if (!Array.isArray(response.data) || response.data.length === 0) {
