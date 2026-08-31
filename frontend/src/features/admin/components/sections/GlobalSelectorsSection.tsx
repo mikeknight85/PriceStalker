@@ -19,6 +19,7 @@ export default function GlobalSelectorsSection() {
   const [globalPriceSelectors, setGlobalPriceSelectors] = useState<string[]>([]);
   const [globalDealPriceSelectors, setGlobalDealPriceSelectors] = useState<string[]>([]);
   const [globalMemberPriceSelectors, setGlobalMemberPriceSelectors] = useState<string[]>([]);
+  const [globalOriginalPriceSelectors, setGlobalOriginalPriceSelectors] = useState<string[]>([]);
   const [globalPreOrderPriceSelectors, setGlobalPreOrderPriceSelectors] = useState<string[]>([]);
   const [globalNameSelectors, setGlobalNameSelectors] = useState<string[]>([]);
   const [globalRetailerNameSelectors, setGlobalRetailerNameSelectors] = useState<string[]>([]);
@@ -64,6 +65,7 @@ export default function GlobalSelectorsSection() {
       try { setGlobalPriceSelectors(JSON.parse(settings.generic_price_selectors || '[]')); } catch { setGlobalPriceSelectors([]); }
       try { setGlobalDealPriceSelectors(JSON.parse(settings.generic_deal_price_selectors || '[]')); } catch { setGlobalDealPriceSelectors([]); }
       try { setGlobalMemberPriceSelectors(JSON.parse(settings.generic_member_price_selectors || '[]')); } catch { setGlobalMemberPriceSelectors([]); }
+      try { setGlobalOriginalPriceSelectors(JSON.parse(settings.generic_original_price_selectors || '[]')); } catch { setGlobalOriginalPriceSelectors([]); }
       try { setGlobalPreOrderPriceSelectors(JSON.parse(settings.generic_pre_order_price_selectors || '[]')); } catch { setGlobalPreOrderPriceSelectors([]); }
       try { setGlobalNameSelectors(JSON.parse(settings.generic_name_selectors || '[]')); } catch { setGlobalNameSelectors([]); }
       try { setGlobalRetailerNameSelectors(JSON.parse(settings.generic_retailer_name_selectors || '[]')); } catch { setGlobalRetailerNameSelectors([]); }
@@ -88,6 +90,7 @@ export default function GlobalSelectorsSection() {
         generic_price_selectors: JSON.stringify(globalPriceSelectors),
         generic_deal_price_selectors: JSON.stringify(globalDealPriceSelectors),
         generic_member_price_selectors: JSON.stringify(globalMemberPriceSelectors),
+        generic_original_price_selectors: JSON.stringify(globalOriginalPriceSelectors),
         generic_pre_order_price_selectors: JSON.stringify(globalPreOrderPriceSelectors),
         generic_name_selectors: JSON.stringify(globalNameSelectors),
         generic_retailer_name_selectors: JSON.stringify(globalRetailerNameSelectors),
@@ -125,6 +128,16 @@ export default function GlobalSelectorsSection() {
 
       <CollapsibleCard title="Generic Member Price Selectors" leadingIcon={<Icon name="users" />} id="sys_sel_member" badge={String(globalMemberPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Member Price Selectors" items={globalMemberPriceSelectors} onChange={setGlobalMemberPriceSelectors} placeholder=".member-price" />
+      </CollapsibleCard>
+
+      <CollapsibleCard title="Generic Original Price (RRP) Selectors" leadingIcon={<Icon name="tag" />} id="sys_sel_original" badge={String(globalOriginalPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+          Used only when a retailer has no Original / RRP selectors of its own. Generic
+          RRP patterns match strikethrough prices anywhere on the page, including
+          unrelated products in carousels and grids, so prefer per-retailer selectors
+          and keep this list short.
+        </p>
+        <UnifiedSelectorManager label="Generic Original Price Selectors" items={globalOriginalPriceSelectors} onChange={setGlobalOriginalPriceSelectors} placeholder=".rrp, .was-price" />
       </CollapsibleCard>
 
       <CollapsibleCard title="⏳ Generic Pre-Order Price Selectors" id="sys_sel_preorder" badge={String(globalPreOrderPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>

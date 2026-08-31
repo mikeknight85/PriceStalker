@@ -10,6 +10,30 @@ export interface EvaluationResult {
 }
 
 /**
+ * Serialised form of the denoised DOM, cached per Cheerio instance.
+ *
+ * Regex selectors are evaluated one at a time, and $.html() walks the whole
+ * document, so serialising on every evaluation would repeat that work for each
+ * rule. The cache is a WeakMap so it disappears with the document.
+ */
+const denoisedHtmlCache = new WeakMap<object, string>();
+
+function denoisedHtmlFor($: CheerioAPI, fallback: string): string {
+  try {
+    const cached = denoisedHtmlCache.get($ as unknown as object);
+    if (cached !== undefined) return cached;
+
+    const serialised = $.html();
+    denoisedHtmlCache.set($ as unknown as object, serialised);
+    return serialised;
+  } catch {
+    // A malformed document should degrade to the old behaviour rather than
+    // losing the selector entirely.
+    return fallback;
+  }
+}
+
+/**
  * Evaluates a selector against a DOM ($) or raw HTML.
  */
 export function evaluateSelector(
@@ -21,7 +45,11 @@ export function evaluateSelector(
   const results: EvaluationResult[] = [];
 
   if (parsed.engine === 'regex') {
-    const matches = extractByRegex(html, [parsed.realSelector]);
+    // Match against the denoised document, not the raw response. The raw HTML
+    // still contains the sidebars, carousels, footers and tracking payloads the
+    // denoiser removed, so a regex written for the product area was matching
+    // prices from unrelated parts of the page.
+    const matches = extractByRegex(denoisedHtmlFor($, html), [parsed.realSelector]);
     for (const val of matches) {
       const modified = applyModifier({ value: val }, parsed);
       if (modified) {
