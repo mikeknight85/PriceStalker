@@ -17,16 +17,27 @@ export const queryKeys = {
   notifications: { recent: (limit: number) => ['notifications', 'recent', limit] as const, history: (page: number, limit: number) => ['notifications', 'history', page, limit] as const },
 };
 
+/**
+ * How often the dashboard and product detail poll for scraper results while the
+ * user is looking at them. React Query leaves `refetchIntervalInBackground` at
+ * its default of false, so a hidden or unfocused tab stops polling on its own
+ * and we do not keep hitting the API for a window nobody is watching.
+ */
+const PRODUCT_POLL_INTERVAL = 15_000;
+const PRODUCT_DETAIL_POLL_INTERVAL = 30_000;
+
 export const productListQuery = () => queryOptions({
   queryKey: queryKeys.products.all,
   queryFn: ({ signal }) => ProductService.getAll({ signal }),
-  staleTime: 30_000,
+  staleTime: PRODUCT_POLL_INTERVAL,
+  refetchInterval: PRODUCT_POLL_INTERVAL,
 });
 
 export const productDetailQuery = (id: number) => queryOptions({
   queryKey: queryKeys.products.detail(id),
   queryFn: ({ signal }) => ProductService.getById(id, { signal }),
-  staleTime: 30_000,
+  staleTime: PRODUCT_DETAIL_POLL_INTERVAL,
+  refetchInterval: PRODUCT_DETAIL_POLL_INTERVAL,
 });
 
 export const discoveryStatusQuery = () => queryOptions({
