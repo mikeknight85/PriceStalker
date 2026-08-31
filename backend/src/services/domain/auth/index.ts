@@ -64,6 +64,12 @@ export class AuthService {
     // 7. Generate token
     const token = generateToken(user.id);
 
+    // Not knowing when somebody last signed in is a reporting gap, not a reason
+    // to refuse them entry, so a failure here must not fail the login.
+    await userRepository.recordLogin(user.id).catch((err) =>
+      logger.warn(`Auth | Could not record login time for user ${user.id}: ${err}`, 'Auth')
+    );
+
     return {
       token,
       user: {

@@ -42,6 +42,37 @@ export class UserAccountService {
     const { email, name, currency, locale, password, is_admin, disabled } = data;
     const updates: any = {};
 
+    // SSO accounts are governed by the identity provider, and these two rules
+    // are enforced here rather than only in the admin UI: hiding a control does
+    // not stop anyone calling the endpoint.
+    const target = await userRepository.findById(targetId);
+    if (!target) {
+      throw new Error('User not found');
+    }
+    const isSsoAccount = target.auth_provider === 'oidc';
+
+    if (isSsoAccount && password) {
+      // An SSO account is provisioned without a password hash. Setting one
+      // turns on local sign-in for a profile that was meant to authenticate
+      // externally, which is an authentication bypass rather than a
+      // convenience.
+      const err = new Error(
+        'This account signs in through SSO. Passwords are managed by the identity provider and cannot be set here.'
+      );
+      (err as any).statusCode = 400;
+      throw err;
+    }
+
+    if (isSsoAccount && email !== undefined && email !== target.email) {
+      // The identity provider owns the email. Changing it locally either breaks
+      // the match on next sign-in or is silently overwritten by the provider.
+      const err = new Error(
+        'This account signs in through SSO. Its email address is managed by the identity provider and must be changed there.'
+      );
+      (err as any).statusCode = 400;
+      throw err;
+    }
+
     if (email !== undefined) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
