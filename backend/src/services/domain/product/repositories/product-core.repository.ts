@@ -1,4 +1,5 @@
 import pool from '../../../../config/database';
+import { asExecutor, type Executor } from './executor';
 import { 
   ProductWithLatestPrice, 
 } from '../../../../models/types';
@@ -51,8 +52,8 @@ export const productQueryCoreRepository = {
     return result.rows;
   },
 
-  findById: async (id: number, userId: number): Promise<ProductWithLatestPrice | null> => {
-    const result = await pool.query(
+  findById: async (id: number, userId: number, executor?: Executor): Promise<ProductWithLatestPrice | null> => {
+    const result = await asExecutor(executor).query(
       `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status,
               ph_m.price as member_price,
               ph_o.price as original_price,
@@ -62,7 +63,7 @@ export const productQueryCoreRepository = {
                 ELSE ph.price * er.rate
               END as converted_price,
               COALESCE(rc.name, rc.domain) as retailer_name,
-              (SELECT MIN(price) FROM price_history WHERE product_id = p.id) as min_price
+              (SELECT MIN(price) FROM price_history WHERE product_id = p.id AND price_type = 'standard') as min_price
        FROM products p
        JOIN users u ON u.id = p.user_id
        LEFT JOIN LATERAL (

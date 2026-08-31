@@ -1,6 +1,7 @@
 import pool from '../../../../config/database';
 import { StockStatus, AIStatus } from '../../../../models/types';
 import { calculateNextCheckSeconds } from '../../../../utils/system/scheduler-helpers';
+import { asExecutor, type Executor } from './executor';
 
 export const productConfigRepository = {
   setPageGoneStreak: async (id: number, streak: number): Promise<void> => {
@@ -10,10 +11,10 @@ export const productConfigRepository = {
     );
   },
 
-  updateLastChecked: async (id: number, refreshInterval: number): Promise<void> => {
+  updateLastChecked: async (id: number, refreshInterval: number, executor?: Executor): Promise<void> => {
     const nextCheckSeconds = calculateNextCheckSeconds(refreshInterval);
 
-    await pool.query(
+    await asExecutor(executor).query(
       `UPDATE products
        SET last_checked = CURRENT_TIMESTAMP,
            next_check_at = CURRENT_TIMESTAMP + ($2 || ' seconds')::interval
@@ -22,22 +23,23 @@ export const productConfigRepository = {
     );
   },
 
-  updateStockStatus: async (id: number, stockStatus: StockStatus, aiStatus?: AIStatus): Promise<void> => {
+  updateStockStatus: async (id: number, stockStatus: StockStatus, aiStatus?: AIStatus, executor?: Executor): Promise<void> => {
+    const db = asExecutor(executor);
     if (aiStatus) {
-      await pool.query(
+      await db.query(
         'UPDATE products SET stock_status = $1, ai_status = $2 WHERE id = $3',
         [stockStatus, aiStatus, id]
       );
     } else {
-      await pool.query(
+      await db.query(
         'UPDATE products SET stock_status = $1 WHERE id = $2',
         [stockStatus, id]
       );
     }
   },
 
-  updateExtractionMethod: async (id: number, method: string): Promise<void> => {
-    await pool.query(
+  updateExtractionMethod: async (id: number, method: string, executor?: Executor): Promise<void> => {
+    await asExecutor(executor).query(
       'UPDATE products SET preferred_extraction_method = $1, needs_price_review = false WHERE id = $2',
       [method, id]
     );
@@ -51,8 +53,8 @@ export const productConfigRepository = {
     return result.rows[0]?.preferred_extraction_method || null;
   },
 
-  updateAnchorPrice: async (id: number, price: number): Promise<void> => {
-    await pool.query(
+  updateAnchorPrice: async (id: number, price: number, executor?: Executor): Promise<void> => {
+    await asExecutor(executor).query(
       'UPDATE products SET anchor_price = $1 WHERE id = $2',
       [price, id]
     );
