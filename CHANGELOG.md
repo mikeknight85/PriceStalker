@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Changing a product's check frequency now takes effect immediately. The new
+  interval was saved but the next check was not rescheduled, so shortening
+  24 hours to 6 left the product quiet for up to another 24 hours while the
+  card counted down to the old time.
+- A product's countdown no longer runs far past the interval you chose. Three
+  independent timing randomisers compounded, so a product set to check every
+  6 hours could be scheduled more than 20 hours out. The randomness is kept --
+  it is what stops requests forming a detectable rhythm -- but the total is now
+  capped at 1.5x your setting.
+
 ## [2.1.0-beta.2] - 2026-08-31
 
 ### Added

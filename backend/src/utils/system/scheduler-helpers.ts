@@ -17,6 +17,22 @@ export function isQuietHours(): boolean {
 }
 
 /**
+ * How far past the configured interval a check may ever be pushed.
+ *
+ * The three randomisers below compound: ±15% jitter, ×1.5 during quiet hours,
+ * and a 10% chance to double. Stacked, a product set to check every 6 hours
+ * could be scheduled 20.7 hours out -- and the dashboard renders a live
+ * countdown straight from next_check_at, so it reads as "this is not being
+ * checked", which is exactly how this was reported.
+ *
+ * The cap keeps the user's setting meaningful without removing the
+ * unpredictability, which is what actually defeats rhythm detection: a request
+ * arriving at an unpredictable point within a bounded window is just as
+ * irregular as one that might arrive three times later.
+ */
+const MAX_INTERVAL_MULTIPLIER = 1.5;
+
+/**
  * Calculates the next check time for a product with jitter and quiet hours adjustment.
  */
 export function calculateNextCheckSeconds(refreshInterval: number): number {
@@ -33,6 +49,10 @@ export function calculateNextCheckSeconds(refreshInterval: number): number {
   if (Math.random() < 0.1) {
     nextCheckSeconds *= 2;
   }
+
+  // Bound the total. Without this the three randomisers compound into a delay
+  // several times the interval the user chose.
+  nextCheckSeconds = Math.min(nextCheckSeconds, Math.floor(refreshInterval * MAX_INTERVAL_MULTIPLIER));
 
   // Ensure we don't schedule something in the past or too soon
   return Math.max(60, nextCheckSeconds);
