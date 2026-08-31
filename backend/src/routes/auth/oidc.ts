@@ -135,6 +135,22 @@ router.get('/callback', async (req: Request, res: Response) => {
     // The fragment keeps the JWT out of server access logs and Referer headers.
     res.redirect(302, `${completeUrl}#token=${encodeURIComponent(token)}`);
   } catch (error) {
+    // The user gets a short message in the redirect; the reason belongs in the
+    // log (logging audit L-05). Previously a failed sign-in left nothing to
+    // diagnose from -- no reason, no issuer, no error code -- so an expired
+    // token, a clock skew and a bad signature were indistinguishable.
+    const err = error as { name?: string; message?: string; code?: string; claim?: string };
+    logger.warn(
+      `Auth | OIDC | Callback failed | ${err?.name || 'Error'}: ${err?.message || 'Unknown error'}`,
+      'Auth',
+      {
+        errorName: err?.name,
+        errorCode: err?.code,
+        // jose names the offending claim on validation failures, which is what
+        // separates "expired" from "wrong audience" from "wrong issuer".
+        claim: err?.claim,
+      }
+    );
     redirectWithError(error instanceof Error ? error.message : 'Unknown error');
   }
 });

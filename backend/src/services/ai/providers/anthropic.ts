@@ -3,6 +3,7 @@ import { AISettings } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 import { withRetry } from '../../../utils/system/retry';
 import { AIProvider, AIRequestOptions, AIResponse } from './types';
+import { traceAiRequest, traceAiResponse } from '../trace';
 
 const DEFAULT_ANTHROPIC_MODEL = 'claude-3-haiku-20240307';
 
@@ -21,6 +22,7 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async generate(prompt: string, options?: AIRequestOptions): Promise<AIResponse> {
+    traceAiRequest(prompt, { provider: 'Anthropic', productId: options?.productId, label: options?.retryLabel });
     const response = await withRetry(() => this.client.messages.create({
       model: this.model,
       max_tokens: options?.maxTokens || 1024,
@@ -40,8 +42,11 @@ export class AnthropicProvider implements AIProvider {
     }
 
     const content = response.content[0];
+    const rawText = content.type === 'text' ? content.text : '';
+    traceAiResponse(rawText, { provider: 'Anthropic', productId: options?.productId, label: options?.retryLabel });
+
     return {
-      text: content.type === 'text' ? content.text : '',
+      text: rawText,
       usage: response.usage ? {
         promptTokens: response.usage.input_tokens,
         completionTokens: response.usage.output_tokens,

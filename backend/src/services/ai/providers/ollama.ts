@@ -2,6 +2,7 @@ import axios from 'axios';
 import { AISettings } from '../../../models';
 import { withRetry } from '../../../utils/system/retry';
 import { AIProvider, AIRequestOptions, AIResponse } from './types';
+import { traceAiRequest, traceAiResponse } from '../trace';
 
 export class OllamaProvider implements AIProvider {
   private baseUrl: string;
@@ -15,6 +16,7 @@ export class OllamaProvider implements AIProvider {
   }
 
   async generate(prompt: string, options?: AIRequestOptions): Promise<AIResponse> {
+    traceAiRequest(prompt, { provider: 'Ollama', productId: options?.productId, label: options?.retryLabel });
     const response = await withRetry(() => axios.post(
       `${this.baseUrl}/api/chat`,
       {
@@ -35,6 +37,8 @@ export class OllamaProvider implements AIProvider {
     ), { maxRetries: this.settings.ai_max_retries ?? 1 }, options?.retryLabel || 'Ollama');
 
     const content = response.data?.message?.content || '';
+    traceAiResponse(content, { provider: 'Ollama', productId: options?.productId, label: options?.retryLabel });
+
     return { text: content };
   }
 }
