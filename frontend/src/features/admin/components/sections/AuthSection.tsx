@@ -276,7 +276,7 @@ export default function AuthSection() {
           ) : (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput
+                <PasswordInput secret
                   value={clientSecret}
                   onChange={e => setClientSecret(e.target.value)}
                   placeholder={

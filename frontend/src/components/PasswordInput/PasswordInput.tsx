@@ -1,11 +1,36 @@
-import { useState, InputHTMLAttributes } from 'react';
+import React, { useState, InputHTMLAttributes } from 'react';
 
 interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   allowReveal?: boolean;
+  /**
+   * Set for values that are not the signed-in user's own login credential --
+   * API keys, webhook URLs, provider tokens, and passwords an administrator
+   * sets for somebody else.
+   *
+   * Browsers apply password-manager heuristics to `type="password"` and largely
+   * ignore `autocomplete="off"` on it, which produces two bugs: they offer to
+   * save API keys as passwords, and on the admin user form they offer to update
+   * the *administrator's own* saved credential with another user's details.
+   * Masking a `type="text"` field with -webkit-text-security keeps the value
+   * hidden while staying invisible to those heuristics.
+   */
+  secret?: boolean;
 }
 
-export default function PasswordInput({ style, allowReveal = true, ...props }: PasswordInputProps) {
+// Firefox does not implement -webkit-text-security, so there we have to fall
+// back to a real password field and rely on the autocomplete and vendor
+// ignore attributes below.
+const supportsTextSecurity =
+  typeof CSS !== 'undefined' &&
+  typeof CSS.supports === 'function' &&
+  CSS.supports('-webkit-text-security', 'disc');
+
+export default function PasswordInput({ style, allowReveal = true, secret = false, ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
+
+  const revealed = visible && allowReveal;
+  const maskWithCss = secret && supportsTextSecurity;
+  const inputType = revealed || maskWithCss ? 'text' : 'password';
 
   return (
     <div style={{ position: 'relative' }}>
@@ -13,14 +38,19 @@ export default function PasswordInput({ style, allowReveal = true, ...props }: P
         autoComplete="off"
         data-1p-ignore="true"
         data-lpignore="true"
+        data-bwignore="true"
+        data-form-type={secret ? 'other' : undefined}
         spellCheck="false"
         {...props}
-        type={visible && allowReveal ? 'text' : 'password'}
+        type={inputType}
         style={{
           ...style,
           width: '100%',
           paddingRight: allowReveal ? '2.5rem' : '0.75rem',
           boxSizing: 'border-box',
+          ...(maskWithCss && !revealed
+            ? ({ WebkitTextSecurity: 'disc' } as React.CSSProperties)
+            : {}),
         }}
       />
       {allowReveal && (
@@ -43,13 +73,13 @@ export default function PasswordInput({ style, allowReveal = true, ...props }: P
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: visible ? 'var(--primary)' : 'var(--text-muted)',
+            color: revealed ? 'var(--primary)' : 'var(--text-muted)',
             zIndex: 10,
           }}
-          title={visible ? 'Hide' : 'Show'}
-          aria-label={visible ? 'Hide password' : 'Show password'}
+          title={revealed ? 'Hide' : 'Show'}
+          aria-label={revealed ? 'Hide value' : 'Show value'}
         >
-          {visible ? (
+          {revealed ? (
             // Eye-off icon (hidden)
             <svg
               width="20"

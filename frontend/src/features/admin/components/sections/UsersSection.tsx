@@ -148,7 +148,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
         <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)' }}>
           <h3 className="settings-card-title">Create New User</h3>
           <div className="form-group"><label>Email Address</label><input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="user@example.com" autoComplete="off" /></div>
-          <div className="form-group"><label>Account Password</label><PasswordInput value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} autoComplete="new-password" /></div>
+          <div className="form-group"><label>Account Password</label><PasswordInput secret value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} autoComplete="new-password" /></div>
           
           <div className="form-grid">
             <div className="form-group">
@@ -222,8 +222,8 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             </div>
           </div>
           <div className="form-grid" style={{ marginTop: '1rem' }}>
-            <div className="form-group"><label>New Password (Optional)</label><PasswordInput value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" /></div>
-            <div className="form-group"><label>Confirm New Password</label><PasswordInput value={editUserConfirmPassword} onChange={e => setEditUserConfirmPassword(e.target.value)} autoComplete="new-password" /></div>
+            <div className="form-group"><label>New Password (Optional)</label><PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" /></div>
+            <div className="form-group"><label>Confirm New Password</label><PasswordInput secret value={editUserConfirmPassword} onChange={e => setEditUserConfirmPassword(e.target.value)} autoComplete="new-password" /></div>
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>

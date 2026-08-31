@@ -169,7 +169,7 @@ export default function NotificationChannelsSection() {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}><strong>Tip:</strong> Start a conversation with your bot (<code>/start</code>) to authorize messages.</p>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="telegram-bot-token">Bot Token</label>
-            <PasswordInput id="telegram-bot-token" name="telegram-bot-token" value={draftSettings.telegram_bot_token} onChange={e => handleUpdateField('telegram_bot_token', e.target.value)} placeholder="123456:ABC-DEF..." autoComplete="new-password" />
+            <PasswordInput secret id="telegram-bot-token" name="telegram-bot-token" value={draftSettings.telegram_bot_token} onChange={e => handleUpdateField('telegram_bot_token', e.target.value)} placeholder="123456:ABC-DEF..." autoComplete="new-password" />
           </form>
           <div className="form-group">
             <label>Chat ID</label>
@@ -194,7 +194,7 @@ export default function NotificationChannelsSection() {
         >
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="discord-webhook-url">Webhook URL</label>
-            <PasswordInput id="discord-webhook-url" name="discord-webhook-url" value={draftSettings.discord_webhook_url} onChange={e => handleUpdateField('discord_webhook_url', e.target.value)} placeholder="https://discord.com/api/webhooks/..." autoComplete="new-password" />
+            <PasswordInput secret id="discord-webhook-url" name="discord-webhook-url" value={draftSettings.discord_webhook_url} onChange={e => handleUpdateField('discord_webhook_url', e.target.value)} placeholder="https://discord.com/api/webhooks/..." autoComplete="new-password" />
           </form>
           <div className="form-group">
             <label>Message Template</label>
@@ -215,11 +215,11 @@ export default function NotificationChannelsSection() {
         >
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="pushover-user-key">User Key</label>
-            <PasswordInput id="pushover-user-key" name="pushover-user-key" value={draftSettings.pushover_user_key} onChange={e => handleUpdateField('pushover_user_key', e.target.value)} placeholder="u..." autoComplete="new-password" />
+            <PasswordInput secret id="pushover-user-key" name="pushover-user-key" value={draftSettings.pushover_user_key} onChange={e => handleUpdateField('pushover_user_key', e.target.value)} placeholder="u..." autoComplete="new-password" />
           </form>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="pushover-app-token">App API Token</label>
-            <PasswordInput id="pushover-app-token" name="pushover-app-token" value={draftSettings.pushover_app_token} onChange={e => handleUpdateField('pushover_app_token', e.target.value)} placeholder="a..." autoComplete="new-password" />
+            <PasswordInput secret id="pushover-app-token" name="pushover-app-token" value={draftSettings.pushover_app_token} onChange={e => handleUpdateField('pushover_app_token', e.target.value)} placeholder="a..." autoComplete="new-password" />
           </form>
           <div className="form-group">
             <label>Message Template</label>
@@ -248,7 +248,7 @@ export default function NotificationChannelsSection() {
           </div>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="ntfy-access-token">Access Token (Optional)</label>
-            <PasswordInput id="ntfy-access-token" name="ntfy-access-token" value={draftSettings.ntfy_password} onChange={e => handleUpdateField('ntfy_password', e.target.value)} placeholder="tk_..." autoComplete="new-password" />
+            <PasswordInput secret id="ntfy-access-token" name="ntfy-access-token" value={draftSettings.ntfy_password} onChange={e => handleUpdateField('ntfy_password', e.target.value)} placeholder="tk_..." autoComplete="new-password" />
           </form>
           <div className="form-group">
             <label>Message Template</label>
@@ -273,7 +273,7 @@ export default function NotificationChannelsSection() {
           </div>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="gotify-app-token">App Token</label>
-            <PasswordInput id="gotify-app-token" name="gotify-app-token" value={draftSettings.gotify_app_token} onChange={e => handleUpdateField('gotify_app_token', e.target.value)} placeholder="A..." autoComplete="new-password" />
+            <PasswordInput secret id="gotify-app-token" name="gotify-app-token" value={draftSettings.gotify_app_token} onChange={e => handleUpdateField('gotify_app_token', e.target.value)} placeholder="A..." autoComplete="new-password" />
           </form>
           <div className="form-group">
             <label>Message Template</label>
@@ -320,7 +320,7 @@ export default function NotificationChannelsSection() {
         >
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="webhook-endpoint-url">Endpoint URL (POST)</label>
-            <PasswordInput id="webhook-endpoint-url" name="webhook-endpoint-url" value={draftSettings.webhook_url} onChange={e => handleUpdateField('webhook_url', e.target.value)} placeholder="https://api.example.com/alerts" autoComplete="new-password" />
+            <PasswordInput secret id="webhook-endpoint-url" name="webhook-endpoint-url" value={draftSettings.webhook_url} onChange={e => handleUpdateField('webhook_url', e.target.value)} placeholder="https://api.example.com/alerts" autoComplete="new-password" />
           </form>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Sends a standard JSON payload with product details.</span>
         </NotificationChannelCard>
