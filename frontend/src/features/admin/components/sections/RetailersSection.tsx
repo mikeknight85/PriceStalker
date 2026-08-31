@@ -1,16 +1,10 @@
 import { useState } from 'react';
-import { queryOptions, useQuery } from '@tanstack/react-query';
-import { RetailerAdminService } from '../../services/RetailerAdminService';
+import { useQuery } from '@tanstack/react-query';
 import { RetailerConfig, GlobalCurrency } from '../../../../types/api';
 import RetailerConfigEditor from './RetailerConfigEditor';
 import Icon from '../../../../components/Icon';
 import { queryClient } from '../../../../api/queryClient';
-
-const retailersQuery = () => queryOptions({
-  queryKey: ['admin', 'retailers'] as const,
-  queryFn: RetailerAdminService.getRetailers,
-  staleTime: 10 * 60_000,
-});
+import { adminRetailersQuery } from '../../../../api/queries';
 
 interface RetailersSectionProps {
   globalCurrencies: GlobalCurrency[];
@@ -20,7 +14,7 @@ interface RetailersSectionProps {
 export default function RetailersSection({ globalCurrencies, initialSearch }: RetailersSectionProps) {
   const [retailerSearch, setRetailerSearch] = useState(initialSearch || '');
   const [editingRetailer, setEditingRetailer] = useState<Partial<RetailerConfig> | null>(null);
-  const retailersResult = useQuery(retailersQuery());
+  const retailersResult = useQuery(adminRetailersQuery());
   const retailers = retailersResult.data ?? [];
 
   const handleEditRetailer = (r: Partial<RetailerConfig>) => {

@@ -20,7 +20,7 @@ export const AdminSystemService = {
   clearLogs: (level?: string, context?: string) => api.delete('/admin/logs/clear', { params: { level, context } }),
 
   // System API Tokens
-  getSystemApiTokens: () => api.get<SystemApiToken[]>('/admin/system-tokens'),
+  getSystemApiTokens: (options?: RequestOptions) => api.get<SystemApiToken[]>('/admin/system-tokens', options),
   createSystemApiToken: (data: { label: string; description?: string; expires_at?: string }) => 
     api.post<CreateSystemApiTokenResponse>('/admin/system-tokens', data),
   deleteSystemApiToken: (id: number) => api.delete(`/admin/system-tokens/${id}`),

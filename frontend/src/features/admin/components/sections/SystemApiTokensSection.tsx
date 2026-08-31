@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AdminSystemService } from '../../services/AdminSystemService';
 import { SystemApiToken } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
@@ -6,11 +6,18 @@ import ConfirmationModal from '../../../../components/ConfirmationModal';
 import Icon from '../../../../components/Icon';
 import { useAuth } from '../../../auth';
 import { formatDate } from '../../../../utils/format';
+import { useQuery } from '@tanstack/react-query';
+import { adminTokensQuery, queryKeys } from '../../../../api/queries';
+import { queryClient } from '../../../../api/queryClient';
 
 export default function SystemApiTokensSection() {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [tokens, setTokens] = useState<SystemApiToken[]>([]);
+  // Polled rather than loaded once: tokens can be created or revoked by CLI
+  // scripts and external integrations, and the panel used to show a stale list
+  // until the whole page was reloaded.
+  const tokensResult = useQuery(adminTokensQuery());
+  const tokens: SystemApiToken[] = tokensResult.data ?? [];
   const [isAddingToken, setIsAddingToken] = useState(false);
   const [newTokenLabel, setNewTokenLabel] = useState('');
   const [newTokenDescription, setNewTokenDescription] = useState('');
@@ -18,18 +25,7 @@ export default function SystemApiTokensSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [tokenToDelete, setTokenToDelete] = useState<SystemApiToken | null>(null);
 
-  useEffect(() => {
-    fetchTokens();
-  }, []);
-
-  const fetchTokens = async () => {
-    try {
-      const res = await AdminSystemService.getSystemApiTokens();
-      setTokens(res);
-    } catch {
-      showToast('Failed to load system API tokens', 'error');
-    }
-  };
+  const fetchTokens = () => queryClient.invalidateQueries({ queryKey: queryKeys.adminTokens });
 
   const handleCreateToken = async () => {
     if (!newTokenLabel) {

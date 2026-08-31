@@ -1,9 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { UserAdminService } from '../../services/UserAdminService';
 import { UserProfile, GlobalCurrency } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import { apiErrorMessage } from '../../../../api/error';
 import { useAuth } from '../../../auth';
+import { useQuery } from '@tanstack/react-query';
+import { adminUsersQuery, queryKeys } from '../../../../api/queries';
+import { queryClient } from '../../../../api/queryClient';
 import PasswordInput from '../../../../components/PasswordInput';
 import SearchableSelect from '../../../../components/SearchableSelect';
 import { ToggleSwitch } from '../../components';
@@ -17,8 +20,12 @@ interface UsersSectionProps {
 
 export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   const { showToast } = useToast();
-  const { user } = useAuth();
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const { user: currentUser } = useAuth();
+
+  // Polled rather than loaded once: SSO provisions accounts on first sign-in,
+  // so the panel used to miss users created since it was opened.
+  const usersResult = useQuery(adminUsersQuery());
+  const users: UserProfile[] = usersResult.data ?? [];
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [editingUser, setEditingUser] = useState<Partial<UserProfile> | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
@@ -35,8 +42,6 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   const [editUserPassword, setEditUserPassword] = useState('');
   const [editUserConfirmPassword, setEditUserConfirmPassword] = useState('');
 
-  const { user: currentUser } = useAuth();
-
   // Filtering is local state, so a background refresh of the list leaves the
   // search box and its results alone.
   const visibleUsers = useMemo(() => {
@@ -50,18 +55,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
 
   const isSsoUser = (u: Partial<UserProfile> | null) => u?.auth_provider === 'oidc';
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await UserAdminService.getUsers();
-      setUsers(res);
-    } catch {
-      showToast('Failed to load users', 'error');
-    }
-  };
+  const fetchUsers = () => queryClient.invalidateQueries({ queryKey: queryKeys.adminUsers });
 
   const handleAddUser = async () => {
     if (!newUserEmail || !newUserPassword) { showToast('Email and password required', 'error'); return; }
@@ -182,7 +176,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <button className="btn btn-secondary btn-sm" onClick={() => { setEditingUser(u); setEditUserPassword(''); setEditUserConfirmPassword(''); }} style={{ marginRight: '0.5rem' }}>Edit</button>
-                      {u.id !== user?.id && <button className="btn btn-danger btn-sm" onClick={() => setUserToDelete(u)}>Delete</button>}
+                      {u.id !== currentUser?.id && <button className="btn btn-danger btn-sm" onClick={() => setUserToDelete(u)}>Delete</button>}
                     </td>
                   </tr>
                 ))}

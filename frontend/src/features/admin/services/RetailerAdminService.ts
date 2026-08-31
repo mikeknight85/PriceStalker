@@ -1,8 +1,8 @@
-import { api } from '../../../api/client';
+import { api, type RequestOptions } from '../../../api/client';
 import { RetailerConfig, TestRetailerConfigResult } from '../../../types/api';
 
 export const RetailerAdminService = {
-  getRetailers: () => api.get<RetailerConfig[]>('/admin/retailers'),
+  getRetailers: (options?: RequestOptions) => api.get<RetailerConfig[]>('/admin/retailers', options),
   getRetailerByDomain: (domain: string) => api.get<RetailerConfig>(`/admin/retailers/domain/${domain}`),
   lookupRetailerByUrl: (url: string) => api.get<RetailerConfig>('/admin/retailers/lookup', { params: { url } }),
   testRetailerConfig: (config: Partial<RetailerConfig>, testUrl: string) =>
