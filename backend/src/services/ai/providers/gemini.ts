@@ -3,6 +3,7 @@ import { AISettings } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 import { withRetry } from '../../../utils/system/retry';
 import { AIProvider, AIRequestOptions, AIResponse } from './types';
+import { traceAiRequest, traceAiResponse } from '../trace';
 
 const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
 
@@ -20,6 +21,7 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generate(prompt: string, options?: AIRequestOptions): Promise<AIResponse> {
+    traceAiRequest(prompt, { provider: 'Gemini', productId: options?.productId, label: options?.retryLabel });
     const result: any = await withRetry(() => this.model.generateContent(prompt),
       { maxRetries: this.settings.ai_max_retries ?? 2 },
       options?.retryLabel || 'Gemini'
@@ -38,8 +40,11 @@ export class GeminiProvider implements AIProvider {
       });
     }
 
+    const rawText = response.text();
+    traceAiResponse(rawText, { provider: 'Gemini', productId: options?.productId, label: options?.retryLabel });
+
     return {
-      text: response.text(),
+      text: rawText,
       usage: response.usageMetadata ? {
         promptTokens: response.usageMetadata.promptTokenCount,
         completionTokens: response.usageMetadata.candidatesTokenCount,

@@ -28,6 +28,7 @@ Usage:
     ./generate-baseline.py canonical-schema.sql <seeds.sql> > 001_baseline.ts
 """
 import re
+import json
 import sys
 
 
@@ -209,9 +210,64 @@ export const down = async ({{ context: pool }}: {{ context: MigrationContext }})
 '''
 
 
+
+def escape_for_ts_template(sql: str) -> str:
+    """Escape SQL so it survives being embedded in a TypeScript template literal.
+
+    The seed SQL is written into a `client.query(\`...\`)` call. A template
+    literal consumes one level of backslash escaping, which silently defeats the
+    escaping that pg_dump's E'' strings depend on:
+
+        in the .ts file        E'["a[rel=\\"b\\"]"]'
+        Postgres receives      E'["a[rel=\"b\"]"]'
+        Postgres stores        ["a[rel="b"]"]        <- invalid JSON
+
+    Postgres drops the backslash from \" because it is not a recognised E''
+    escape, so the JSON escaping is gone by the time it lands in the column.
+    That is how generic_stock_selectors, generic_ai_price_selectors and
+    generic_ai_image_selectors came to be stored unparseable, which in turn made
+    SettingsCache fall back to its smaller built-in defaults without saying so.
+
+    Escaping backticks and ${ as well, because seed content is arbitrary text and
+    either would otherwise terminate the literal or start an interpolation.
+    """
+    return (
+        sql.replace("\\", "\\\\")
+        .replace("`", "\\`")
+        .replace("${", "\\${")
+    )
+
+
+def check_json_settings(sql: str) -> None:
+    """Warn if any system_settings array value would not survive as JSON.
+
+    This is the assertion that would have caught the escaping bug at generation
+    time rather than months later in a running database.
+    """
+    for match in re.finditer(r"\('(generic_[a-z_]+)',\s*(E?)'((?:[^']|'')*)'\)", sql):
+        key, is_e, raw = match.group(1), match.group(2), match.group(3)
+        value = raw.replace("''", "'")
+        if is_e:
+            # Mirror Postgres: a backslash before an unrecognised character is
+            # dropped, and \\ collapses to one backslash.
+            value = re.sub(r"\\(.)", lambda m: "\\" if m.group(1) == "\\" else m.group(1), value)
+        if not value.lstrip().startswith("["):
+            continue
+        try:
+            json.loads(value)
+        except json.JSONDecodeError as err:
+            print(
+                f"warning: seed value for {key} is not valid JSON as Postgres would store it: {err}",
+                file=sys.stderr,
+            )
+
+
 def main():
     schema = open(sys.argv[1]).read()
     seeds = open(sys.argv[2]).read().strip() if len(sys.argv) > 2 else ""
+    if seeds:
+        check_json_settings(seeds)
+        seeds = escape_for_ts_template(seeds)
     parts = transform(split_statements(schema))
     tables, columns, seqs, seqs_owned, defaults, constraints, indexes, functions, triggers = parts
 

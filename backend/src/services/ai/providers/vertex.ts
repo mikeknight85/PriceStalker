@@ -3,6 +3,7 @@ import { AISettings } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 import { withRetry } from '../../../utils/system/retry';
 import { AIProvider, AIRequestOptions, AIResponse } from './types';
+import { traceAiRequest, traceAiResponse } from '../trace';
 
 const DEFAULT_VERTEX_MODEL = 'gemini-1.5-pro-002';
 
@@ -14,6 +15,7 @@ export class VertexProvider implements AIProvider {
   }
 
   async generate(prompt: string, options?: AIRequestOptions): Promise<AIResponse> {
+    traceAiRequest(prompt, { provider: 'Vertex', productId: options?.productId, label: options?.retryLabel });
     const projectId = this.settings.vertex_project_id;
     const location = this.settings.vertex_location || 'us-central1';
     const apiKey = this.settings.vertex_api_key;
@@ -67,6 +69,8 @@ export class VertexProvider implements AIProvider {
         product_id: options?.productId
       });
     }
+
+    traceAiResponse(text, { provider: 'Vertex', productId: options?.productId, label: options?.retryLabel });
 
     return {
       text,

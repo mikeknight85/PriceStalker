@@ -6,6 +6,7 @@ import {
 import { RetailerConfig } from '../../models';
 import { settingsCache } from '../../utils/cache';
 import { extractCustomCandidates, extractGenericPriceCandidates, extractJsonLdCandidates } from './extractors/prices';
+import { logger } from '../../utils/system/logger';
 
 /**
  * Definition of an extraction pass for a specific price type.
@@ -49,6 +50,19 @@ const EXTRACTION_PASSES: ExtractionPass[] = [
   }
 ];
 
+/**
+ * Records a cascade step to the trace and, at debug level, to the log stream
+ * (logging audit L-04).
+ *
+ * extractionSteps is attached to the final result, so it only becomes visible
+ * once a scrape has finished. When a scrape hangs or dies partway, the steps it
+ * had reached died with it -- which is precisely when you want them.
+ */
+function traceStep(extractionSteps: string[], message: string): void {
+  extractionSteps.push(message);
+  logger.debug(message, 'Extraction');
+}
+
 export async function extractAllPriceCandidates(
   $: CheerioAPI,
   html: string,
@@ -65,7 +79,7 @@ export async function extractAllPriceCandidates(
   const jsonLd = extractJsonLdCandidates($, currencyHint || undefined, jsonLdPriceKey);
   if (jsonLd.length > 0) {
     allCandidates.push(...jsonLd);
-    extractionSteps.push(`Extract | JSON-LD | Found ${jsonLd.length} candidates`);
+    traceStep(extractionSteps, `Extract | JSON-LD | Found ${jsonLd.length} candidates`);
   }
 
   // 2. Main Iterative Passes (Deals, Member, Pre-order, Original)
@@ -76,11 +90,11 @@ export async function extractAllPriceCandidates(
     const uniqueSelectors = Array.from(new Set([...custom, ...generic].map(s => s.trim()))).filter(Boolean);
     
     if (uniqueSelectors.length > 0) {
-      extractionSteps.push(`Extract | ${pass.name} | Selectors: ${JSON.stringify(uniqueSelectors)}`);
+      traceStep(extractionSteps, `Extract | ${pass.name} | Selectors: ${JSON.stringify(uniqueSelectors)}`);
       const candidates = extractCustomCandidates($, uniqueSelectors, html, currencyHint || undefined, localeHint);
       
       if (candidates.length > 0) {
-        extractionSteps.push(`Extract | ${pass.name} | Found ${candidates.length} candidates`);
+        traceStep(extractionSteps, `Extract | ${pass.name} | Found ${candidates.length} candidates`);
         for (const c of candidates) {
           c.method = pass.method;
           c.confidence = pass.confidence;
@@ -93,11 +107,11 @@ export async function extractAllPriceCandidates(
   // 3. Site-Specific (Standard)
   const customSelectors = domainConfig?.price_selectors || [];
   if (customSelectors.length > 0) {
-    extractionSteps.push(`Extract | Custom | Selectors: ${JSON.stringify(customSelectors)}`);
+    traceStep(extractionSteps, `Extract | Custom | Selectors: ${JSON.stringify(customSelectors)}`);
     const custom = extractCustomCandidates($, customSelectors, html, currencyHint || undefined, localeHint);
     if (custom.length > 0) {
       allCandidates.push(...custom);
-      extractionSteps.push(`Extract | Custom | Found ${custom.length} candidates`);
+      traceStep(extractionSteps, `Extract | Custom | Found ${custom.length} candidates`);
     }
   }
 
@@ -107,11 +121,11 @@ export async function extractAllPriceCandidates(
     .filter(s => !normalizedCustom.has(s.trim().toLowerCase()));
     
   if (genericSelectors.length > 0) {
-    extractionSteps.push(`Extract | Generic | Selectors: ${JSON.stringify(genericSelectors)}`);
+    traceStep(extractionSteps, `Extract | Generic | Selectors: ${JSON.stringify(genericSelectors)}`);
     const generic = await extractGenericPriceCandidates($, currencyHint || undefined, localeHint, genericSelectors, html);
     if (generic.length > 0) {
       allCandidates.push(...generic);
-      extractionSteps.push(`Extract | Generic | Found ${generic.length} candidates`);
+      traceStep(extractionSteps, `Extract | Generic | Found ${generic.length} candidates`);
     }
   }
 

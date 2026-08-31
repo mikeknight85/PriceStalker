@@ -24,6 +24,7 @@ Logging behavior is controlled via environment variables in your `.env` file or 
 | `FILE_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for Disk Log files. |
 | `DB_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for the `system_logs` table behind Admin -> System Event Log. Raise it to `warn` to keep the table small, or lower it to `debug` to capture traces without flooding the console. |
 | `SLOW_QUERY_MS` | Any positive integer | `500` | A SQL statement taking at least this long is logged at `WARN` instead of `DEBUG`. |
+| `AI_TRACE_CHARS` | Any positive integer | `2000` | How much of an AI prompt and response to record at `DEBUG`. Both are capped: a prompt carries the denoised product page. |
 | `LOG_DIR_PATH` | Any valid absolute/relative directory | `./logs` | Directory path where log files are written. |
 | `TZ` | e.g. `Australia/Perth`, `UTC` | `UTC` | Controls the timezone prefix format for both services. |
 
@@ -149,3 +150,30 @@ recorded instead.
 Because `Database` is a high-volume context, `DEBUG` and `INFO` lines are printed
 and written to disk but not persisted to `system_logs`. Slow-query warnings and
 query failures are persisted, so they show up in **Admin -> System Event Log**.
+
+---
+
+## 7. AI Request Tracing
+
+At `DEBUG`, every AI provider records the prompt it sent and the raw text it got
+back, under the `AI` context:
+
+```text
+DEBUG [AI]: AI | Gemini | Request  | Extract the price from... [3021 more chars]
+DEBUG [AI]: AI | Gemini | Response | {"price": 49.99, "currency": "AUD"}
+```
+
+The raw response matters more than the parsed one: most AI extraction failures
+are a model wrapping its JSON in prose or a code fence, which is invisible by the
+time parsing has already failed.
+
+Both are capped at `AI_TRACE_CHARS` (default 2000). Uncapped, a single scrape
+would put a page of HTML into the console, the log file, and -- if
+`DB_LOG_LEVEL=debug` -- a `system_logs` row.
+
+## 8. Extraction Progress
+
+The price cascade writes each step to the log as it runs, as well as into the
+scrape trace attached to the result. The trace alone only becomes visible once a
+scrape finishes, so a scrape that hangs or dies partway took its progress with
+it -- which is exactly when it is wanted.

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- AI extraction can now be diagnosed: at debug level each provider records the
+  prompt it sent and the raw text it returned, capped by `AI_TRACE_CHARS`.
+  Previously only token counts were logged, so there was no way to tell whether
+  the model was asked the wrong question or answered the right one badly.
+- The price extraction cascade writes its progress to the log as it runs, rather
+  than only into the trace attached to a finished scrape -- so a scrape that
+  hangs or dies partway no longer takes its progress with it.
+- Failed OIDC sign-ins record why. An expired token, a clock skew and a bad
+  signature previously all produced the same empty log.
+- The baseline schema generator no longer corrupts JSON seed values. Seed SQL is
+  now escaped for the TypeScript template literal it gets embedded in, and the
+  generator warns if any settings value would not survive as valid JSON.
+
 ## [2.0.0] - 2026-08-31
 
 ### Changed

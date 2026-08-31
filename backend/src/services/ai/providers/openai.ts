@@ -3,6 +3,7 @@ import { AISettings } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 import { withRetry } from '../../../utils/system/retry';
 import { AIProvider, AIRequestOptions, AIResponse } from './types';
+import { traceAiRequest, traceAiResponse } from '../trace';
 
 const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo-0125';
 const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
@@ -55,6 +56,7 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async generate(prompt: string, options?: AIRequestOptions): Promise<AIResponse> {
+    traceAiRequest(prompt, { provider: this.providerName, productId: options?.productId, label: options?.retryLabel });
     const response = await withRetry(() => this.client.chat.completions.create({
       model: this.model,
       max_tokens: options?.maxTokens || 1024,
@@ -74,8 +76,11 @@ export class OpenAIProvider implements AIProvider {
       });
     }
 
+    const rawText = response.choices[0]?.message?.content || '';
+    traceAiResponse(rawText, { provider: this.providerName, productId: options?.productId, label: options?.retryLabel });
+
     return {
-      text: response.choices[0]?.message?.content || '',
+      text: rawText,
       usage: response.usage ? {
         promptTokens: response.usage.prompt_tokens,
         completionTokens: response.usage.completion_tokens,
