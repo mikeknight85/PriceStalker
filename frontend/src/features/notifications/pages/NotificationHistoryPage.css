@@ -252,6 +252,27 @@
   cursor: help;
 }
 
+/*
+ * A channel that was tried and failed. Colour alone would not carry this --
+ * the strikethrough is what makes "we tried and could not reach it" readable
+ * without hovering for the tooltip.
+ */
+.channel-badge-failed {
+  color: var(--danger, #ef4444);
+  opacity: 0.7;
+  position: relative;
+}
+
+.channel-badge-failed::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1.5px solid currentColor;
+  transform: rotate(-20deg);
+}
+
 .notification-date {
   font-size: 0.8125rem;
   color: var(--text-muted);

@@ -10,11 +10,25 @@ import pool from '../../../config/database';
 import { PoolClient } from 'pg';
 import { configCache, regionalMappingCache } from '../../../utils/cache';
 import { Product } from '../../../models/types';
+import { StockStatus } from '../../../models/types/base';
+
+/** A stock change that was actually written, as observed under the lock. */
+export interface StockTransition {
+  from: StockStatus | null;
+  to: StockStatus;
+}
 
 export class ProductPersistenceService {
   /**
    * Saves metadata, price history, and stock history for a product.
    * Handles Standard, Member, and Original prices.
+   *
+   * Returns the stock transition it actually applied, or null if the status did
+   * not change. Callers must decide whether to notify from this rather than
+   * from their own pre-scrape snapshot: the snapshot is read outside the
+   * advisory lock, so two concurrent refreshes both saw the old status and both
+   * fired a back-in-stock alert for the same event (issue #92). The transition
+   * returned here is observed under the lock, so exactly one of them sees it.
    */
   async saveScrapeResult(
     productId: number, 
@@ -22,7 +36,7 @@ export class ProductPersistenceService {
     scrapedData: ScrapedProductWithVoting,
     source: 'manual-add' | 'refresh' | 'manual-confirm' | 'auto-track',
     manualSelector?: string
-  ) {
+  ): Promise<StockTransition | null> {
     const client = await pool.connect();
     
     try {
@@ -36,7 +50,7 @@ export class ProductPersistenceService {
       const product = await productRepository.findById(productId, userId, { executor: client });
       if (!product) {
         await client.query('ROLLBACK');
-        return;
+        return null;
       }
 
       // Resolve domain early — needed for cache invalidation post-commit
@@ -46,7 +60,7 @@ export class ProductPersistenceService {
       await this.updateMetadata(client, productId, userId, product, scrapedData, source);
 
       // 3. Update stock status and history
-      await this.updateStockState(client, productId, product, scrapedData);
+      const transition = await this.updateStockState(client, productId, product, scrapedData);
 
       // 4. Record Prices
       await this.recordPrices(client, productId, scrapedData, source);
@@ -80,6 +94,8 @@ export class ProductPersistenceService {
       // Flush the in-memory retailer config cache AFTER commit so the next scrape
       // immediately picks up any selector changes confirmed by this save operation.
       configCache.invalidate(configDomain);
+
+      return transition;
     } catch (error) {
       await client.query('ROLLBACK');
       logger.error(`Product ${productId} | Persistence | Failed: ${error}`, 'Products', { product_id: productId, error });
@@ -128,20 +144,23 @@ export class ProductPersistenceService {
     productId: number,
     product: Product,
     scrapedData: ScrapedProductWithVoting
-  ) {
+  ): Promise<StockTransition | null> {
     // 'unknown' means the scrape could not determine anything (blocked page,
     // failed extraction) — it is not an observation, so never let it
     // overwrite a real previously-known status.
     if (scrapedData.stockStatus === 'unknown' && product.stock_status && product.stock_status !== 'unknown') {
       logger.debug(`Product ${productId} | Stock | Scrape returned unknown; keeping '${product.stock_status}'`, 'Products', { product_id: productId });
-      return;
+      return null;
     }
 
     if (scrapedData.stockStatus !== product.stock_status) {
       await productRepository.updateStockStatus(productId, scrapedData.stockStatus, scrapedData.aiStatus, client);
       await stockHistoryRepository.recordChange(productId, scrapedData.stockStatus, client);
       logger.info(`Product ${productId} | Stock | Changed: ${product.stock_status} -> ${scrapedData.stockStatus}`, 'Products', { product_id: productId });
+      return { from: product.stock_status, to: scrapedData.stockStatus };
     }
+
+    return null;
   }
 
   /**

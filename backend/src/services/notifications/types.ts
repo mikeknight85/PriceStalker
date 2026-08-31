@@ -15,6 +15,20 @@ export interface NotificationPayload {
    */
   oldStockStatus?: string;
   newStockStatus?: string;
+  /**
+   * Why the product could not be read, already phrased for a person.
+   *
+   * Every channel hardcoded "Page no longer exists (404/410)", so a timeout, a
+   * redirect and a soft 404 were all reported as a dead page -- while the
+   * in-app history, which does receive the reason, said something different.
+   */
+  reason?: string;
+  /**
+   * Whether monitoring actually stopped. Defaults to true when absent, matching
+   * the definitive-unavailable path. The transient-failure path passes false:
+   * it keeps retrying, and saying otherwise is simply untrue.
+   */
+  paused?: boolean;
 }
 
 export interface NotificationResult {

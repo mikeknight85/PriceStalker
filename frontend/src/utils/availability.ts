@@ -54,8 +54,13 @@ export function describeMonitoringState(product: {
   failure_streak?: number;
 }): string {
   if (product.checking_paused) {
+    // A paused product is excluded from scheduled refreshes, so nothing is
+    // watching for it to come back. The system resumes an auto-pause the moment
+    // a scrape succeeds -- but only a manual refresh can produce that scrape,
+    // so saying only "paused" leaves the user waiting for a recovery that will
+    // never arrive on its own (issue #92).
     return product.auto_paused
-      ? 'Paused automatically because the page could not be found'
+      ? 'Paused automatically because the page could not be found. Refresh it manually to check whether it is back'
       : 'Paused by you';
   }
   if (product.failure_streak && product.failure_streak > 0) {
