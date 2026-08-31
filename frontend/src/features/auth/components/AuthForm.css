@@ -52,6 +52,7 @@
   top: 1rem;
   right: 1rem;
   background: var(--surface);
+  color: var(--text);
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 0.5rem;
