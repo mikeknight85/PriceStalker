@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The scraper no longer announces two different browsers in the same request.
+  The `User-Agent` came from the Default User-Agent setting (seeded as Chrome
+  146) while the `Sec-CH-UA` client hints were hardcoded to Chrome 121 on
+  Windows, so every request from every install described a browser that cannot
+  exist. Client hints are now derived from whichever User-Agent is in play,
+  including a per-retailer override, and are omitted entirely for Firefox and
+  Safari, which do not send them.
+- The browser scraper now presents the same identity as the HTTP scraper. Both
+  remote calls passed no User-Agent at all, so a retailer that had just been
+  shown the configured browser saw headless Chromium on the fallback.
+- Overriding the User-Agent in the browser scraper now sets matching client-hint
+  metadata, instead of leaving Chrome reporting its own build in the hints.
+
+### Fixed
+
 - Notifications now describe the event that actually happened on every channel.
   A product becoming reachable again was announced as "Back in Stock!" on
   Discord, Pushover, Gotify and ntfy, and was never delivered to Telegram at

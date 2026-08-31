@@ -2,6 +2,7 @@ import { log } from '../utils/logger.js';
 import { performHumanLikeActions } from '../core/Actions.js';
 import type { BrowserSession, ScrapeOptions, ScrapeResult, ScraperPage } from '../types.js';
 import { errorMessage } from '../types.js';
+import { parseUserAgent, buildUserAgentMetadata } from '../utils/userAgent.js';
 
 export class ScraperService {
   /**
@@ -61,7 +62,21 @@ export class ScraperService {
 
       if (options.userAgent) {
         if (context.forceDebug) log(`Applying User-Agent: ${options.userAgent}`, 'DEBUG', context);
-        await page.setUserAgent(options.userAgent);
+        // The metadata is what keeps Sec-CH-UA in step with the string. Calling
+        // setUserAgent with the string alone leaves Chrome reporting its own
+        // build in the client hints, so the page announces one browser in the
+        // User-Agent and another in the hints -- and overrides the coordinated
+        // override the stealth plugin had already set up.
+        const identity = parseUserAgent(options.userAgent);
+        const metadata = buildUserAgentMetadata(identity);
+        if (metadata) {
+          await page.setUserAgent(options.userAgent, metadata);
+        } else {
+          // Firefox and Safari send no client hints, so there is nothing to
+          // keep in step and the bare string is correct.
+          if (context.forceDebug) log(`No client hints for ${identity.family} UA`, 'DEBUG', context);
+          await page.setUserAgent(options.userAgent);
+        }
       }
 
       if (options.referrer) {
