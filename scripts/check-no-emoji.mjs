@@ -24,7 +24,20 @@ const RANGES = [
   [0x2b00, 0x2bff], // misc symbols and arrows (⬅ ⬆ ⭐ …)
   [0xfe00, 0xfe0f], // variation selectors (the "️" that trails many emoji)
   [0x1f1e6, 0x1f1ff], // regional indicators (flags)
+
+  // Emoji inside Miscellaneous Technical (U+2300–23FF). Listed as three narrow
+  // ranges rather than the whole block, which also holds genuine technical
+  // symbols. An hourglass (⏳ U+23F3) sat in the admin UI unnoticed because
+  // nothing here reached this far.
+  [0x231a, 0x231b], // ⌚ ⌛
+  [0x23e9, 0x23f3], // ⏩ ⏪ ⏫ ⏬ ⏭ ⏮ ⏯ ⏰ ⏱ ⏲ ⏳
+  [0x23f8, 0x23fa], // ⏸ ⏹ ⏺
+  [0x2934, 0x2935], // ⤴ ⤵ arrows presented as emoji
 ];
+
+// Deliberately NOT flagged, because CLAUDE.md permits them as genuine text:
+// plain arrows (U+2190–21FF), bullets, em-dashes, ellipses, and the geometric
+// shapes (▼ ▲) used as sort and disclosure indicators.
 
 const inRange = (cp) => RANGES.some(([lo, hi]) => cp >= lo && cp <= hi);
 

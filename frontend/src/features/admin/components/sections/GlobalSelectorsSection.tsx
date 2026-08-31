@@ -140,7 +140,7 @@ export default function GlobalSelectorsSection() {
         <UnifiedSelectorManager label="Generic Original Price Selectors" items={globalOriginalPriceSelectors} onChange={setGlobalOriginalPriceSelectors} placeholder=".rrp, .was-price" />
       </CollapsibleCard>
 
-      <CollapsibleCard title="⏳ Generic Pre-Order Price Selectors" id="sys_sel_preorder" badge={String(globalPreOrderPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Generic Pre-Order Price Selectors" leadingIcon={<Icon name="clock" />} id="sys_sel_preorder" badge={String(globalPreOrderPriceSelectors.length) + ' items'} expandedSections={expandedSections} onToggle={toggleSection}>
         <UnifiedSelectorManager label="Generic Pre-Order Price Selectors" items={globalPreOrderPriceSelectors} onChange={setGlobalPreOrderPriceSelectors} placeholder=".preorder-price" />
       </CollapsibleCard>
 

@@ -97,6 +97,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Removed an hourglass emoji from the admin Extraction Rules panel and closed
+  the gap in the emoji check that let it through, so the icon set stays the only
+  thing rendering symbols in the UI.
 - The product card's price and status no longer overlap the sparkline in the
   two-column layout on tablets. The stacked layout now responds to the width of
   the card rather than the width of the window, so it applies whenever a card is
