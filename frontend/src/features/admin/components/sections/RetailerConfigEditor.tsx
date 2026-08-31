@@ -5,11 +5,14 @@ import { RetailerAdminService } from '../../services/RetailerAdminService';
 import { useAuth } from '../../../auth';
 import { useAsyncAction } from '../../../../hooks/useAsyncAction';
 import { 
+  FieldHelp,
+  SettingsCacheNotice,
   CollapsibleCard, 
   ToggleSwitch
 } from '../../components';
 import SearchableSelect from '../../../../components/SearchableSelect';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import { apiErrorMessage } from '../../../../api/error';
 
 // Sub-sections
 import ScraperEngineSection from './retailer-config/ScraperEngineSection';
@@ -39,6 +42,32 @@ export default function RetailerConfigEditor({
   
   const [draftConfig, setDraftConfig] = useState<Partial<RetailerConfig>>(initialRetailer);
   const { execute: runSaveRetailer, isLoading: isSavingRetailer } = useAsyncAction();
+  const [showRemap, setShowRemap] = useState(false);
+  const [remapUrl, setRemapUrl] = useState('');
+  const [isRemapping, setIsRemapping] = useState(false);
+
+  /**
+   * Re-runs AI auto-mapping against a product URL (issue #74).
+   *
+   * The previous way to fix a bad retailer configuration was to delete the
+   * retailer and re-scrape a product through it, because auto-mapping only fires
+   * for an unknown domain or a shell config.
+   */
+  const handleRemap = async () => {
+    setIsRemapping(true);
+    try {
+      const res = await RetailerAdminService.remapRetailer(remapUrl.trim());
+      showToast('Retailer re-mapped from that page', 'success');
+      setShowRemap(false);
+      setRemapUrl('');
+      onSave();
+      void res;
+    } catch (err) {
+      showToast(apiErrorMessage(err) || 'Auto-mapping failed', 'error');
+    } finally {
+      setIsRemapping(false);
+    }
+  };
   const { execute: runTestConfig, isLoading: isTestingConfig } = useAsyncAction();
   const { execute: runDeleteRetailer } = useAsyncAction();
   
@@ -67,7 +96,9 @@ export default function RetailerConfigEditor({
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     engine: false,
-    selectors: false,
+    selectors_product: false,
+    selectors_pricing: false,
+    selectors_pruning: false,
     phrases: false,
     tester: false,
     ai_selectors: false,
@@ -196,6 +227,56 @@ export default function RetailerConfigEditor({
         isDanger={true}
       />
       
+      <div className="retailer-editor-header">
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: '1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {draftConfig.name || draftConfig.domain || 'New retailer'}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {draftConfig.domain}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowRemap(true)}
+            disabled={!draftConfig.domain}
+            title="Regenerate this retailer's selectors from a product page"
+          >
+            Re-run auto-map
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={onCancel}>Discard</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSaveRetailer} disabled={isSavingRetailer}>
+            {isSavingRetailer ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      {showRemap && (
+        <div className="settings-card" style={{ border: '1px solid var(--primary)', marginBottom: '1.5rem' }}>
+          <h4 style={{ margin: '0 0 0.5rem' }}>Re-run auto-mapping</h4>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 0.75rem', maxWidth: '70ch' }}>
+            Regenerates this retailer's selectors by reading a real product page. A
+            product URL is required &mdash; a home page has no price to learn from.
+            The generated configuration replaces what is saved here.
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <input
+              type="url"
+              className="form-control"
+              style={{ flex: 1, minWidth: '260px' }}
+              value={remapUrl}
+              onChange={e => setRemapUrl(e.target.value)}
+              placeholder={`https://${draftConfig.domain || 'example.com'}/product/...`}
+            />
+            <button className="btn btn-primary" onClick={() => void handleRemap()} disabled={isRemapping || !remapUrl.trim()}>
+              {isRemapping ? 'Mapping...' : 'Run'}
+            </button>
+            <button className="btn btn-secondary" onClick={() => setShowRemap(false)} disabled={isRemapping}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       <div className="form-grid">
         <div className="form-group">
           <label>Primary Domain</label>
@@ -277,16 +358,18 @@ export default function RetailerConfigEditor({
         </div>
       </div>
 
+      <SettingsCacheNotice compact />
+
       <div style={{ marginTop: '2rem' }}>
-        <CollapsibleCard title="Scraper Configuration" leadingIcon={<Icon name="globe" />} id="engine" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Page acquisition" leadingIcon={<Icon name="globe" />} id="engine" expandedSections={expandedSections} onToggle={toggleSection}>
           <ScraperEngineSection 
             draftConfig={draftConfig} 
             onUpdateConfig={handleUpdateDraft} 
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="Extraction Parameters" leadingIcon={<Icon name="search" />} id="selectors" expandedSections={expandedSections} onToggle={toggleSection}>
-          <ExtractionParamsSection 
+        <CollapsibleCard title="Product information" leadingIcon={<Icon name="fileText" />} id="selectors_product" expandedSections={expandedSections} onToggle={toggleSection}>
+          <ExtractionParamsSection
             draftConfig={draftConfig}
             onUpdateConfig={handleUpdateDraft}
             titleSelectors={draftTitleSelectors}
@@ -309,10 +392,70 @@ export default function RetailerConfigEditor({
             setExclusionSelectors={setDraftExclusionSelectors}
             customSelectorsJson={draftCustomSelectorsJson}
             setCustomSelectorsJson={setDraftCustomSelectorsJson}
+            part="product"
           />
+          <FieldHelp>Title, image and the JSON-LD keys they are read from. Retailer identity is the shop, not the manufacturer.</FieldHelp>
         </CollapsibleCard>
 
-        <CollapsibleCard title="Stock Status & Phrases" leadingIcon={<Icon name="package" />} id="phrases" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Pricing" leadingIcon={<Icon name="tag" />} id="selectors_pricing" expandedSections={expandedSections} onToggle={toggleSection}>
+          <ExtractionParamsSection
+            draftConfig={draftConfig}
+            onUpdateConfig={handleUpdateDraft}
+            titleSelectors={draftTitleSelectors}
+            setTitleSelectors={setDraftTitleSelectors}
+            retailerNameSelectors={draftRetailerNameSelectors}
+            setRetailerNameSelectors={setDraftRetailerNameSelectors}
+            priceSelectors={draftPriceSelectors}
+            setPriceSelectors={setDraftPriceSelectors}
+            dealPriceSelectors={draftDealPriceSelectors}
+            setDealPriceSelectors={setDraftDealPriceSelectors}
+            memberPriceSelectors={draftMemberPriceSelectors}
+            setMemberPriceSelectors={setDraftMemberPriceSelectors}
+            originalPriceSelectors={draftOriginalPriceSelectors}
+            setOriginalPriceSelectors={setDraftOriginalPriceSelectors}
+            preOrderPriceSelectors={draftPreOrderPriceSelectors}
+            setPreOrderPriceSelectors={setDraftPreOrderPriceSelectors}
+            imageSelectors={draftImageSelectors}
+            setImageSelectors={setDraftImageSelectors}
+            exclusionSelectors={draftExclusionSelectors}
+            setExclusionSelectors={setDraftExclusionSelectors}
+            customSelectorsJson={draftCustomSelectorsJson}
+            setCustomSelectorsJson={setDraftCustomSelectorsJson}
+            part="pricing"
+          />
+          <FieldHelp>Only the standard price becomes the tracked price. Original / RRP is a reference value and is never saved as it.</FieldHelp>
+        </CollapsibleCard>
+
+        <CollapsibleCard title="False-positive prevention" leadingIcon={<Icon name="ban" />} id="selectors_pruning" expandedSections={expandedSections} onToggle={toggleSection}>
+          <ExtractionParamsSection
+            draftConfig={draftConfig}
+            onUpdateConfig={handleUpdateDraft}
+            titleSelectors={draftTitleSelectors}
+            setTitleSelectors={setDraftTitleSelectors}
+            retailerNameSelectors={draftRetailerNameSelectors}
+            setRetailerNameSelectors={setDraftRetailerNameSelectors}
+            priceSelectors={draftPriceSelectors}
+            setPriceSelectors={setDraftPriceSelectors}
+            dealPriceSelectors={draftDealPriceSelectors}
+            setDealPriceSelectors={setDraftDealPriceSelectors}
+            memberPriceSelectors={draftMemberPriceSelectors}
+            setMemberPriceSelectors={setDraftMemberPriceSelectors}
+            originalPriceSelectors={draftOriginalPriceSelectors}
+            setOriginalPriceSelectors={setDraftOriginalPriceSelectors}
+            preOrderPriceSelectors={draftPreOrderPriceSelectors}
+            setPreOrderPriceSelectors={setDraftPreOrderPriceSelectors}
+            imageSelectors={draftImageSelectors}
+            setImageSelectors={setDraftImageSelectors}
+            exclusionSelectors={draftExclusionSelectors}
+            setExclusionSelectors={setDraftExclusionSelectors}
+            customSelectorsJson={draftCustomSelectorsJson}
+            setCustomSelectorsJson={setDraftCustomSelectorsJson}
+            part="pruning"
+          />
+          <FieldHelp>Removed from the page before extraction runs. Carousels and related products are the usual source of a price belonging to a different item.</FieldHelp>
+        </CollapsibleCard>
+
+        <CollapsibleCard title="Availability" leadingIcon={<Icon name="package" />} id="phrases" expandedSections={expandedSections} onToggle={toggleSection}>
           <StockPhrasesSection 
             stockSelectors={draftStockSelectors}
             setStockSelectors={setDraftStockSelectors}
@@ -334,7 +477,7 @@ export default function RetailerConfigEditor({
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="Validation Hub" leadingIcon={<Icon name="flask" />} id="tester" isExpanded={expandedSections.tester} onToggle={toggleSection}>
+        <CollapsibleCard title="Validation" leadingIcon={<Icon name="flask" />} id="tester" isExpanded={expandedSections.tester} onToggle={toggleSection}>
           <ScrapeValidationHub 
             testUrl={testUrl}
             setTestUrl={setTestUrl}
@@ -347,10 +490,6 @@ export default function RetailerConfigEditor({
         </CollapsibleCard>
       </div>
 
-      <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={onCancel}>Discard</button>
-        <button className="btn btn-primary" onClick={handleSaveRetailer} disabled={isSavingRetailer}>Push Configuration</button>
-      </div>
     </div>
   );
 }

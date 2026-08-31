@@ -13,4 +13,6 @@ export const RetailerAdminService = {
 
   debugExtract: (url: string, config?: Partial<RetailerConfig>, mode?: string, returnHtml?: boolean, use_ai?: boolean, force_ai?: boolean) => 
     api.post<any>('/admin/debug/extract', { url, config, mode, returnHtml, use_ai, force_ai }),
+  remapRetailer: (url: string) =>
+    api.post<{ success: boolean; retailer: RetailerConfig; trace: string[] }>('/admin/retailers/remap', { url }),
 };
