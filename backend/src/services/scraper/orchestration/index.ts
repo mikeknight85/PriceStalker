@@ -130,8 +130,10 @@ export async function scrapeProductWithVoting(
 
     const isDefinitivelyUnavailable = result.stockStatus === 'out_of_stock' || result.stockStatus === 'not_available';
     const priceExtracted = result.price !== null;
+    let autoMapAttempted = false;
 
     if (!challenge && !isDefinitivelyUnavailable && !priceExtracted && (!domainConfig || isShellConfig) && session.globalAiSettings.ai_auto_mapping_enabled) {
+      autoMapAttempted = true;
       domainConfig = await handleAutoMapping({
         html,
         url,
@@ -193,11 +195,24 @@ export async function scrapeProductWithVoting(
     const isOosOrPreOrderSuccess = !result.price && 
       (result.stockStatus === 'out_of_stock' || result.stockStatus === 'pre_order' || result.stockStatus === 'not_available');
 
+    // Record why, while the reasons are still in scope. Callers turn this into
+    // something a user can act on instead of a flat "could not extract price".
+    if (!result.price && !isOosOrPreOrderSuccess) {
+      if (challenge) {
+        result.failureReason = 'bot_challenge';
+        result.failureDetail = challenge;
+      } else if (autoMapAttempted && !domainConfig) {
+        result.failureReason = 'auto_map_rejected';
+      } else {
+        result.failureReason = 'no_price_found';
+      }
+    }
+
     const finalMsg = result.price
       ? `Success | ${session.domain}: ${result.price.currency} ${result.price.price} (${result.selectedMethod})`
       : isOosOrPreOrderSuccess
         ? `Success | ${session.domain}: Out of Stock / Pre-Order (${result.stockStatus})`
-        : `Failed | ${session.domain}: No price found`;
+        : `Failed | ${session.domain}: No price found (${result.failureReason})`;
 
     logger.info(`Extraction | ${finalMsg}`, 'Extraction', {
       trace: extractionSteps,
@@ -210,6 +225,7 @@ export async function scrapeProductWithVoting(
     if (error instanceof PageNotAvailableError) {
       extractionSteps.push(`Scraper | Block | Page no longer exists (404/410)`);
       result.stockStatus = 'not_available';
+      result.failureReason = 'page_unavailable';
       logger.warn(`Product | Scrape Failed | Page Gone | ${url}`, 'Scraper', { product_id: productId, requestId });
     } else {
       logger.error(`Product | Scrape Failed | ${url}`, 'Scraper', { product_id: productId, error, requestId });

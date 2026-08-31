@@ -1,6 +1,29 @@
 import { productRepository } from '../../../../models';
 import { scrapeProductWithVoting } from '../../../scraper';
 import { productPersistenceService } from '../ProductPersistenceService';
+import type { ScrapeFailureReason } from '../../../../types/scraper';
+
+/**
+ * Turns the scrape's failure reason into something the person adding the
+ * product can act on.
+ *
+ * Every one of these previously surfaced as "Could not extract price from the
+ * provided URL" with a bare 400, while the log recorded exactly what happened
+ * a few lines earlier.
+ */
+function describeScrapeFailure(reason?: ScrapeFailureReason, detail?: string): string {
+  switch (reason) {
+    case 'bot_challenge':
+      return `The retailer blocked the request${detail ? ` (${detail})` : ''}. Enable the Browser Scraper for this retailer under Admin -> Retailers, or configure a proxy, then try again.`;
+    case 'page_unavailable':
+      return 'The product page could not be found. Check the URL is still live and points at a product rather than a search or category page.';
+    case 'auto_map_rejected':
+      return 'AI auto-mapping could not find a usable price on this page, so no retailer configuration was saved. Add price selectors for this retailer under Admin -> Retailers, or use the Live Tester to work them out.';
+    case 'no_price_found':
+    default:
+      return 'No price could be found on this page. If the price is rendered by JavaScript, enable the Browser Scraper for this retailer under Admin -> Retailers.';
+  }
+}
 
 export class ProductDiscoveryService {
   /**
@@ -10,7 +33,7 @@ export class ProductDiscoveryService {
     const scrapedData = await scrapeProductWithVoting(url, userId);
 
     if (!scrapedData.price && scrapedData.stockStatus !== 'out_of_stock' && scrapedData.stockStatus !== 'pre_order') {
-      throw new Error('Could not extract price from the provided URL');
+      throw new Error(describeScrapeFailure(scrapedData.failureReason, scrapedData.failureDetail));
     }
 
     const requiresCurrencyReview = Boolean(scrapedData.price && !scrapedData.price.currency);

@@ -8,6 +8,13 @@ export interface NotificationPayload {
   currency?: string;
   threshold?: number;
   targetPrice?: number;
+  /**
+   * Stock transition that triggered the notification, when there was one.
+   * Without these a custom template cannot tell "back in stock" from a price
+   * drop, and every event renders through the same price-shaped wording.
+   */
+  oldStockStatus?: string;
+  newStockStatus?: string;
 }
 
 export interface NotificationResult {

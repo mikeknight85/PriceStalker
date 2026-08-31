@@ -37,13 +37,19 @@ export class ProductAlertService {
         productUrl: product.url,
         type: 'back_in_stock',
         newPrice: scrapedData.price?.price,
-        currency: scrapedData.price?.currency || 'USD',
+        currency: scrapedData.price?.currency || undefined,
+        oldStockStatus: product.stock_status || undefined,
+        newStockStatus: scrapedData.stockStatus,
         productId: product.id
       },
       {
         type: 'stock_alert',
         title: `Back in Stock: ${product.name || 'Product'}`,
-        message: `Product is back in stock at ${scrapedData.price?.price} ${scrapedData.price?.currency || 'USD'}`,
+        // A product can come back in stock before a price is extracted, which
+        // used to render as "back in stock at undefined USD".
+        message: scrapedData.price?.price !== undefined && scrapedData.price?.currency
+          ? `Product is back in stock at ${scrapedData.price.currency} ${scrapedData.price.price}`
+          : 'Product is back in stock. Current price: unavailable',
         data: {
           productId: product.id,
           productName: product.name,
@@ -51,7 +57,7 @@ export class ProductAlertService {
           oldStockStatus: product.stock_status,
           newStockStatus: scrapedData.stockStatus,
           newPrice: scrapedData.price?.price,
-          currency: scrapedData.price?.currency || 'USD'
+          currency: scrapedData.price?.currency || undefined
         }
       }
     );
