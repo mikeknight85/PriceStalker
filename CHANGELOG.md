@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Newly generated system API tokens now use a `ps_` prefix to make leaked
+  PriceStalker tokens easier for secret-scanning tools to identify.
 - Password reset via email: a "Forgot password?" link on the login page sends
   a single-use, one-hour reset link using the system SMTP settings
   (`SMTP_FALLBACK_*`). Admins can disable the feature under Admin -> System ->
