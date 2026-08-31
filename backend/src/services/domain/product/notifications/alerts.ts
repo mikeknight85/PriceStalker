@@ -12,7 +12,7 @@ export class ProductAlertService {
    * being retried. Telling someone monitoring has stopped when it has not is
    * worse than saying nothing.
    */
-  async notifyNotAvailable(product: Product, reason?: UnavailableReason | null, paused = true) {
+  async notifyNotAvailable(product: Product, reason?: UnavailableReason | null, paused = true, failureCount?: number) {
     await productNotificationOrchestrator.deliver(
       product,
       'not_available',
@@ -44,7 +44,10 @@ export class ProductAlertService {
           productUrl: product.url,
           reason: describeUnavailableReason(reason),
           reasonCode: reason ?? 'unknown_scrape_failure',
-          action: paused ? 'Monitoring Paused' : 'Still Retrying'
+          action: paused ? 'Monitoring Paused' : 'Still Retrying',
+          // The history row shows this. Without it "still retrying" gave no
+          // sense of how long the retailer had been failing (issue #93).
+          failureCount
         }
       }
     );

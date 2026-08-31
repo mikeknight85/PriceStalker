@@ -99,7 +99,7 @@ export class ProductRefreshService {
       );
       if (failures === SITE_FAILURE_NOTIFY_THRESHOLD) {
         // Once, on crossing the threshold -- not every scrape thereafter.
-        await productNotificationService.notifyNotAvailable(product, reason!, false);
+        await productNotificationService.notifyNotAvailable(product, reason!, false, failures);
       }
     } else if (isDefinitive && product.stock_status !== 'not_available') {
       const streak = (product.page_gone_streak || 0) + 1;
@@ -142,7 +142,7 @@ export class ProductRefreshService {
       if (transition.to === 'not_available') {
         logger.warn(`Product ${productId} | Status | ${describeUnavailableReason(reason)}. Pausing further checks.`, 'Products', { product_id: productId });
         await productRepository.setPaused(productId, true, false);
-        await productNotificationService.notifyNotAvailable(product, reason);
+        await productNotificationService.notifyNotAvailable(product, reason, true, (product.page_gone_streak || 0) + 1);
       } else if (transition.to === 'in_stock' && isBackInStockFrom(transition.from) && product.notify_back_in_stock) {
         await productNotificationService.notifyBackInStock(product, scrapedData, transition.from);
       }

@@ -4,14 +4,57 @@ import { NotificationEntry } from '../../../types/api';
 import { formatPrice, formatDate } from '../../../utils/format';
 import { getNotificationIcon, getNotificationTypeLabel, getChannelIcon } from './utils';
 import Icon from '../../../components/Icon';
+import { buildDetailChips } from './detailChips';
 
 interface NotificationTableProps {
   notifications: NotificationEntry[];
   loading: boolean;
   userLocale?: string;
+  /** Set when the history query failed, so a failure is not shown as "none". */
+  error?: unknown;
+  onRetry?: () => void;
+  /** Marks one row read. The API has always supported it; only the drawer used it. */
+  onMarkRead?: (id: number) => void;
+  markingId?: number | null;
 }
 
-const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, loading, userLocale }) => {
+/** Renders the structured fields the backend records alongside an alert. */
+const DetailChips: React.FC<{ data: unknown }> = ({ data }) => {
+  const chips = buildDetailChips(data);
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="notification-detail-chips">
+      {chips.map(chip => (
+        <span key={chip.label} className="notification-detail-chip">
+          <span className="notification-detail-chip-label">{chip.label}</span>
+          {chip.value}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, loading, userLocale, error, onRetry, onMarkRead, markingId }) => {
+  // Checked before the empty state: a failed request used to fall through to
+  // "No notifications found", which reads as "you have none" rather than
+  // "we could not ask".
+  if (error) {
+    return (
+      <div className="notifications-table">
+        <div className="notifications-empty">
+          <div className="notifications-empty-icon"><Icon name="alertTriangle" /></div>
+          <div>Notifications could not be loaded.</div>
+          {onRetry && (
+            <button className="btn btn-secondary btn-sm" style={{ marginTop: '1rem' }} onClick={onRetry}>
+              Try again
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (loading && notifications.length === 0) {
     return (
       <div className="notifications-table">
@@ -86,6 +129,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
                     : JSON.stringify(notification.data.details)}
                 </div>
               )}
+              <DetailChips data={notification.data} />
             </div>
 
             <div className="notification-price">
@@ -105,14 +149,16 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
                     </span>
                   )}
                 </>
+              ) : targetPrice ? (
+                <div className="notification-price-target">
+                  Target: {formatPrice(targetPrice, currency, userLocale)}
+                </div>
               ) : (
-                <>
-                  {targetPrice && (
-                    <div className="notification-price-target">
-                      Target: {formatPrice(targetPrice, currency, userLocale)}
-                    </div>
-                  )}
-                </>
+                // A blank cell left three possibilities open: the event had no
+                // price, the price failed to load, or the row was incomplete.
+                // A product can genuinely come back in stock before a price is
+                // extracted, so say that rather than showing nothing.
+                <span className="notification-price-absent">Not available</span>
               )}
             </div>
 
@@ -138,6 +184,16 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
 
             <div className="notification-date">
               {formatDate(notification.created_at, userLocale, true)}
+              {onMarkRead && !notification.is_read && (
+                <button
+                  className="notification-mark-read"
+                  onClick={() => onMarkRead(notification.id)}
+                  disabled={markingId === notification.id}
+                  title="Mark this notification read"
+                >
+                  {markingId === notification.id ? 'Marking...' : 'Mark read'}
+                </button>
+              )}
             </div>
           </div>
         );

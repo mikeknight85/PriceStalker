@@ -27,6 +27,10 @@ export default function NotificationHistory() {
   const totalPages = historyQuery.data?.pagination?.totalPages ?? 1;
   const invalidateNotifications = () => queryClient.invalidateQueries({ queryKey: ['notifications'] });
   const markAllRead = useMutation({ mutationFn: NotificationService.markAllAsRead, onSuccess: invalidateNotifications });
+  // The API has supported marking one notification read all along; only the
+  // drawer used it, so on this page the sole option was to mark everything read
+  // and lose track of what you had not seen (issue #93).
+  const markOneRead = useMutation({ mutationFn: NotificationService.markAsRead, onSuccess: invalidateNotifications });
   const deleteAll = useMutation({ mutationFn: NotificationService.deleteAll, onSuccess: invalidateNotifications });
 
   const handleMarkAllRead = async () => {
@@ -112,9 +116,13 @@ export default function NotificationHistory() {
               notifications={filteredNotifications} 
               loading={historyQuery.isLoading}
               userLocale={user?.locale ?? undefined}
+              error={historyQuery.isError ? historyQuery.error : undefined}
+              onRetry={() => historyQuery.refetch()}
+              onMarkRead={(id) => markOneRead.mutate(id)}
+              markingId={markOneRead.isPending ? (markOneRead.variables ?? null) : null}
             />
 
-            {totalPages > 1 && (
+            {!historyQuery.isError && totalPages > 1 && (
               <Pagination 
                 page={page} 
                 totalPages={totalPages} 

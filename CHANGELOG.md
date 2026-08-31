@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Notification history rows now show why something happened. The reason a
+  product could not be read, what was done about it, how many attempts had
+  failed and which way the stock status moved were all recorded and none of
+  them were displayed, so an unavailable product showed a generic label while
+  the row's own data held the explanation.
+- A notification with no price says "Not available" rather than leaving the
+  column blank, which left it ambiguous whether the event had no price or the
+  price had failed to load.
+- Notifications that fail to load now say so, on both the drawer and the
+  history page, instead of rendering "No alerts yet" as though nothing had
+  happened. Both offer a retry.
+- Individual notifications can be marked read on the history page. The API
+  always supported it and only the drawer used it, so the sole option here was
+  to mark everything read at once.
+- Unavailable alerts record how many consecutive attempts had failed.
+
+### Fixed
+
 - The scraper no longer announces two different browsers in the same request.
   The `User-Agent` came from the Default User-Agent setting (seeded as Chrome
   146) while the `Sec-CH-UA` client hints were hardcoded to Chrome 121 on
