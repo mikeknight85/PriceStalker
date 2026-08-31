@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `DB_LOG_LEVEL` sets the log level for the Admin System Event Log
+  independently of the console and file logs, so the table can be kept quiet
+  while debugging on the console, or capture debug traces without flooding it.
 - The products dashboard and product detail page now refresh in the background
   while you are looking at them, so scraper results, price changes and status
   updates appear without a manual reload. Polling stops automatically when the
@@ -61,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The Admin System Event Log now honours the configured log level. Setting
+  `LOG_LEVEL=error` previously still filled the table with INFO entries, and
+  `DEBUG` messages could never be stored at all no matter how the level was set.
 - Browsers no longer offer to save API keys, provider tokens and webhook URLs as
   passwords, and no longer offer to overwrite the administrator's own saved
   login when creating or editing another user. These fields are now masked

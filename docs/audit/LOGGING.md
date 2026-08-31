@@ -55,7 +55,7 @@ We identified **five major monitoring and tracing gaps** that degrade debugging 
 | :--- | :--- | :--- | :--- | :--- |
 | **L-01** | Database Layer | **High** | No visibility into SQL queries, database latency, or parameter maps during transaction failures. | Introduce a wrapper around `pool.query` that logs executing queries, counts, and duration at `DEBUG` level. |
 | **L-02** | AI / LLM Integrations | **Medium** | Prompt structure, system parameters, and raw JSON returns are invisible; only token usage is logged. | Add `logger.debug` statements inside `providers/*.ts` printing the raw prompt request and response payloads. |
-| **L-03** | Configuration Filtering | **Low** | Global `LOG_LEVEL` limits are bypassed by database writes, causing disk bloat on errors even when debugging is off. | Modify the persistence write handler to enforce `LOG_LEVEL` thresholds before inserting into the Postgres database. |
+| **L-03** | Configuration Filtering | **Low** | Global `LOG_LEVEL` limits are bypassed by database writes, causing disk bloat on errors even when debugging is off. | **Fixed.** Database writes now honour `DB_LOG_LEVEL`, falling back to `LOG_LEVEL`, like the console and file sinks. |
 | **L-04** | Scraper Selectors | **Low** | Selector evaluation sequence (JSON-LD, custom-regex, generic parsing) lacks real-time streaming console logs. | Log each selector execution and matching candidate in real-time under `DEBUG` level. |
 | **L-05** | Auth token errors | **Low** | Verification checks for tokens don't log the reason for expiration or decryption failure. | Log token validation failures (e.g., token expired, signature mismatch) at `WARN` level. |
 

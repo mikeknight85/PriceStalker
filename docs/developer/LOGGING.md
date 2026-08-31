@@ -22,6 +22,7 @@ Logging behavior is controlled via environment variables in your `.env` file or 
 | `DEBUG` | `true`, `false` | `false` | Shortcut boolean. Setting to `true` overrides log levels to `DEBUG` and enables detailed HTTP request body logging. |
 | `CONSOLE_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for Console/Docker output. |
 | `FILE_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for Disk Log files. |
+| `DB_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for the `system_logs` table behind Admin -> System Event Log. Raise it to `warn` to keep the table small, or lower it to `debug` to capture traces without flooding the console. |
 | `LOG_DIR_PATH` | Any valid absolute/relative directory | `./logs` | Directory path where log files are written. |
 | `TZ` | e.g. `Australia/Perth`, `UTC` | `UTC` | Controls the timezone prefix format for both services. |
 
@@ -42,7 +43,18 @@ Logs are written to the directory specified by `LOG_DIR_PATH` (default: `./logs/
 * `error.log`: An error-only log capturing `WARN` and `ERROR` entries. Includes full stack traces when errors are thrown.
 
 ### C. Database (PostgreSQL)
-Persistent event logs stored in the `system_logs` table. These logs are queryable via the **Admin -> System Event Log** panel in the Web UI. They store:
+Persistent event logs stored in the `system_logs` table. These logs are queryable via the **Admin -> System Event Log** panel in the Web UI.
+
+Writes honour `DB_LOG_LEVEL` (falling back to `LOG_LEVEL`) exactly as the console
+and file sinks honour theirs. Two context rules apply on top of the threshold:
+
+* `HTTP`, `Database` and `Scheduler` are high-volume operational contexts. Below
+  `WARN` they are not persisted, because request and heartbeat chatter bloats the
+  table without telling an administrator anything.
+* At `WARN` and `ERROR` those contexts *are* persisted regardless, since a failed
+  request or a scheduler error is exactly what the event log is opened to find.
+
+They store:
 * Log Level & Timestamp
 * Source context (e.g. `Auth`, `Scraper`, `API`, `Database`)
 * Message content
