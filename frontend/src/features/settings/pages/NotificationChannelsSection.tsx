@@ -8,8 +8,21 @@ import { queryClient } from '../../../api/queryClient';
 import { notificationSettingsQuery, queryKeys } from '../../../api/queries';
 import { NotificationSettings } from '../../../types/api';
 
-const DEFAULT_EMAIL_SUBJECT = 'PriceStalker Alert: {{product_name}}';
-const DEFAULT_EMAIL_BODY = 'Hi,\n\n{{product_name}} has dropped to {{current_price}}!\n\nView it here: {{product_url}}';
+/*
+ * Shown as placeholder text, not prefilled into the fields (issue #92).
+ *
+ * These used to be the fields' initial values, so a user who opened this page
+ * and pressed Save -- without ever intending to write a template -- stored
+ * "{{product_name}} has dropped to {{current_price}}!" and received that
+ * sentence for every event thereafter, including a product coming back in
+ * stock and a product going missing.
+ *
+ * Left empty, the backend picks wording that matches the event. A template the
+ * user actually types still wins, always: the variables to make one
+ * event-aware are listed under the field.
+ */
+const EMAIL_SUBJECT_PLACEHOLDER = 'Leave empty for wording that matches each event';
+const EMAIL_BODY_PLACEHOLDER = 'Leave empty for wording that matches each event, or write your own:\n\n{{product_name}}\n{{type}}: {{price}}\n{{product_url}}';
 
 interface ChannelSettings {
   telegram_bot_token: string;
@@ -52,7 +65,7 @@ export default function NotificationChannelsSection() {
     pushover_user_key: '', pushover_app_token: '', pushover_enabled: false, pushover_message_template: '',
     ntfy_server_url: '', ntfy_topic: '', ntfy_password: '', ntfy_enabled: false, ntfy_message_template: '',
     gotify_url: '', gotify_app_token: '', gotify_enabled: false, gotify_message_template: '',
-    email_enabled: false, email_to: '', email_subject_template: DEFAULT_EMAIL_SUBJECT, email_body_template: DEFAULT_EMAIL_BODY,
+    email_enabled: false, email_to: '', email_subject_template: '', email_body_template: '',
     webhook_url: '', webhook_enabled: false
   });
 
@@ -93,8 +106,8 @@ export default function NotificationChannelsSection() {
         gotify_message_template: s.gotify_message_template || '',
         email_enabled: !!s.email_enabled,
         email_to: s.email_to || '',
-        email_subject_template: s.email_subject_template || DEFAULT_EMAIL_SUBJECT,
-        email_body_template: s.email_body_template || DEFAULT_EMAIL_BODY,
+        email_subject_template: s.email_subject_template || '',
+        email_body_template: s.email_body_template || '',
         webhook_url: s.webhook_url || '',
         webhook_enabled: !!s.webhook_enabled
       });
@@ -142,7 +155,13 @@ export default function NotificationChannelsSection() {
 
   const renderTemplateHelp = () => (
     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', padding: '0.5rem', background: 'var(--background)', borderRadius: '0.25rem' }}>
-      <strong>Available Tags:</strong> <code>{"{{product_name}}"}</code>, <code>{"{{product_url}}"}</code>, <code>{"{{old_price}}"}</code>, <code>{"{{current_price}}"}</code>, <code>{"{{currency}}"}</code>, <code>{"{{product_id}}"}</code>, <code>{"{{type}}"}</code>, <code>{"{{old_stock_status}}"}</code>, <code>{"{{new_stock_status}}"}</code>
+      <strong>Available Tags:</strong> <code>{"{{product_name}}"}</code>, <code>{"{{product_url}}"}</code>, <code>{"{{old_price}}"}</code>, <code>{"{{current_price}}"}</code>, <code>{"{{price}}"}</code>, <code>{"{{currency}}"}</code>, <code>{"{{product_id}}"}</code>, <code>{"{{type}}"}</code>, <code>{"{{old_stock_status}}"}</code>, <code>{"{{new_stock_status}}"}</code>, <code>{"{{reason}}"}</code>
+      <div style={{ marginTop: '0.375rem' }}>
+        One template covers every event, so wording it around a price drop will read
+        oddly on a back-in-stock or unavailable alert. Use <code>{"{{type}}"}</code> and{' '}
+        <code>{"{{new_stock_status}}"}</code> to describe what happened, or leave the field
+        empty to get wording chosen per event.
+      </div>
     </div>
   );
 
@@ -299,11 +318,11 @@ export default function NotificationChannelsSection() {
           </div>
           <div className="form-group">
             <label>Subject Template</label>
-            <input type="text" className="form-control" value={draftSettings.email_subject_template} onChange={e => handleUpdateField('email_subject_template', e.target.value)} />
+            <input type="text" className="form-control" value={draftSettings.email_subject_template} onChange={e => handleUpdateField('email_subject_template', e.target.value)} placeholder={EMAIL_SUBJECT_PLACEHOLDER} />
           </div>
           <div className="form-group">
             <label>Body Template</label>
-            <textarea className="form-control" style={{ height: '120px', fontSize: '0.8rem' }} value={draftSettings.email_body_template} onChange={e => handleUpdateField('email_body_template', e.target.value)} />
+            <textarea className="form-control" style={{ height: '120px', fontSize: '0.8rem' }} value={draftSettings.email_body_template} onChange={e => handleUpdateField('email_body_template', e.target.value)} placeholder={EMAIL_BODY_PLACEHOLDER} />
             {renderTemplateHelp()}
           </div>
         </NotificationChannelCard>

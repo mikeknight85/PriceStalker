@@ -9,6 +9,7 @@ import { logger } from '../../../utils/system/logger';
 import { productNotificationService } from './notifications/index';
 import { productPersistenceService } from './ProductPersistenceService';
 import { isDefinitiveUnavailable, describeUnavailableReason } from '../../../types/availability';
+import { StockStatus } from '../../../models/types/base';
 
 // Consecutive page-gone scrapes required before a product is marked
 // not_available, monitoring is paused, and the user is notified.
@@ -23,6 +24,27 @@ const PAGE_GONE_THRESHOLD = 3;
  * response is to keep trying and say so once it stops looking like a blip.
  */
 const SITE_FAILURE_NOTIFY_THRESHOLD = 6;
+
+/**
+ * Which previous statuses make a move to `in_stock` worth announcing.
+ *
+ * `member_only` is included, and was not before (issue #92). From the user's
+ * side it is the same event as any other on this list: the item exists, they
+ * could not buy it, and now they can. Leaving it out meant a members-only
+ * product opening to everyone passed silently.
+ *
+ * `unknown` stays out deliberately. It does not mean the item was unavailable,
+ * it means the last scrape could not tell -- so treating it as a transition
+ * would fire "back in stock" on the first successful scrape after any parse
+ * failure, for a product that had been in stock the whole time. `null` is out
+ * for the same reason: a product that has never had a status is not a product
+ * that has come back.
+ */
+const BACK_IN_STOCK_FROM: readonly StockStatus[] = ['out_of_stock', 'pre_order', 'not_available', 'member_only'];
+
+export function isBackInStockFrom(previous: StockStatus | null): boolean {
+  return previous !== null && BACK_IN_STOCK_FROM.includes(previous);
+}
 
 export class ProductRefreshService {
   /**
@@ -94,7 +116,13 @@ export class ProductRefreshService {
     }
 
     // 2. Persist results (DB State Sync)
-    await productPersistenceService.saveScrapeResult(productId, userId, scrapedData, 'refresh');
+    //
+    // The transition comes back from inside the advisory lock. The check below
+    // used to compare against `product.stock_status`, read before the scrape
+    // and outside any lock, so two concurrent refreshes of the same product
+    // both saw `out_of_stock` and both sent a back-in-stock alert for one
+    // event. Only the refresh that actually wrote the change sees it here.
+    const transition = await productPersistenceService.saveScrapeResult(productId, userId, scrapedData, 'refresh');
 
     // Resume only a pause the system applied. A user who deliberately paused a
     // product does not want it silently resumed because the page came back --
@@ -110,17 +138,13 @@ export class ProductRefreshService {
     }
 
     // 3. Handle Notifications (Side-effects of change)
-    if (scrapedData.stockStatus !== product.stock_status) {
-      if (scrapedData.stockStatus === 'not_available') {
+    if (transition) {
+      if (transition.to === 'not_available') {
         logger.warn(`Product ${productId} | Status | ${describeUnavailableReason(reason)}. Pausing further checks.`, 'Products', { product_id: productId });
         await productRepository.setPaused(productId, true, false);
         await productNotificationService.notifyNotAvailable(product, reason);
-      } else if (
-        (product.stock_status === 'out_of_stock' || product.stock_status === 'pre_order' || product.stock_status === 'not_available') && 
-        scrapedData.stockStatus === 'in_stock' && 
-        product.notify_back_in_stock
-      ) {
-        await productNotificationService.notifyBackInStock(product, scrapedData);
+      } else if (transition.to === 'in_stock' && isBackInStockFrom(transition.from) && product.notify_back_in_stock) {
+        await productNotificationService.notifyBackInStock(product, scrapedData, transition.from);
       }
     }
 

@@ -31,13 +31,24 @@ export class WebhookProvider implements NotificationProvider {
           body = interpolateTemplate(this.payloadTemplate, payload);
         }
       } else {
+        // The default payload carried `event: back_in_stock` with nothing else
+        // about stock, so a receiver could not tell what the item had come back
+        // *from*, and it reported `currency: 'USD'` for products whose currency
+        // was never resolved -- a wrong value is worse than an absent one for a
+        // consumer parsing this.
         body = {
           event: payload.type,
           product: payload.productName,
+          productId: payload.productId,
           url: payload.productUrl,
-          price: payload.newPrice,
-          oldPrice: payload.oldPrice,
-          currency: payload.currency || 'USD',
+          price: payload.newPrice ?? null,
+          oldPrice: payload.oldPrice ?? null,
+          targetPrice: payload.targetPrice ?? null,
+          currency: payload.currency ?? null,
+          oldStockStatus: payload.oldStockStatus ?? null,
+          newStockStatus: payload.newStockStatus ?? null,
+          reason: payload.reason ?? null,
+          paused: payload.paused ?? null,
           timestamp: new Date().toISOString()
         };
       }

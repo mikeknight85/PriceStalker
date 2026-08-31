@@ -50,6 +50,10 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
         const currency = notification.data?.currency;
         const priceChangePercent = notification.data?.priceChangePercent || notification.data?.price_change_percent;
         const channelsNotified = notification.data?.channelsNotified || notification.data?.channels_notified || [];
+        // A notification is now recorded whether or not it was delivered, so
+        // "no channels" and "every channel failed" are different rows and must
+        // not both read as "Internal Only" (issue #92).
+        const channelsFailed = notification.data?.channelsFailed || notification.data?.channels_failed || [];
 
         return (
           <div key={notification.id} className={`notification-row ${!notification.is_read ? 'unread' : ''}`}>
@@ -113,13 +117,21 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
             </div>
 
             <div className="notification-channels">
-              {channelsNotified.length > 0 ? (
-                channelsNotified.map((channel: string) => (
-                  <span key={channel} className="channel-badge" title={channel}>
-                    <Icon name={getChannelIcon(channel)} />
-                  </span>
-                ))
-              ) : (
+              {channelsNotified.map((channel: string) => (
+                <span key={channel} className="channel-badge" title={channel}>
+                  <Icon name={getChannelIcon(channel)} />
+                </span>
+              ))}
+              {channelsFailed.map((channel: string) => (
+                <span
+                  key={`failed-${channel}`}
+                  className="channel-badge channel-badge-failed"
+                  title={`${channel} delivery failed`}
+                >
+                  <Icon name={getChannelIcon(channel)} />
+                </span>
+              ))}
+              {channelsNotified.length === 0 && channelsFailed.length === 0 && (
                 <span className="text-muted" style={{ fontSize: '0.75rem' }}>Internal Only</span>
               )}
             </div>

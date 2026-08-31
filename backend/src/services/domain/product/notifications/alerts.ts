@@ -20,7 +20,13 @@ export class ProductAlertService {
         productName: product.name || 'Unknown Product',
         productUrl: product.url,
         type: 'not_available',
-        productId: product.id
+        productId: product.id,
+        // Both of these used to stop at the in-app history. Every external
+        // channel hardcoded "Page no longer exists (404/410). Monitoring has
+        // been paused", so a timeout read as a dead page, and the transient
+        // path -- which does not pause -- said monitoring had stopped.
+        reason: describeUnavailableReason(reason),
+        paused
       },
       {
         type: 'not_available',
@@ -60,7 +66,8 @@ export class ProductAlertService {
         productName: product.name || 'Unknown Product',
         productUrl: product.url,
         type: 'product_restored',
-        productId: product.id
+        productId: product.id,
+        oldStockStatus: product.stock_status || undefined
       },
       {
         type: 'product_restored',
@@ -77,7 +84,13 @@ export class ProductAlertService {
     );
   }
 
-  async notifyBackInStock(product: Product, scrapedData: ScrapedProductWithVoting) {
+  /**
+   * `previousStatus` is the status observed under the persistence lock, not the
+   * caller's pre-scrape snapshot -- so "Previously out of stock" in the message
+   * describes what actually changed rather than what the caller happened to
+   * have loaded.
+   */
+  async notifyBackInStock(product: Product, scrapedData: ScrapedProductWithVoting, previousStatus?: string | null) {
     await productNotificationOrchestrator.deliver(
       product,
       'back_in_stock',
@@ -87,7 +100,7 @@ export class ProductAlertService {
         type: 'back_in_stock',
         newPrice: scrapedData.price?.price,
         currency: scrapedData.price?.currency || undefined,
-        oldStockStatus: product.stock_status || undefined,
+        oldStockStatus: previousStatus || product.stock_status || undefined,
         newStockStatus: scrapedData.stockStatus,
         productId: product.id
       },
@@ -103,7 +116,7 @@ export class ProductAlertService {
           productId: product.id,
           productName: product.name,
           productUrl: product.url,
-          oldStockStatus: product.stock_status,
+          oldStockStatus: previousStatus || product.stock_status,
           newStockStatus: scrapedData.stockStatus,
           newPrice: scrapedData.price?.price,
           currency: scrapedData.price?.currency || undefined

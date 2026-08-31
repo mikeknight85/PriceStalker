@@ -12,16 +12,21 @@ export class TelegramProvider implements NotificationProvider {
 
   async send(payload: NotificationPayload): Promise<boolean> {
     try {
-      const message = this.template 
-        ? interpolateTemplate(this.template, payload) 
+      const message = this.template
+        ? interpolateTemplate(this.template, payload)
         : formatDefaultMessage(payload);
-        
+
       const url = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
 
       await axios.post(url, {
         chat_id: this.chatId,
         text: message,
-        parse_mode: 'HTML',
+        // HTML parse mode only for a custom template, where the user may
+        // actually be using tags. The default message contains no markup, and
+        // sending it as HTML meant any product name containing &, < or > was
+        // rejected by the API with a 400 -- a whole class of products whose
+        // alerts silently never arrived.
+        ...(this.template ? { parse_mode: 'HTML' as const } : {}),
         disable_web_page_preview: false,
       });
 

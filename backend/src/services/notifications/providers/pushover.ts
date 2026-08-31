@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { NotificationProvider, NotificationPayload } from '../types';
 import { getNotificationContent, executeProviderRequest } from '../utils';
+import { describeEvent } from '../events';
 
 export class PushoverProvider implements NotificationProvider {
   constructor(
@@ -12,11 +13,11 @@ export class PushoverProvider implements NotificationProvider {
   async send(payload: NotificationPayload): Promise<boolean> {
     return executeProviderRequest('Pushover', async () => {
       const { title, message } = getNotificationContent(payload, this.template);
-      
-      const pushTitle = payload.type === 'price_drop' && !this.template ? `🔔 ${title}` 
-                      : payload.type === 'target_price' && !this.template ? `🎯 ${title}`
-                      : payload.type === 'back_in_stock' && !this.template ? `🎉 ${title}`
-                      : title;
+
+      // The prefix used to come from a ternary listing three event types by
+      // name, so half the events arrived without one -- and the title they
+      // arrived under was 'Back in Stock!' whatever had happened.
+      const pushTitle = this.template ? title : `${describeEvent(payload).emoji} ${title}`;
 
       await axios.post('https://api.pushover.net/1/messages.json', {
         token: this.appToken,

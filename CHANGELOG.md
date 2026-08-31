@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Notifications now describe the event that actually happened on every channel.
+  A product becoming reachable again was announced as "Back in Stock!" on
+  Discord, Pushover, Gotify and ntfy, and was never delivered to Telegram at
+  all -- the message came out empty and the API rejected it. Every channel now
+  renders from one shared description, so all six event types are covered
+  everywhere.
+- An "unavailable" alert says why the product could not be read, and no longer
+  claims monitoring has been paused when it has not. Every channel reported
+  "Page no longer exists (404/410). Monitoring has been paused" regardless of
+  the real cause, including on the retry path that deliberately keeps checking.
+- Telegram alerts arrive for products whose names contain `&`, `<` or `>`.
+  These were sent in HTML mode without escaping and were rejected outright.
+- Prices in notifications no longer render an unresolved currency as dollars,
+  and a price of zero is shown as a price rather than treated as missing.
+- The email templates in Notification Channels are no longer prefilled with a
+  price-drop sentence. Saving that page without editing them stored
+  "{{product_name}} has dropped to {{current_price}}!" for every event; the
+  prefilled text is now a placeholder, and a template that was stored without
+  being chosen is cleared on upgrade. Templates you wrote are untouched.
+- A product moving from members-only to in stock now sends a back-in-stock
+  alert.
+- Notification history records every alert, whether or not a channel delivered
+  it. Previously nothing was recorded unless an external channel succeeded, so
+  an install with no channels configured had no history at all, and a total
+  delivery failure erased the one record that would have explained the silence.
+  Channels that failed are now shown struck through beside those that worked.
+- Concurrent refreshes of the same product can no longer send two back-in-stock
+  alerts for one event.
+
+### Added
+
+- `{{price}}` (amount with its currency) and `{{reason}}` template variables
+  for notification templates.
+- Webhook payloads carry the stock transition, target price, product id and
+  failure reason, and report an unresolved currency as `null` instead of `USD`.
+
+### Fixed
+
 - Changing a product's check frequency now takes effect immediately. The new
   interval was saved but the next check was not rescheduled, so shortening
   24 hours to 6 left the product quiet for up to another 24 hours while the

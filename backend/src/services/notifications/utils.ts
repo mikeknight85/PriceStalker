@@ -1,11 +1,18 @@
 import { NotificationPayload } from './types';
 import { logger } from '../../utils/system/logger';
+import { describeEvent, eventBody, formatMoney, humaniseStockStatus } from './events';
 
 /**
- * Helper to get currency symbol for display.
+ * Kept for callers that want a bare symbol.
+ *
+ * It no longer falls back to '$'. Defaulting an unresolved currency to dollars
+ * is how a CHF price arrived in a notification reading "$49.90"; the rest of
+ * the app stopped guessing when unresolved currencies moved to manual
+ * confirmation, and `formatMoney` shows the ISO code instead.
  */
 export function getCurrencySymbol(currency?: string): string {
   switch (currency) {
+    case 'USD': case 'AUD': case 'NZD': case 'CAD': case 'SGD': case 'HKD': return '$';
     case 'EUR': return '€';
     case 'GBP': return '£';
     case 'CHF': return 'CHF ';
@@ -16,15 +23,14 @@ export function getCurrencySymbol(currency?: string): string {
     case 'ZAR': return 'R';
     case 'BRL': return 'R$';
     case 'SEK': case 'NOK': case 'DKK': return 'kr';
-    case 'SGD': case 'HKD': case 'NZD': case 'CAD': return '$';
-    default: return '$';
+    default: return '';
   }
 }
 
 /** "out_of_stock" reads badly in a notification; "Out of stock" does not. */
 function formatStockStatus(status?: string): string {
-  if (!status) return 'unknown';
-  const words = status.replace(/_/g, ' ');
+  const words = humaniseStockStatus(status);
+  if (!words) return 'unknown';
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
@@ -52,6 +58,10 @@ export function interpolateTemplate(template: string, payload: NotificationPaylo
     'type': payload.type.replace(/_/g, ' '),
     'old_stock_status': formatStockStatus(payload.oldStockStatus),
     'new_stock_status': formatStockStatus(payload.newStockStatus),
+    // A price with its currency attached, so a template does not have to
+    // assemble one and get the unknown-currency case wrong.
+    'price': formatMoney(payload.newPrice, payload.currency) ?? 'unavailable',
+    'reason': payload.reason || '',
   };
 
   let result = template;
@@ -65,52 +75,20 @@ export function interpolateTemplate(template: string, payload: NotificationPaylo
 }
 
 /**
- * Default formatter for notification messages.
+ * The default message for channels that send plain prose (Telegram).
+ *
+ * This used to be an if/else chain over the event type with no branch for
+ * `product_restored` or `price_announced`, falling through to `return ''`.
+ * Telegram's API rejects an empty `text`, so those two events were never
+ * delivered to Telegram at all -- they were logged as a send failure with no
+ * indication that the message itself was the problem.
  */
 export function formatDefaultMessage(payload: NotificationPayload): string {
-  const currencySymbol = getCurrencySymbol(payload.currency);
-
-  if (payload.type === 'price_drop') {
-    const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
-    const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
-    const dropAmount = payload.oldPrice && payload.newPrice
-      ? `${currencySymbol}${(payload.oldPrice - payload.newPrice).toFixed(2)}`
-      : '';
-
-    return `🔔 Price Drop Alert!\n\n` +
-      `📦 ${payload.productName}\n\n` +
-      `💰 Price dropped from ${oldPriceStr} to ${newPriceStr}` +
-      (dropAmount ? ` (-${dropAmount})` : '') + `\n\n` +
-      `🔗 ${payload.productUrl}`;
-  }
-
-  if (payload.type === 'target_price') {
-    const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
-    const targetPriceStr = payload.targetPrice ? `${currencySymbol}${payload.targetPrice.toFixed(2)}` : 'N/A';
-
-    return `🎯 Target Price Reached!\n\n` +
-      `📦 ${payload.productName}\n\n` +
-      `💰 Price is now ${newPriceStr} (your target: ${targetPriceStr})\n\n` +
-      `🔗 ${payload.productUrl}`;
-  }
-
-  if (payload.type === 'back_in_stock') {
-    const priceStr = payload.newPrice ? ` at ${currencySymbol}${payload.newPrice.toFixed(2)}` : '';
-    return `🎉 Back in Stock!\n\n` +
-      `📦 ${payload.productName}\n\n` +
-      `✅ This item is now available${priceStr}\n\n` +
-      `🔗 ${payload.productUrl}`;
-  }
-
-  if (payload.type === 'not_available') {
-    return `⚠️ Product Unavailable\n\n` +
-      `📦 ${payload.productName}\n\n` +
-      `❌ Page no longer exists (404/410).\n` +
-      `⏸️ Monitoring has been paused.\n\n` +
-      `🔗 ${payload.productUrl}`;
-  }
-
-  return '';
+  const event = describeEvent(payload);
+  return `${event.emoji} ${event.title}\n\n` +
+    `📦 ${payload.productName}\n\n` +
+    `${event.headline}` + (event.detail ? `\n${event.detail}` : '') + `\n\n` +
+    `🔗 ${payload.productUrl}`;
 }
 
 export async function executeProviderRequest(providerName: string, requestFn: () => Promise<void>): Promise<boolean> {
@@ -124,39 +102,21 @@ export async function executeProviderRequest(providerName: string, requestFn: ()
   }
 }
 
+/**
+ * Title and body for the channels that send a title/message pair (Pushover,
+ * Gotify).
+ *
+ * The title used to come from a ternary chain whose final branch was
+ * 'Back in Stock!', so a restored product and an announced price were both
+ * announced as back in stock -- on the custom-template path too, where the
+ * user's own wording arrived under a title contradicting it.
+ */
 export function getNotificationContent(payload: NotificationPayload, template?: string | null): { title: string, message: string } {
-  if (template) {
-    const title = payload.type === 'price_drop' ? 'Price Drop Alert!' : 
-                  payload.type === 'target_price' ? 'Target Price Reached!' : 
-                  payload.type === 'not_available' ? 'Product Unavailable' : 'Back in Stock!';
-    const message = interpolateTemplate(template, payload);
-    return { title, message };
-  }
-
-  const currencySymbol = getCurrencySymbol(payload.currency);
-  let title = '';
-  let message = '';
-
-  if (payload.type === 'price_drop') {
-    const oldPriceStr = payload.oldPrice ? `${currencySymbol}${payload.oldPrice.toFixed(2)}` : 'N/A';
-    const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
-    title = 'Price Drop Alert!';
-    message = `${payload.productName}\n\nPrice dropped from ${oldPriceStr} to ${newPriceStr}`;
-  } else if (payload.type === 'target_price') {
-    const newPriceStr = payload.newPrice ? `${currencySymbol}${payload.newPrice.toFixed(2)}` : 'N/A';
-    const targetPriceStr = payload.targetPrice ? `${currencySymbol}${payload.targetPrice.toFixed(2)}` : 'N/A';
-    title = 'Target Price Reached!';
-    message = `${payload.productName}\n\nPrice is now ${newPriceStr} (your target: ${targetPriceStr})`;
-  } else if (payload.type === 'not_available') {
-    title = 'Product Unavailable';
-    message = `${payload.productName}\n\nThis product is no longer available (404/410) and monitoring has been paused.`;
-  } else {
-    const priceStr = payload.newPrice ? ` at ${currencySymbol}${payload.newPrice.toFixed(2)}` : '';
-    title = 'Back in Stock!';
-    message = `${payload.productName}\n\nThis item is now available${priceStr}`;
-  }
-
-  return { title, message };
+  const event = describeEvent(payload);
+  return {
+    title: event.title,
+    message: template ? interpolateTemplate(template, payload) : eventBody(payload),
+  };
 }
 
 /**
@@ -192,12 +152,12 @@ export function defaultEmailTemplate(type: NotificationPayload['type']): { subje
     case 'back_in_stock':
       return {
         subject: 'Back in stock: {{product_name}}',
-        body: '{{product_name}} is available again.\n\nCurrent price: {{current_price}} {{currency}}\n\n{{product_url}}',
+        body: '{{product_name}} is available again.\n\nCurrent price: {{price}}\n\n{{product_url}}',
       };
     case 'not_available':
       return {
         subject: 'Unavailable: {{product_name}}',
-        body: '{{product_name}} could not be reached.\n\n{{product_url}}',
+        body: '{{product_name}} could not be read.\n\n{{reason}}\n\n{{product_url}}',
       };
     case 'product_restored':
       return {
