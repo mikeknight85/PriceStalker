@@ -7,6 +7,13 @@ export interface SparklinePoint {
 }
 
 export interface Product {
+  /** Why the product is unavailable, when it is. See utils/availability. */
+  unavailable_reason?: string | null;
+  /** True when the system paused monitoring, false when the user did. */
+  auto_paused?: boolean;
+  /** Consecutive failed fetches; the product is still being retried. */
+  failure_streak?: number;
+  last_failure_at?: string | null;
   id: number;
   user_id: number;
   url: string;

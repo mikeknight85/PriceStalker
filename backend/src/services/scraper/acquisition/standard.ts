@@ -135,7 +135,7 @@ function handleAxiosError(err: any, url: string, extractionSteps: string[], requ
         // fall through to the plain 404 handling.
       }
     }
-    throw new PageNotAvailableError(`Page not found (${status}): ${url}`);
+    throw new PageNotAvailableError(`Page not found (${status}): ${url}`, status === 410 ? 'http_410' : 'http_404');
   }
 
   if (err instanceof AxiosError && status === 403) {
@@ -156,7 +156,7 @@ function validateUrl(originalUrl: string, finalUrl: string, requestId?: string) 
     
     if (isErrorPath || (originalObj.pathname.length > 5 && (finalPath === '/' || finalPath === ''))) {
       logger.warn(`Scraper | Axios | [${requestId || 'N/A'}] | Soft 404 | Redirected from ${originalUrl} to ${finalUrl}`, 'Scraper', { requestId });
-      throw new PageNotAvailableError(`Soft 404: Redirected to error or root page: ${finalUrl}`);
+      throw new PageNotAvailableError(`Soft 404: Redirected to error or root page: ${finalUrl}`, 'redirected_to_error_page');
     }
   } catch (urlErr) {
     if (urlErr instanceof PageNotAvailableError) throw urlErr;

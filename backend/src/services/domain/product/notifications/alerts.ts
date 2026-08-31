@@ -1,9 +1,18 @@
 import { Product } from '../../../../models';
 import { ScrapedProductWithVoting } from '../../../../types/scraper';
 import { productNotificationOrchestrator } from './orchestrator';
+import { describeUnavailableReason, type UnavailableReason } from '../../../../types/availability';
 
 export class ProductAlertService {
-  async notifyNotAvailable(product: Product) {
+  /**
+   * Tells the user a product could not be reached.
+   *
+   * `paused` separates the two cases this used to conflate: a page that is gone
+   * and no longer being checked, versus a retailer that is unreachable and still
+   * being retried. Telling someone monitoring has stopped when it has not is
+   * worse than saying nothing.
+   */
+  async notifyNotAvailable(product: Product, reason?: UnavailableReason | null, paused = true) {
     await productNotificationOrchestrator.deliver(
       product,
       'not_available',
@@ -15,14 +24,21 @@ export class ProductAlertService {
       },
       {
         type: 'system_alert',
-        title: `404 | ${product.name || 'Product'}`,
-        message: 'Page not found. Monitoring paused.',
+        // The reason and the action were hardcoded to "404/410 Page Not Found"
+        // and "Monitoring Paused" regardless of what actually happened, so a
+        // redirect, a soft 404 and a week-long retailer outage all read the
+        // same in the notification history (issue #73).
+        title: `Unavailable | ${product.name || 'Product'}`,
+        message: paused
+          ? `${describeUnavailableReason(reason)}. Monitoring paused.`
+          : `${describeUnavailableReason(reason)}. Still retrying.`,
         data: {
           productId: product.id,
           productName: product.name,
           productUrl: product.url,
-          reason: '404/410 Page Not Found',
-          action: 'Monitoring Paused'
+          reason: describeUnavailableReason(reason),
+          reasonCode: reason ?? 'unknown_scrape_failure',
+          action: paused ? 'Monitoring Paused' : 'Still Retrying'
         }
       }
     );

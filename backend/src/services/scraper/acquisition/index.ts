@@ -109,7 +109,7 @@ function checkSoft404($: CheerioAPI, html: string, extractionSteps: string[]) {
     for (const pattern of notFoundPatterns) {
       if (title === pattern || (pattern !== 'not found' && title.includes(pattern))) {
         extractionSteps.push(`Soft-404 | Title match: "${title}" contains "${pattern}"`);
-        throw new PageNotAvailableError(`Soft 404: Title matches "${pattern}"`);
+        throw new PageNotAvailableError(`Soft 404: Title matches "${pattern}"`, 'soft_404_title');
       }
     }
   }
@@ -131,7 +131,7 @@ function checkSoft404($: CheerioAPI, html: string, extractionSteps: string[]) {
 
     if (!hasPriceMeta && !hasJsonLdProduct) {
       extractionSteps.push(`Soft-404 | Robots meta tag contains noindex: "${robots}"`);
-      throw new PageNotAvailableError(`Soft 404: Robots meta tag contains noindex (${robots})`);
+      throw new PageNotAvailableError(`Soft 404: Robots meta tag contains noindex (${robots})`, 'soft_404_noindex');
     } else {
       extractionSteps.push(`Soft-404 | Robots meta has noindex but page has valid product/price metadata. Skipping robots check.`);
     }
@@ -148,7 +148,7 @@ function checkSoft404($: CheerioAPI, html: string, extractionSteps: string[]) {
   for (const selector of soft404Selectors) {
     if ($(selector).length > 0) {
       extractionSteps.push(`Soft-404 | Found error selector: "${selector}"`);
-      throw new PageNotAvailableError(`Soft 404: Found error element "${selector}"`);
+      throw new PageNotAvailableError(`Soft 404: Found error element "${selector}"`, 'soft_404_element');
     }
   }
 }

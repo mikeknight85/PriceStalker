@@ -1,4 +1,5 @@
 import { ParsedPrice } from '../utils/scraping/priceParser';
+import type { UnavailableReason } from './availability';
 
 export type StockStatus = 'in_stock' | 'out_of_stock' | 'pre_order' | 'not_available' | 'member_only' | 'unknown';
 export type AIStatus = 'verified' | 'corrected' | 'confirmed' | null;
@@ -60,6 +61,12 @@ export interface ScrapedProductWithVoting extends ScrapedProduct {
   failureReason?: ScrapeFailureReason;
   /** Free-text detail for the reason, e.g. which challenge was detected. */
   failureDetail?: string;
+  /**
+   * Why the page could not be read, when it could not be. Distinguishes a page
+   * that is genuinely gone from one we merely failed to fetch -- the two get
+   * opposite treatment during a refresh.
+   */
+  unavailableReason?: UnavailableReason;
 }
 
 export type ExtractionMethod = 'json-ld' | 'site-specific' | 'generic-css' | 'custom-css' | 'custom-regex' | 'ai' | 'generic' | 'deal-price' | 'member-price' | 'pre-order-price' | 'original-price';
