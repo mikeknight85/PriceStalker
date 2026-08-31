@@ -54,6 +54,10 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=beta,enable={{is_default_branch}}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            # `stable` is what deploy/swarm-stack.yml tracks by default. It moves
+            # only on a versioned release, so an operator who does not pin a
+            # version never gets an unreviewed migration from main.
+            type=raw,value=stable,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Build Docker image
         uses: docker/build-push-action@v7
