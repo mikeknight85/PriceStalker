@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.1] - 2026-08-31
+
 ### Fixed
 
 - AI extraction can now be diagnosed: at debug level each provider records the
