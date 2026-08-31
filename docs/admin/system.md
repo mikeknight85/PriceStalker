@@ -6,7 +6,11 @@ The **System** tab in the Admin Panel provides the core configurations for netwo
 
 ## 1. Network & Integration
 * **Proxy URL/Port (`scraper_proxy`)**: Specify the HTTP/HTTPS proxy address used to route outgoing PDP requests (e.g. `http://user:pass@proxyhost:port`).
-* **Remote Scraper URL (`remote_scraper_url`)**: Sets the address of your containerized stealth Puppeteer scraping service (`scraper`, e.g. `http://scraper:5100/scrape`).
+* **Browser Scraper URL (`remote_scraper_url`)**: Sets the address of your
+  containerized stealth Puppeteer scraping service (`scraper`, e.g.
+  `http://scraper:5100/scrape`). Retailers with **Use Browser Scraper**
+  enabled are fetched through it. The stored setting key keeps its original
+  name so existing configurations are unaffected.
 
 ---
 

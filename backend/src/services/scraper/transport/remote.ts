@@ -20,7 +20,7 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
     const abortTimeout = setTimeout(() => controller.abort(), 65000); // 65s safety timeout
 
     try {
-      const logPrefix = `Remote Scraper | [${requestId}]${productId ? ` [PROD-${productId}]` : ''}`;
+      const logPrefix = `Browser Scraper | [${requestId}]${productId ? ` [PROD-${productId}]` : ''}`;
 
       if (retryCount > 0) {
         logger.info(`${logPrefix} | Retry ${retryCount}/${maxRetries} | ${url}`, 'Scraper');
@@ -60,8 +60,8 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
 
     } catch (error: any) {
       if (axios.isCancel(error) || error.name === 'AbortError') {
-        logger.warn(`Remote Scraper | [${requestId}] | Aborted | Request for ${url} was canceled by backend`, 'Scraper');
-        throw new Error('Remote Scraper request aborted');
+        logger.warn(`Browser Scraper | [${requestId}] | Aborted | Request for ${url} was canceled by backend`, 'Scraper');
+        throw new Error('Browser Scraper request aborted');
       }
 
       const status = error.response?.status;
@@ -72,23 +72,23 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
       // Scraper URL endpoint does not exist — a configuration problem, never
       // evidence that the product page is gone.
       if (status === 404 || status === 410) {
-        throw new Error(`Remote Scraper endpoint not found (${status}) — check the Remote Scraper URL setting`);
+        throw new Error(`Browser Scraper endpoint not found (${status}) — check the Browser Scraper URL setting`);
       }
 
       // Handle Rate Limiting (503) with Exponential Backoff
       if (status === 503 && retryCount < maxRetries) {
         retryCount++;
         const delay = Math.pow(2, retryCount) * 1000; // 2s, 4s, 8s
-        logger.warn(`Remote Scraper | [${requestId}] | Busy | Retrying in ${delay}ms...`, 'Scraper');
+        logger.warn(`Browser Scraper | [${requestId}] | Busy | Retrying in ${delay}ms...`, 'Scraper');
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
 
-      throw new Error(`Remote Scraper Failed (${status}): ${msg}`);
+      throw new Error(`Browser Scraper failed (${status}): ${msg}`);
     } finally {
       clearTimeout(abortTimeout);
     }
   }
 
-  throw new Error('Remote Scraper Failed: Max retries exceeded');
+  throw new Error('Browser Scraper failed: max retries exceeded');
 }

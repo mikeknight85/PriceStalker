@@ -137,7 +137,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
             </span>
           );
         } else if (status === 403) {
-          setError('Access Denied: The retailer is blocking our scraper. Try enabling the Remote Scraper or a Proxy for this site in Retailer Settings.');
+          setError('Access Denied: The retailer is blocking our scraper. Try enabling the Browser Scraper or a Proxy for this retailer under Admin -> Retailers.');
         } else if (status === 400) {
           setError(serverError || 'Scraping Failed: We could not find a price on this page. Check your selectors in Retailer Settings.');
         } else if (status === 500) {
