@@ -35,13 +35,51 @@ function getLogLevelValue(level: LogLevel | string): number {
   }
 }
 
+/**
+ * Each sink has its own threshold, falling back to the global LOG_LEVEL.
+ * These are read per call rather than cached so a level can be changed without
+ * a restart.
+ */
+function getSinkLevels() {
+  const global =
+    process.env.LOG_LEVEL || (process.env.DEBUG === 'true' ? 'DEBUG' : DEFAULT_LOG_LEVEL);
+  return {
+    console: process.env.CONSOLE_LOG_LEVEL || global,
+    file: process.env.FILE_LOG_LEVEL || global,
+    database: process.env.DB_LOG_LEVEL || global,
+  };
+}
+
+/**
+ * True when at least one sink would accept this level. Callers use it to skip
+ * building a message no sink will keep -- most usefully `logger.debug`, which
+ * would otherwise format and scrub text that is thrown away.
+ */
+export function isLevelEnabled(level: LogLevel): boolean {
+  const value = getLogLevelValue(level);
+  const levels = getSinkLevels();
+  return (
+    value >= getLogLevelValue(levels.console) ||
+    value >= getLogLevelValue(levels.file) ||
+    value >= getLogLevelValue(levels.database)
+  );
+}
+
+/**
+ * High-volume contexts. Below WARN they are operational chatter that would bloat
+ * system_logs without telling an administrator anything; at WARN and above they
+ * describe an actual problem and are always worth keeping.
+ */
+const NOISE_CONTEXTS = ['HTTP', 'Database', 'Scheduler'];
+
 export function print(level: LogLevel, msg: string, context?: string, details?: any) {
   msg = scrubSensitiveData(msg);
   if (context) context = scrubSensitiveData(context);
   if (details) details = scrubSensitiveData(details);
 
-  const currentConsoleLevel = process.env.CONSOLE_LOG_LEVEL || process.env.LOG_LEVEL || (process.env.DEBUG === 'true' ? 'DEBUG' : DEFAULT_LOG_LEVEL);
-  const currentFileLevel = process.env.FILE_LOG_LEVEL || process.env.LOG_LEVEL || (process.env.DEBUG === 'true' ? 'DEBUG' : DEFAULT_LOG_LEVEL);
+  const sinkLevels = getSinkLevels();
+  const currentConsoleLevel = sinkLevels.console;
+  const currentFileLevel = sinkLevels.file;
   
   // Clean up redundant context in message
   let cleanMsg = msg;
@@ -123,19 +161,14 @@ export function print(level: LogLevel, msg: string, context?: string, details?: 
     writeToLogFile(level, fileOutput);
   }
 
-  // --- DATABASE PERSISTENCE RULES ---
-  let shouldSaveToDb = false;
-  const noiseContexts = ['HTTP', 'Database', 'Scheduler'];
-
-  if (level === 'ERROR' || level === 'WARN') {
-    shouldSaveToDb = true;
-  } else if (level === 'INFO') {
-    // Only save INFO if it's not a noise context
-    shouldSaveToDb = !noiseContexts.includes(context || '');
-  } else if (level === 'DEBUG') {
-    // Only save DEBUG if it's the consolidated Voting trace
-    shouldSaveToDb = (context === 'Voting');
-  }
+  // 3. DATABASE PERSISTENCE
+  // Previously this ignored the configured level entirely: every INFO was
+  // written whatever LOG_LEVEL said, while DEBUG could never be written at all.
+  // The threshold now applies here like it does to the other two sinks.
+  const isProblem = level === 'WARN' || level === 'ERROR';
+  const shouldSaveToDb =
+    getLogLevelValue(level) >= getLogLevelValue(sinkLevels.database) &&
+    (isProblem || !NOISE_CONTEXTS.includes(context || ''));
 
   if (shouldSaveToDb) {
     saveToDb(level, cleanMsg, context, details).catch(() => {});

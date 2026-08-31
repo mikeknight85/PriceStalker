@@ -22,6 +22,8 @@ Logging behavior is controlled via environment variables in your `.env` file or 
 | `DEBUG` | `true`, `false` | `false` | Shortcut boolean. Setting to `true` overrides log levels to `DEBUG` and enables detailed HTTP request body logging. |
 | `CONSOLE_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for Console/Docker output. |
 | `FILE_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for Disk Log files. |
+| `DB_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `LOG_LEVEL` | Overrides the log level threshold specifically for the `system_logs` table behind Admin -> System Event Log. Raise it to `warn` to keep the table small, or lower it to `debug` to capture traces without flooding the console. |
+| `SLOW_QUERY_MS` | Any positive integer | `500` | A SQL statement taking at least this long is logged at `WARN` instead of `DEBUG`. |
 | `LOG_DIR_PATH` | Any valid absolute/relative directory | `./logs` | Directory path where log files are written. |
 | `TZ` | e.g. `Australia/Perth`, `UTC` | `UTC` | Controls the timezone prefix format for both services. |
 
@@ -42,7 +44,18 @@ Logs are written to the directory specified by `LOG_DIR_PATH` (default: `./logs/
 * `error.log`: An error-only log capturing `WARN` and `ERROR` entries. Includes full stack traces when errors are thrown.
 
 ### C. Database (PostgreSQL)
-Persistent event logs stored in the `system_logs` table. These logs are queryable via the **Admin -> System Event Log** panel in the Web UI. They store:
+Persistent event logs stored in the `system_logs` table. These logs are queryable via the **Admin -> System Event Log** panel in the Web UI.
+
+Writes honour `DB_LOG_LEVEL` (falling back to `LOG_LEVEL`) exactly as the console
+and file sinks honour theirs. Two context rules apply on top of the threshold:
+
+* `HTTP`, `Database` and `Scheduler` are high-volume operational contexts. Below
+  `WARN` they are not persisted, because request and heartbeat chatter bloats the
+  table without telling an administrator anything.
+* At `WARN` and `ERROR` those contexts *are* persisted regardless, since a failed
+  request or a scheduler error is exactly what the event log is opened to find.
+
+They store:
 * Log Level & Timestamp
 * Source context (e.g. `Auth`, `Scraper`, `API`, `Database`)
 * Message content
@@ -105,3 +118,34 @@ Administrators can search, filter, and review logs under **Admin -> System Event
 * **Purge Logs**: Clear all logs matching current filters.
 * **Bulk Action**: Delete specific log rows.
 * **Auto-cleanup**: The database runs background routines that automatically prune logs older than 14 days to prevent storage growth.
+
+---
+
+## 6. SQL Query Tracing
+
+Every statement issued through the connection pool is traced under the
+`Database` context, including statements on a client checked out for a
+transaction. Each line carries the statement, how long it took, and how many
+bind parameters it had:
+
+```text
+DEBUG [Database]: SQL | Pool | 4ms | SELECT * FROM products WHERE user_id = $1 | Params: 1
+WARN  [Database]: SQL | Pool | Slow query | 812ms | SELECT ... | Params: 2
+ERROR [Database]: SQL | Client | Failed after 3ms | UPDATE ... | Params: 3
+```
+
+Levels follow the same thresholds as everything else:
+
+* `DEBUG` for a normal query. Set `LOG_LEVEL=debug` (or `CONSOLE_LOG_LEVEL=debug`)
+  to see them; at the default `info` they cost nothing.
+* `WARN` once a query reaches `SLOW_QUERY_MS`.
+* `ERROR` when a query fails, with the driver error attached.
+
+**Parameter values are never logged.** Bind parameters routinely carry password
+hashes, reset tokens, API keys and email addresses, and the scrubber matches on
+key names it cannot see in a bare positional array. The parameter count is
+recorded instead.
+
+Because `Database` is a high-volume context, `DEBUG` and `INFO` lines are printed
+and written to disk but not persisted to `system_logs`. Slow-query warnings and
+query failures are persisted, so they show up in **Admin -> System Event Log**.

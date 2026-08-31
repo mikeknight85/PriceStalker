@@ -1,4 +1,4 @@
-import { print } from './printer';
+import { print, isLevelEnabled } from './printer';
 
 export const logger = {
   info: (msg: string, context?: string, details?: any) => print('INFO', msg, context, details),
@@ -32,7 +32,10 @@ export const logger = {
     }
   },
   debug: (msg: string, context?: string, details?: any) => {
-    if (process.env.DEBUG === 'true' || (process.env.LOG_LEVEL && process.env.LOG_LEVEL.toUpperCase() === 'DEBUG')) {
+    // This used to check the global LOG_LEVEL only, so setting
+    // CONSOLE_LOG_LEVEL=debug or DB_LOG_LEVEL=debug on its own produced no
+    // debug output at all. Ask the printer whether any sink wants it.
+    if (isLevelEnabled('DEBUG')) {
       print('DEBUG', msg, context, details);
     }
   },
