@@ -343,10 +343,13 @@ export interface SystemLog {
 }
 
 export interface SystemLogsResponse {
-  logs: SystemLog[];
+  // The arrays are optional on purpose: the client must not assume a response
+  // shape it cannot enforce. Rendering code maps over them, so a missing field
+  // is a render crash rather than a missing filter.
+  logs?: SystemLog[];
   total: number;
   pages: number;
-  contexts: string[];
+  contexts?: string[];
 }
 
 export interface TestRetailerConfigResult {
