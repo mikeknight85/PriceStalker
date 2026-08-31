@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Product search results now offer both **Track** and **Configure**. Track adds
+  the product straight away with the default settings; Configure opens the usual
+  form for setting an interval or categories first. Repeated clicks while a
+  track is in flight no longer add the product twice.
 - Admin Retailers, Users and API Tokens now refresh in the background, so
   retailers the scraper auto-creates, accounts SSO provisions on first sign-in,
   and tokens managed outside the UI appear without reloading the page. Search
@@ -93,6 +97,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The product card's price and status no longer overlap the sparkline in the
+  two-column layout on tablets. The stacked layout now responds to the width of
+  the card rather than the width of the window, so it applies whenever a card is
+  narrow instead of only on a narrow screen.
+- Price selection dialog filter pills no longer squash their labels; the row
+  scrolls as intended when the filters do not fit.
 - SSO accounts can no longer have a local password set or their email changed
   from the admin user editor. Setting a password on an account provisioned for
   external sign-in enabled local authentication on it, and a locally changed

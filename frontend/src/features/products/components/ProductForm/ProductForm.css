@@ -186,6 +186,20 @@
 
 .result-actions {
   margin-left: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  /* Two buttons now; keep them beside the result rather than letting the
+     result text squeeze them. */
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .result-actions {
+    margin-left: 0;
+    margin-top: 0.75rem;
+    width: 100%;
+  }
 }
 
 .empty-search-state {
