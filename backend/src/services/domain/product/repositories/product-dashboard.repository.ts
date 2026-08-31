@@ -74,9 +74,13 @@ export const productDashboardRepository = {
     // Get sparkline data for all products (last 7 days)
     const productIds = products.map((p: Product) => p.id);
     const sparklineResult = await pool.query(
+      // price_type must be filtered here. Without it a member-only or
+      // struck-through original price is plotted as though it were a change in
+      // the tracked price, and the sparkline shows drops that never happened.
       `SELECT product_id, price, recorded_at
        FROM price_history
        WHERE product_id = ANY($1)
+       AND price_type = 'standard'
        AND recorded_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
        ORDER BY product_id, recorded_at ASC`,
       [productIds]
@@ -84,9 +88,12 @@ export const productDashboardRepository = {
 
     // Get min prices for all products (all-time low)
     const minPriceResult = await pool.query(
+      // Same reason: a member price is not a price this user ever paid, so it
+      // must not become the product's all-time low.
       `SELECT product_id, MIN(price) as min_price
        FROM price_history
        WHERE product_id = ANY($1)
+       AND price_type = 'standard'
        GROUP BY product_id`,
       [productIds]
     );

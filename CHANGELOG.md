@@ -73,6 +73,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Price history is now written inside the same transaction as the product
+  update it belongs to, so a rollback can no longer leave behind history for a
+  state the product never reached.
+- A price change that is only a currency change (100 USD to 100 AUD) is now
+  recorded, instead of leaving the product reporting the old currency forever.
+- A scraped price still awaiting manual review no longer becomes the product's
+  current price and drift anchor before anyone has confirmed it.
+- Dashboard sparklines and the all-time-low price now use standard prices only.
+  A member-only or struck-through original price could previously appear as a
+  price drop, or become the product's all-time low.
+- Member and original prices with no resolvable currency are now reported in the
+  logs like standard prices are, rather than being skipped silently.
 - Product images no longer break when a retailer expresses the image as a
   relative or protocol-relative URL: candidates are now resolved against the
   page they were scraped from. Placeholder and spacer images are recognised

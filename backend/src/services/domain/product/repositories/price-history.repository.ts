@@ -1,4 +1,5 @@
 import pool from '../../../../config/database';
+import { asExecutor, type Executor } from './executor';
 import { 
   PriceHistory,
   AIStatus
@@ -32,9 +33,10 @@ export const priceHistoryRepository = {
     currency: string = 'USD',
     aiStatus: AIStatus = null,
     details: any = null,
-    priceType: string = 'standard'
+    priceType: string = 'standard',
+    executor?: Executor
   ): Promise<PriceHistory> => {
-    const result = await pool.query(
+    const result = await asExecutor(executor).query(
       `INSERT INTO price_history (product_id, price, currency, ai_status, details, price_type)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
@@ -43,8 +45,8 @@ export const priceHistoryRepository = {
     return result.rows[0];
   },
 
-  getLatest: async (productId: number, priceType: string = 'standard'): Promise<PriceHistory | null> => {
-    const result = await pool.query(
+  getLatest: async (productId: number, priceType: string = 'standard', executor?: Executor): Promise<PriceHistory | null> => {
+    const result = await asExecutor(executor).query(
       `SELECT * FROM price_history
        WHERE product_id = $1 AND price_type = $2
        ORDER BY recorded_at DESC
@@ -54,7 +56,14 @@ export const priceHistoryRepository = {
     return result.rows[0] || null;
   },
 
-  getStats: async (productId: number): Promise<{
+  /**
+   * Statistics for one price type. Defaults to 'standard'.
+   *
+   * This used to aggregate every row for the product regardless of type, so a
+   * member-only or a struck-through original price could become the product's
+   * all-time low.
+   */
+  getStats: async (productId: number, priceType: string = 'standard'): Promise<{
     min_price: number;
     max_price: number;
     avg_price: number;
@@ -67,8 +76,8 @@ export const priceHistoryRepository = {
          AVG(price)::decimal(10,2) as avg_price,
          COUNT(*) as price_count
        FROM price_history
-       WHERE product_id = $1`,
-      [productId]
+       WHERE product_id = $1 AND price_type = $2`,
+      [productId, priceType]
     );
     return result.rows[0] || null;
   },

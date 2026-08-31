@@ -1,4 +1,5 @@
 import pool from '../../../../config/database';
+import { asExecutor, type Executor } from './executor';
 import { 
   StockStatus,
   StockStatusHistory,
@@ -56,8 +57,8 @@ export const stockHistoryRepository = {
   },
 
   // Get the most recent status for a product
-  getLatest: async (productId: number): Promise<StockStatusHistory | null> => {
-    const result = await pool.query(
+  getLatest: async (productId: number, executor?: Executor): Promise<StockStatusHistory | null> => {
+    const result = await asExecutor(executor).query(
       `SELECT * FROM stock_status_history
        WHERE product_id = $1
        ORDER BY changed_at DESC
@@ -68,16 +69,20 @@ export const stockHistoryRepository = {
   },
 
   // Record a status change (only if status actually changed)
-  recordChange: async (productId: number, status: StockStatus): Promise<StockStatusHistory | null> => {
-    // First check if this is actually a change
-    const latest = await stockHistoryRepository.getLatest(productId);
+  recordChange: async (productId: number, status: StockStatus, executor?: Executor): Promise<StockStatusHistory | null> => {
+    const db = asExecutor(executor);
+
+    // First check if this is actually a change. Reading through the same
+    // executor matters inside a transaction: the pool would not see rows this
+    // transaction has already written.
+    const latest = await stockHistoryRepository.getLatest(productId, db);
 
     // If status is the same as the last recorded status, don't create a new record
     if (latest && latest.status === status) {
       return null;
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO stock_status_history (product_id, status)
        VALUES ($1, $2)
        RETURNING *`,
