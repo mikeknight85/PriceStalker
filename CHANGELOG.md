@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Generic stock, AI price and AI image selector settings were stored as invalid
+  JSON by the baseline schema, so the scraper silently fell back to a smaller
+  built-in list instead of the seeded one. Stock detection in particular was
+  running on 5 generic selectors rather than 12. Existing installs are repaired
+  automatically on upgrade; a customised list is left untouched.
+- AI retailer auto-mapping is now shown the same breadth of image candidates
+  that normal extraction uses, so it stops learning over-specific image
+  selectors that then outrank the generic selector which would have worked.
 - The Admin System Event Log now honours the configured log level. Setting
   `LOG_LEVEL=error` previously still filled the table with INFO entries, and
   `DEBUG` messages could never be stored at all no matter how the level was set.
