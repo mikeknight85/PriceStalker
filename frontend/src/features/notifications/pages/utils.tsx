@@ -6,6 +6,8 @@ export function getNotificationIcon(type: string): React.ReactNode {
   const size = 18;
   
   switch (type) {
+    case 'price_announced':
+    case 'price_alert':
     case 'price_drop':
       return (
         <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--secondary)' }}>
@@ -21,6 +23,7 @@ export function getNotificationIcon(type: string): React.ReactNode {
           <circle cx="12" cy="12" r="2" />
         </svg>
       );
+    case 'back_in_stock':
     case 'stock_alert':
       return (
         <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ color: '#f59e0b' }}>
@@ -29,6 +32,7 @@ export function getNotificationIcon(type: string): React.ReactNode {
           <line x1="12" y1="22.08" x2="12" y2="12" />
         </svg>
       );
+    case 'not_available':
     case 'system_alert':
       return (
         <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--danger)' }}>
@@ -47,6 +51,7 @@ export function getNotificationIcon(type: string): React.ReactNode {
           <polyline points="10 9 9 9 8 9" />
         </svg>
       );
+    case 'product_restored':
     case 'success':
       return (
         <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--secondary)' }}>
@@ -78,18 +83,39 @@ export function getNotificationIcon(type: string): React.ReactNode {
   }
 }
 
+/**
+ * Names the event, not the category it used to be filed under.
+ *
+ * "Tracking Issue" covered a product being gone, a retailer being unreachable
+ * and a product coming back, which are three different things a user would want
+ * to react to differently (issue #93).
+ *
+ * The legacy names are still handled: a row written before the event types
+ * landed reads correctly rather than falling through to a de-underscored code.
+ */
 export function getNotificationTypeLabel(type: string): string {
   switch (type) {
     case 'price_drop':
       return 'Price Drop';
     case 'target_price':
       return 'Target Reached';
+    case 'price_announced':
+      return 'Price Announced';
+    case 'back_in_stock':
+      return 'Back in Stock';
+    case 'not_available':
+      return 'Unavailable';
+    case 'product_restored':
+      return 'Available Again';
+    // Pre-#93 rows, in case any survived the backfill.
     case 'stock_alert':
-      return 'Stock Alert';
+      return 'Back in Stock';
     case 'system_alert':
-      return 'Tracking Issue';
+      return 'Unavailable';
+    case 'price_alert':
+      return 'Price Announced';
     default:
-      return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 }
 

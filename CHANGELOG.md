@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Notification history filters by **All**, **Unread**, **Price** and
+  **Availability**, and shows how many notifications match.
 - **Resume Monitoring** on a paused product, and **Retry Now** to check an
   unavailable product once without resuming its schedule.
 - A notification when a product that had gone unavailable becomes reachable
@@ -21,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Notifications now say what actually happened. A product going missing, a
+  retailer being unreachable and a product coming back were all stored as
+  "Tracking Issue"; back-in-stock and price-announced were similarly collapsed.
+  Existing notifications are relabelled automatically on upgrade.
+- Notification filters now search your whole history rather than the page
+  already on screen, so a filter no longer reports "none" when it means "none
+  in the most recent twenty".
 - A retailer being unreachable no longer passes silently. Timeouts, DNS failures
   and refused connections were producing "unknown", which kept the old status,
   counted nothing and recorded nothing -- a retailer could be down for a week

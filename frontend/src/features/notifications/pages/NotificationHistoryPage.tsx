@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Layout from '../../../layouts/Layout';
 import { NotificationService } from '../services/NotificationService';
@@ -22,7 +22,7 @@ export default function NotificationHistory() {
   const [activeTab, setActiveTab] = useState<'activity' | 'alerts'>('activity');
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<string>('all');
-  const historyQuery = useQuery({ ...notificationHistoryQuery(page, 20), enabled: activeTab === 'alerts' });
+  const historyQuery = useQuery({ ...notificationHistoryQuery(page, 20, filter), enabled: activeTab === 'alerts' });
   const notifications = historyQuery.data?.notifications?.filter(n => !['session_activity', 'system_info'].includes(n.type)) ?? [];
   const totalPages = historyQuery.data?.pagination?.totalPages ?? 1;
   const invalidateNotifications = () => queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -45,10 +45,11 @@ export default function NotificationHistory() {
     } catch { /* keep the cached history intact after a failed mutation */ }
   };
 
-  const filteredNotifications = useMemo(() => {
-    if (filter === 'all') return notifications;
-    return notifications.filter(n => n.type === filter);
-  }, [notifications, filter]);
+  // The server applies the filter, so what comes back is already the filtered
+  // set. Filtering again here would re-introduce the bug this replaces: the old
+  // client-side filter searched only the loaded page, so selecting one reported
+  // nothing beyond the most recent 20 notifications.
+  const filteredNotifications = notifications;
 
   const historyTabs: Tab[] = [
     { id: 'activity', label: 'Session Activity', icon: <Icon name="fileText" /> },
@@ -103,7 +104,8 @@ export default function NotificationHistory() {
           <>
             <NotificationFilters 
               filter={filter} 
-              setFilter={setFilter} 
+              resultCount={historyQuery.data?.pagination?.totalCount}
+              setFilter={(f) => { setFilter(f); setPage(1); }}
             />
 
             <NotificationTable 

@@ -28,7 +28,8 @@ router.get('/history', async (req: AuthRequest, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
     
-    const result = await notificationService.getPaginatedHistory(userId, page, limit);
+    const filter = typeof req.query.filter === 'string' ? req.query.filter : null;
+    const result = await notificationService.getPaginatedHistory(userId, page, limit, filter);
     res.json(result);
   } catch (error) {
     logger.error(`Notify | Fetch History Failed | ${error}`, 'Notifications');

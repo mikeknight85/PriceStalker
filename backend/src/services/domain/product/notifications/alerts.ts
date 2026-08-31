@@ -23,7 +23,7 @@ export class ProductAlertService {
         productId: product.id
       },
       {
-        type: 'system_alert',
+        type: 'not_available',
         // The reason and the action were hardcoded to "404/410 Page Not Found"
         // and "Monitoring Paused" regardless of what actually happened, so a
         // redirect, a soft 404 and a week-long retailer outage all read the
@@ -63,7 +63,7 @@ export class ProductAlertService {
         productId: product.id
       },
       {
-        type: 'system_alert',
+        type: 'product_restored',
         title: `Available again | ${product.name || 'Product'}`,
         message: 'The product page is reachable again. Monitoring has resumed.',
         data: {
@@ -92,7 +92,7 @@ export class ProductAlertService {
         productId: product.id
       },
       {
-        type: 'stock_alert',
+        type: 'back_in_stock',
         title: `Back in Stock: ${product.name || 'Product'}`,
         // A product can come back in stock before a price is extracted, which
         // used to render as "back in stock at undefined USD".
@@ -194,7 +194,7 @@ export class ProductAlertService {
         productId: product.id
       },
       {
-        type: 'price_alert',
+        type: 'price_announced',
         title: `Price Announced: ${product.name || 'Product'}`,
         message: `Price has been announced for this pre-order item: ${newPriceObj.price} ${newPriceObj.currency}`,
         data: {
