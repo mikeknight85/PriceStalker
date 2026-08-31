@@ -41,9 +41,10 @@
 # `beta` -- which tracks every merge to main -- that means an unreviewed
 # migration can run against your database the next time the container restarts.
 #
-#   stable   versioned releases only (default, recommended)
-#   beta     every merge to main; expect schema changes without notice
-#   v2.0.0   pin an exact version and choose your own upgrade moment
+#   stable          final releases only (default, recommended)
+#   beta            every merge to main; expect schema changes without notice
+#   v2.0.0          pin an exact version and choose your own upgrade moment
+#   v2.1.0-beta.1   a prerelease; these never advance stable
 #
 # Whichever you track, take the backup above before upgrading.
 
