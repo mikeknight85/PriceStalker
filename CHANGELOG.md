@@ -56,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The theme toggle icon is no longer invisible when the app is set to Light on a
+  device whose system theme is Dark. Choosing Light now pins the browser colour
+  scheme to light, so buttons, select popups, date pickers and autofill stop
+  rendering with dark system colours on the app's light surfaces.
 - Scraper debug previews no longer execute arbitrary scripts from fetched pages,
   preventing anti-bot scripts from triggering Chrome Private Network Access
   prompts; the API also acknowledges Private Network Access preflight requests.

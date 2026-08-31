@@ -22,6 +22,13 @@
   --chart-text: #94a3b8;
 }
 
+/* An explicit light choice must also pin the UA colour scheme. Without this,
+   :root's `light dark` resolves to dark on a dark OS, so native controls render
+   with dark UA colours (buttontext turns white) on the app's light surfaces. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 /* Dark theme variables */
 :root[data-theme="dark"] {
   --primary: #818cf8;
@@ -83,6 +90,11 @@ a:hover {
 button {
   cursor: pointer;
   font-family: inherit;
+  /* Buttons do not inherit colour from their ancestors by default; the UA gives
+     them `buttontext`, which follows the OS scheme rather than the app theme.
+     Icon buttons stroke with `currentColor`, so without this they disappear
+     whenever the two disagree. Every .btn variant sets its own colour. */
+  color: inherit;
 }
 
 input, button, select, textarea {
@@ -119,7 +131,9 @@ input, button, select, textarea {
   background-color: var(--surface);
   color: var(--text);
   transition: border-color 0.2s, box-shadow 0.2s;
-  color-scheme: light dark;
+  /* Follow the resolved app theme, not the OS, so select popups, date pickers
+     and autofill backgrounds match the surface they sit on. */
+  color-scheme: inherit;
 }
 
 .form-group input:focus,
