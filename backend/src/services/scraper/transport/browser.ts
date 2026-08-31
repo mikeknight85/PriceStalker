@@ -15,12 +15,12 @@ export async function fetchBrowserHtml(
 ): Promise<string> {
   const rsUrl = await settingsCache.getRemoteScraperUrl();
   if (!rsUrl) {
-    logger.warn('Remote Scraper | Warning | Browser rendering requested but remote_scraper_url is not configured', 'Scraper');
+    logger.warn('Browser Scraper | Warning | Browser rendering requested but remote_scraper_url is not configured', 'Scraper');
     return '';
   }
 
   try {
-    logger.info(`Remote Scraper | Offloading | ${url}${productId ? ` [PROD-${productId}]` : ''}`, 'Scraper');
+    logger.info(`Browser Scraper | Offloading | ${url}${productId ? ` [PROD-${productId}]` : ''}`, 'Scraper');
     const options: any = {};
     if (userAgent) options.userAgent = userAgent;
     if (productId) options.productId = productId;
@@ -42,7 +42,7 @@ export async function fetchBrowserHtml(
     return await fetchRemoteHtml(url, rsUrl, options);
   } catch (error: any) {
     if (error instanceof PageNotAvailableError) throw error;
-    logger.error(`Remote Scraper | Failed | Browser Rendering: ${url}: ${error.message}`, 'Scraper');
+    logger.error(`Browser Scraper | Failed | Browser Rendering: ${url}: ${error.message}`, 'Scraper');
     return '';
   }
 }

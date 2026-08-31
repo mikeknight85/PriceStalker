@@ -132,7 +132,14 @@ export default function SystemSection() {
       
       <CollapsibleCard title="Network & Integration" leadingIcon={<Icon name="globe" />} id="sys_network" expandedSections={expandedSections} onToggle={toggleSection}>
         <div className="form-group"><label>Proxy URL/Port</label><input type="text" value={systemSettings?.scraper_proxy || ''} onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)} placeholder="http://proxy:port" /></div>
-        <div className="form-group"><label>Remote Scraper URL</label><input type="text" value={systemSettings?.remote_scraper_url || ''} onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_url: e.target.value } : null)} placeholder="http://192.168.50.215:5100/scrape" /></div>
+        <div className="form-group">
+          <label>Browser Scraper URL</label>
+          <input type="text" value={systemSettings?.remote_scraper_url || ''} onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_url: e.target.value } : null)} placeholder="http://scraper:5100/scrape" />
+          <small style={{ color: 'var(--text-muted)' }}>
+            Where the browser scraper service is running. Retailers with
+            &ldquo;Use Browser Scraper&rdquo; enabled are fetched through it.
+          </small>
+        </div>
       </CollapsibleCard>
 
       <CollapsibleCard title="Product Discovery (SearXNG)" leadingIcon={<Icon name="search" />} id="sys_discovery" expandedSections={expandedSections} onToggle={toggleSection}>

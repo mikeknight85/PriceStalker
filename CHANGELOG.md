@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The **Remote Scraper URL** system setting is now labelled **Browser Scraper
+  URL**, matching the per-retailer "Use Browser Scraper" toggle it feeds, and its
+  placeholder shows the documented `http://scraper:5100/scrape` rather than a
+  developer's LAN address. Scraper errors name the same thing. The stored setting
+  key is unchanged, so existing configurations keep working.
 - **Global Selectors** is now **Extraction Rules**, grouped by the job each rule
   does -- product information, pricing, availability, false-positive prevention
   -- rather than listed in storage order, and it states the rule priority
