@@ -1,7 +1,7 @@
 export interface NotificationPayload {
   productName: string;
   productUrl: string;
-  type: 'price_drop' | 'back_in_stock' | 'target_price' | 'not_available' | 'price_announced';
+  type: 'price_drop' | 'back_in_stock' | 'target_price' | 'not_available' | 'product_restored' | 'price_announced';
   productId?: number;
   oldPrice?: number;
   newPrice?: number;

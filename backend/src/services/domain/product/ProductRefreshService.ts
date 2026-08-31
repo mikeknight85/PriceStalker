@@ -104,6 +104,9 @@ export class ProductRefreshService {
       await productRepository.setPaused(productId, false, false);
       await productRepository.setUnavailableReason(productId, null);
       product.checking_paused = false;
+      // Close the loop. Without this the lifecycle only ever reports bad news:
+      // the user was told monitoring stopped and never told it started again.
+      await productNotificationService.notifyProductRestored(product);
     }
 
     // 3. Handle Notifications (Side-effects of change)

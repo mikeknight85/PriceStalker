@@ -75,7 +75,9 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
             handleRefresh={state.handleRefresh}
             handleRescan={state.handleRescan}
             handleDelete={async () => state.setShowDeleteConfirm(true)}
+            handleResumeMonitoring={state.handleResumeMonitoring}
             isRefreshing={state.isRefreshing}
+            isPaused={!!product?.checking_paused}
           />
         </div>
       </div>
