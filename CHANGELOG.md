@@ -112,6 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Admin user management now records "Last Active" on sign-in. It was only being
+  recorded at registration, so the column read "Never" for everyone.
 - Removed an hourglass emoji from the admin Extraction Rules panel and closed
   the gap in the emoji check that let it through, so the icon set stays the only
   thing rendering symbols in the UI.
