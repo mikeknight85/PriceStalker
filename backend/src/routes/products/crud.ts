@@ -1,9 +1,10 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { productAddService, productHistoryService } from '../../services/domain/product';
-import { asyncHandler, parseIdParam } from '../../utils/system/route-helpers';
+import { asyncHandler, parseIdParam, callerIsAdmin } from '../../utils/system/route-helpers';
 
 const router = Router();
+
 
 router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
@@ -38,7 +39,7 @@ router.get('/:id', asyncHandler(async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const product = await productHistoryService.getProduct(productId, userId);
+  const product = await productHistoryService.getProduct(productId, userId, await callerIsAdmin(req));
 
   if (!product) {
     res.status(404).json({ error: 'Product not found' });
@@ -57,7 +58,7 @@ router.put('/:id', asyncHandler(async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const updated = await productHistoryService.updateProduct(productId, userId, req.body);
+  const updated = await productHistoryService.updateProduct(productId, userId, req.body, await callerIsAdmin(req));
   if (!updated) {
     res.status(404).json({ error: 'Product not found' });
     return;
@@ -75,7 +76,7 @@ router.delete('/:id', asyncHandler(async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const deleted = await productHistoryService.deleteProduct(productId, userId);
+  const deleted = await productHistoryService.deleteProduct(productId, userId, await callerIsAdmin(req));
 
   if (!deleted) {
     res.status(404).json({ error: 'Product not found' });

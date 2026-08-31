@@ -52,8 +52,19 @@ export const productQueryCoreRepository = {
     return result.rows;
   },
 
-  findById: async (id: number, userId: number, executor?: Executor): Promise<ProductWithLatestPrice | null> => {
-    const result = await asExecutor(executor).query(
+  /**
+   * `asAdmin` lifts the ownership filter so an administrator can open a product
+   * belonging to another account. It is an options field rather than a
+   * positional boolean so that every bypass is spelled out at the call site --
+   * a stray `true` in an argument list is not something a reviewer should have
+   * to count parameters to catch.
+   */
+  findById: async (
+    id: number,
+    userId: number,
+    options?: { executor?: Executor; asAdmin?: boolean }
+  ): Promise<ProductWithLatestPrice | null> => {
+    const result = await asExecutor(options?.executor).query(
       `SELECT p.*, ph.price as current_price, ph.currency, ph.ai_status,
               ph_m.price as member_price,
               ph_o.price as original_price,
@@ -107,8 +118,8 @@ export const productQueryCoreRepository = {
          ORDER BY length(domain) DESC
          LIMIT 1
        ) rc ON true
-       WHERE p.id = $1 AND p.user_id = $2`,
-      [id, userId]
+       WHERE p.id = $1 AND ($3::boolean = true OR p.user_id = $2)`,
+      [id, userId, options?.asAdmin === true]
     );
     return result.rows[0] || null;
   },

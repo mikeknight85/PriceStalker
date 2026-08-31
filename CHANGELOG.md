@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Administrators can now open, edit and delete any tracked product by following
+  a direct link to it, instead of getting a "not found" for products belonging
+  to other accounts. Their own dashboard still lists only their own products,
+  and reaching into another account's product is recorded in the event log.
 - Admin user management shows when each account last signed in, when it joined,
   and how many products it tracks, with a search box for installations with many
   accounts.

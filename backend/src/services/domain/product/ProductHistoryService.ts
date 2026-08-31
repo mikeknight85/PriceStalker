@@ -7,47 +7,77 @@ import {
   ProductWithSparkline
 } from '../../../models';
 import { syncUserCategories } from './utils';
+import { logger } from '../../../utils/system/logger';
 
 export class ProductHistoryService {
   async getUserProducts(userId: number): Promise<ProductWithSparkline[]> {
     return await productRepository.findByUserIdWithSparkline(userId);
   }
 
-  async getProduct(productId: number, userId: number): Promise<ProductWithLatestPrice | null> {
-    return await productRepository.findById(productId, userId);
+  async getProduct(productId: number, userId: number, asAdmin = false): Promise<ProductWithLatestPrice | null> {
+    const product = await productRepository.findById(productId, userId, { asAdmin });
+    this.auditAdminAccess('view', product, userId, asAdmin);
+    return product;
   }
 
-  async deleteProduct(productId: number, userId: number): Promise<boolean> {
-    return await productRepository.delete(productId, userId);
+  async deleteProduct(productId: number, userId: number, asAdmin = false): Promise<boolean> {
+    // Read first so the audit line can name the owner; the row is gone after.
+    const product = await productRepository.findById(productId, userId, { asAdmin });
+    if (!product) return false;
+    this.auditAdminAccess('delete', product, userId, asAdmin);
+    return await productRepository.delete(productId, userId, { asAdmin });
+  }
+
+  /**
+   * An administrator reaching into another account's product is legitimate but
+   * not routine, so it leaves a trace. Acting on your own product logs nothing.
+   */
+  private auditAdminAccess(
+    action: string,
+    product: { id: number; user_id?: number } | null,
+    userId: number,
+    asAdmin: boolean
+  ): void {
+    if (!asAdmin || !product || product.user_id === userId) return;
+    logger.info(
+      `Product ${product.id} | Admin ${action} | Admin ${userId} accessed a product owned by user ${product.user_id}`,
+      'Admin',
+      { product_id: product.id }
+    );
   }
 
   async bulkUpdatePauseStatus(ids: number[], userId: number, paused: boolean): Promise<number> {
     return await productRepository.bulkSetCheckingPaused(ids, userId, paused);
   }
 
-  async updateProduct(productId: number, userId: number, data: any): Promise<ProductWithLatestPrice | null> {
+  async updateProduct(productId: number, userId: number, data: any, asAdmin = false): Promise<ProductWithLatestPrice | null> {
     if (data.category !== undefined) {
       data.category = data.category?.trim() || null;
     }
-    const updated = await productRepository.update(productId, userId, data);
-    
+    const updated = await productRepository.update(productId, userId, data, undefined, { asAdmin });
+
+    // Categories belong to the owner of the product, not to whoever edited it.
+    // Syncing them to the admin's own list would pollute their category filter
+    // with somebody else's categories.
     if (updated && data.category) {
-      await syncUserCategories(userId, data.category);
+      await syncUserCategories(updated.user_id ?? userId, data.category);
     }
-    
-    return await productRepository.findById(productId, userId);
+
+    const product = await productRepository.findById(productId, userId, { asAdmin });
+    this.auditAdminAccess('update', product, userId, asAdmin);
+    return product;
   }
 
-  async getPriceHistory(productId: number, userId: number, days?: number) {
-    const product = await productRepository.findById(productId, userId);
+  async getPriceHistory(productId: number, userId: number, days?: number, asAdmin = false) {
+    const product = await productRepository.findById(productId, userId, { asAdmin });
     if (!product) throw new Error('Product not found');
 
     const prices = await priceHistoryRepository.findByProductId(productId, days);
     return { product, prices };
   }
 
-  async getStockHistory(productId: number, userId: number, days: number = 30) {
-    const product = await productRepository.findById(productId, userId);
+  async getStockHistory(productId: number, userId: number, days: number = 30, asAdmin = false) {
+    const product = await productRepository.findById(productId, userId, { asAdmin });
     if (!product) throw new Error('Product not found');
 
     let history = await stockHistoryRepository.getByProductId(productId, days);
