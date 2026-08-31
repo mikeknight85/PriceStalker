@@ -88,6 +88,26 @@ function getPreservedElements($: CheerioAPI, domainConfig?: Partial<RetailerConf
  * In-place Cheerio DOM cleaner. Strips layout/noise elements while keeping attributes,
  * JSON-LD script blocks, and elements targeted by custom configs.
  */
+/**
+ * Whether a script block looks like it carries product data rather than
+ * marketing or tracking code.
+ *
+ * Deliberately keyword-based and cheap: the alternative is parsing every script
+ * on the page. The keywords are the ones that appear in state blobs and
+ * structured product payloads, and a false positive only costs a slightly
+ * larger denoised document.
+ */
+const PRODUCT_DATA_KEYWORDS = ['price', 'sku', 'offers', 'availability', 'currency'];
+
+function scriptCarriesProductData(content: string | null): boolean {
+  if (!content) return false;
+  // Only inspect the head of very large bundles; a state blob puts its keys
+  // near the front, while a minified vendor bundle would cost a full scan.
+  const sample = content.length > 200_000 ? content.slice(0, 200_000) : content;
+  const lowered = sample.toLowerCase();
+  return PRODUCT_DATA_KEYWORDS.some((keyword) => lowered.includes(keyword));
+}
+
 export function denoiseDomForExtraction(
   $: CheerioAPI, 
   domainConfig?: Partial<RetailerConfig>, 
@@ -118,11 +138,19 @@ export function denoiseDomForExtraction(
     jsonLdBlocks.push($(el).clone());
   });
 
-  // 3. Remove non-JSON-LD scripts, styles, and noscript blocks
+  // 3. Remove non-JSON-LD scripts, styles, and noscript blocks.
+  //
+  // Scripts carrying product data are kept: many sites render the price from a
+  // state blob (window.__INITIAL_STATE__, __NEXT_DATA__) rather than into the
+  // DOM, and a custom regex rule aimed at one of those is the only way to reach
+  // it. Stripping every script left those rules matching nothing.
   $('script:not([type="application/ld+json"]), style, noscript').each((_, el) => {
-    if (!preservedElements.has(el)) {
-      $(el).remove();
-    }
+    if (preservedElements.has(el)) return;
+
+    const tag = (el as { name?: string }).name;
+    if (tag === 'script' && scriptCarriesProductData($(el).html())) return;
+
+    $(el).remove();
   });
 
   // 4. Remove structural noise containers

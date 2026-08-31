@@ -17,6 +17,8 @@ interface ExtractionParamsSectionProps {
   setDealPriceSelectors: (s: string[]) => void;
   memberPriceSelectors: string[];
   setMemberPriceSelectors: (s: string[]) => void;
+  originalPriceSelectors: string[];
+  setOriginalPriceSelectors: (s: string[]) => void;
   preOrderPriceSelectors: string[];
   setPreOrderPriceSelectors: (s: string[]) => void;
   imageSelectors: string[];
@@ -40,6 +42,8 @@ export default function ExtractionParamsSection({
   setDealPriceSelectors,
   memberPriceSelectors,
   setMemberPriceSelectors,
+  originalPriceSelectors,
+  setOriginalPriceSelectors,
   preOrderPriceSelectors,
   setPreOrderPriceSelectors,
   imageSelectors,
@@ -148,6 +152,12 @@ export default function ExtractionParamsSection({
             items={memberPriceSelectors} 
             onChange={setMemberPriceSelectors} 
             placeholder=".member-price-text" 
+          />
+          <UnifiedSelectorManager
+            label="Original / RRP"
+            items={originalPriceSelectors}
+            onChange={setOriginalPriceSelectors}
+            placeholder=".rrp, .was-price"
           />
           <UnifiedSelectorManager 
             label="Pre-Order Price" 

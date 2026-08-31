@@ -39,6 +39,14 @@ If the price or details are locked inside script blocks or raw Javascript variab
 * **Capture Groups**: The first match capture group `()` is extracted. If no groups are present, the entire expression match is taken.
   * *Example*: `regex:/var price = "([0-9.]+)";/`
 * **Legacy format**: Patterns enclosed in tildes (`~pattern~`) are automatically treated as regex rules.
+* **What the pattern is matched against**: the *denoised* document, not the raw
+  response. Sidebars, navigation, footers, related-product carousels and
+  marketing/tracking scripts have already been removed, so a pattern aimed at the
+  product area will not pick up prices from elsewhere on the page.
+* **State scripts are preserved.** Script blocks whose contents mention `price`,
+  `sku`, `offers`, `availability` or `currency` survive denoising, so a rule
+  targeting `window.__INITIAL_STATE__` or `__NEXT_DATA__` still works on sites
+  that render the price from JavaScript rather than into the DOM.
 
 ---
 

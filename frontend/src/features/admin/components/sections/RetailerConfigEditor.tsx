@@ -52,6 +52,7 @@ export default function RetailerConfigEditor({
   const [draftRetailerNameSelectors, setDraftRetailerNameSelectors] = useState<string[]>([]);
   const [draftDealPriceSelectors, setDraftDealPriceSelectors] = useState<string[]>([]);
   const [draftMemberPriceSelectors, setDraftMemberPriceSelectors] = useState<string[]>([]);
+  const [draftOriginalPriceSelectors, setDraftOriginalPriceSelectors] = useState<string[]>([]);
   const [draftPreOrderPriceSelectors, setDraftPreOrderPriceSelectors] = useState<string[]>([]);
   const [draftTitleSelectors, setDraftTitleSelectors] = useState<string[]>([]);
   const [draftImageSelectors, setDraftImageSelectors] = useState<string[]>([]);
@@ -83,6 +84,7 @@ export default function RetailerConfigEditor({
     setDraftRetailerNameSelectors(initialRetailer.retailer_name_selectors || []);
     setDraftDealPriceSelectors(initialRetailer.deal_price_selectors || []);
     setDraftMemberPriceSelectors(initialRetailer.member_price_selectors || []);
+    setDraftOriginalPriceSelectors(initialRetailer.original_price_selectors || []);
     setDraftPreOrderPriceSelectors(initialRetailer.pre_order_price_selectors || []);
     setDraftTitleSelectors(initialRetailer.name_selectors || []);
     setDraftImageSelectors(initialRetailer.image_selectors || []);
@@ -121,6 +123,7 @@ export default function RetailerConfigEditor({
       retailer_name_selectors: draftRetailerNameSelectors,
       deal_price_selectors: draftDealPriceSelectors,
       member_price_selectors: draftMemberPriceSelectors,
+      original_price_selectors: draftOriginalPriceSelectors,
       pre_order_price_selectors: draftPreOrderPriceSelectors,
       name_selectors: draftTitleSelectors,
       image_selectors: draftImageSelectors,
@@ -153,6 +156,7 @@ export default function RetailerConfigEditor({
       price_selectors: draftPriceSelectors,
       deal_price_selectors: draftDealPriceSelectors,
       member_price_selectors: draftMemberPriceSelectors,
+      original_price_selectors: draftOriginalPriceSelectors,
       pre_order_price_selectors: draftPreOrderPriceSelectors,
       name_selectors: draftTitleSelectors,
       image_selectors: draftImageSelectors,
@@ -295,6 +299,8 @@ export default function RetailerConfigEditor({
             setDealPriceSelectors={setDraftDealPriceSelectors}
             memberPriceSelectors={draftMemberPriceSelectors}
             setMemberPriceSelectors={setDraftMemberPriceSelectors}
+            originalPriceSelectors={draftOriginalPriceSelectors}
+            setOriginalPriceSelectors={setDraftOriginalPriceSelectors}
             preOrderPriceSelectors={draftPreOrderPriceSelectors}
             setPreOrderPriceSelectors={setDraftPreOrderPriceSelectors}
             imageSelectors={draftImageSelectors}

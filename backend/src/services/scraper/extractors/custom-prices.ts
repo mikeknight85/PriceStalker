@@ -5,7 +5,6 @@ import { parsePrice } from '../../../utils/scraping/priceParser';
 import { parseSelector, isNoiseElement } from './metadata';
 import { extractByRegex } from './price-extraction';
 import { evaluatePriceSelectors } from './price-utils';
-import { denoiseHtmlForRegex } from './dom-denoiser';
 
 /**
  * Extracts price candidates using site-specific selectors (CSS or Regex).

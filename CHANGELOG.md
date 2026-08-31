@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Original Price (RRP) selectors can now be edited from the admin interface,
+  both per retailer under Extraction Parameters and globally under Extraction
+  Rules. The database always supported them; there was no way to set them
+  without direct SQL.
 - Notification templates gain `{{old_stock_status}}`, `{{new_stock_status}}` and
   `{{type}}`, so a custom template can tell a stock event from a price drop.
 - Per-retailer "Prefer JSON-LD Images" override under Admin -> Retailers ->
@@ -75,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Custom regex selectors now match against the denoised page instead of the raw
+  response, so a pattern written for the product area no longer picks up prices
+  from sidebars, related-product carousels or tracking payloads. Scripts holding
+  product data are preserved through denoising, so rules targeting a JavaScript
+  state blob keep working.
 - Back-in-stock notifications no longer read "back in stock at undefined USD"
   when a product becomes available before a price is extracted, and no longer
   present an unknown currency as USD.
