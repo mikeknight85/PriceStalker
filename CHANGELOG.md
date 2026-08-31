@@ -54,6 +54,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Retailer configurations that define only a JSON-LD price key are no longer
+  treated as empty shell configurations, so their saved extraction settings are
+  used instead of being discarded in favour of the generic selectors.
+- Exchange-rate refreshes now time out after 10 seconds instead of hanging
+  indefinitely when the Frankfurter API is unreachable.
+- Scraper HTTP retries are logged under the `Scraper` context rather than `AI`,
+  so the admin event log no longer files transport failures as AI failures.
+- Scrape request IDs now use a UUID instead of a timestamp plus a
+  three-digit random number, which could collide between concurrent scrapes.
 - The simplified scraper result now preserves the retailer name resolved during
   extraction, so callers can use it for store identification and configuration.
 - Retailer display names are no longer learned from a product's brand: the

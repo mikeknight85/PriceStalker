@@ -38,8 +38,8 @@ The original audit registers aggregated bugs across scraping, voting, database t
 | **O-3** | High | Orchestration | `consensus.ts` | OOS drift only checks downward spikes. | Reopened — current code still checks only prices below 50% of the anchor. |
 | **O-4** | High | Orchestration | `maintenance.ts` | `configCache.invalidate()` with no domain key wipes entire cache. | Pending |
 | **O-5** | High | Orchestration | `maintenance.ts` | Wrong extraction step logged for status-restore vs engine-upgrade. | Pending |
-| **O-6** | Medium | Orchestration | `index.ts` | `requestId` has only 1,000 entropy values. | Fixed on `fix/audit-a15-o6-o7-sys15` |
-| **O-7** | Medium | Orchestration | `index.ts` | `isShellConfig` ignores `jsonld_price_key`. | Fixed on `fix/audit-a15-o6-o7-sys15` |
+| **O-6** | Medium | Orchestration | `index.ts` | `requestId` has only 1,000 entropy values. | Fixed |
+| **O-7** | Medium | Orchestration | `index.ts` | `isShellConfig` ignores `jsonld_price_key`. | Fixed |
 | **O-8** | Medium | Orchestration | `consensus.ts` | Arbitrated prices wrongly treated as uncorroborated in OOS guardrail. | Pending |
 | **O-9** | Medium | Orchestration | `index.ts` | `scrapeProduct()` silently drops `retailerName` from return value. | Fixed |
 | **O-10**| Medium | Orchestration | `arbitration.ts` | AI arbitration/verification errors swallowed. | Pending |
@@ -60,7 +60,7 @@ The original audit registers aggregated bugs across scraping, voting, database t
 | **A-12**| Medium | Transport | `remote.ts` | Empty remote HTML body silently treated as successful extraction. | Pending |
 | **A-13**| Medium | Transport | `detection.ts` | Case-sensitive WAF marker detection. | Pending |
 | **A-14**| Low | Transport | `detection.ts` | Akamai `Reference #18.` pattern too specific. | Pending |
-| **A-15**| Low | Acquisition | `standard.ts` | `withRetry` logs under `'AI'` category for HTTP scraper calls. | Fixed on `fix/audit-a15-o6-o7-sys15` |
+| **A-15**| Low | Acquisition | `standard.ts` | `withRetry` logs under `'AI'` category for HTTP scraper calls. | Fixed |
 | **E-1** | High | Extractor | `dom-denoiser.ts`| `denoiseHtmlForRegex` nested-quantifier regex ReDoS vulnerability. | Pending |
 | **E-2** | High | Extractor | `stock/schema.ts` | `walk()` recursion stack overflow risk (no depth guard). | Pending |
 | **E-3** | High | Extractor | `arbitration.ts` | AI arbitration passed `allCandidates` including member/original prices. | Confirmed pending — `standardCandidates` is created but AI receives `allCandidates`. |
@@ -108,6 +108,6 @@ The original audit registers aggregated bugs across scraping, voting, database t
 | **SYS-12**| Medium | System | `settings/system.ts` | Settings update loop has no transaction. | Pending |
 | **SYS-13**| Medium | System | `SettingsListenerService.ts` | Stale debounce closure not cancelled on reconnect. | Pending |
 | **SYS-14**| Medium | System | `settings/ai.ts` | API key mask detection based on `"..."` substring is fragile. | Pending |
-| **SYS-15**| Low | System | `CurrencyConversionService.ts` | No timeout on Frankfurter API call. | Fixed on `fix/audit-a15-o6-o7-sys15` |
+| **SYS-15**| Low | System | `CurrencyConversionService.ts` | No timeout on Frankfurter API call. | Fixed |
 | **SYS-16**| Low | System | `CurrencyConversionService.ts` | AUD→AUD self-rate never written to DB. | Pending |
 | **SYS-17**| Low | Routes | `admin/users.ts` | `PUT /:id` passes raw `req.body` to service. | Pending |
