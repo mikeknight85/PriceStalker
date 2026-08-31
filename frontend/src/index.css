@@ -687,3 +687,32 @@ display: block;
   width: 1.25rem;
   height: 1.25rem;
 }
+
+/* Retailer editor sticky header.
+   The editor is a long form; without this the save action and the name of the
+   retailer being edited scroll away, and it is easy to lose track of which
+   retailer a change belongs to. Deliberately carries only three things --
+   identity, the primary action, and discard -- because a full toolbar pinned to
+   the top of a form is worse than no toolbar at all. */
+.retailer-editor-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  margin: -0.5rem -0.5rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 640px) {
+  .retailer-editor-header {
+    position: static;
+  }
+}

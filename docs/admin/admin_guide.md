@@ -12,13 +12,46 @@ The System Administration screen is organized into eight specialized tabs:
 Configure network proxy routing, remote Puppeteer scraper links, browser timeouts/referrers, product discovery via SearXNG, and master toggles for registrations or debug pages.
 * *For details, see [system.md](system.md).*
 
-### 2. Global Selectors
-Configure default system-wide extraction selectors. These act as universal fallbacks if a retailer has no domain-specific configuration defined.
-* **Global Price Selectors**: Standard class and attribute patterns used to find price strings.
-* **Global Stock Selectors**: Universal phrases or attribute schemas (like `[itemprop="availability"]`) used to assess stock levels.
+### 2. Extraction Rules
+Default system-wide extraction rules, used as fallbacks when a retailer has no
+site-specific configuration of its own.
+
+Rule priority: **retailer rules -> these default rules -> built-in fallbacks.**
+
+The screen is grouped by the job each rule does:
+
+* **Product information**: product title, retailer identity, product image.
+  Retailer identity is the shop, not the manufacturer.
+* **Pricing**: current, sale/deal, member, pre-order, and original/RRP. Only the
+  current price becomes the tracked price; the rest are recorded alongside it.
+* **Availability**: stock evidence selectors, then the status phrases read inside
+  them. Detection order is member only -> pre-order -> out of stock -> in stock.
+* **False-positive prevention**: exclusion selectors, removed from the page
+  before extraction runs.
+
+Saved changes reach a running scraper within 30 minutes, because settings are
+cached. The **Apply now** button on this screen clears that cache immediately.
 
 ### 3. Retailers
-Manage configurations on a domain-by-domain basis. You can add new domains, inspect selector counts, configure anti-bot proxies, test scraper configs, or edit custom selectors.
+Manage configurations on a domain-by-domain basis. The editor is grouped the same
+way as Extraction Rules:
+
+* **Retailer identity**: friendly name, domain, notes, and the selectors that
+  identify the shop.
+* **Page acquisition**: browser scraper, proxy, currency hint, user agent,
+  referrer.
+* **Product information**: title and image selectors, and their JSON-LD keys.
+* **Pricing**: the five price types, the JSON-LD price key, and the per-retailer
+  **Prefer JSON-LD Images** override.
+* **False-positive prevention**: exclusion selectors and the raw selector JSON.
+* **Availability**: stock evidence and status phrases.
+* **Validation**: the live tester and AI preprocessor selectors.
+
+**Re-run auto-map** in the sticky header regenerates a retailer's selectors from a
+product page you supply, without deleting the retailer first. A product URL is
+required: mapping works by reading a real product page, and a home page has no
+price to learn from. The generated configuration replaces what is saved, and the
+scraper's config cache is cleared so the next scrape uses it.
 * *For selector syntax rules and eviction mechanics, see [selectors.md](selectors.md).*
 
 ### 4. Users

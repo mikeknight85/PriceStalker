@@ -51,7 +51,7 @@ export default function Admin({ activeSection }: { activeSection: AdminSection }
           onChange={(e) => setActiveSection(e.target.value as AdminSection)}
         >
           <option value="system">System</option>
-          <option value="selectors">Global Selectors</option>
+          <option value="selectors">Extraction Rules</option>
           <option value="retailers">Retailers</option>
           <option value="users">Users</option>
           <option value="tokens">API Tokens</option>
@@ -62,7 +62,7 @@ export default function Admin({ activeSection }: { activeSection: AdminSection }
         <aside className="settings-sidebar-new">
           <nav className="settings-nav-new">
             <button className={`settings-nav-item-new ${activeSection === 'system' ? 'active' : ''}`} onClick={() => setActiveSection('system')}><Icon name="settings" /><span>System</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'selectors' ? 'active' : ''}`} onClick={() => setActiveSection('selectors')}><Icon name="search" /><span>Global Selectors</span></button>
+            <button className={`settings-nav-item-new ${activeSection === 'selectors' ? 'active' : ''}`} onClick={() => setActiveSection('selectors')}><Icon name="search" /><span>Extraction Rules</span></button>
             <button className={`settings-nav-item-new ${activeSection === 'retailers' ? 'active' : ''}`} onClick={() => setActiveSection('retailers')}><Icon name="store" /><span>Retailers</span></button>
             <button className={`settings-nav-item-new ${activeSection === 'users' ? 'active' : ''}`} onClick={() => setActiveSection('users')}><Icon name="users" /><span>Users</span></button>
             <button className={`settings-nav-item-new ${activeSection === 'tokens' ? 'active' : ''}`} onClick={() => setActiveSection('tokens')}><Icon name="key" /><span>API Tokens</span></button>

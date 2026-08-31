@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Global Selectors** is now **Extraction Rules**, grouped by the job each rule
+  does -- product information, pricing, availability, false-positive prevention
+  -- rather than listed in storage order, and it states the rule priority
+  (retailer rules, then these, then built-in fallbacks) and the stock detection
+  order.
+- The retailer editor is grouped the same way. Its single "Extraction
+  Parameters" card, which held the title, image, five price types, both JSON-LD
+  keys, exclusions and the raw selector JSON, is now three focused cards, and a
+  sticky header keeps the retailer name and the save action in reach.
 - **Breaking:** the three per-retailer scraper toggles (`use_browser`,
   `is_js_heavy`, `use_remote_scraper`) are consolidated into a single
   "Browser Scraper" flag; existing configurations migrate automatically.
@@ -28,6 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Re-run auto-map** on the retailer editor regenerates a retailer's selectors
+  from a product page you supply, without having to delete the retailer and
+  re-scrape a product through it first.
+- Both extraction screens now say that saved changes reach a running scraper
+  within 30 minutes, with an **Apply now** button that clears the cache
+  immediately.
 - Product search results now offer both **Track** and **Configure**. Track adds
   the product straight away with the default settings; Configure opens the usual
   form for setting an interval or categories first. Repeated clicks while a

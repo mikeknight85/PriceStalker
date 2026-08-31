@@ -27,6 +27,12 @@ interface ExtractionParamsSectionProps {
   setExclusionSelectors: (s: string[]) => void;
   customSelectorsJson: string;
   setCustomSelectorsJson: (s: string) => void;
+  /**
+   * Which half to render. The editor shows these as separate collapsible cards
+   * so "Extraction Parameters" stops being one card holding the title, image,
+   * five price types, both JSON-LD keys, exclusions and the raw selector JSON.
+   */
+  part?: 'product' | 'pricing' | 'pruning';
 }
 
 export default function ExtractionParamsSection({
@@ -51,7 +57,8 @@ export default function ExtractionParamsSection({
   exclusionSelectors,
   setExclusionSelectors,
   customSelectorsJson,
-  setCustomSelectorsJson
+  setCustomSelectorsJson,
+  part
 }: ExtractionParamsSectionProps) {
   // Name the value being inherited: "Use global setting" on its own leaves an
   // admin guessing which behaviour that actually is.
@@ -61,9 +68,14 @@ export default function ExtractionParamsSection({
     systemSettings?.prefer_jsonld_image === 'true';
   const globalPreferLabel = globalPrefersJsonLd ? 'JSON-LD images' : 'CSS selectors';
 
+  const showProduct = !part || part === 'product';
+  const showPricing = !part || part === 'pricing';
+  const showPruning = !part || part === 'pruning';
+
   return (
     <div className="extraction-params-section">
       <div className="form-grid">
+        {showProduct && (
         <div className="settings-card" style={{ padding: '1rem', background: 'var(--surface)', marginBottom: 0 }}>
           <h4 className="mb-3">Metadata</h4>
           <UnifiedSelectorManager 
@@ -132,7 +144,9 @@ export default function ExtractionParamsSection({
             </small>
           </div>
         </div>
+        )}
 
+        {showPricing && (
         <div className="settings-card" style={{ padding: '1rem', background: 'var(--surface)', marginBottom: 0 }}>
           <h4 className="mb-3">Pricing Strategy</h4>
           <UnifiedSelectorManager 
@@ -175,8 +189,11 @@ export default function ExtractionParamsSection({
             />
           </div>
         </div>
+        )}
       </div>
-      
+
+      {showPruning && (
+      <>
       <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--surface)', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
         <h4 className="mb-2"><Icon name="ban" /> Structural Pruning (Exclusions)</h4>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
@@ -203,6 +220,8 @@ export default function ExtractionParamsSection({
           placeholder='{ "custom_price": ".my-price" }'
         />
       </div>
+      </>
+      )}
     </div>
   );
 }

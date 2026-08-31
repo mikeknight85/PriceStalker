@@ -140,7 +140,7 @@ export function useDebugScraper() {
     setTempRetailerNameSelectors(parseSelectors(globalSettings.generic_retailer_name_selectors));
     setTempStockSelectors(parseSelectors(globalSettings.generic_stock_selectors));
     setTempExclusionSelectors(parseSelectors(globalSettings.generic_exclusion_selectors));
-    showToast('Pre-populated fields with system Global Selectors.');
+    showToast('Pre-populated fields with the system Extraction Rules.');
   }, [useOverride, globalSettings]);
 
   // Reset selector states when override is toggled off
