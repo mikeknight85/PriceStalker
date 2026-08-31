@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- SQL query tracing: every statement, its duration and its parameter count are
+  logged under the `Database` context, with a `WARN` for anything slower than
+  `SLOW_QUERY_MS` (default 500ms) and the failing statement attached to query
+  errors. Parameter values are never logged. Set `LOG_LEVEL=debug` to see
+  successful queries; slow-query and failure entries appear regardless.
 - `DB_LOG_LEVEL` sets the log level for the Admin System Event Log
   independently of the console and file logs, so the table can be kept quiet
   while debugging on the console, or capture debug traces without flooding it.
