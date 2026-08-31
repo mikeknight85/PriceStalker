@@ -91,7 +91,7 @@ const NotificationDrawer: React.FC = () => {
                     <div className="drawer-item-content">
                       <div className="drawer-item-title">{item.message}</div>
                       <div className="drawer-item-meta">
-                        <span>{formatRelativeDate(item.timestamp.toISOString())}</span>
+                        <span>{formatRelativeDate(item.timestamp.toISOString(), user?.locale)}</span>
                       </div>
                     </div>
                   </div>
@@ -124,7 +124,7 @@ const NotificationDrawer: React.FC = () => {
                       <div className="drawer-item-message">{n.message}</div>
                       <div className="drawer-item-meta">
                         {newPrice && <span className="drawer-item-price">{formatPrice(newPrice, currency, user?.locale)}</span>}
-                        <span>{formatRelativeDate(n.created_at)}</span>
+                        <span>{formatRelativeDate(n.created_at, user?.locale)}</span>
                       </div>
                     </div>
                   </div>

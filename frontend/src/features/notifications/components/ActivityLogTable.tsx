@@ -1,4 +1,6 @@
-import { formatDate, getNotificationIcon } from '../pages/utils';
+import { getNotificationIcon } from '../pages/utils';
+import { useAuth } from '../../auth';
+import { formatDate } from '../../../utils/format';
 import Icon from '../../../components/Icon';
 
 interface ActivityLogItem {
@@ -14,6 +16,8 @@ interface ActivityLogTableProps {
 }
 
 export default function ActivityLogTable({ activityLog }: ActivityLogTableProps) {
+  const { user } = useAuth();
+
   if (activityLog.length === 0) {
     return (
       <div className="notifications-empty">
@@ -69,7 +73,7 @@ export default function ActivityLogTable({ activityLog }: ActivityLogTableProps)
           </div>
 
           <div className="notification-date">
-            {formatDate(item.timestamp.toISOString())}
+            {formatDate(item.timestamp.toISOString(), user?.locale, true)}
           </div>
         </div>
       ))}

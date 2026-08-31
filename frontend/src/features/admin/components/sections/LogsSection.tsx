@@ -4,12 +4,15 @@ import { AdminSystemService } from '../../services/AdminSystemService';
 import { useToast } from '../../../../context/ToastContext';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
 import type { SystemLog } from '../../../../types/api';
+import { useAuth } from '../../../auth';
+import { formatDateTime } from '../../../../utils/format';
 
 interface LogsSectionProps {
   onSearchRetailer: (domain: string) => void;
 }
 
 export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -165,7 +168,7 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
                  <Fragment key={log.id}>
                    <tr style={{ fontSize: '0.8125rem', background: expandedLogId === log.id ? 'rgba(var(--primary-rgb), 0.05)' : 'none' }}>
                       <td className="log-select-cell"><input type="checkbox" checked={selectedLogIds.includes(log.id)} onChange={e => setSelectedLogIds(prev => e.target.checked ? [...prev, log.id] : prev.filter(id => id !== log.id))} /></td>
-                      <td style={{ color: 'var(--text-muted)' }} className="mobile-hide">{new Date(log.created_at).toLocaleString()}</td>
+                      <td style={{ color: 'var(--text-muted)' }} className="mobile-hide">{formatDateTime(log.created_at, user?.locale)}</td>
                       <td className="log-level-cell">
                         <span style={{ 
                           fontWeight: 700, fontSize: '0.65rem', padding: '0.125rem 0.4rem', borderRadius: '4px',
@@ -190,7 +193,7 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
                        <td colSpan={6} style={{ padding: '0 0 1.5rem 0', background: 'rgba(var(--primary-rgb), 0.05)' }}>
                          <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', fontSize: '0.8125rem', overflowX: 'auto', boxShadow: 'var(--shadow)' }}>
                             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Event Details <span style={{ fontWeight: 400, fontSize: '0.75rem', color: 'var(--text-muted)' }}>({new Date(log.created_at).toLocaleString()})</span></span>
+                              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Event Details <span style={{ fontWeight: 400, fontSize: '0.75rem', color: 'var(--text-muted)' }}>({formatDateTime(log.created_at, user?.locale)})</span></span>
                               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 {log.details?.tokens && (
                                   <>

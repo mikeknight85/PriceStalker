@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from '@tanstack/react-router';
 import { NotificationEntry } from '../../../types/api';
-import { formatPrice } from '../../../utils/format';
-import { formatDate, getNotificationIcon, getNotificationTypeLabel, getChannelIcon } from './utils';
+import { formatPrice, formatDate } from '../../../utils/format';
+import { getNotificationIcon, getNotificationTypeLabel, getChannelIcon } from './utils';
 import Icon from '../../../components/Icon';
 
 interface NotificationTableProps {
@@ -125,7 +125,7 @@ const NotificationTable: React.FC<NotificationTableProps> = ({ notifications, lo
             </div>
 
             <div className="notification-date">
-              {formatDate(notification.created_at)}
+              {formatDate(notification.created_at, userLocale, true)}
             </div>
           </div>
         );

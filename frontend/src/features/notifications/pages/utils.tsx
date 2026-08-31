@@ -1,17 +1,6 @@
 import React from 'react';
 import type { IconName } from '../../../components/Icon';
 
-export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export function getNotificationIcon(type: string): React.ReactNode {
   const strokeWidth = 2.5;
   const size = 18;

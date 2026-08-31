@@ -12,6 +12,8 @@ import PasswordInput from '../../../../components/PasswordInput';
 import { CollapsibleCard, ToggleSwitch } from '../../components';
 import Icon from '../../../../components/Icon';
 import { ApiError, apiErrorMessage } from '../../../../api/error';
+import { useAuth } from '../../../auth';
+import { formatDate } from '../../../../utils/format';
 
 const toggleRow: React.CSSProperties = {
   display: 'flex',
@@ -31,6 +33,7 @@ const toggleRow: React.CSSProperties = {
  * is stored". Clearing it is therefore an explicit action, not an empty box.
  */
 export default function AuthSection() {
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   const [config, setConfig] = useState<AuthConfigAdminView | null>(null);
@@ -349,7 +352,7 @@ export default function AuthSection() {
         </button>
         {config && (
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Last updated {new Date(config.updated_at).toLocaleString()}
+            Last updated {formatDate(config.updated_at, user?.locale, true)}
           </span>
         )}
       </div>
