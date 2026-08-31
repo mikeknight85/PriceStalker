@@ -248,6 +248,10 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+  /* Flex items shrink before their container overflows, so without this the
+     pills compress and their labels spill out of the rounded background rather
+     than the row scrolling as the overflow-x above intends. */
+  flex-shrink: 0;
 }
 
 .price-filter-tab:hover {

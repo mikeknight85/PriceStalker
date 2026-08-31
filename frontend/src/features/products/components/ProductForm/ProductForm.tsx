@@ -30,6 +30,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
   const [refreshInterval, setRefreshInterval] = useState(43200);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ReactNode>('');
+  // Which search result is being tracked, so only that row shows a spinner.
+  const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -66,9 +68,32 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    await submitUrl(url);
+  };
+
+  /**
+   * Tracks a search result immediately with the current defaults.
+   *
+   * Choosing a result used to drop the user back into the URL form with the
+   * field filled in, so tracking something with default settings took an extra
+   * step for no decision. Configure still opens that form for anyone who wants
+   * to set an interval or categories first.
+   */
+  const handleQuickTrack = async (resultUrl: string) => {
+    // A second click while the first is in flight would add the product twice.
+    if (isLoading) return;
+    setTrackingUrl(resultUrl);
+    try {
+      await submitUrl(resultUrl);
+    } finally {
+      setTrackingUrl(null);
+    }
+  };
+
+  const submitUrl = async (rawUrl: string) => {
     setError('');
 
-    let processedUrl = url.trim();
+    let processedUrl = rawUrl.trim();
 
     if (!/^https?:\/\//i.test(processedUrl)) {
       processedUrl = 'https://' + processedUrl;
@@ -269,14 +294,22 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
                     <p className="result-content">{result.content}</p>
                   </div>
                   <div className="result-actions">
-                    <button 
+                    <button
+                      className="btn btn-primary btn-sm"
+                      disabled={isLoading}
+                      onClick={() => void handleQuickTrack(result.url)}
+                    >
+                      {trackingUrl === result.url ? <LoadingSpinner size="1rem" /> : 'Track'}
+                    </button>
+                    <button
                       className="btn btn-secondary btn-sm"
+                      disabled={isLoading}
                       onClick={() => {
                         setUrl(result.url);
                         setMode('url');
                       }}
                     >
-                      Track this
+                      Configure
                     </button>
                   </div>
                 </div>
