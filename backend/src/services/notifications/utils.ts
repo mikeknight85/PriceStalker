@@ -158,3 +158,56 @@ export function getNotificationContent(payload: NotificationPayload, template?: 
 
   return { title, message };
 }
+
+/**
+ * Default email wording per event, used only when the user has not configured
+ * their own template.
+ *
+ * The single default was `Product: {{product_name}} / Price: {{current_price}}`
+ * for every event, so a back-in-stock alert arrived as a bare price line saying
+ * nothing about stock, and an unavailable alert reported a price for a product
+ * that could not be reached (issue #92).
+ *
+ * A user's own template is never overridden -- it is their choice, and the
+ * variables to make one event-aware (`{{type}}`, `{{new_stock_status}}`) now
+ * exist for exactly that.
+ */
+export function defaultEmailTemplate(type: NotificationPayload['type']): { subject: string; body: string } {
+  switch (type) {
+    case 'price_drop':
+      return {
+        subject: 'Price drop: {{product_name}}',
+        body: '{{product_name}} dropped from {{old_price}} to {{current_price}} {{currency}}.\n\n{{product_url}}',
+      };
+    case 'target_price':
+      return {
+        subject: 'Target price reached: {{product_name}}',
+        body: '{{product_name}} is now {{current_price}} {{currency}}, at or below your target.\n\n{{product_url}}',
+      };
+    case 'price_announced':
+      return {
+        subject: 'Price announced: {{product_name}}',
+        body: '{{product_name}} now has a price: {{current_price}} {{currency}}.\n\n{{product_url}}',
+      };
+    case 'back_in_stock':
+      return {
+        subject: 'Back in stock: {{product_name}}',
+        body: '{{product_name}} is available again.\n\nCurrent price: {{current_price}} {{currency}}\n\n{{product_url}}',
+      };
+    case 'not_available':
+      return {
+        subject: 'Unavailable: {{product_name}}',
+        body: '{{product_name}} could not be reached.\n\n{{product_url}}',
+      };
+    case 'product_restored':
+      return {
+        subject: 'Available again: {{product_name}}',
+        body: '{{product_name}} is reachable again and monitoring has resumed.\n\n{{product_url}}',
+      };
+    default:
+      return {
+        subject: 'PriceStalker alert: {{product_name}}',
+        body: '{{product_name}}\n\n{{product_url}}',
+      };
+  }
+}

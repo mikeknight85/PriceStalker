@@ -48,8 +48,11 @@ export const PROVIDER_REGISTRY: Record<string, ProviderInitializer> = {
       s.smtp_port,
       s.email_from,
       s.email_to,
-      s.email_subject_template || 'PriceStalker Alert: {{product_name}}',
-      s.email_body_template || 'Product: {{product_name}}\nPrice: {{current_price}}'
+      // Passed through unset so the provider can choose a default that matches
+      // the event. Substituting a generic one here is what made every email
+      // look like a price alert.
+      s.email_subject_template,
+      s.email_body_template
     );
   }
 };
