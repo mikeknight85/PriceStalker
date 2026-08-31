@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.4] - 2026-08-31
+
+### Fixed
+
+- Products already scheduled further out than their interval are corrected on
+  upgrade. Bounding the timing randomisers in beta.3 stopped new schedules
+  running long, but every check time already stored kept its old value until
+  the product's next check -- so a product set to check every 6 hours could
+  still be sitting on a 13-hour countdown, and one set to 12 hours on a
+  39-hour one. Only schedules that exceed the bound are touched.
+
 ## [2.1.0-beta.3] - 2026-08-31
 
 ### Fixed
