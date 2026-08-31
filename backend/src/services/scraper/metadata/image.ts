@@ -203,10 +203,17 @@ export async function extractProductImage(
 ): Promise<void> {
   const siteSelectors = domainConfig?.image_selectors || [];
   const genericSelectors = await settingsCache.getImageSelectors() || [];
-  const preferJsonLd = (await settingsCache.get('prefer_jsonld_image')) === 'true';
+  // Retailer override wins, then the global setting. Null on the retailer means
+  // inherit, which is why this is ?? and not ||: `false` is a real choice.
+  const globalPreferJsonLd = (await settingsCache.get('prefer_jsonld_image')) === 'true';
+  const retailerPreference = domainConfig?.prefer_jsonld_image;
+  const preferJsonLd = retailerPreference ?? globalPreferJsonLd;
   if (!result.imageCandidates) result.imageCandidates = [];
 
-  extractionSteps.push(`Extract | Image | Prefer JSON-LD: ${preferJsonLd}`);
+  const preferenceSource = retailerPreference === null || retailerPreference === undefined
+    ? `global (${globalPreferJsonLd})`
+    : `retailer override (${retailerPreference})`;
+  extractionSteps.push(`Extract | Image | Prefer JSON-LD: ${preferJsonLd} from ${preferenceSource}`);
 
   const candidates = evaluateImageSelectors($, siteSelectors, genericSelectors, extractionSteps, result.html || undefined, pageUrl);
 

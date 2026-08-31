@@ -76,3 +76,27 @@ Every custom selector you define has a health score calculated by the database. 
 * **Score Formula**: `score = match_count - consecutive_failures * 2`
 * When a product is successfully scraped, the winning selector gets its `match_count` incremented, `consecutive_failures` reset to `0`, and is promoted to the top of the list (`index 0`).
 * Stale selectors that fail will gradually lose points and be evicted.
+
+## Prefer JSON-LD Images (per retailer)
+
+`Prefer JSON-LD Images` under **Admin -> Retailers -> [Retailer] -> Extraction
+Parameters** decides whether a JSON-LD image outranks the configured CSS and
+generic image selectors for that one retailer.
+
+| Setting | Behaviour |
+|---|---|
+| Use global setting | Follow the system-wide **Prefer JSON-LD Images** toggle (the default) |
+| Prefer JSON-LD images | Rank JSON-LD image candidates first for this retailer |
+| Prefer CSS selectors | Rank configured and generic image selectors first for this retailer |
+
+Resolution order is retailer override, then the global setting.
+
+Use the override for retailers whose structured data contains a thumbnail, a
+directory-style path such as `/content/dam/example/product/`, or an otherwise
+unusable image, while leaving JSON-LD preference on everywhere else. The scrape
+trace records which source decided it:
+
+```text
+Extract | Image | Prefer JSON-LD: false from retailer override (false)
+Extract | Image | Prefer JSON-LD: true from global (true)
+```

@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Per-retailer "Prefer JSON-LD Images" override under Admin -> Retailers ->
+  Extraction Parameters. Retailers whose structured data points at a thumbnail
+  or a directory can now prefer CSS selectors while JSON-LD preference stays on
+  globally. Existing retailers inherit the global setting and are unchanged.
 - SQL query tracing: every statement, its duration and its parameter count are
   logged under the `Database` context, with a `WARN` for anything slower than
   `SLOW_QUERY_MS` (default 500ms) and the failing statement attached to query
