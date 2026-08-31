@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UserAdminService } from '../../services/UserAdminService';
 import { UserProfile, GlobalCurrency } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
@@ -9,6 +9,7 @@ import SearchableSelect from '../../../../components/SearchableSelect';
 import { ToggleSwitch } from '../../components';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
 import { AUTOMATIC_CURRENCY_OPTION, AUTOMATIC_LOCALE_OPTION, LOCALE_OPTIONS } from '../../../settings/regionalOptions';
+import { formatDate, formatRelativeDate } from '../../../../utils/format';
 
 interface UsersSectionProps {
   globalCurrencies: GlobalCurrency[];
@@ -21,6 +22,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [editingUser, setEditingUser] = useState<Partial<UserProfile> | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [userSearch, setUserSearch] = useState('');
 
   // Add User states
   const [newUserEmail, setNewUserEmail] = useState('');
@@ -32,6 +34,21 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   // Edit User states
   const [editUserPassword, setEditUserPassword] = useState('');
   const [editUserConfirmPassword, setEditUserConfirmPassword] = useState('');
+
+  const { user: currentUser } = useAuth();
+
+  // Filtering is local state, so a background refresh of the list leaves the
+  // search box and its results alone.
+  const visibleUsers = useMemo(() => {
+    const term = userSearch.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter(u =>
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.name || '').toLowerCase().includes(term)
+    );
+  }, [users, userSearch]);
+
+  const isSsoUser = (u: Partial<UserProfile> | null) => u?.auth_provider === 'oidc';
 
   useEffect(() => {
     fetchUsers();
@@ -94,7 +111,18 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
         <div className="settings-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h2 className="settings-card-title" style={{ margin: 0 }}>User Management</h2>
-            <button className="btn btn-primary btn-sm" onClick={() => setIsAddingUser(true)}>+ Add User</button>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="search"
+                className="form-control"
+                style={{ width: 'auto', minWidth: '200px' }}
+                placeholder="Search name or email"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                aria-label="Search users"
+              />
+              <button className="btn btn-primary btn-sm" onClick={() => setIsAddingUser(true)}>+ Add User</button>
+            </div>
           </div>
 
           <div className="mobile-scroll-hint">Swipe left to see more →</div>
@@ -104,15 +132,26 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
                 <tr>
                   <th>User Account</th>
                   <th className="mobile-hide">Privileges</th>
+                  <th className="mobile-hide">Last Active</th>
+                  <th className="mobile-hide">Joined</th>
+                  <th className="mobile-hide">Tracked</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {visibleUsers.map(u => (
                   <tr key={u.id}>
                     <td>
                        <div style={{ fontWeight: 600 }}>{u.name || 'Unnamed User'}</div>
                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                       {isSsoUser(u) && (
+                         <span style={{
+                           fontSize: '0.6rem', fontWeight: 800, color: 'var(--text-muted)',
+                           marginTop: '0.25rem', display: 'inline-block'
+                         }}>
+                           SSO
+                         </span>
+                       )}
                        {u.disabled && (
                          <span style={{ 
                            fontSize: '0.6rem', fontWeight: 800, color: 'var(--danger)', 
@@ -131,6 +170,15 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
                       }}>
                         {u.is_admin ? 'ADMIN' : 'USER'}
                       </span>
+                    </td>
+                    <td className="mobile-hide" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {u.last_login_at ? formatRelativeDate(u.last_login_at, currentUser?.locale) : 'Never'}
+                    </td>
+                    <td className="mobile-hide" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {formatDate(u.created_at, currentUser?.locale)}
+                    </td>
+                    <td className="mobile-hide" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {u.product_count ?? 0}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <button className="btn btn-secondary btn-sm" onClick={() => { setEditingUser(u); setEditUserPassword(''); setEditUserConfirmPassword(''); }} style={{ marginRight: '0.5rem' }}>Edit</button>
@@ -194,6 +242,22 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
       {editingUser && (
         <div className="settings-card" style={{ border: '2px solid var(--primary)' }}>
           <h3 className="settings-card-title">Edit User: {editingUser.email}</h3>
+          {isSsoUser(editingUser) && (
+            <div className="alert" style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              This account signs in through SSO. Its email address and password are
+              managed by the identity provider and cannot be changed here.
+            </div>
+          )}
+          <div className="form-group">
+            <label htmlFor="edit-user-email">Email Address</label>
+            <input
+              id="edit-user-email"
+              type="email"
+              value={editingUser.email || ''}
+              disabled={isSsoUser(editingUser)}
+              onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
+            />
+          </div>
           <div className="form-group"><label>Display Name</label><input type="text" value={editingUser.name || ''} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} /></div>
           <div className="form-grid">
             <div className="form-group">
@@ -221,10 +285,12 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
               />
             </div>
           </div>
-          <div className="form-grid" style={{ marginTop: '1rem' }}>
-            <div className="form-group"><label>New Password (Optional)</label><PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" /></div>
-            <div className="form-group"><label>Confirm New Password</label><PasswordInput secret value={editUserConfirmPassword} onChange={e => setEditUserConfirmPassword(e.target.value)} autoComplete="new-password" /></div>
-          </div>
+          {!isSsoUser(editingUser) && (
+            <div className="form-grid" style={{ marginTop: '1rem' }}>
+              <div className="form-group"><label>New Password (Optional)</label><PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" /></div>
+              <div className="form-group"><label>Confirm New Password</label><PasswordInput secret value={editUserConfirmPassword} onChange={e => setEditUserConfirmPassword(e.target.value)} autoComplete="new-password" /></div>
+            </div>
+          )}
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
             <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Administrator Access</span>

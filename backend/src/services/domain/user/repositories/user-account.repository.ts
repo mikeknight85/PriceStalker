@@ -83,10 +83,30 @@ export const userAccountRepository = {
 
   // Admin queries
   findAll: async (): Promise<UserProfile[]> => {
+    // auth_provider drives which fields the admin UI may edit, last_login_at
+    // answers "is this account actually in use", and the product count shows
+    // how much of the scraper's budget each account is spending.
     const result = await pool.query(
-      'SELECT id, email, name, currency, locale, is_admin, disabled, created_at FROM users ORDER BY created_at ASC'
+      `SELECT u.id, u.email, u.name, u.currency, u.locale, u.is_admin, u.disabled,
+              u.created_at, u.auth_provider, u.last_login_at,
+              COUNT(p.id)::int AS product_count
+         FROM users u
+         LEFT JOIN products p ON p.user_id = u.id
+        GROUP BY u.id
+        ORDER BY u.created_at ASC`
     );
     return result.rows;
+  },
+
+  /**
+   * Stamps a successful sign-in. Called from both the local and the OIDC paths.
+   *
+   * Failures are swallowed by the caller rather than blocking the login: not
+   * knowing when somebody last signed in is a reporting gap, not a reason to
+   * refuse them entry.
+   */
+  recordLogin: async (id: number): Promise<void> => {
+    await pool.query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
   },
 
   delete: async (id: number): Promise<boolean> => {

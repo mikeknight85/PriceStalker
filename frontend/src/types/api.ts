@@ -147,6 +147,12 @@ export interface UserProfile {
   disabled: boolean;
   categories: string[];
   created_at: string;
+  /** 'local' or 'oidc'. Decides which fields an administrator may change. */
+  auth_provider?: string;
+  /** Null until the account signs in for the first time. */
+  last_login_at?: string | null;
+  /** Products this user tracks. Present only on the admin listing. */
+  product_count?: number;
 }
 
 export interface NotificationSettings {

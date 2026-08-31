@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Admin user management shows when each account last signed in, when it joined,
+  and how many products it tracks, with a search box for installations with many
+  accounts.
+- Administrators can now change a local account's email address from the user
+  editor. The backend always supported it; there was no field.
 - Original Price (RRP) selectors can now be edited from the admin interface,
   both per retailer under Extraction Parameters and globally under Extraction
   Rules. The database always supported them; there was no way to set them
@@ -79,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- SSO accounts can no longer have a local password set or their email changed
+  from the admin user editor. Setting a password on an account provisioned for
+  external sign-in enabled local authentication on it, and a locally changed
+  email either breaks the match at next sign-in or is silently overwritten by
+  the identity provider. Both are refused by the API, not just hidden in the UI.
 - Custom regex selectors now match against the denoised page instead of the raw
   response, so a pattern written for the product area no longer picks up prices
   from sidebars, related-product carousels or tracking payloads. Scripts holding

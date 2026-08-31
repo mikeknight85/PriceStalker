@@ -9,6 +9,7 @@ import {
 } from '../../services/domain/auth/oidc';
 import { generateToken } from '../../middleware/auth';
 import { logger } from '../../utils/system/logger';
+import { userRepository } from '../../models';
 
 const router = Router();
 
@@ -112,6 +113,15 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     const claims = await completeFlow(params, state);
     const user = await authService.resolveOidcUser(claims, cfg.oidc_jit_enabled);
+
+    // Stamped here rather than inside resolveOidcUser: that function returns a
+    // user from three separate branches, and this is the single point where all
+    // three have succeeded.
+    if (user) {
+      await userRepository.recordLogin(user.id).catch((err) =>
+        logger.warn(`Auth | Could not record login time for user ${user.id}: ${err}`, 'Auth')
+      );
+    }
 
     if (!user) {
       redirectWithError(
