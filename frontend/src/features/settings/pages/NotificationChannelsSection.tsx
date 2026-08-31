@@ -142,7 +142,7 @@ export default function NotificationChannelsSection() {
 
   const renderTemplateHelp = () => (
     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', padding: '0.5rem', background: 'var(--background)', borderRadius: '0.25rem' }}>
-      <strong>Available Tags:</strong> <code>{"{{product_name}}"}</code>, <code>{"{{product_url}}"}</code>, <code>{"{{old_price}}"}</code>, <code>{"{{current_price}}"}</code>, <code>{"{{currency}}"}</code>, <code>{"{{product_id}}"}</code>
+      <strong>Available Tags:</strong> <code>{"{{product_name}}"}</code>, <code>{"{{product_url}}"}</code>, <code>{"{{old_price}}"}</code>, <code>{"{{current_price}}"}</code>, <code>{"{{currency}}"}</code>, <code>{"{{product_id}}"}</code>, <code>{"{{type}}"}</code>, <code>{"{{old_stock_status}}"}</code>, <code>{"{{new_stock_status}}"}</code>
     </div>
   );
 

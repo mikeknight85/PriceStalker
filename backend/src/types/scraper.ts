@@ -29,6 +29,18 @@ export interface ScrapedProduct {
   html?: string;
 }
 
+/**
+ * Why a scrape produced no usable price. The log already knew this; the caller
+ * did not, so an add failed with a flat "Could not extract price" no matter
+ * whether the retailer served a CAPTCHA, the page was gone, or auto-mapping
+ * rejected the config it generated.
+ */
+export type ScrapeFailureReason =
+  | 'bot_challenge'
+  | 'page_unavailable'
+  | 'auto_map_rejected'
+  | 'no_price_found';
+
 export type ReviewReason = 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan' | 'first_scan' | 'missing_currency';
 
 export interface ScrapedProductWithVoting extends ScrapedProduct {
@@ -44,6 +56,10 @@ export interface ScrapedProductWithVoting extends ScrapedProduct {
   // Flags learned during acquisition (e.g. the page only rendered via the
   // browser scraper), persisted to the retailer config on save.
   learnedFlags?: { use_browser_scraper?: boolean };
+  /** Set only when the scrape produced no usable price. */
+  failureReason?: ScrapeFailureReason;
+  /** Free-text detail for the reason, e.g. which challenge was detected. */
+  failureDetail?: string;
 }
 
 export type ExtractionMethod = 'json-ld' | 'site-specific' | 'generic-css' | 'custom-css' | 'custom-regex' | 'ai' | 'generic' | 'deal-price' | 'member-price' | 'pre-order-price' | 'original-price';

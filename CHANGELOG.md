@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Notification templates gain `{{old_stock_status}}`, `{{new_stock_status}}` and
+  `{{type}}`, so a custom template can tell a stock event from a price drop.
 - Per-retailer "Prefer JSON-LD Images" override under Admin -> Retailers ->
   Extraction Parameters. Retailers whose structured data points at a thumbnail
   or a directory can now prefer CSS selectors while JSON-LD preference stays on
@@ -73,6 +75,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Back-in-stock notifications no longer read "back in stock at undefined USD"
+  when a product becomes available before a price is extracted, and no longer
+  present an unknown currency as USD.
+- ntfy no longer announces an unavailable product as "Back in Stock!" -- product
+  unavailable and price announced now have their own notification wording.
+- Adding a product that cannot be scraped now explains why -- retailer blocked
+  the request, page not found, AI auto-mapping found no usable price, or no
+  price on the page -- with the setting to change, instead of a generic
+  "Could not extract price from the provided URL".
 - Price history is now written inside the same transaction as the product
   update it belongs to, so a rollback can no longer leave behind history for a
   state the product never reached.

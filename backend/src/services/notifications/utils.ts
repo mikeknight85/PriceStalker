@@ -21,6 +21,13 @@ export function getCurrencySymbol(currency?: string): string {
   }
 }
 
+/** "out_of_stock" reads badly in a notification; "Out of stock" does not. */
+function formatStockStatus(status?: string): string {
+  if (!status) return 'unknown';
+  const words = status.replace(/_/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 /**
  * Simple template engine to replace {{variable}} with real data.
  */
@@ -31,11 +38,20 @@ export function interpolateTemplate(template: string, payload: NotificationPaylo
     'product_name': payload.productName,
     'product_url': payload.productUrl,
     'product_id': payload.productId ? String(payload.productId) : 'N/A',
-    'current_price': payload.newPrice ? payload.newPrice.toFixed(2) : 'N/A',
-    'old_price': payload.oldPrice ? payload.oldPrice.toFixed(2) : 'N/A',
-    'currency': payload.currency || 'USD',
+    'current_price': payload.newPrice !== undefined && payload.newPrice !== null
+      ? payload.newPrice.toFixed(2)
+      : 'unavailable',
+    'old_price': payload.oldPrice !== undefined && payload.oldPrice !== null
+      ? payload.oldPrice.toFixed(2)
+      : 'unavailable',
+    // An unknown currency must not masquerade as USD. The rest of the app
+    // stopped doing this when unresolved currencies moved to manual
+    // confirmation; the notification path was still guessing.
+    'currency': payload.currency || '',
     'currency_symbol': currencySymbol,
     'type': payload.type.replace(/_/g, ' '),
+    'old_stock_status': formatStockStatus(payload.oldStockStatus),
+    'new_stock_status': formatStockStatus(payload.newStockStatus),
   };
 
   let result = template;
