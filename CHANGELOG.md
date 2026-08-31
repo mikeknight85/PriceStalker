@@ -69,6 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Product images no longer break when a retailer expresses the image as a
+  relative or protocol-relative URL: candidates are now resolved against the
+  page they were scraped from. Placeholder and spacer images are recognised
+  under many more spellings, and an unusable candidate can no longer replace a
+  working stored image. Dynamic image endpoints, including ones ending in a
+  slash, are kept rather than discarded.
 - Generic stock, AI price and AI image selector settings were stored as invalid
   JSON by the baseline schema, so the scraper silently fell back to a smaller
   built-in list instead of the seeded one. Stock detection in particular was

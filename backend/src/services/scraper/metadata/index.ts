@@ -9,6 +9,7 @@ import { extractProductImage } from './image';
 export * from './stock';
 export * from './title';
 export * from './image';
+export * from './image-url';
 export * from './utils';
 
 /**
@@ -18,7 +19,8 @@ export async function extractMetadata(
   $: CheerioAPI,
   domainConfig: RetailerConfig | undefined,
   extractionSteps: string[],
-  result: ScrapedProductWithVoting
+  result: ScrapedProductWithVoting,
+  pageUrl?: string | null
 ): Promise<void> {
   // 1. Stock Status
   await extractProductStock($, domainConfig, extractionSteps, result);
@@ -27,5 +29,5 @@ export async function extractMetadata(
   await extractProductTitle($, domainConfig, extractionSteps, result);
 
   // 3. Image
-  await extractProductImage($, domainConfig, extractionSteps, result);
+  await extractProductImage($, domainConfig, extractionSteps, result, pageUrl);
 }
