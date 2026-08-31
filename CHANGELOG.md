@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Email alerts now describe the event that happened. Every email used the same
+  price-shaped default, so a back-in-stock alert arrived as a bare price line
+  saying nothing about stock, and an unavailable alert reported a price for a
+  product that could not be reached. A template you have configured yourself is
+  still used exactly as written.
+- Product search results are ordered by how likely each is to be a trackable
+  product page, so retailer listings come before videos, forum threads and
+  buying guides. Nothing is removed from the results.
 - Notifications now say what actually happened. A product going missing, a
   retailer being unreachable and a product coming back were all stored as
   "Tracking Issue"; back-in-stock and price-announced were similarly collapsed.

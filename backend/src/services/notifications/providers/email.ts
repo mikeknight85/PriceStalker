@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import { NotificationProvider, NotificationPayload } from '../types';
 import { logger } from '../../../utils/system/logger';
-import { interpolateTemplate } from '../utils';
+import { interpolateTemplate, defaultEmailTemplate } from '../utils';
 
 export class EmailProvider implements NotificationProvider {
   constructor(
@@ -9,14 +9,19 @@ export class EmailProvider implements NotificationProvider {
     private smtpPort: number,
     private from: string,
     private to: string,
-    private subjectTemplate: string,
-    private bodyTemplate: string
+    private subjectTemplate: string | null | undefined,
+    private bodyTemplate: string | null | undefined
   ) {}
 
   async send(payload: NotificationPayload): Promise<boolean> {
     try {
-      const subject = interpolateTemplate(this.subjectTemplate, payload);
-      const body = interpolateTemplate(this.bodyTemplate, payload);
+      // A configured template wins, whatever the event -- it is the user's
+      // choice, and the variables to make one event-aware now exist. Only the
+      // fallback is chosen per event, because a single default cannot describe
+      // a price drop and a product going missing at the same time.
+      const defaults = defaultEmailTemplate(payload.type);
+      const subject = interpolateTemplate(this.subjectTemplate || defaults.subject, payload);
+      const body = interpolateTemplate(this.bodyTemplate || defaults.body, payload);
 
       const transporter = nodemailer.createTransport({
         host: this.smtpHost,

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { settingsCache } from '../../../utils/cache';
 import { RetailerQueryService } from '../retailer/RetailerQueryService';
 import { logger } from '../../../utils/system/logger';
+import { rankSearchResults } from './utils/search-ranking';
 
 export interface SearchResult {
   title: string;
@@ -65,7 +66,9 @@ export class SearchService {
         }
       }
 
-      return processedResults;
+      // Reordered, not filtered: a retailer whose URLs do not match any
+      // heuristic still appears, just lower down (issue #94).
+      return rankSearchResults(processedResults);
     } catch (error: any) {
       logger.error('SearchService | SearXNG query failed', 'Product', error);
       
