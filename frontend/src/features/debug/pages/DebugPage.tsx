@@ -74,7 +74,7 @@ export default function Debug() {
         stock_selectors: state.tempStockSelectors,
         exclusion_selectors: state.tempExclusionSelectors,
         active: true,
-        description: `Saved from Debug Page on ${new Date().toLocaleDateString()}`
+        description: `Saved from Debug Page on ${new Date().toISOString().slice(0, 10)}`
       });
       showToast(`Retailer config for ${domain} updated successfully!`);
     } catch (err: any) {

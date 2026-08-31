@@ -58,7 +58,7 @@ export function truncateUrl(url: string): string {
 /**
  * Format relative date/time
  */
-export function formatRelativeDate(dateString: string | null): string {
+export function formatRelativeDate(dateString: string | null, locale?: string | null): string {
   if (!dateString) return 'Never';
   const date = new Date(dateString);
   const now = new Date();
@@ -68,8 +68,38 @@ export function formatRelativeDate(dateString: string | null): string {
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  
-  return date.toLocaleDateString();
+
+  // Anything older falls back to an absolute date, which must respect the
+  // user's locale like every other date in the app.
+  return formatDate(dateString, locale);
+}
+
+/**
+ * Localized date and time down to the second, for log and audit timestamps
+ * where the exact moment matters. Normalises a null locale so Intl never throws.
+ */
+export function formatDateTime(
+  dateString: string | null | undefined,
+  locale?: string | null
+): string {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  };
+
+  try {
+    return date.toLocaleString(locale ?? undefined, options);
+  } catch {
+    return date.toLocaleString(undefined, options);
+  }
 }
 
 /**

@@ -61,6 +61,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Dates and times across the app now follow the user's saved locale instead of
+  always rendering US month/day/year. This covers the product detail page, price
+  and stock history, the notification list and drawer, and the admin system log,
+  API token and authentication panels.
 - The theme toggle icon is no longer invisible when the app is set to Light on a
   device whose system theme is Dark. Choosing Light now pins the browser colour
   scheme to light, so buttons, select popups, date pickers and autofill stop

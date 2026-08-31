@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuth } from '../../../auth';
+import { formatDate } from '../../../../utils/format';
 
 interface ProductMetadataProps {
   product: any;
@@ -32,6 +34,8 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
   isSaving,
   REFRESH_INTERVALS,
 }) => {
+  const { user } = useAuth();
+
   return (
     <div className="product-detail-meta">
       <div className="product-detail-meta-item">
@@ -98,7 +102,7 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
       </div>
       <div className="product-detail-meta-item">
         <span className="product-detail-meta-label">Last Checked</span>
-        <span className="product-detail-meta-value">{product.last_checked ? new Date(product.last_checked).toLocaleString() : 'Never'}</span>
+        <span className="product-detail-meta-value">{product.last_checked ? formatDate(product.last_checked, user?.locale, true) : 'Never'}</span>
       </div>
       <div className="product-detail-meta-item">
         <span className="product-detail-meta-label">Check Interval</span>
@@ -115,7 +119,7 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
       </div>
       <div className="product-detail-meta-item">
         <span className="product-detail-meta-label">Tracking Since</span>
-        <span className="product-detail-meta-value">{new Date(product.created_at).toLocaleDateString()}</span>
+        <span className="product-detail-meta-value">{formatDate(product.created_at, user?.locale)}</span>
       </div>
     </div>
   );

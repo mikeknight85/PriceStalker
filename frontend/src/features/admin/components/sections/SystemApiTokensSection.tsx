@@ -4,8 +4,11 @@ import { SystemApiToken } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
 import Icon from '../../../../components/Icon';
+import { useAuth } from '../../../auth';
+import { formatDate } from '../../../../utils/format';
 
 export default function SystemApiTokensSection() {
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [tokens, setTokens] = useState<SystemApiToken[]>([]);
   const [isAddingToken, setIsAddingToken] = useState(false);
@@ -141,7 +144,7 @@ export default function SystemApiTokensSection() {
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{token.description}</div>
                         )}
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                          Created: {new Date(token.created_at).toLocaleDateString()}
+                          Created: {formatDate(token.created_at, user?.locale)}
                         </div>
                       </td>
                       <td className="mobile-hide">
@@ -156,7 +159,7 @@ export default function SystemApiTokensSection() {
                       </td>
                       <td>
                         <div style={{ fontSize: '0.875rem' }}>
-                          {token.last_used_at ? new Date(token.last_used_at).toLocaleString() : 'Never'}
+                          {token.last_used_at ? formatDate(token.last_used_at, user?.locale, true) : 'Never'}
                         </div>
                       </td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
