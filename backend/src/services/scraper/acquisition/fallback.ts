@@ -4,7 +4,8 @@ import { settingsCache } from '../../../utils/cache';
 import { 
   detectBotChallenge, 
   fetchRemoteHtml, 
-  fetchBrowserHtml
+  fetchBrowserHtml,
+  resolveUserAgent
 } from '../transport';
 
 export interface FallbackOptions {
@@ -13,6 +14,8 @@ export interface FallbackOptions {
   productId?: number;
   extractionSteps: string[];
   challengeReason: string;
+  /** The retailer's User-Agent override, if it has one. */
+  userAgent?: string | null;
 }
 
 export interface FallbackResult {
@@ -23,7 +26,7 @@ export interface FallbackResult {
 }
 
 export async function handleAcquisitionFallback(options: FallbackOptions): Promise<FallbackResult | null> {
-  const { url, domain, productId, extractionSteps, challengeReason } = options;
+  const { url, domain, productId, extractionSteps, challengeReason, userAgent } = options;
   
   logger.warn(`Scraper | Block | ${challengeReason} detected. Triggering fallback for ${domain}`, 'Scraper', { product_id: productId });
   extractionSteps.push(`Scraper | Fallback | Triggered by ${challengeReason}`);
@@ -37,7 +40,11 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
   if (rsUrl) {
     try {
       const isDiscovery = !productId;
-      const remoteOptions: any = { productId, isDiscovery };
+      // The same identity the HTTP attempt just used. Both remote calls used to
+      // omit it entirely, so the fallback presented a different browser -- and
+      // headless Chromium's own -- to a retailer that had just been shown the
+      // configured one.
+      const remoteOptions: any = { productId, isDiscovery, userAgent: await resolveUserAgent(userAgent) };
       // Referrer policy: system default or none — never a fabricated random
       // one (issue #44).
       const defaultReferrer = await settingsCache.getDefaultReferrer();
@@ -58,7 +65,7 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
   } else {
     try {
       logger.warn(`Scraper | Fallback | Local browser fallback for ${domain}`, 'Scraper', { product_id: productId });
-      html = await fetchBrowserHtml(url, undefined, undefined, undefined, productId);
+      html = await fetchBrowserHtml(url, await resolveUserAgent(userAgent), undefined, undefined, productId);
       if (html) logger.info(`Scraper | Fallback | Local success for ${domain}`, 'Scraper', { product_id: productId });
       extractionSteps.push(html ? `Scraper | Fallback | Local Success` : `Scraper | Fallback | Local Failed`);
       

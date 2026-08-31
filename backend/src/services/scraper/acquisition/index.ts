@@ -80,6 +80,9 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
       productId,
       extractionSteps,
       challengeReason
+      // No retailer override to pass: this branch only runs when the domain has
+      // no config, so the system default is the right identity -- and is the
+      // one the HTTP attempt just used.
     });
 
     if (fallbackResult) {
