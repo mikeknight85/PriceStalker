@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Admin Retailers, Users and API Tokens now refresh in the background, so
+  retailers the scraper auto-creates, accounts SSO provisions on first sign-in,
+  and tokens managed outside the UI appear without reloading the page. Search
+  filters are untouched by a background refresh, and polling stops when the tab
+  is hidden.
 - Administrators can now open, edit and delete any tracked product by following
   a direct link to it, instead of getting a "not found" for products belonging
   to other accounts. Their own dashboard still lists only their own products,

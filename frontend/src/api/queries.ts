@@ -4,8 +4,13 @@ import { ProfileService } from '../features/settings/services/ProfileService';
 import { NotificationService } from '../features/notifications/services/NotificationService';
 import { SharedService } from '../services/SharedService';
 import { AdminSystemService } from '../features/admin/services/AdminSystemService';
+import { UserAdminService } from '../features/admin/services/UserAdminService';
+import { RetailerAdminService } from '../features/admin/services/RetailerAdminService';
 
 export const queryKeys = {
+  adminUsers: ['admin', 'users'] as const,
+  adminTokens: ['admin', 'system-tokens'] as const,
+  adminRetailers: ['admin', 'retailers'] as const,
   products: { all: ['products'] as const, detail: (id: number) => ['products', id] as const },
   discoveryStatus: ['settings', 'discovery-status'] as const,
   profile: ['profile'] as const,
@@ -62,6 +67,37 @@ export const notificationSettingsQuery = () => queryOptions({
   queryKey: queryKeys.notificationSettings,
   queryFn: ({ signal }) => ProfileService.getNotificationSettings({ signal }),
   staleTime: 10 * 60_000,
+});
+
+/**
+ * Admin lists fall out of date on their own: the scraper auto-creates retailer
+ * configs, SSO provisions users on first sign-in, and tokens can be managed by
+ * scripts. Polling means an administrator sees those without reloading.
+ *
+ * Slower than the product dashboard because these change on human timescales,
+ * and React Query stops polling a hidden tab by itself.
+ */
+const ADMIN_POLL_INTERVAL = 30_000;
+
+export const adminUsersQuery = () => queryOptions({
+  queryKey: queryKeys.adminUsers,
+  queryFn: ({ signal }) => UserAdminService.getUsers({ signal }),
+  staleTime: ADMIN_POLL_INTERVAL,
+  refetchInterval: ADMIN_POLL_INTERVAL,
+});
+
+export const adminTokensQuery = () => queryOptions({
+  queryKey: queryKeys.adminTokens,
+  queryFn: ({ signal }) => AdminSystemService.getSystemApiTokens({ signal }),
+  staleTime: ADMIN_POLL_INTERVAL,
+  refetchInterval: ADMIN_POLL_INTERVAL,
+});
+
+export const adminRetailersQuery = () => queryOptions({
+  queryKey: queryKeys.adminRetailers,
+  queryFn: ({ signal }) => RetailerAdminService.getRetailers({ signal }),
+  staleTime: ADMIN_POLL_INTERVAL,
+  refetchInterval: ADMIN_POLL_INTERVAL,
 });
 
 export const adminSystemSettingsQuery = () => queryOptions({

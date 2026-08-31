@@ -1,8 +1,8 @@
-import { api } from '../../../api/client';
+import { api, type RequestOptions } from '../../../api/client';
 import { UserProfile } from '../../../types/api';
 
 export const UserAdminService = {
-  getUsers: () => api.get<UserProfile[]>('/admin/users'),
+  getUsers: (options?: RequestOptions) => api.get<UserProfile[]>('/admin/users', options),
   deleteUser: (id: number) => api.delete(`/admin/users/${id}`),
   updateUser: (id: number, data: Partial<UserProfile> & { password?: string }) => 
     api.put(`/admin/users/${id}`, data),
