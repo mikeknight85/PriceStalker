@@ -1,6 +1,7 @@
 import { notificationRepository } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 import { CreateNotification } from '../../../models/types';
+import { eventTypesForCategory } from '../../../models/types/notification';
 
 export class NotificationService {
   /**
@@ -22,11 +23,22 @@ export class NotificationService {
   /**
    * Get paginated notification history
    */
-  async getPaginatedHistory(userId: number, page: number, limit: number) {
+  async getPaginatedHistory(
+    userId: number,
+    page: number,
+    limit: number,
+    filter?: string | null
+  ) {
     const offset = (page - 1) * limit;
+    // Resolve the filter to concrete event types once, so the list and the
+    // count cannot disagree about what is being paginated.
+    const unreadOnly = filter === 'unread';
+    const types = unreadOnly ? null : eventTypesForCategory(filter);
+    const options = { types, unreadOnly };
+
     const [notifications, totalCount] = await Promise.all([
-      notificationRepository.getByUserId(userId, limit, offset),
-      notificationRepository.getTotalCount(userId),
+      notificationRepository.getByUserId(userId, limit, offset, options),
+      notificationRepository.getTotalCount(userId, options),
     ]);
 
     return {
@@ -37,6 +49,7 @@ export class NotificationService {
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
       },
+      filter: filter || 'all',
     };
   }
 

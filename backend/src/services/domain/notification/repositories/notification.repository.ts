@@ -25,17 +25,38 @@ export const notificationRepository = {
   },
 
   // Get notifications for a user with pagination
+  /**
+   * Filtering happens here rather than in the client.
+   *
+   * The history page filtered whatever page it had already loaded, so selecting
+   * a filter searched the most recent 50 notifications and reported nothing
+   * beyond them -- which reads as "you have no unavailable alerts" when what it
+   * means is "none in the last 50" (issue #93).
+   */
   getByUserId: async (
     userId: number,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
+    options: { types?: readonly string[] | null; unreadOnly?: boolean } = {}
   ): Promise<Notification[]> => {
+    const where: string[] = ['user_id = $1'];
+    const values: (number | string | readonly string[])[] = [userId];
+    let i = 2;
+
+    if (options.types && options.types.length > 0) {
+      where.push(`type = ANY($${i++}::text[])`);
+      values.push(options.types);
+    }
+    if (options.unreadOnly) {
+      where.push('is_read = false');
+    }
+
     const result = await pool.query(
       `SELECT * FROM notifications
-       WHERE user_id = $1
-       ORDER BY created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [userId, limit, offset]
+        WHERE ${where.join(' AND ')}
+        ORDER BY created_at DESC
+        LIMIT $${i++} OFFSET $${i}`,
+      [...values, limit, offset]
     );
     return result.rows;
   },
@@ -89,10 +110,26 @@ export const notificationRepository = {
   },
 
   // Get total count for pagination
-  getTotalCount: async (userId: number): Promise<number> => {
+  /** Counts the filtered set, so pagination matches what is being shown. */
+  getTotalCount: async (
+    userId: number,
+    options: { types?: readonly string[] | null; unreadOnly?: boolean } = {}
+  ): Promise<number> => {
+    const where: string[] = ['user_id = $1'];
+    const values: (number | readonly string[])[] = [userId];
+    let i = 2;
+
+    if (options.types && options.types.length > 0) {
+      where.push(`type = ANY($${i++}::text[])`);
+      values.push(options.types);
+    }
+    if (options.unreadOnly) {
+      where.push('is_read = false');
+    }
+
     const result = await pool.query(
-      `SELECT COUNT(*) FROM notifications WHERE user_id = $1`,
-      [userId]
+      `SELECT COUNT(*) FROM notifications WHERE ${where.join(' AND ')}`,
+      values
     );
     return parseInt(result.rows[0].count, 10);
   },

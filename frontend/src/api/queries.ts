@@ -19,7 +19,7 @@ export const queryKeys = {
   adminSystemSettings: ['admin', 'system-settings'] as const,
   priceHistory: (productId: number, days: number) => ['products', productId, 'price-history', days] as const,
   stockHistory: (productId: number, days: number) => ['products', productId, 'stock-history', days] as const,
-  notifications: { recent: (limit: number) => ['notifications', 'recent', limit] as const, history: (page: number, limit: number) => ['notifications', 'history', page, limit] as const },
+  notifications: { recent: (limit: number) => ['notifications', 'recent', limit] as const, history: (page: number, limit: number, filter: string) => ['notifications', 'history', page, limit, filter] as const },
 };
 
 /**
@@ -124,8 +124,8 @@ export const recentNotificationsQuery = (limit: number) => queryOptions({
   staleTime: 30_000,
 });
 
-export const notificationHistoryQuery = (page: number, limit: number) => queryOptions({
-  queryKey: queryKeys.notifications.history(page, limit),
-  queryFn: ({ signal }) => NotificationService.getHistory(page, limit, { signal }),
+export const notificationHistoryQuery = (page: number, limit: number, filter = 'all') => queryOptions({
+  queryKey: queryKeys.notifications.history(page, limit, filter),
+  queryFn: ({ signal }) => NotificationService.getHistory(page, limit, filter, { signal }),
   staleTime: 30_000,
 });
