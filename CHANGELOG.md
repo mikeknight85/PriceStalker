@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-31
+
 ### Changed
 
+- **The Docker Compose / Swarm deployment now tracks `stable` instead of
+  `beta`.** `beta` follows every merge to `main`, and because schema migrations
+  run automatically when the backend starts and are not reversible, tracking it
+  meant an unreviewed migration could run against your database on any restart.
+  `stable` moves only on a versioned release. Set `PRICESTALKER_TAG=beta` to
+  keep the old behaviour, or pin an exact version such as `v2.0.0`.
 - The **Remote Scraper URL** system setting is now labelled **Browser Scraper
   URL**, matching the per-retailer "Use Browser Scraper" toggle it feeds, and its
   placeholder shows the documented `http://scraper:5100/scrape` rather than a

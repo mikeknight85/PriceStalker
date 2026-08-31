@@ -34,11 +34,18 @@
 #   docker exec $(docker ps -q -f name=pricestalker_postgres) \
 #     pg_dump -U postgres --no-owner --no-privileges priceghost | gzip > backup.sql.gz
 #
-# The tag below defaults to `beta`, which currently contains the ongoing v2
-# overhaul from main. The stable `latest` tag is published only for versioned
-# releases and may still represent the previous stable line. Pin
-# PRICESTALKER_TAG to a specific version if you want to choose your upgrade
-# moment.
+# The tag below defaults to `stable`, which moves only on a versioned release.
+#
+# This matters more than a normal image tag would, because schema migrations run
+# automatically when the backend container starts and are not reversible. On
+# `beta` -- which tracks every merge to main -- that means an unreviewed
+# migration can run against your database the next time the container restarts.
+#
+#   stable   versioned releases only (default, recommended)
+#   beta     every merge to main; expect schema changes without notice
+#   v2.0.0   pin an exact version and choose your own upgrade moment
+#
+# Whichever you track, take the backup above before upgrading.
 
 services:
   postgres:
@@ -64,7 +71,7 @@ services:
         condition: on-failure
 
   backend:
-    image: ghcr.io/mikeknight85/pricestalker-backend:${PRICESTALKER_TAG:-beta}
+    image: ghcr.io/mikeknight85/pricestalker-backend:${PRICESTALKER_TAG:-stable}
     environment:
       NODE_ENV: production
       PORT: "3001"
@@ -93,7 +100,7 @@ services:
         condition: on-failure
 
   frontend:
-    image: ghcr.io/mikeknight85/pricestalker-frontend:${PRICESTALKER_TAG:-beta}
+    image: ghcr.io/mikeknight85/pricestalker-frontend:${PRICESTALKER_TAG:-stable}
     networks:
       - pricestalker-internal
       - traefik-public
@@ -118,7 +125,7 @@ services:
   # http://scraper:5100/scrape once deployed. Remove this service if
   # unused; the backend scrapes in-process without it.
   scraper:
-    image: ghcr.io/mikeknight85/pricestalker-scraper:${PRICESTALKER_TAG:-beta}
+    image: ghcr.io/mikeknight85/pricestalker-scraper:${PRICESTALKER_TAG:-stable}
     environment:
       PORT: "5100"
     # Chromium needs more than the default 64MB of shared memory or it crashes
