@@ -41,7 +41,8 @@ export async function acquireStandardHtml(options: StandardAcquisitionOptions): 
     response = await withRetry(
       () => axios.get(url, { headers, timeout, httpsAgent }),
       { maxRetries: 1 },
-      'Axios'
+      'Axios',
+      'Scraper'
     );
     const latency = Date.now() - start;
     const status = response.status;
@@ -74,7 +75,8 @@ export async function acquireStandardHtml(options: StandardAcquisitionOptions): 
         response = await withRetry(
           () => axios.get(url, { headers, timeout, httpsAgent: undefined }),
           { maxRetries: 2 },
-          'Axios-Fallback'
+          'Axios-Fallback',
+          'Scraper'
         );
         const latency = Date.now() - fallbackStart;
         const status = response.status;

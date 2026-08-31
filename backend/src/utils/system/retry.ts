@@ -38,7 +38,8 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
 export async function withRetry<T>(
   operation: () => Promise<T>,
   options: RetryOptions = {},
-  context: string = 'Retry'
+  context: string = 'Retry',
+  category: string = 'AI'
 ): Promise<T> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let lastError: any;
@@ -68,8 +69,8 @@ export async function withRetry<T>(
       const status = error.response?.status ? ` (${error.response.status})` : '';
       
       logger.warn(
-        `AI | ${context} | Attempt ${attempt} failed${status}: ${errorMsg}. Retrying in ${currentDelay}ms...`,
-        'AI'
+        `${category} | ${context} | Attempt ${attempt} failed${status}: ${errorMsg}. Retrying in ${currentDelay}ms...`,
+        category
       );
 
       await new Promise(resolve => setTimeout(resolve, currentDelay));

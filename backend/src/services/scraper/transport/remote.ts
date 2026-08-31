@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import axios from 'axios';
 import { logger } from '../../../utils/system/logger';
 import { PageNotAvailableError } from './errors';
@@ -10,7 +11,7 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
   let retryCount = 0;
 
   // Generate a unique Request ID for traceability across services
-  const requestId = options.requestId || `REQ-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const requestId = options.requestId || `REQ-${randomUUID()}`;
   const productId = options.productId;
   const isDebug = options.debug || process.env.LOG_LEVEL === 'debug';
 
