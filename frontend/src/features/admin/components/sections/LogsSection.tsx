@@ -40,11 +40,14 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
         level: logLevel, 
         context: logContext 
       });
-      setLogs(res.logs);
+      // The list and the filter options are rendered with .map(), so a response
+      // missing either array takes the whole admin page down through the
+      // ErrorBoundary rather than degrading to an empty table or filter.
+      setLogs(res.logs ?? []);
       setTotalCount(res.total);
       setLogPage(page);
       setLogPages(res.pages);
-      setAvailableContexts(res.contexts);
+      setAvailableContexts(res.contexts ?? []);
     } catch {
       showToast('Failed to load logs', 'error');
     } finally {

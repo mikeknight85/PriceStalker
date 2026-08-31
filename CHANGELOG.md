@@ -61,6 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The admin System Event Log no longer blanks the whole admin page when the
+  logs response omits its context list; the filter falls back to empty instead
+  of throwing during render.
 - Dates and times across the app now follow the user's saved locale instead of
   always rendering US month/day/year. This covers the product detail page, price
   and stock history, the notification list and drawer, and the admin system log,
