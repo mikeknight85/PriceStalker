@@ -65,6 +65,23 @@ export const productLifecycleRepository = {
       }
     }
 
+    // Changing the frequency has to move the next check with it (issue #138).
+    // refresh_interval is written here, but next_check_at is only ever set by
+    // updateLastChecked after a scrape -- so a user shortening 24h to 6h waited
+    // up to a further 24 hours, watching a countdown to the old target.
+    //
+    // Anchored on last_checked rather than now, so time already elapsed counts
+    // toward the new interval and an already-overdue product is picked up on the
+    // next tick. GREATEST clamps a resulting past timestamp to now.
+    //
+    // Deliberately not calculateNextCheckSeconds(): its randomisers are for
+    // spreading scheduled load, and applying them here would show a user a
+    // countdown that disagrees with the interval they just picked.
+    if ((updates as any).refresh_interval !== undefined) {
+      fields.push(`next_check_at = GREATEST(CURRENT_TIMESTAMP, COALESCE(last_checked, CURRENT_TIMESTAMP) + ($${paramIndex++} || ' seconds')::interval)`);
+      values.push(String((updates as any).refresh_interval));
+    }
+
     // checking_paused and auto_paused are a pair: a pause set through this
     // update is a user's decision, so the automatic flag must clear with it.
     // Leaving it set would produce auto_paused = true with checking_paused =
