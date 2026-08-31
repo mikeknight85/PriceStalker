@@ -141,7 +141,7 @@ export default function AIProviderConfig({
             <label htmlFor="gemini-api-key">Google Gemini API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="gemini-api-key"
                   name="gemini-api-key"
                   value={aiSettings?.gemini_api_key || ''} 
@@ -189,7 +189,7 @@ export default function AIProviderConfig({
             <label htmlFor="vertex-api-key">Vertex API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="vertex-api-key"
                   name="vertex-api-key"
                   value={aiSettings?.vertex_api_key || ''} 
@@ -223,7 +223,7 @@ export default function AIProviderConfig({
             <label htmlFor="openai-api-key">OpenAI API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="openai-api-key"
                   name="openai-api-key"
                   value={aiSettings?.openai_api_key || ''} 
@@ -249,7 +249,7 @@ export default function AIProviderConfig({
             <label htmlFor="anthropic-api-key">Anthropic API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="anthropic-api-key"
                   name="anthropic-api-key"
                   value={aiSettings?.anthropic_api_key || ''} 
@@ -275,7 +275,7 @@ export default function AIProviderConfig({
             <label htmlFor="deepseek-api-key">DeepSeek API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="deepseek-api-key"
                   name="deepseek-api-key"
                   value={aiSettings?.deepseek_api_key || ''} 
@@ -301,7 +301,7 @@ export default function AIProviderConfig({
             <label htmlFor="groq-api-key">Groq API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="groq-api-key"
                   name="groq-api-key"
                   value={aiSettings?.groq_api_key || ''} 
@@ -327,7 +327,7 @@ export default function AIProviderConfig({
             <label htmlFor="mistral-api-key">Mistral API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="mistral-api-key"
                   name="mistral-api-key"
                   value={aiSettings?.mistral_api_key || ''} 
@@ -353,7 +353,7 @@ export default function AIProviderConfig({
             <label htmlFor="openrouter-api-key">OpenRouter API Key</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
-                <PasswordInput 
+                <PasswordInput secret
                   id="openrouter-api-key"
                   name="openrouter-api-key"
                   value={aiSettings?.openrouter_api_key || ''} 
@@ -387,7 +387,7 @@ export default function AIProviderConfig({
           </div>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="openai-compatible-api-key">API Key (optional)</label>
-            <PasswordInput 
+            <PasswordInput secret
               id="openai-compatible-api-key"
               name="openai-compatible-api-key"
               value={aiSettings?.openai_compatible_api_key || ''} 

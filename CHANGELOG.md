@@ -61,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Browsers no longer offer to save API keys, provider tokens and webhook URLs as
+  passwords, and no longer offer to overwrite the administrator's own saved
+  login when creating or editing another user. These fields are now masked
+  without being real password inputs, so password-manager heuristics ignore
+  them. Sign-in and "change my own password" are unchanged and still work with
+  a password manager.
 - The admin System Event Log no longer blanks the whole admin page when the
   logs response omits its context list; the filter falls back to empty instead
   of throwing during render.
