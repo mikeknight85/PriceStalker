@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { AdminSystemService } from '../../services/AdminSystemService';
 import { useToast } from '../../../../context/ToastContext';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import type { SystemLog } from '../../../../types/api';
 
 interface LogsSectionProps {
   onSearchRetailer: (domain: string) => void;
@@ -10,7 +11,7 @@ interface LogsSectionProps {
 
 export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
   const { showToast } = useToast();
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<SystemLog[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [logPage, setLogPage] = useState(1);
   const [logPages, setLogPages] = useState(1);
@@ -38,9 +39,9 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
       });
       setLogs(res.logs);
       setTotalCount(res.total);
-      setLogPage(res.page);
+      setLogPage(page);
       setLogPages(res.pages);
-      setAvailableContexts(res.availableContexts || []);
+      setAvailableContexts(res.contexts);
     } catch {
       showToast('Failed to load logs', 'error');
     } finally {
@@ -210,7 +211,7 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
                                   <button 
                                     className="btn btn-secondary btn-sm" 
                                     style={{ fontSize: '0.65rem', height: '20px', padding: '0 0.5rem', display: 'flex', alignItems: 'center' }}
-                                    onClick={() => onSearchRetailer(log.details.retailer_domain)}
+                                    onClick={() => onSearchRetailer(log.details?.retailer_domain ?? '')}
                                   >
                                     Retailer
                                   </button>
@@ -225,7 +226,7 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
                               <div style={{ marginBottom: '1.5rem' }}>
                                 <div style={{ marginBottom: '0.75rem', fontWeight: 700, fontSize: '0.9rem' }}>Process Flow</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  {(log.details.trace || log.details.steps).map((step: string, idx: number) => (
+                                  {(log.details?.trace ?? log.details?.steps ?? []).map((step: string, idx: number) => (
                                     <div key={idx} style={{ 
                                       padding: '0.5rem 0.75rem', 
                                       background: 'var(--background)', 

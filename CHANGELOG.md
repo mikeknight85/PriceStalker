@@ -56,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The Admin System Event Log now populates the Context Filter from the API's
+  `contexts` response field and keeps pagination on the requested page.
 - Retailer configurations that define only a JSON-LD price key are no longer
   treated as empty shell configurations, so their saved extraction settings are
   used instead of being discarded in favour of the generic selectors.
