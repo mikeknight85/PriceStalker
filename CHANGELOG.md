@@ -7,42 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Notification history rows now show why something happened. The reason a
-  product could not be read, what was done about it, how many attempts had
-  failed and which way the stock status moved were all recorded and none of
-  them were displayed, so an unavailable product showed a generic label while
-  the row's own data held the explanation.
-- A notification with no price says "Not available" rather than leaving the
-  column blank, which left it ambiguous whether the event had no price or the
-  price had failed to load.
-- Notifications that fail to load now say so, on both the drawer and the
-  history page, instead of rendering "No alerts yet" as though nothing had
-  happened. Both offer a retry.
-- Individual notifications can be marked read on the history page. The API
-  always supported it and only the drawer used it, so the sole option here was
-  to mark everything read at once.
-- Unavailable alerts record how many consecutive attempts had failed.
+## [2.1.0-beta.3] - 2026-08-31
 
 ### Fixed
 
-- The scraper no longer announces two different browsers in the same request.
-  The `User-Agent` came from the Default User-Agent setting (seeded as Chrome
-  146) while the `Sec-CH-UA` client hints were hardcoded to Chrome 121 on
-  Windows, so every request from every install described a browser that cannot
-  exist. Client hints are now derived from whichever User-Agent is in play,
-  including a per-retailer override, and are omitted entirely for Firefox and
-  Safari, which do not send them.
-- The browser scraper now presents the same identity as the HTTP scraper. Both
-  remote calls passed no User-Agent at all, so a retailer that had just been
-  shown the configured browser saw headless Chromium on the fallback.
-- Overriding the User-Agent in the browser scraper now sets matching client-hint
-  metadata, instead of leaving Chrome reporting its own build in the hints.
+**Notifications**
 
-### Fixed
-
-- Notifications now describe the event that actually happened on every channel.
+- Notifications now describe the event that actually happened, on every channel.
   A product becoming reachable again was announced as "Back in Stock!" on
   Discord, Pushover, Gotify and ntfy, and was never delivered to Telegram at
   all -- the message came out empty and the API rejected it. Every channel now
@@ -67,18 +38,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it. Previously nothing was recorded unless an external channel succeeded, so
   an install with no channels configured had no history at all, and a total
   delivery failure erased the one record that would have explained the silence.
-  Channels that failed are now shown struck through beside those that worked.
+  Channels that failed are shown struck through beside those that worked.
 - Concurrent refreshes of the same product can no longer send two back-in-stock
   alerts for one event.
+- Notification history rows now show why something happened. The reason a
+  product could not be read, what was done about it, how many attempts had
+  failed and which way the stock status moved were all recorded and none of
+  them were displayed, so an unavailable product showed a generic label while
+  the row's own data held the explanation.
+- A notification with no price says "Not available" rather than leaving the
+  column blank, which left it ambiguous whether the event had no price or the
+  price had failed to load.
+- Notifications that fail to load now say so, on both the drawer and the
+  history page, instead of rendering "No alerts yet" as though nothing had
+  happened. Both offer a retry.
+- Individual notifications can be marked read on the history page. The API
+  always supported it and only the drawer used it, so the sole option here was
+  to mark everything read at once.
+- Unavailable alerts record how many consecutive attempts had failed.
 
-### Added
+**Scraping**
 
-- `{{price}}` (amount with its currency) and `{{reason}}` template variables
-  for notification templates.
-- Webhook payloads carry the stock transition, target price, product id and
-  failure reason, and report an unresolved currency as `null` instead of `USD`.
+- The scraper no longer announces two different browsers in the same request.
+  The `User-Agent` came from the Default User-Agent setting (seeded as Chrome
+  146) while the `Sec-CH-UA` client hints were hardcoded to Chrome 121 on
+  Windows, so every request from every install described a browser that cannot
+  exist. Client hints are now derived from whichever User-Agent is in play,
+  including a per-retailer override, and are omitted entirely for Firefox and
+  Safari, which do not send them.
+- The browser scraper now presents the same identity as the HTTP scraper. Both
+  remote calls passed no User-Agent at all, so a retailer that had just been
+  shown the configured browser saw headless Chromium on the fallback.
+- Overriding the User-Agent in the browser scraper now sets matching client-hint
+  metadata, instead of leaving Chrome reporting its own build in the hints.
 
-### Fixed
+**Scheduling**
 
 - Changing a product's check frequency now takes effect immediately. The new
   interval was saved but the next check was not rescheduled, so shortening
@@ -89,6 +83,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   6 hours could be scheduled more than 20 hours out. The randomness is kept --
   it is what stops requests forming a detectable rhythm -- but the total is now
   capped at 1.5x your setting.
+
+### Added
+
+- `{{price}}` (amount with its currency) and `{{reason}}` template variables
+  for notification templates.
+- Webhook payloads carry the stock transition, target price, product id and
+  failure reason, and report an unresolved currency as `null` instead of `USD`.
 
 ## [2.1.0-beta.2] - 2026-08-31
 
