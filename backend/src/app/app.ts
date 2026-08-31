@@ -21,6 +21,12 @@ if (!fs.existsSync(debugDir)) {
 }
 
 // Middleware
+app.use((req, res, next) => {
+  if (req.headers['access-control-request-private-network'] === 'true') {
+    res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  }
+  next();
+});
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(requestLogger);

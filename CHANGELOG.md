@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Scraper debug previews no longer execute arbitrary scripts from fetched pages,
+  preventing anti-bot scripts from triggering Chrome Private Network Access
+  prompts; the API also acknowledges Private Network Access preflight requests.
 - The Admin System Event Log now populates the Context Filter from the API's
   `contexts` response field and keeps pagination on the requested page.
 - Retailer configurations that define only a JSON-LD price key are no longer
