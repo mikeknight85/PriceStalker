@@ -12,7 +12,7 @@ export class ProductNotificationOrchestrator {
    */
   async deliver(
     product: Product, 
-    type: 'not_available' | 'back_in_stock' | 'price_drop' | 'target_price' | 'price_announced',
+    type: 'not_available' | 'product_restored' | 'back_in_stock' | 'price_drop' | 'target_price' | 'price_announced',
     payload: NotificationPayload,
     historyEntry: {
       type: string;

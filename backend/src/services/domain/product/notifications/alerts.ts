@@ -44,6 +44,39 @@ export class ProductAlertService {
     );
   }
 
+  /**
+   * Tells the user a product that had gone unavailable is reachable again.
+   *
+   * The issue asks for this explicitly, and without it the lifecycle only ever
+   * reports bad news: a user was told monitoring had stopped and never told it
+   * had started again, so a recovered product looked identical to one still
+   * broken.
+   */
+  async notifyProductRestored(product: Product) {
+    await productNotificationOrchestrator.deliver(
+      product,
+      'product_restored',
+      {
+        productName: product.name || 'Unknown Product',
+        productUrl: product.url,
+        type: 'product_restored',
+        productId: product.id
+      },
+      {
+        type: 'system_alert',
+        title: `Available again | ${product.name || 'Product'}`,
+        message: 'The product page is reachable again. Monitoring has resumed.',
+        data: {
+          productId: product.id,
+          productName: product.name,
+          productUrl: product.url,
+          reason: 'The product page is reachable again',
+          action: 'Monitoring Resumed'
+        }
+      }
+    );
+  }
+
   async notifyBackInStock(product: Product, scrapedData: ScrapedProductWithVoting) {
     await productNotificationOrchestrator.deliver(
       product,

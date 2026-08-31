@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Resume Monitoring** on a paused product, and **Retry Now** to check an
+  unavailable product once without resuming its schedule.
+- A notification when a product that had gone unavailable becomes reachable
+  again. Previously the lifecycle only ever reported bad news: you were told
+  monitoring had stopped and never told it had started again.
 - Products now record **why** they could not be reached, and the product page
   shows it alongside whether monitoring is still running. A page that is
   genuinely gone, a retailer that is temporarily unreachable, and a product you

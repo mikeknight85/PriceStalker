@@ -65,6 +65,15 @@ export const productLifecycleRepository = {
       }
     }
 
+    // checking_paused and auto_paused are a pair: a pause set through this
+    // update is a user's decision, so the automatic flag must clear with it.
+    // Leaving it set would produce auto_paused = true with checking_paused =
+    // false, which describes nothing, and would let a later automatic resume
+    // undo a pause the user had chosen.
+    if (fields.some(f => f.startsWith('checking_paused'))) {
+      fields.push('auto_paused = false');
+    }
+
     if (fields.length === 0) return null;
 
     // Order matters: the WHERE clause numbers these as id, userId, admin flag.
