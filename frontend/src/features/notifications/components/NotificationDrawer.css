@@ -262,3 +262,9 @@
   max-height: 150px;
   overflow-y: auto;
 }
+
+/* Says the price is genuinely absent rather than leaving the row looking cut off. */
+.drawer-item-price-absent {
+  color: var(--text-muted);
+  font-style: italic;
+}

@@ -12,6 +12,9 @@ import Icon from '../../../components/Icon';
 import { queryClient } from '../../../api/queryClient';
 import { recentNotificationsQuery } from '../../../api/queries';
 
+/** Events where a product legitimately has no price yet. */
+const STOCK_EVENTS = ['back_in_stock', 'not_available', 'product_restored', 'stock_alert', 'system_alert'];
+
 const NotificationDrawer: React.FC = () => {
   const { user } = useAuth();
   const { isDrawerOpen, setDrawerOpen, activityLog, clearActivityLog } = useToast();
@@ -99,7 +102,22 @@ const NotificationDrawer: React.FC = () => {
               ))
             )
           ) : (
-            recentQuery.isLoading && notifications.length === 0 ? (
+            recentQuery.isError ? (
+              // Checked before the empty state: a failed request used to render
+              // "No alerts yet", which reads as "nothing happened" rather than
+              // "we could not ask" (issue #93).
+              <div className="drawer-empty">
+                <div className="drawer-empty-icon"><Icon name="alertTriangle" /></div>
+                <div style={{ fontWeight: 600 }}>Alerts could not be loaded</div>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ marginTop: '0.75rem' }}
+                  onClick={() => recentQuery.refetch()}
+                >
+                  Try again
+                </button>
+              </div>
+            ) : recentQuery.isLoading && notifications.length === 0 ? (
               <div className="drawer-empty"><LoadingSpinner size="1.5rem" centered /></div>
             ) : notifications.length === 0 ? (
               <div className="drawer-empty">
@@ -123,7 +141,14 @@ const NotificationDrawer: React.FC = () => {
                       </div>
                       <div className="drawer-item-message">{n.message}</div>
                       <div className="drawer-item-meta">
-                        {newPrice && <span className="drawer-item-price">{formatPrice(newPrice, currency, user?.locale)}</span>}
+                        {newPrice ? (
+                          <span className="drawer-item-price">{formatPrice(newPrice, currency, user?.locale)}</span>
+                        ) : STOCK_EVENTS.includes(n.type) ? (
+                          // A product can come back in stock before a price is
+                          // extracted. Blank left it ambiguous whether the price
+                          // was absent or had failed to load.
+                          <span className="drawer-item-price drawer-item-price-absent">No price yet</span>
+                        ) : null}
                         <span>{formatRelativeDate(n.created_at, user?.locale)}</span>
                       </div>
                     </div>
