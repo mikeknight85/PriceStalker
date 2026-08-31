@@ -1,4 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { RetailerConfig } from '../../../../../types/api';
+import { adminSystemSettingsQuery } from '../../../../../api/queries';
 import { UnifiedSelectorManager } from '../../index';
 import Icon from '../../../../../components/Icon';
 
@@ -47,6 +49,14 @@ export default function ExtractionParamsSection({
   customSelectorsJson,
   setCustomSelectorsJson
 }: ExtractionParamsSectionProps) {
+  // Name the value being inherited: "Use global setting" on its own leaves an
+  // admin guessing which behaviour that actually is.
+  const { data: systemSettings } = useQuery(adminSystemSettingsQuery());
+  const globalPrefersJsonLd =
+    systemSettings?.prefer_jsonld_image === true ||
+    systemSettings?.prefer_jsonld_image === 'true';
+  const globalPreferLabel = globalPrefersJsonLd ? 'JSON-LD images' : 'CSS selectors';
+
   return (
     <div className="extraction-params-section">
       <div className="form-grid">
@@ -88,6 +98,34 @@ export default function ExtractionParamsSection({
               value={draftConfig.jsonld_image_key || ''} 
               onChange={e => onUpdateConfig({ jsonld_image_key: e.target.value })} 
             />
+          </div>
+          <div className="form-group mt-2">
+            <label htmlFor="prefer-jsonld-image">Prefer JSON-LD Images</label>
+            <select
+              id="prefer-jsonld-image"
+              className="form-control"
+              value={
+                draftConfig.prefer_jsonld_image === true
+                  ? 'true'
+                  : draftConfig.prefer_jsonld_image === false
+                    ? 'false'
+                    : 'inherit'
+              }
+              onChange={e =>
+                onUpdateConfig({
+                  prefer_jsonld_image:
+                    e.target.value === 'inherit' ? null : e.target.value === 'true',
+                })
+              }
+            >
+              <option value="inherit">Use global setting ({globalPreferLabel})</option>
+              <option value="true">Prefer JSON-LD images</option>
+              <option value="false">Prefer CSS selectors</option>
+            </select>
+            <small style={{ color: 'var(--text-muted)' }}>
+              Override this for retailers whose structured data points at a
+              thumbnail, a directory, or an otherwise unusable image.
+            </small>
           </div>
         </div>
 

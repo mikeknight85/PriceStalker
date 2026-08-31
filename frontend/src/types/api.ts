@@ -209,6 +209,8 @@ export interface RetailerConfig {
   pre_order_price_selectors: string[];
   exclusion_selectors: string[];
   jsonld_image_key: string | null;
+  /** true prefer JSON-LD, false prefer CSS selectors, null inherit the global setting. */
+  prefer_jsonld_image: boolean | null;
   jsonld_price_key: string | null;
   jsonld_name_key: string | null;
   user_agent: string | null;

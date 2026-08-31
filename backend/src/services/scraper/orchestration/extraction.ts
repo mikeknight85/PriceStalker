@@ -56,7 +56,7 @@ export async function runExtractionPhase(
   }
 
   // 1. Metadata (Name, Image, Stock) first
-  await extractMetadata($, domainConfig || undefined, extractionSteps, result);
+  await extractMetadata($, domainConfig || undefined, extractionSteps, result, url);
 
   // 2. Extract Price Candidates
   extractionSteps.push(`HTML | Metadata | Length: ${html.length} chars`);

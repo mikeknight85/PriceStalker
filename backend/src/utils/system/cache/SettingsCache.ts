@@ -29,16 +29,32 @@ const DEFAULT_CONFIG = {
     '[data-price-amount]',
     '[data-product-price]'
   ],
+  // These are the selectors used to gather *evidence* for AI auto-mapping. They
+  // must stay at least as broad as generic_image_selectors (seeded by
+  // 006_seed_generic_selectors), because the AI can only propose a selector for
+  // an element it was shown. When this list was the narrower of the two, pages
+  // whose image is matched by the broad `img[class*="product"]` were presented
+  // to the AI only through narrow patterns, so it learned an over-specific
+  // selector -- and site-specific selectors then outrank the generic one that
+  // would have worked.
   genericAIImageSelectors: [
     'link[rel="preload"][as="image"]',
+    '[itemprop="image"]',
+    '[property="og:image"]',
     'img#landingImage',
     'img#main-image',
     'img.main-image',
     'img.hero-image',
     'img[class*="product-image" i]',
     'img[class*="product__image" i]',
+    'img[class*="product" i]',
     'img[class*="gallery" i]',
-    'img[data-testid*="image" i]'
+    'img[data-testid*="image" i]',
+    '[data-automation-test-id*="image" i]',
+    '[data-testid*="image" i]',
+    '.product-image img',
+    '.main-image img',
+    '[data-zoom-image]'
   ],
   browserTimeout: 60000,
   browserDelay: 3000,
@@ -79,7 +95,15 @@ export class SystemSettingsCache {
       try {
         result = JSON.parse(this.settings[key]);
       } catch (e) {
-        // use default
+        // Falling back silently hid a real bug for a long time: 001_baseline
+        // stored several of these settings as unparseable JSON, so extraction
+        // quietly ran on the hardcoded defaults instead of the seeded set and
+        // nothing said so. Repaired by 013, but say it out loud if it recurs.
+        logger.warn(
+          `Settings | ${key} is not valid JSON; falling back to the built-in default. ` +
+            `Re-save it under Admin -> Extraction Rules to fix.`,
+          'System'
+        );
       }
     }
     this.parsedArrays.set(key, result);

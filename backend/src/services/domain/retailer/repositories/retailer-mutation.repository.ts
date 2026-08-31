@@ -42,6 +42,8 @@ export const retailerMutationRepository = {
     const executor = client || pool;
     const domain = config.domain?.toLowerCase();
     // $31..$52 — presence flags for PRESENCE_FIELDS, in that order.
+    // $53/$54 — prefer_jsonld_image value and its presence flag, appended so
+    // adding it did not renumber everything above.
     const presence = PRESENCE_FIELDS.map(field => config[field] !== undefined);
     const result = await executor.query(
       `INSERT INTO retailer_configs (
@@ -49,9 +51,9 @@ export const retailerMutationRepository = {
          name_selectors, price_selectors, deal_price_selectors, member_price_selectors, image_selectors, stock_selectors,
          in_stock_phrases, out_of_stock_phrases, pre_order_phrases, pre_order_price_selectors, user_agent, custom_selectors, active, description,
          retailer_name_selectors, jsonld_image_key, jsonld_price_key, jsonld_name_key, original_price_selectors, ai_selectors, exclusion_selectors,
-         selector_metadata
+         selector_metadata, prefer_jsonld_image
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $53)
        ON CONFLICT (domain) DO UPDATE SET
          name = CASE
            WHEN $30 = true THEN EXCLUDED.name
@@ -95,6 +97,7 @@ export const retailerMutationRepository = {
          jsonld_image_key = CASE WHEN $50 = true THEN EXCLUDED.jsonld_image_key ELSE retailer_configs.jsonld_image_key END,
          jsonld_price_key = CASE WHEN $51 = true THEN EXCLUDED.jsonld_price_key ELSE retailer_configs.jsonld_price_key END,
          jsonld_name_key = CASE WHEN $52 = true THEN EXCLUDED.jsonld_name_key ELSE retailer_configs.jsonld_name_key END,
+         prefer_jsonld_image = CASE WHEN $54 = true THEN EXCLUDED.prefer_jsonld_image ELSE retailer_configs.prefer_jsonld_image END,
          active = COALESCE(EXCLUDED.active, retailer_configs.active),
          updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
@@ -129,7 +132,13 @@ export const retailerMutationRepository = {
         JSON.stringify(config.exclusion_selectors || []),
         JSON.stringify(config.selector_metadata || {}),
         config.forceNameRemoval ?? false,
-        ...presence
+        ...presence,
+        // $53/$54 are appended after the presence flags so the existing
+        // hand-numbered parameters keep their positions. A value of null here
+        // is meaningful -- it means "inherit the global setting" -- so it is
+        // passed through rather than collapsed with ||.
+        config.prefer_jsonld_image ?? null,
+        config.prefer_jsonld_image !== undefined,
       ]
     );
     return result.rows[0];

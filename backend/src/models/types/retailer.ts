@@ -24,6 +24,11 @@ export interface RetailerConfig {
   jsonld_image_key: string | null;
   jsonld_price_key: string | null;
   jsonld_name_key: string | null;
+  /**
+   * Tri-state override of the global prefer_jsonld_image setting:
+   * true prefer JSON-LD, false prefer CSS selectors, null inherit the global.
+   */
+  prefer_jsonld_image: boolean | null;
   user_agent: string | null;
   referrer: string | null;
   custom_selectors: any;

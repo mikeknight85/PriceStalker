@@ -5,6 +5,7 @@ import { settingsCache } from '../../../utils/cache';
 import { extractMetaWithCandidates, findInJsonLd, evaluateMetadataSelectors } from './utils';
 import { parseSelector } from '../extractors/metadata';
 import { extractByRegex } from '../extractors/price-extraction';
+import { resolveImageUrl } from './image-url';
 
 export interface ImageDimensions {
   width: number;
@@ -134,16 +135,19 @@ export function evaluateImageSelectors(
   siteSelectors: string[],
   genericSelectors: string[],
   extractionSteps: string[],
-  html?: string
+  html?: string,
+  pageUrl?: string | null
 ): any[] {
   const candidates: any[] = [];
   const processedUrls = new Set<string>();
 
   const addCandidate = (url: string, method: string, selector: string, confidence: number) => {
-    const cleanUrl = url.trim();
-    if (!cleanUrl || processedUrls.has(cleanUrl)) return;
-    processedUrls.add(cleanUrl);
-    candidates.push({ value: cleanUrl, method, selector, confidence });
+    // Resolve here rather than at the end: a relative and an absolute form of
+    // the same image would otherwise both survive deduplication and compete.
+    const resolved = resolveImageUrl(url, pageUrl);
+    if (!resolved || processedUrls.has(resolved)) return;
+    processedUrls.add(resolved);
+    candidates.push({ value: resolved, method, selector, confidence });
   };
 
   const runSelectors = (selectors: string[], methodLabel: string, baseConfidence: number) => {
@@ -194,16 +198,24 @@ export async function extractProductImage(
   $: CheerioAPI,
   domainConfig: RetailerConfig | undefined,
   extractionSteps: string[],
-  result: ScrapedProductWithVoting
+  result: ScrapedProductWithVoting,
+  pageUrl?: string | null
 ): Promise<void> {
   const siteSelectors = domainConfig?.image_selectors || [];
   const genericSelectors = await settingsCache.getImageSelectors() || [];
-  const preferJsonLd = (await settingsCache.get('prefer_jsonld_image')) === 'true';
+  // Retailer override wins, then the global setting. Null on the retailer means
+  // inherit, which is why this is ?? and not ||: `false` is a real choice.
+  const globalPreferJsonLd = (await settingsCache.get('prefer_jsonld_image')) === 'true';
+  const retailerPreference = domainConfig?.prefer_jsonld_image;
+  const preferJsonLd = retailerPreference ?? globalPreferJsonLd;
   if (!result.imageCandidates) result.imageCandidates = [];
 
-  extractionSteps.push(`Extract | Image | Prefer JSON-LD: ${preferJsonLd}`);
+  const preferenceSource = retailerPreference === null || retailerPreference === undefined
+    ? `global (${globalPreferJsonLd})`
+    : `retailer override (${retailerPreference})`;
+  extractionSteps.push(`Extract | Image | Prefer JSON-LD: ${preferJsonLd} from ${preferenceSource}`);
 
-  const candidates = evaluateImageSelectors($, siteSelectors, genericSelectors, extractionSteps, result.html || undefined);
+  const candidates = evaluateImageSelectors($, siteSelectors, genericSelectors, extractionSteps, result.html || undefined, pageUrl);
 
   result.imageCandidates.push(...candidates);
 
@@ -216,17 +228,24 @@ export async function extractProductImage(
     if (imgVal) {
       const imageUrl = Array.isArray(imgVal) ? imgVal[0] : imgVal;
       if (typeof imageUrl === 'string') {
-        result.imageCandidates?.push({ value: imageUrl.trim(), method: 'json-ld', confidence: 0.99 });
+        // JSON-LD is the worst offender for directory-style and relative values.
+        const resolved = resolveImageUrl(imageUrl, pageUrl);
+        if (resolved) {
+          result.imageCandidates?.push({ value: resolved, method: 'json-ld', confidence: 0.99 });
+        }
       }
     }
   });
 
-  const ogImg = $('meta[property="og:image"]').attr('content');
+  const ogImg = resolveImageUrl($('meta[property="og:image"]').attr('content') || '', pageUrl);
   if (ogImg) result.imageCandidates.push({ value: ogImg, method: 'og:image', confidence: 0.8 });
 
   $('link[rel="preload"][as="image"]').each((_, el) => {
     processImageElement(el, $, (url) => {
-      result.imageCandidates!.push({ value: url.trim(), method: 'link-preload', confidence: 0.85 });
+      const resolved = resolveImageUrl(url, pageUrl);
+      if (resolved) {
+        result.imageCandidates!.push({ value: resolved, method: 'link-preload', confidence: 0.85 });
+      }
     });
   });
 
