@@ -15,6 +15,7 @@ import { runExtractionPhase } from './extraction';
 import { runConsensusPhase } from './consensus';
 import { runVerificationPhase } from './verification';
 import { handleRetailerMaintenance, handleAutoMapping, handleRestoreStatus } from './maintenance';
+import { classifyTransportError } from '../../../types/availability';
 
 /**
  * High-level scraper entry point.
@@ -223,12 +224,17 @@ export async function scrapeProductWithVoting(
     });
   } catch (error) {
     if (error instanceof PageNotAvailableError) {
-      extractionSteps.push(`Scraper | Block | Page no longer exists (404/410)`);
+      extractionSteps.push(`Scraper | Block | Page no longer exists (${error.reason})`);
       result.stockStatus = 'not_available';
       result.failureReason = 'page_unavailable';
+      result.unavailableReason = error.reason;
       logger.warn(`Product | Scrape Failed | Page Gone | ${url}`, 'Scraper', { product_id: productId, requestId });
     } else {
-      logger.error(`Product | Scrape Failed | ${url}`, 'Scraper', { product_id: productId, error, requestId });
+      // A transport failure is not evidence about the product. Classify it so a
+      // refresh can count it separately and leave the product's status alone,
+      // rather than the previous behaviour of silently returning 'unknown'.
+      result.unavailableReason = classifyTransportError(error);
+      logger.error(`Product | Scrape Failed | ${url} (${result.unavailableReason})`, 'Scraper', { product_id: productId, error, requestId });
     }
     result.extractionSteps = extractionSteps;
   } finally {

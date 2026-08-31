@@ -86,10 +86,15 @@ export const productLifecycleRepository = {
     return (result.rowCount ?? 0) > 0;
   },
 
+  /**
+   * The user-facing pause. Always recorded as a user pause (auto_paused = false),
+   * which is what stops a later automatic resume from overriding a deliberate
+   * decision -- the system only resumes what the system paused.
+   */
   bulkSetCheckingPaused: async (ids: number[], userId: number, paused: boolean): Promise<number> => {
     if (ids.length === 0) return 0;
     const result = await pool.query(
-      `UPDATE products SET checking_paused = $1 WHERE id = ANY($2) AND user_id = $3`,
+      `UPDATE products SET checking_paused = $1, auto_paused = false WHERE id = ANY($2) AND user_id = $3`,
       [paused, ids, userId]
     );
     return result.rowCount || 0;

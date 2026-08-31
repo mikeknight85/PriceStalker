@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Products now record **why** they could not be reached, and the product page
+  shows it alongside whether monitoring is still running. A page that is
+  genuinely gone, a retailer that is temporarily unreachable, and a product you
+  paused yourself are now three visibly different things.
+
+### Fixed
+
+- A retailer being unreachable no longer passes silently. Timeouts, DNS failures
+  and refused connections were producing "unknown", which kept the old status,
+  counted nothing and recorded nothing -- a retailer could be down for a week
+  leaving no trace on the product. They are now counted separately, never mark a
+  product as gone, and notify once if they persist.
+- Unavailable notifications state the real cause instead of always saying
+  "404/410 Page Not Found", and say whether monitoring actually stopped.
+- A product you paused yourself is no longer silently resumed by the system when
+  its page comes back. Only an automatic pause is automatically undone.
+
 ## [2.1.0-beta.1] - 2026-08-31
 
 ### Fixed

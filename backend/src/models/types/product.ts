@@ -11,6 +11,13 @@ export interface Product {
   next_check_at: Date | null;
   stock_status: StockStatus;
   page_gone_streak?: number;
+  /** Why the product is unavailable, when it is. See types/availability. */
+  unavailable_reason?: string | null;
+  /** True when the system paused monitoring, false when a user did. */
+  auto_paused?: boolean;
+  /** Consecutive transport failures; distinct from page_gone_streak. */
+  failure_streak?: number;
+  last_failure_at?: Date | null;
   price_drop_threshold: number | null;
   target_price: number | null;
   notify_back_in_stock: boolean;

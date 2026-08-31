@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../../auth';
 import { formatDate } from '../../../../utils/format';
+import { describeUnavailableReason, describeMonitoringState } from '../../../../utils/availability';
 
 interface ProductMetadataProps {
   product: any;
@@ -35,6 +36,11 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
   REFRESH_INTERVALS,
 }) => {
   const { user } = useAuth();
+
+  // A stalled product used to give no explanation at all: a user could not tell
+  // whether they had paused it, the system had given up, or the retailer was
+  // simply unreachable (issue #73).
+  const unavailableReason = describeUnavailableReason(product.unavailable_reason);
 
   return (
     <div className="product-detail-meta">
@@ -104,6 +110,18 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
         <span className="product-detail-meta-label">Last Checked</span>
         <span className="product-detail-meta-value">{product.last_checked ? formatDate(product.last_checked, user?.locale, true) : 'Never'}</span>
       </div>
+      <div className="product-detail-meta-item">
+        <span className="product-detail-meta-label">Monitoring</span>
+        <span className="product-detail-meta-value">{describeMonitoringState(product)}</span>
+      </div>
+      {unavailableReason && (
+        <div className="product-detail-meta-item">
+          <span className="product-detail-meta-label">Reason</span>
+          <span className="product-detail-meta-value" style={{ color: 'var(--text-muted)' }}>
+            {unavailableReason}
+          </span>
+        </div>
+      )}
       <div className="product-detail-meta-item">
         <span className="product-detail-meta-label">Check Interval</span>
         <select
