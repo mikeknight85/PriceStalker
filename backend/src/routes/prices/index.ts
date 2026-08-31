@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../../middleware/auth';
 import { productHistoryService, productRefreshService } from '../../services/domain/product';
 import { logger } from '../../utils/system/logger';
-import { asyncHandler } from '../../utils/system/route-helpers';
+import { asyncHandler, callerIsAdmin } from '../../utils/system/route-helpers';
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get('/:productId/history', asyncHandler(async (req: AuthRequest, res: Res
   }
 
   const days = req.query.days ? parseInt(req.query.days as string, 10) : undefined;
-  const result = await productHistoryService.getPriceHistory(productId, userId, days);
+  const result = await productHistoryService.getPriceHistory(productId, userId, days, await callerIsAdmin(req));
 
   res.json(result);
 }, 'Prices | Fetch History', 'Prices', 'Failed to fetch price history'));
@@ -63,7 +63,7 @@ router.get('/:productId/stock-history', asyncHandler(async (req: AuthRequest, re
   }
 
   const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
-  const result = await productHistoryService.getStockHistory(productId, userId, days);
+  const result = await productHistoryService.getStockHistory(productId, userId, days, await callerIsAdmin(req));
 
   res.json(result);
 }, 'Prices | Fetch Stock History', 'Prices', 'Failed to fetch stock status history'));

@@ -7,6 +7,12 @@ export interface AuthRequest extends Request {
   userId?: number;
   isSystemToken?: boolean;
   tokenLabel?: string;
+  /**
+   * Resolved on demand by routes that offer an administrator bypass, not on
+   * every request. It is deliberately not carried in the JWT: a token minted
+   * before a demotion would keep asserting admin until it expired.
+   */
+  isAdmin?: boolean;
 }
 
 interface JwtPayload {

@@ -33,7 +33,7 @@ export class ProductPersistenceService {
       await client.query('SELECT pg_advisory_xact_lock($1)', [productId]);
 
       // 1. Fetch current state
-      const product = await productRepository.findById(productId, userId, client);
+      const product = await productRepository.findById(productId, userId, { executor: client });
       if (!product) {
         await client.query('ROLLBACK');
         return;

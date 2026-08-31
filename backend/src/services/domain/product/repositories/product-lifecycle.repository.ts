@@ -43,7 +43,8 @@ export const productLifecycleRepository = {
       needs_price_review?: boolean;
       ai_status?: string;
     },
-    client?: any
+    client?: any,
+    options?: { asAdmin?: boolean }
   ): Promise<Product | null> => {
     const executor = client || pool;
     const fields: string[] = [];
@@ -66,20 +67,21 @@ export const productLifecycleRepository = {
 
     if (fields.length === 0) return null;
 
-    values.push(id, userId);
+    // Order matters: the WHERE clause numbers these as id, userId, admin flag.
+    values.push(id, userId, options?.asAdmin === true);
     const result = await executor.query(
       `UPDATE products SET ${fields.join(', ')}
-       WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
+       WHERE id = $${paramIndex++} AND ($${paramIndex + 1}::boolean = true OR user_id = $${paramIndex})
        RETURNING *`,
       values
     );
     return result.rows[0] || null;
   },
 
-  delete: async (id: number, userId: number): Promise<boolean> => {
+  delete: async (id: number, userId: number, options?: { asAdmin?: boolean }): Promise<boolean> => {
     const result = await pool.query(
-      'DELETE FROM products WHERE id = $1 AND user_id = $2',
-      [id, userId]
+      'DELETE FROM products WHERE id = $1 AND ($3::boolean = true OR user_id = $2)',
+      [id, userId, options?.asAdmin === true]
     );
     return (result.rowCount ?? 0) > 0;
   },
