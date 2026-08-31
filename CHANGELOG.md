@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The products dashboard and product detail page now refresh in the background
+  while you are looking at them, so scraper results, price changes and status
+  updates appear without a manual reload. Polling stops automatically when the
+  tab is hidden, and your search, filters and category selection are untouched
+  by a background refresh.
 - Newly generated system API tokens now use a `ps_` prefix to make leaked
   PriceStalker tokens easier for secret-scanning tools to identify.
 - Password reset via email: a "Forgot password?" link on the login page sends
