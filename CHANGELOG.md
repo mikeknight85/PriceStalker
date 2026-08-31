@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The baseline schema generator no longer corrupts JSON seed values. Seed SQL is
+  now escaped for the TypeScript template literal it gets embedded in, and the
+  generator warns if any settings value would not survive as valid JSON.
+
 ## [2.0.0] - 2026-08-31
 
 ### Changed
