@@ -55,25 +55,32 @@ scraper's config cache is cleared so the next scrape uses it.
 * *For selector syntax rules and eviction mechanics, see [selectors.md](selectors.md).*
 
 ### 4. Users
-Administrate the user database:
+Administrate the user accounts and metadata:
 * Create new accounts or edit existing profile settings.
 * Toggle the **Is Admin** flag to grant/revoke access to administrative panels.
+* Toggle account active / disabled state without deleting user records.
+* View SSO provider linkage and last-active timestamps (updated on sign-in and user activity).
+* Inspect tracked products owned by any user directly from the admin interface.
 * Set default regional preferences (currency, timezone, and locale).
 
 ### 5. API Tokens
-Generate and manage database-backed access tokens used by external integrations (like Discord bots or scripting webhooks) to safely query endpoints.
+Generate and manage database-backed access tokens used by external integrations (like Discord bots or scripting webhooks) to safely query endpoints. Tokens are prefixed with `ps_`.
 * *For terminal command scripts and authentication syntax, see [tokens.md](tokens.md).*
 
 ### 6. Authentication
-Set up Single Sign-On (SSO) with OpenID Connect (OIDC) identity providers (like Google, Keycloak, or Authentik). Configure policies determining if login is restricted to local credentials, OIDC, or supports both.
+Configure instance-wide authentication and login security:
+* Set up Single Sign-On (SSO) with OpenID Connect (OIDC) identity providers (like Google, Keycloak, or Authentik).
+* Configure sign-in policies determining if login is restricted to local credentials, OIDC, or supports both (with local admin break-glass recovery).
+* Enable self-service password reset via email when SMTP is configured.
 * *For architecture details and parameters, see [SSO_DESIGN.md](../SSO_DESIGN.md).*
 
 ### 7. AI Engine
-Configure the active AI provider (Gemini, OpenAI, Anthropic, Ollama, Vertex, etc.), input credentials, test provider connections, and toggle switches for **AI Fallback**, **AI Verification**, and **Auto-Mapping**.
+Configure the active AI provider (Gemini, OpenAI, Anthropic, Ollama, Vertex, Groq, DeepSeek, Mistral, OpenRouter), input credentials, test provider connections, and toggle switches for **AI Fallback**, **AI Verification**, and **Auto-Mapping**.
 * *For supported models and configuration guidelines, see [ai_features.md](ai_features.md).*
 
 ### 8. Logs
-View and search the structured `system_logs` history:
-* Filter logs by level (`info`, `warn`, `error`) and context context.
-* Clear logs to prune the database.
-* Inspect troubleshooting details for failed scrapes.
+View, search, and troubleshoot using the structured `system_logs` database table:
+* Filter logs by level (`info`, `warn`, `error`) and source context (`Scraper`, `Auth`, `API`, `Database`, `Scheduler`).
+* Search log message content and metadata payloads.
+* Trace slow database queries (`SLOW_QUERY_MS`) and detailed scraper voting decisions.
+* Clear logs on demand to prune database storage.

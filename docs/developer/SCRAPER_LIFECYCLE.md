@@ -48,12 +48,12 @@ Phase 6: runVerificationPhase → Optional AI cross-verification of selected pri
 
 Generic acquisition errors are returned to the orchestration error path. They do not currently create a product-level exponential backoff counter; normal scheduling continues through `next_check_at` and `refresh_interval`.
 
-> **When to use the browser scraper:** Enable `use_browser_scraper` per-retailer (Admin > Retailer Settings) for sites that:
+> **When to use the browser scraper:** Enable `use_browser_scraper` per-retailer (Admin > Retailers) for sites that:
 > - Require JavaScript execution to render prices (React/Vue SPAs, lazy-loaded price elements)
 > - Are behind CDN bot-protection such as Cloudflare or Imperva that blocks plain HTTP requests
 > - Return incomplete or challenge HTML to standard `axios` fetches
 >
-> The `Remote Scraper URL` system setting (Admin > Settings) must point to the running `scraper` container before per-retailer flags take effect.
+> The `Browser Scraper URL` system setting (Admin > System) must point to the running `scraper` container before per-retailer flags take effect.
 
 > **URL cleaning:** `cleanUrl()` in `urlHelper.ts` strips UTM/affiliate/tracking parameters before lookup and storage. 
 > **Known quirk:** The hash-stripping logic uses `.includes(k)` against KEEP_LIST, meaning single-char entries like `'v'` match fragments like `#reviews` — documented in `url-helper.test.ts`. upstream audit issue **U-1**.

@@ -4,15 +4,19 @@ PriceStalker uses a unified selector engine that allows administrators to define
 
 ---
 
-## 1. UI Field Mapping
-When configuring a retailer via the Admin panel, use the following fields inside the **Stock Status & Phrases** collapsible card:
+## 1. Retailer Configuration Structure
+When configuring a retailer via **Admin → Retailers**, the configuration cards are structured by purpose:
 
-| Field Name | Description |
-| :--- | :--- |
-| **Stock Status Selectors** | The elements and attributes to query. Order matters (top-down evaluation). |
-| **In-Stock Phrases** | Phrases that indicate availability (e.g., `in stock`, `add to cart`). |
-| **Out-of-Stock Phrases** | Phrases that indicate unavailability (e.g., `sold out`, `unavailable`). |
-| **Pre-Order Phrases** | Phrases that indicate pre-order status (e.g., `pre-order`). |
+| Section | Key Settings & Fields | Description |
+| :--- | :--- | :--- |
+| **Retailer Identity** | `name`, `domain`, `description`, `retailer_name_selectors` | Domain lookup, display name, administrative notes, and selectors identifying the shop (not the product brand). |
+| **Page Acquisition** | `use_browser_scraper`, `use_proxy`, `currency_hint`, `user_agent`, `referrer` | Offloading to the remote browser scraper, proxy routing, fallback currency, and custom request headers. |
+| **Product Information** | `name_selectors`, `image_selectors`, `jsonld_name_key`, `jsonld_image_key` | Selectors and JSON-LD keys for extracting the product title and image. |
+| **Pricing** | `price_selectors`, `deal_price_selectors`, `member_price_selectors`, `pre_order_price_selectors`, `original_price_selectors`, `jsonld_price_key`, `prefer_jsonld_image` | Selectors for each price type, JSON-LD price key override, and per-retailer JSON-LD image preference. |
+| **Availability & Phrases** | `stock_selectors`, `in_stock_phrases`, `out_of_stock_phrases`, `pre_order_phrases`, `member_only_phrases` | Stock element selectors and phrase lists evaluated in priority order: Member Only → Pre-Order → Out of Stock → In Stock. |
+| **False-Positive Prevention** | `exclusion_selectors`, `skip_denoising`, `custom_selectors` | CSS selectors to strip before extraction, raw HTML bypass, and custom raw selector JSON. |
+| **AI Preprocessor** | `ai_selectors.price`, `ai_selectors.image` | Specific candidate patterns passed to AI extraction when standard selectors fail. |
+| **Validation Hub** | Live Scrape Tester & **Re-run Auto-Map** | Live tester to preview extraction results on a URL, and automated selector regeneration from a sample product page. |
 
 ---
 
@@ -62,10 +66,12 @@ The returned value must be one of:
 * `in_stock`
 * `out_of_stock`
 * `pre_order`
+* `member_only`
 
 ### Examples
 * `xpath://div[@class="stock"]::attr(data-status)::equals(preorder)->pre_order`
 * `.availability-label::contains(sold out)->out_of_stock`
+* `.member-badge::contains(VIP only)->member_only`
 
 ---
 

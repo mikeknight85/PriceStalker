@@ -18,6 +18,8 @@ The **System** tab in the Admin Panel provides the core configurations for netwo
 PriceStalker integrates with SearXNG to search for products across search engine providers:
 * **SearXNG API URL (`searxng_url`)**: Connection URL to your SearXNG instance. You can click the **Test** button next to it to verify connection health.
 * **Enable Product Search (`searxng_enabled`)**: Switch toggle. If enabled, users can find products by search query directly in the *Add Product* modal instead of pasting URLs.
+* **Search Result Ranking**: Search results are scored and ranked so that supported retailers and product pages appear above forum threads, video links, or articles, while retaining all results.
+* **Quick-Track Action**: Users can click **Track** to immediately begin tracking a search result with default settings, or click **Configure** to customize intervals and alert thresholds.
 
 ---
 

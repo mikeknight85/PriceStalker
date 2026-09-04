@@ -15,6 +15,7 @@ Under the **AI Engine** tab of the Admin Panel, you can select which backend AI 
 * **DeepSeek**: Requires a DeepSeek API Key and model selection.
 * **Groq**: Requires a Groq API Key and model selection.
 * **Mistral**: Requires a Mistral API Key and model selection.
+* **OpenRouter**: Requires an OpenRouter API Key and model selection (OpenAI-compatible).
 
 ---
 

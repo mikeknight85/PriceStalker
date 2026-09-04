@@ -68,20 +68,16 @@ enough evidence to distinguish them.
 
 ## 4. When a Page Is Unavailable
 
-PriceStalker distinguishes between an uncertain check and a page that appears
+PriceStalker distinguishes between temporary network glitches and pages that appear
 to have gone away:
 
-* A temporary network problem, timeout, or blocked response normally leaves the
-  last known stock status unchanged.
-* A confirmed 404, redirect to an error page, or other soft-404 result is
-  counted across multiple checks before action is taken.
-* After three consecutive page-gone results, the product is marked
-  **Unavailable**, monitoring is paused, and a notification can be sent.
-* A manual or forced refresh can resume monitoring if the page becomes
-  available again.
-
-This prevents a short-lived retailer outage or bot-protection response from
-immediately making a product appear permanently unavailable.
+* **Temporary issues**: Network timeouts, DNS errors, or connection resets do not mark a product as gone. They are tracked as transient retailer issues so the product status stays intact.
+* **Persistent failures**: Confirmed 404/410 errors or error redirects are counted over three consecutive checks before the product is marked **Unavailable**.
+* **Reason tracking**: When a product cannot be read, the product page and notification history display the specific explanation (e.g. *Page not found (404)*, *Bot wall*, or *Connection timeout*).
+* **On-demand actions**:
+  * **Retry Now**: Immediately checks an unavailable or paused product once to see if it has returned, without altering its paused schedule.
+  * **Resume Monitoring**: Re-activates automatic background checks for a paused product.
+  * **Automatic recovery**: If an automatically paused product becomes available again on a subsequent check, monitoring resumes automatically and a back-online notification is sent. (Products paused manually by you remain paused until you choose to resume them).
 
 ## 5. Where AI Fits In (Enhanced, but Optional)
 PriceStalker is built to be resilient, even without AI. However, enabling the AI Engine unlocks powerful benefits:

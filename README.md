@@ -61,7 +61,8 @@ For more detail, see [How price selection works](docs/user/README.md#5-price-con
 
 | Version | Highlights |
 |---------|-----------|
-| **2.0.0-beta** | **Rebuilt scraping engine** — acquisition/transport/extraction split with consensus arbitration and DOM denoising. **Per-retailer configuration UI** — tune selectors, stock phrases, user-agent and engine per domain, with a visual selector picker. **Optional remote scraper** — stealth browser in its own container for sites that block ordinary scraping. **Live currency conversion** with daily FX rates and per-user preferred currency. **Product categories**, dashboard tabs, pagination and filtering. **Email/SMTP notifications** and per-channel message templates. **Product search** via SearXNG. **Persisted system logs** with an admin viewer, and **system API tokens** for machine access. Schema migrations now run automatically at startup. |
+| **2.1.x (beta)** | **Unavailable product lifecycle & reasons** — track why a page could not be reached, resume monitoring, and retry on demand (#133, #134). **Server-side notification event filtering** across six distinct event types (#135). **Notification resilience & delivery fixes** — history recorded regardless of channel outcome, event-aware shared descriptions (#136, #140, #142). **Scraper identity parity** — matching User-Agent and client hints across HTTP and browser scraper (#141). **Bounded scheduler jitter** (#139). |
+| **2.0.0 (stable)** | **Rebuilt scraping engine** — acquisition/transport/extraction split with consensus arbitration and DOM denoising. **Per-retailer configuration UI** — tune selectors, stock phrases, user-agent and engine per domain, with a visual selector picker. **Optional remote scraper** — stealth browser in its own container for sites that block ordinary scraping. **Live currency conversion** with daily FX rates and per-user preferred currency. **Product categories**, dashboard tabs, pagination and filtering. **Email/SMTP notifications** and per-channel message templates. **Product search** via SearXNG. **Persisted system logs** with an admin viewer, and **system API tokens** for machine access. Schema migrations now run automatically at startup. |
 | **1.4.x** | **Edit a watcher's price selection** after creation — re-pick the price/selector without losing price history (#21). Relative product image URLs now resolved to absolute so images stop breaking (#22). |
 | **1.3.x** | **Custom Webhook** notification provider (any HTTP endpoint). **`:beta` Docker channel** + BETA pill in Settings. Shopify-aware extraction (`/products/<handle>.js`). Per-product currency override + "Detected via …" hint. Any-price-change alert (#5). Self-healing product images. In-app update notification. Themed textareas + UI polish. |
 | **1.1.2** | New logo (ghost with binoculars). `/version.json` caching hardened. |
@@ -124,16 +125,17 @@ Multi-user with per-user products and settings · admin panel · registration to
 
 ## AI providers
 
-Eight providers supported. AI extraction kicks in when standard scrapers fail;
+Nine providers supported. AI extraction kicks in when standard scrapers fail;
 AI verification catches bad extractions; AI arbitration breaks ties.
 
 | Provider | Get a key | Recommended model | Cost |
 |----------|-----------|-------------------|------|
-| **Anthropic (Claude)** | [console.anthropic.com](https://console.anthropic.com) | Claude Haiku 4.5 ⭐ | ~$0.001 / check |
+| **Anthropic (Claude)** | [console.anthropic.com](https://console.anthropic.com) | Claude Haiku 4.5 | ~$0.001 / check |
 | **OpenAI (GPT)** | [platform.openai.com](https://platform.openai.com/api-keys) | GPT-4.1 Nano | ~$0.001 / check |
 | **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/apikey) | Gemini 2.5 Flash Lite | Free tier available |
 | **Google Vertex AI** | [console.cloud.google.com](https://console.cloud.google.com) | Gemini via Vertex | GCP billing |
 | **Groq** | [console.groq.com](https://console.groq.com/keys) | Llama 3.3 70B Versatile | **Free tier** |
+| **OpenRouter** | [openrouter.ai](https://openrouter.ai/keys) | Any compatible model | Usage-based |
 | **DeepSeek** | [platform.deepseek.com](https://platform.deepseek.com) | `deepseek-chat` | Low cost |
 | **Mistral** | [console.mistral.ai](https://console.mistral.ai) | `mistral-large-latest` | Paid |
 | **Ollama (local)** | [ollama.ai](https://ollama.ai) | `ollama pull qwen3` | **Free**, local compute |
@@ -142,9 +144,6 @@ Configured in **Admin → AI Engine**. AI settings are instance-wide in 2.0 —
 1.x stored an API key per user; 2.0 has one admin-managed configuration for the
 whole instance. Start with AI Verification: it's the highest-leverage single
 setting and catches the most embarrassing extraction errors.
-
-> **Removed in 2.0:** OpenRouter. If you relied on it, stay on 1.4.x or use
-> Groq, which also has a free tier.
 
 ---
 

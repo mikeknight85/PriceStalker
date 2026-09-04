@@ -1,6 +1,8 @@
-# PriceStalker Fallback Universal Selectors: Reference Defaults
+# PriceStalker Admin: Extraction Rules (Global Fallback Reference)
 
-This document serves as a general scratch pad reference for default fallback universal selectors. These settings map generic CSS, XPath, and pattern attributes to guide extraction when no retailer-specific selectors are defined.
+This document provides a reference for the default system-wide fallback extraction rules configured under **Admin → Extraction Rules** (stored in `system_settings` as `generic_*` selectors and phrases). These rules serve as fallbacks when a retailer has no domain-specific configuration of its own.
+
+Rule priority: **Retailer rules → Extraction Rules (Default rules) → Built-in engine fallbacks**.
 
 ---
 
@@ -142,8 +144,6 @@ This document serves as a general scratch pad reference for default fallback uni
 [
   "meta[property=\"og:site_name\"]::attr(content)",
   "meta[name=\"application-name\"]::attr(content)",
-  "[itemprop=\"brand\"] [itemprop=\"name\"]",
-  "[itemprop=\"brand\"]::attr(content)",
   "a[class*=\"logo\" i]::attr(aria-label)",
   "a[id*=\"logo\" i]::attr(aria-label)"
 ]
