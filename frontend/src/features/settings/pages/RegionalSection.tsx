@@ -9,18 +9,10 @@ import LoadingSpinner from '../../../components/LoadingSpinner';
 import { queryClient } from '../../../api/queryClient';
 import { currenciesQuery, profileQuery, queryKeys } from '../../../api/queries';
 import { AUTOMATIC_CURRENCY_OPTION, AUTOMATIC_LOCALE_OPTION, LOCALE_OPTIONS } from '../regionalOptions';
-import { useTheme, ThemeMode } from '../../../context/ThemeContext';
-
-const THEME_MODES: { value: ThemeMode; label: string; hint: string }[] = [
-  { value: 'auto', label: 'Auto', hint: 'Follow your operating system' },
-  { value: 'light', label: 'Light', hint: 'Always light' },
-  { value: 'dark', label: 'Dark', hint: 'Always dark' },
-];
 
 export default function RegionalSection() {
   const { showToast } = useToast();
   const { updateUser } = useAuth();
-  const { mode, setMode } = useTheme();
   const [profileCurrency, setProfileCurrency] = useState('');
   const [profileLocale, setProfileLocale] = useState('');
   const initializedProfileId = useRef<number | null>(null);
@@ -98,24 +90,6 @@ export default function RegionalSection() {
         <button className="btn btn-primary" onClick={handleSaveRegional} disabled={updateProfile.isPending}>
           {updateProfile.isPending ? 'Saving...' : 'Save Regional Settings'}
         </button>
-      </div>
-
-      <h2 className="settings-card-title" style={{ marginTop: '2rem' }}>Appearance</h2>
-      <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
-        Choose a color theme, or let it follow your operating system. Applied
-        immediately on this device.
-      </p>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {THEME_MODES.map(t => (
-          <button
-            key={t.value}
-            className={`btn btn-sm ${mode === t.value ? 'btn-primary' : 'btn-secondary'}`}
-            title={t.hint}
-            onClick={() => setMode(t.value)}
-          >
-            {t.label}
-          </button>
-        ))}
       </div>
     </section>
   );

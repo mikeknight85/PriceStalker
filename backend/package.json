@@ -10,6 +10,8 @@
     "test": "vitest",
     "map": "tsx src/scripts/generate-codebase-map.ts",
     "generate-api-token": "node dist/scripts/generate-api-token.js",
+    "reset-password": "node dist/scripts/reset-password.js",
+    "reset-password:dev": "tsx src/scripts/reset-password.ts",
     "db:migrate": "node dist/config/migrate.js up",
     "db:migrate:down": "node dist/config/migrate.js down",
     "db:migrate:dev": "tsx src/config/migrate.ts up",

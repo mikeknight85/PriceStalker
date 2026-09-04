@@ -7,6 +7,7 @@ import { useAuth } from '../../../auth';
 import { useQuery } from '@tanstack/react-query';
 import { adminUsersQuery, queryKeys } from '../../../../api/queries';
 import { queryClient } from '../../../../api/queryClient';
+import Icon from '../../../../components/Icon';
 import PasswordInput from '../../../../components/PasswordInput';
 import SearchableSelect from '../../../../components/SearchableSelect';
 import { ToggleSwitch } from '../../components';
@@ -33,6 +34,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
 
   // Add User states
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserCurrency, setNewUserCurrency] = useState('');
   const [newUserLocale, setNewUserLocale] = useState('');
@@ -40,7 +42,36 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
 
   // Edit User states
   const [editUserPassword, setEditUserPassword] = useState('');
-  const [editUserConfirmPassword, setEditUserConfirmPassword] = useState('');
+
+  const generateRandomPassword = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~';
+    const array = new Uint32Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, x => chars[x % chars.length]).join('');
+  };
+
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+      showToast('Password copied to clipboard', 'success');
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Password copied to clipboard', 'success');
+      } catch {
+        showToast('Failed to copy password', 'error');
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   // Filtering is local state, so a background refresh of the list leaves the
   // search box and its results alone.
@@ -60,17 +91,16 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
   const handleAddUser = async () => {
     if (!newUserEmail || !newUserPassword) { showToast('Email and password required', 'error'); return; }
     try {
-      await UserAdminService.createUser(newUserEmail, newUserPassword, newUserIsAdmin, newUserCurrency || undefined, newUserLocale || undefined);
+      await UserAdminService.createUser(newUserEmail, newUserPassword, newUserIsAdmin, newUserCurrency || undefined, newUserLocale || undefined, newUserName || undefined);
       showToast('User created', 'success');
       setIsAddingUser(false);
-      setNewUserEmail(''); setNewUserPassword('');
+      setNewUserEmail(''); setNewUserName(''); setNewUserPassword('');
       fetchUsers();
     } catch (err) { showToast(apiErrorMessage(err, 'Failed to create user')); }
   };
 
   const handleUpdateUser = async () => {
     if (!editingUser?.id) return;
-    if (editUserPassword && editUserPassword !== editUserConfirmPassword) { showToast('Passwords do not match', 'error'); return; }
     try {
       await UserAdminService.updateUser(editingUser.id, { 
         name: editingUser.name, email: editingUser.email, currency: editingUser.currency || null, locale: editingUser.locale || null,
@@ -175,7 +205,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
                       {u.product_count ?? 0}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => { setEditingUser(u); setEditUserPassword(''); setEditUserConfirmPassword(''); }} style={{ marginRight: '0.5rem' }}>Edit</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => { setEditingUser(u); setEditUserPassword(''); }} style={{ marginRight: '0.5rem' }}>Edit</button>
                       {u.id !== currentUser?.id && <button className="btn btn-danger btn-sm" onClick={() => setUserToDelete(u)}>Delete</button>}
                     </td>
                   </tr>
@@ -190,7 +220,32 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
         <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)' }}>
           <h3 className="settings-card-title">Create New User</h3>
           <div className="form-group"><label>Email Address</label><input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="user@example.com" autoComplete="off" /></div>
-          <div className="form-group"><label>Account Password</label><PasswordInput secret value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} autoComplete="new-password" /></div>
+          <div className="form-group"><label>Display Name (Optional)</label><input type="text" value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Jane Doe" autoComplete="off" /></div>
+          <div className="form-group">
+            <label>Account Password</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <PasswordInput secret value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} autoComplete="new-password" />
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setNewUserPassword(generateRandomPassword())}
+              >
+                Generate
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={!newUserPassword}
+                onClick={() => copyToClipboard(newUserPassword)}
+                title="Copy password"
+                aria-label="Copy password"
+              >
+                <Icon name="clipboard" />
+              </button>
+            </div>
+          </div>
           
           <div className="form-grid">
             <div className="form-group">
@@ -280,9 +335,30 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             </div>
           </div>
           {!isSsoUser(editingUser) && (
-            <div className="form-grid" style={{ marginTop: '1rem' }}>
-              <div className="form-group"><label>New Password (Optional)</label><PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" /></div>
-              <div className="form-group"><label>Confirm New Password</label><PasswordInput secret value={editUserConfirmPassword} onChange={e => setEditUserConfirmPassword(e.target.value)} autoComplete="new-password" /></div>
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label>New Password (Optional)</label>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" />
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setEditUserPassword(generateRandomPassword())}
+                >
+                  Generate
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  disabled={!editUserPassword}
+                  onClick={() => copyToClipboard(editUserPassword)}
+                  title="Copy password"
+                  aria-label="Copy password"
+                >
+                  <Icon name="clipboard" />
+                </button>
+              </div>
             </div>
           )}
           

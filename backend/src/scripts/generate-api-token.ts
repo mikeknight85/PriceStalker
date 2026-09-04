@@ -19,17 +19,17 @@ async function main() {
     });
 
     console.log('\n---------------------------------------------------------');
-    console.log('✅ API Token Generated Successfully!');
+    console.log('API Token Generated Successfully');
     console.log('---------------------------------------------------------');
     console.log(`ID:      ${systemToken.id}`);
     console.log(`Label:   ${systemToken.label}`);
     console.log(`Token:   ${token}`);
     console.log('---------------------------------------------------------');
-    console.log('⚠️  IMPORTANT: Store this token securely.');
-    console.log('   This is the ONLY time it will be displayed.');
+    console.log('[IMPORTANT] Store this token securely.');
+    console.log('  This is the ONLY time it will be displayed.');
     console.log('---------------------------------------------------------\n');
   } catch (error) {
-    console.error('❌ Error generating token:', error);
+    console.error('[ERROR] Error generating token:', error);
   } finally {
     // Ensure the database pool is closed so the script can exit
     await pool.end();

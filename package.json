@@ -25,6 +25,7 @@
     "start:frontend": "pnpm --filter pricestalker-frontend run dev",
     "db:migrate": "pnpm --filter pricestalker-backend run db:migrate",
     "db:migrate:dev": "pnpm --filter pricestalker-backend run db:migrate:dev",
+    "reset-password": "pnpm --filter pricestalker-backend run reset-password:dev",
     "test:dev-env": "node --test scripts/create-local-env.test.mjs",
     "tree": "pnpm dlx tree-node-cli -I \"node_modules|build|dist|\\.git|\\.js\\.map|\\.d\\.ts\" -a",
     "lint": "node scripts/check-no-emoji.mjs"
