@@ -16,6 +16,20 @@ export const ProductService = {
   /** The same listings, grouped into items (issue #143). */
   getItems: (options?: RequestOptions) => api.get<ItemWithListings[]>('/products/items', options),
 
+  /**
+   * Links a store you already track to another product -- "these two are the
+   * same thing". Returns what alert settings the move discarded, if any, so the
+   * user can be told rather than finding out when an alert stops arriving.
+   */
+  attachToItem: (itemId: number, productId: number) =>
+    api.post<{ movedFromItemId: number; discardedAlertSettings: { target_price: number | null; price_drop_threshold: number | null; notify_back_in_stock: boolean } | null }>(
+      `/products/items/${itemId}/listings`, { productId }
+    ),
+
+  /** Undoes the above: gives this store its own product entry again. */
+  detachFromItem: (productId: number) =>
+    api.post<{ id: number; name: string }>(`/products/${productId}/detach`, {}),
+
   getById: (id: number, options?: RequestOptions) => api.get<ProductWithStats>(`/products/${id}`, options),
 
   create: (data: {
