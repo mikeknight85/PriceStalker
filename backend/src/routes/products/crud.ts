@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { productAddService, productHistoryService } from '../../services/domain/product';
+import { itemRepository } from '../../models';
 import { asyncHandler, parseIdParam, callerIsAdmin } from '../../utils/system/route-helpers';
 
 const router = Router();
@@ -23,6 +24,39 @@ router.get('/items', asyncHandler(async (req: AuthRequest, res: Response) => {
   const items = await productHistoryService.getUserItems(req.userId!);
   res.json(items);
 }, 'Product', 'Products', 'Failed to fetch items'));
+
+/**
+ * Links a store you already track to another product -- "these two are the
+ * same thing" (issue #143).
+ *
+ * Declared before `/:id` for the same reason as `/items`: Express matches in
+ * order.
+ */
+router.post('/items/:itemId/listings', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const itemId = parseIdParam(req, 'itemId');
+  if (itemId === null) {
+    res.status(400).json({ error: 'Invalid product id' });
+    return;
+  }
+  const productId = Number(req.body?.productId);
+  if (!Number.isInteger(productId) || productId <= 0) {
+    res.status(400).json({ error: 'A productId is required' });
+    return;
+  }
+  const result = await itemRepository.attachListing(productId, itemId, req.userId!);
+  res.json(result);
+}, 'Product', 'Products', 'Failed to link the store'));
+
+/** Undoes the above: gives a store its own product entry again. */
+router.post('/:id/detach', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const productId = parseIdParam(req);
+  if (productId === null) {
+    res.status(400).json({ error: 'Invalid store id' });
+    return;
+  }
+  const item = await itemRepository.detachListing(productId, req.userId!);
+  res.json(item);
+}, 'Product', 'Products', 'Failed to separate the store'));
 
 router.post('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { url } = req.body;

@@ -38,7 +38,9 @@ const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeCategory }) => {
 
   if (itemsQuery.isLoading) return <LoadingSpinner centered />;
 
-  const items = (itemsQuery.data ?? []).filter(item => {
+  // Array.isArray rather than a null check: an unexpected response shape must
+  // render as "nothing to show" rather than throwing out of the dashboard.
+  const items = (Array.isArray(itemsQuery.data) ? itemsQuery.data : []).filter(item => {
     const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !activeCategory || (item.category || '').split(',').map(c => c.trim()).includes(activeCategory);
     return matchesSearch && matchesCategory;

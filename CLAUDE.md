@@ -232,12 +232,24 @@ file and none are found. Do not change the backend build to bundle.
 
 - `pnpm --filter pricestalker-frontend run build` — passes, and typechecks.
 - `pnpm --filter pricestalker-backend test` and `pnpm --filter pricestalker-backend run build` — pass.
+- `pnpm --filter pricestalker-frontend test` — the unit tests.
+- `pnpm --filter pricestalker-frontend run test:routes` — the Playwright suite,
+  which CI runs and which is easy to forget because the other commands pass
+  without it. **Build the frontend first.** Playwright serves the prebuilt
+  `dist` via `vite preview` and reuses a running server outside CI, so a stale
+  bundle will happily pass tests for code you have just changed.
 - `pnpm run lint` (the emoji check, rule 1) passes.
 - New migrations tested against a real Postgres, not just `tsc`.
 - Verify against the **built bundle / running app**, not only the source. Three
   separate bugs here were invisible in source and only showed up in the compiled
   output or against real data (escaped emoji, null locale, unseeded reference
   tables).
+- **Never assume the shape of an API response in a component.** The e2e suite
+  answers unmocked endpoints with `{}`, and so does a misconfigured proxy in
+  production. `data?.find(...)` on an object throws and takes its whole section
+  down; `Array.isArray(data) ? data : []` renders without it. The ErrorBoundary
+  will catch the throw, but a section that renders slightly reduced beats one
+  that does not render.
 - Update `CHANGELOG.md` for any user-facing change. Add an entry under
   `## [Unreleased]` using `### Added`, `### Fixed`, or `### Changed`. The file
   follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — match the

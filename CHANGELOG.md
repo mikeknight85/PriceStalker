@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- You can mark a store as selling a product you already track (#143). On a
+  product's page, **Same As Another Product** links the two, and from then on
+  they appear as one entry in the By product view with their prices compared
+  against each other. **Separate From Product** undoes it.
+- Linking tells you when it replaces alert settings, rather than leaving you to
+  discover it when an alert stops arriving: the product you link *to* owns the
+  target price and notification settings for both.
+
 ### Fixed
 
 - The `beta` image tag can no longer end up pointing at an older commit than the

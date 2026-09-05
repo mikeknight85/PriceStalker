@@ -1,0 +1,84 @@
+.link-item-modal {
+  max-width: 34rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.link-item-title {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.link-item-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.link-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  /* Bounded so a long list scrolls inside the modal rather than pushing the
+     cancel button off the screen. */
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.link-item-option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--background);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.link-item-option:hover:not(:disabled) { border-color: var(--primary); }
+.link-item-option:disabled { opacity: 0.6; cursor: default; }
+
+.link-item-option-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-item-option-meta {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.link-item-empty {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.link-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.link-item-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
