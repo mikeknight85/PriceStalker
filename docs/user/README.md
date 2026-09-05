@@ -178,6 +178,17 @@ PriceStalker can display prices in your preferred currency using its configured
 exchange-rate data. The original retailer currency remains part of the price
 record.
 
+### Supported currencies
+
+PriceStalker includes reference data and regional domain inference for 37 curated global currencies:
+
+| Region | Currencies |
+|:---|:---|
+| **Americas** | USD ($), CAD (C$), BRL (R$), MXN (MX$), ARS (ARS$), CLP (CLP$), COP (COP$) |
+| **Europe** | EUR (€), GBP (£), CHF, PLN (zł), SEK (kr), NOK (kr), DKK (kr), CZK (Kč), HUF (Ft), ISK (kr), RON (lei), TRY (₺), RUB (₽), UAH (₴) |
+| **Asia-Pacific** | JPY (¥), CNY (¥), INR (₹), AUD (A$), NZD (NZ$), SGD (S$), HKD (HK$), KRW (₩), THB (฿), MYR (RM), PHP (₱), IDR (Rp), VND (₫) |
+| **Middle East & Africa** | AED, ILS (₪), ZAR (R) |
+
 If an administrator enables AI extraction, auto-mapping, or verification,
 relevant page content may be sent to the configured AI provider. Check with
 your administrator if your deployment has specific privacy or data-retention

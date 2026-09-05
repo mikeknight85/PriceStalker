@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected check interval documentation in `README.md` to match the UI and
   backend (1 h to 24 h, default 12 h, ±15% jitter) and removed reference to a
   legacy 5 min aggressive interval warning.
+- Updated multi-currency documentation: `README.md` now highlights the top 10
+  currencies and links to a comprehensive regional table of all 37 supported
+  currencies in `docs/user/README.md`.
 
 ## [2.1.0-beta.8] - 2026-09-05
 

@@ -186,6 +186,33 @@
       border-color: var(--primary);
     }
 
+    .hero-banner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      padding: 1.5rem 1rem;
+      background: #ffffff;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .hero-banner {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .hero-logo {
+      max-width: 540px;
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
     h1 {
       font-size: 2.4rem;
       font-weight: 800;
@@ -325,9 +352,7 @@
   <div class="container">
     <header>
       <a href="#" class="brand">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
+        <img src="assets/icon.svg" alt="PriceStalker" width="28" height="28" />
         PriceStalker
       </a>
       <a href="https://github.com/mikeknight85/PriceStalker" class="btn-github">
@@ -339,7 +364,9 @@
     </header>
 
     <main>
-      <h1>PriceStalker</h1>
+      <div class="hero-banner">
+        <img src="assets/header.svg" alt="PriceStalker" class="hero-logo" />
+      </div>
       <h2 class="subtitle">Open-source, self-hosted price tracking</h2>
       
       <p class="intro-p">

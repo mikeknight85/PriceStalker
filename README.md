@@ -90,7 +90,7 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 - Live countdown timers + progress bars to the next check
 
 ### Multi-currency
-- USD, EUR, GBP, CHF, CAD, AUD, JPY, INR, BRL, PLN, SEK, NOK, DKK, KRW, RUB, CNY
+- 37 global currencies supported (USD, EUR, GBP, CAD, AUD, JPY, CHF, CNY, INR, NZD, and [27 more](docs/user/README.md#supported-currencies))
 - Currency-aware number parsing: `R$2.720,00` → 2720 BRL (not 2.72); `CHF 1'234.56` with Swiss apostrophe; `€1.234,56` with European thousands
 - **Live conversion (2.0)** — daily FX rates, a per-user preferred currency, and prices shown in it regardless of what the retailer quoted
 - Display formatter centralised — notifications, charts, tables all speak the same currency
