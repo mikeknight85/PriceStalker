@@ -52,8 +52,13 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
 
   const copyToClipboard = (text: string) => {
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text);
-      showToast('Password copied to clipboard', 'success');
+      // writeText returns a promise. Reporting success before it settles means
+      // that on rejection -- the document not focused, or the permission denied
+      // -- the admin is told the password was copied, pastes nothing, and has
+      // already dismissed the only copy of it.
+      navigator.clipboard.writeText(text)
+        .then(() => showToast('Password copied to clipboard', 'success'))
+        .catch(() => showToast('Could not copy the password. Select it and copy manually.', 'error'));
     } else {
       const textArea = document.createElement("textarea");
       textArea.value = text;

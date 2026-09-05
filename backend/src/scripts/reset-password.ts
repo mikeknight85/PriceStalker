@@ -13,15 +13,22 @@ function generateSecurePassword(length = 16): string {
 }
 
 async function main() {
-  const identifier = process.argv[2];
-  const customPassword = process.argv[3];
+  // --force may appear anywhere; the positionals keep their meaning either way.
+  const args = process.argv.slice(2).filter(a => a !== '--force');
+  const force = process.argv.slice(2).includes('--force');
+  const identifier = args[0];
+  const customPassword = args[1];
 
   if (!identifier) {
     console.log('');
-    console.error('Usage: pnpm run reset-password <email-or-user-id> [optional-password]');
+    console.error('Usage: pnpm run reset-password <email-or-user-id> [optional-password] [--force]');
     console.log('Examples:');
     console.log('  pnpm run reset-password admin@example.com');
     console.log('  pnpm run reset-password 1 "MySecretPassword123!"');
+    console.log('');
+    console.log('  --force  Also set a password on an SSO account. This enables local');
+    console.log('           sign-in for it, bypassing the identity provider. Use only');
+    console.log('           when SSO itself is broken.');
     console.log('');
     process.exit(1);
   }
@@ -45,9 +52,32 @@ async function main() {
       process.exit(1);
     }
 
-    if (user.auth_provider === 'oidc') {
-      console.warn('\n[WARNING] This account signs in via SSO (OIDC).');
-      console.warn('  Setting a local password enables local password authentication for this user.');
+    if (user.auth_provider === 'oidc' && !force) {
+      // UserAccountService.adminUpdateUser refuses this outright, calling it
+      // "an authentication bypass rather than a convenience", and it is right:
+      // AuthService.loginUser gates only on `!user.password_hash` and never
+      // looks at auth_provider. So writing a hash here permanently opens an
+      // SSO-provisioned account to the local login form, with a password the
+      // identity provider knows nothing about -- bypassing IdP-side MFA and
+      // surviving deprovisioning there. A warning is not enough for that.
+      //
+      // --force exists because this is also the break-glass tool for an
+      // instance whose SSO has broken, which is exactly when you cannot go
+      // through the admin UI. It has to be asked for explicitly.
+      console.error('\n[ERROR] This account signs in through SSO (OIDC).');
+      console.error('  Its password is managed by the identity provider. Setting one here would');
+      console.error('  enable local sign-in for it, bypassing the provider entirely -- including');
+      console.error('  any MFA it enforces, and any later deprovisioning there.');
+      console.error('');
+      console.error('  If SSO is broken and this is deliberate, re-run with --force.');
+      console.error('');
+      process.exit(1);
+    }
+
+    if (user.auth_provider === 'oidc' && force) {
+      console.warn('\n[WARNING] --force: enabling local sign-in for an SSO account.');
+      console.warn('  This account can now be reached with a password the identity provider');
+      console.warn('  does not know about. Remove the password once SSO is working again.');
     }
 
     const passwordToSet = customPassword || generateSecurePassword(16);
@@ -60,7 +90,10 @@ async function main() {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(passwordToSet, saltRounds);
 
-    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, user.id]);
+    // userRepository.updatePassword runs exactly this statement. CLAUDE.md keeps
+    // SQL out of everything that is not a repository, and a second copy of the
+    // same UPDATE is a second place to forget a WHERE clause.
+    await userRepository.updatePassword(user.id, passwordHash);
 
     console.log('\n---------------------------------------------------------');
     console.log('Password Reset Successfully');
