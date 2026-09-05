@@ -22,11 +22,11 @@
   --chart-text: #94a3b8;
 }
 
-/* An explicit light choice must also pin the UA colour scheme. Without this,
-   :root's `light dark` resolves to dark on a dark OS, so native controls render
-   with dark UA colours (buttontext turns white) on the app's light surfaces. */
+/* An explicit light choice must also pin the UA colour scheme. The `only` keyword
+   explicitly opts out of Chromium/Blink Auto-Dark / Forced-Dark heuristic inversions
+   when the user intentionally selected a light theme. */
 :root[data-theme="light"] {
-  color-scheme: light;
+  color-scheme: only light;
 }
 
 /* Dark theme variables */
@@ -45,7 +45,7 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   --chart-grid: #334155;
   --chart-text: #64748b;
-  color-scheme: dark;
+  color-scheme: only dark;
 }
 
 /* System dark preference - only apply if not explicitly set to light */
@@ -65,7 +65,7 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     --chart-grid: #334155;
     --chart-text: #64748b;
-    color-scheme: dark;
+    color-scheme: only dark;
   }
 }
 

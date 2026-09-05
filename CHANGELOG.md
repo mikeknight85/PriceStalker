@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and says so once at startup rather than failing silently.
 - Scraper log timestamps include milliseconds and are no longer written in an
   ambiguous day/month format.
+- Explicit Light mode now renders cleanly on Desktop Chrome when Windows Dark Mode
+  and Chrome Auto-Dark/Forced-Dark are active. Added `<meta name="color-scheme" content="light dark" />`
+  and set `color-scheme: only light` / `only dark` to explicitly opt out of browser-level
+  algorithmic color inversion when a theme is selected.
 
 ## [2.1.0-beta.4] - 2026-08-31
 
