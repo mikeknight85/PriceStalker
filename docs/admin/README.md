@@ -21,7 +21,7 @@ This portal contains detailed guides for administrators managing retailers, cust
 * **[4. Security & API Tokens](tokens.md)**
   Instructions on generating, viewing, and revoking machine access tokens.
 
-* **[5. Authentication & SSO Setup](../design/SSO_DESIGN.md)**
+* **[5. Authentication & SSO Setup](authentication.md)**
   Configuring OpenID Connect (OIDC) Single Sign-On and user login policies.
 
 * **[6. AI Features & Setup](ai_features.md)**
@@ -43,5 +43,5 @@ This portal contains detailed guides for administrators managing retailers, cust
 ## Related Documentation
 * **[User Guide](../user/README.md)**: Simplified flow reference for scraping, price review, and the scheduler queue.
 * **[Technical Scraper Lifecycle](../developer/SCRAPER_LIFECYCLE.md)**: Technical overview of the scraper's seven execution stages and its product-monitoring hand-off.
-* **[SSO / OIDC Setup Guide](../design/SSO_DESIGN.md)**: Details on single sign-on authentication configuration.
+* **[Authentication & SSO Guide](authentication.md)**: Details on single sign-on authentication configuration.
 * **[Database Schema Guide](../developer/DATABASE.md)**: Overview of PostgreSQL tables, schemas, and backup targets.

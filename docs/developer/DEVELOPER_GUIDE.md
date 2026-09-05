@@ -283,5 +283,5 @@ glance without reading every child file:
 * **[Selectors](SELECTORS.md)**: Details on the unified selectors engine syntax, XPath, and regex.
 * **[Database](DATABASE.md)**: Information on tables, schema design, and pg_notify cache invalidations.
 * **[Internationalisation design](../design/I18N_DESIGN.md)**: Guidelines for localizing UI labels and managing translation key JSON files.
-* **[SSO design](../design/SSO_DESIGN.md)**: Configuration details for OpenID Connect (OIDC) Single Sign-On providers and JWT authentication.
+* **[SSO / Authentication Guide](../admin/authentication.md)**: Configuration details for OpenID Connect (OIDC) Single Sign-On providers and JWT authentication.
 * **[Design tokens](../design/DESIGN_TOKENS.md)**: Developer styling guide mapping global CSS colors, shadows, and spacing tokens.

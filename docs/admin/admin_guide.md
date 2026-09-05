@@ -72,7 +72,7 @@ Configure instance-wide authentication and login security:
 * Set up Single Sign-On (SSO) with OpenID Connect (OIDC) identity providers (like Google, Keycloak, or Authentik).
 * Configure sign-in policies determining if login is restricted to local credentials, OIDC, or supports both (with local admin break-glass recovery).
 * Enable self-service password reset via email when SMTP is configured.
-* *For architecture details and parameters, see [SSO_DESIGN.md](../SSO_DESIGN.md).*
+* *For architecture details and parameters, see [authentication.md](authentication.md).*
 
 ### 7. AI Engine
 Configure the active AI provider (Gemini, OpenAI, Anthropic, Ollama, Vertex, Groq, DeepSeek, Mistral, OpenRouter), input credentials, test provider connections, and toggle switches for **AI Fallback**, **AI Verification**, and **Auto-Mapping**.

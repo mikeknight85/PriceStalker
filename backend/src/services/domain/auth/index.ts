@@ -142,7 +142,7 @@ export class AuthService {
   /**
    * Resolve an OIDC identity to a local user.
    *
-   * Resolution order, per docs/SSO_DESIGN.md:
+   * Resolution order, per docs/admin/authentication.md:
    *   1. Match on (oidc_issuer, oidc_subject) -- a returning SSO user.
    *   2. Match on email -- an existing local account, linked to this identity.
    *   3. JIT-create, if the admin has enabled it.

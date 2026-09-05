@@ -28,6 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   currencies and links to a comprehensive regional table of all 37 supported
   currencies in `docs/user/README.md`.
 
+### Changed
+
+- Replaced design document `SSO_DESIGN.md` with an official administrator and
+  technical setup guide in `docs/admin/authentication.md`.
+- Expanded `docs/admin/ai_features.md` into a comprehensive guide covering setup,
+  registration portals, model recommendations, and network/Docker configuration
+  for all 10 supported AI providers and custom OpenAI-compatible endpoints.
+
 ## [2.1.0-beta.8] - 2026-09-05
 
 ### Added

@@ -5,7 +5,7 @@
 // invalidated whenever an admin saves the auth config.
 //
 // Flow state (state, code_verifier, nonce) lives in memory keyed by the state
-// value. That is safe with a single backend replica -- see docs/SSO_DESIGN.md.
+// value. That is safe with a single backend replica -- see docs/admin/authentication.md.
 // Running more than one replica requires moving this to shared storage.
 
 import { Client, Issuer, TokenSet, generators } from 'openid-client';

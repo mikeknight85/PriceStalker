@@ -44,14 +44,14 @@ noted. Docs drift; trust the code for specifics.
 
 | Doc | Covers |
 |---|---|
-| [design/SSO_DESIGN.md](design/SSO_DESIGN.md) | OIDC/SSO design (a PriceStalker feature, ported forward). |
+| [admin/authentication.md](admin/authentication.md) | Single Sign-On (SSO / OIDC) and authentication guide. |
 | [design/I18N_DESIGN.md](design/I18N_DESIGN.md) | Internationalisation design. |
 
 ## Design and audit material
 
 | Area | Entry point |
 |---|---|
-| Authentication and SSO | [SSO design](design/SSO_DESIGN.md) |
+| Authentication and SSO | [Authentication & SSO guide](admin/authentication.md) |
 | Internationalisation | [I18N design](design/I18N_DESIGN.md) |
 | Frontend visual system | [Design tokens](design/DESIGN_TOKENS.md) |
 | Investigations and historical audits | [Audit index](audit/README.md) |

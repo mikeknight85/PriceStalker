@@ -125,8 +125,7 @@ Multi-user with per-user products and settings · admin panel · registration to
 
 ## AI providers
 
-Nine providers supported. AI extraction kicks in when standard scrapers fail;
-AI verification catches bad extractions; AI arbitration breaks ties.
+Multiple providers supported, from cloud APIs to local models. AI extraction kicks in when standard scrapers fail; AI verification catches bad extractions; AI arbitration breaks ties.
 
 | Provider | Get a key | Recommended model | Cost |
 |----------|-----------|-------------------|------|
@@ -139,11 +138,9 @@ AI verification catches bad extractions; AI arbitration breaks ties.
 | **DeepSeek** | [platform.deepseek.com](https://platform.deepseek.com) | `deepseek-chat` | Low cost |
 | **Mistral** | [console.mistral.ai](https://console.mistral.ai) | `mistral-large-latest` | Paid |
 | **Ollama (local)** | [ollama.ai](https://ollama.ai) | `ollama pull qwen3` | **Free**, local compute |
+| **OpenAI-Compatible** | Self-hosted | LocalAI, vLLM, LM Studio | **Free**, local compute |
 
-Configured in **Admin → AI Engine**. AI settings are instance-wide in 2.0 —
-1.x stored an API key per user; 2.0 has one admin-managed configuration for the
-whole instance. Start with AI Verification: it's the highest-leverage single
-setting and catches the most embarrassing extraction errors.
+Configured in **Admin → AI Engine**. For detailed step-by-step registration guides and model setup instructions for every provider, see the **[AI Features & Setup Guide](docs/admin/ai_features.md)**. Start with AI Verification: it's the highest-leverage single setting and catches the most embarrassing extraction errors.
 
 ---
 
