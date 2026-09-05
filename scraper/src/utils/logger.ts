@@ -3,6 +3,7 @@
  */
 
 import type { LogContext } from '../types.js';
+import { formatLogTimestamp } from './timestamp.js';
 
 const LEVELS = {
   DEBUG: 0,
@@ -29,7 +30,7 @@ export function log(message: string, type: string = 'INFO', context: LogContext 
     return;
   }
 
-  const timestamp = new Date().toLocaleString('en-AU', { timeZone: 'Australia/Perth' });
+  const timestamp = formatLogTimestamp();
   const typeStr = type.padEnd(5);
   
   // Format context identifiers

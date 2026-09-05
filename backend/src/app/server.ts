@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { currencyCache } from '../utils/i18n/currency/cache';
+import { invalidTimezone, isTimezoneApplied } from '../utils/system/logging/timestamp';
 
 const PORT = process.env.PORT || 3001;
 
@@ -45,6 +46,16 @@ export async function startServer() {
   try {
     // Rotate logs if they exceed size limit on startup
     rotateLogsOnStartup();
+
+    // 0. Say once whether TZ is being honoured. A misspelled zone falls back to
+    //    UTC rather than taking the logger down, which without this line would
+    //    leave an operator staring at UTC timestamps with no idea why.
+    const badTz = invalidTimezone();
+    if (badTz) {
+      logger.warn(`System | Server | TZ="${badTz}" is not a timezone this runtime recognises. Log timestamps will use UTC.`, 'Server');
+    } else if (isTimezoneApplied()) {
+      logger.info(`System | Server | Log timestamps using TZ=${process.env.TZ}`, 'Server');
+    }
 
     // 1. Initialize DB and Logger Persistence
     await initializeDatabase();

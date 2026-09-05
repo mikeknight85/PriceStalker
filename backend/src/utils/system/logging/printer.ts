@@ -2,6 +2,7 @@ import { LogLevel, saveToDb } from './persistence';
 import fs from 'fs';
 import path from 'path';
 import { scrubSensitiveData } from './scrubber';
+import { formatLogTimestamp } from './timestamp';
 
 const DEFAULT_LOG_LEVEL = 'INFO';
 const LOG_DIR = process.env.LOG_DIR_PATH || path.join(process.cwd(), 'logs');
@@ -97,7 +98,9 @@ export function print(level: LogLevel, msg: string, context?: string, details?: 
   // Strip common redundant prefixes
   cleanMsg = cleanMsg.replace(/^System [|:] /, '');
 
-  const ts = new Date().toISOString();
+  // Respects TZ. Was toISOString(), which is UTC by definition whatever TZ
+  // says, so a Perth-configured install still logged in UTC (issue #146).
+  const ts = formatLogTimestamp();
   const ctx = context ? ' [' + context + ']' : '';
 
   // Prepare Console-safe version (Strip HTML tags for Docker visibility)

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Log timestamps now follow the `TZ` you configure. The backend always printed
+  UTC regardless, and the scraper was hardcoded to `Australia/Perth`, so every
+  install in the world read its scraper logs in Perth time -- while the
+  documentation said `TZ` controlled both. Unset or `UTC` is unchanged
+  (`2026-09-04T17:18:02.834Z`); any other zone renders the same ISO 8601 format
+  with a local offset (`2026-09-05T01:18:02.834+08:00`). Database rows and API
+  payloads stay UTC. A zone your runtime does not recognise falls back to UTC
+  and says so once at startup rather than failing silently.
+- Scraper log timestamps include milliseconds and are no longer written in an
+  ambiguous day/month format.
+
 ## [2.1.0-beta.4] - 2026-08-31
 
 ### Fixed
