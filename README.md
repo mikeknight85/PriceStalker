@@ -271,11 +271,11 @@ Three rolling tags are published, in order of stability:
 | `:1.2` | Same as `:latest`, but only within the 1.2.x line | Production with auto-patch but no minor bumps. |
 | `:beta` | Every merge to `main` | Current v2 overhaul / pre-release staging. May break. |
 
-Pin to an immutable version for absolute stability:
+Pin to an immutable version for absolute stability (note: published GHCR image tags omit the leading `v`):
 
 ```yaml
-image: ghcr.io/mikeknight85/pricestalker-backend:1.2.11
-image: ghcr.io/mikeknight85/pricestalker-frontend:1.2.11
+image: ghcr.io/mikeknight85/pricestalker-backend:2.1.0-beta.8
+image: ghcr.io/mikeknight85/pricestalker-frontend:2.1.0-beta.8
 ```
 
 ---

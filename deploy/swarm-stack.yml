@@ -43,8 +43,8 @@
 #
 #   stable          final releases only (default, recommended)
 #   beta            every merge to main; expect schema changes without notice
-#   v2.0.0          pin an exact version and choose your own upgrade moment
-#   v2.1.0-beta.1   a prerelease; these never advance stable
+#   2.0.0           pin an exact version and choose your own upgrade moment
+#   2.1.0-beta.8    a prerelease (published tags omit leading 'v'); these never advance stable
 #
 # Whichever you track, take the backup above before upgrading.
 

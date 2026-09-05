@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Products tracked at a single store are unaffected: their alerts read exactly
   as they did before, because naming the only possible store adds nothing.
 
+### Fixed
+
+- Corrected Docker image tag references across documentation, `.env.example`, and
+  deployment stacks: published GHCR image tags follow semver without a leading `v`
+  (e.g. `2.1.0-beta.8`).
+
 ## [2.1.0-beta.8] - 2026-09-05
 
 ### Added
