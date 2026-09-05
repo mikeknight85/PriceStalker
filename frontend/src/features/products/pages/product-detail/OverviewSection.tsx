@@ -30,7 +30,13 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
   // Whether this store shares a product with others decides which action is
   // offered: link, or separate. Derived from the grouped data rather than
   // tracked separately, so it cannot disagree with what the dashboard shows.
-  const owningItem = itemsQuery.data?.find(item => item.listings.some(l => l.id === product?.id));
+  // Array.isArray, not just a null check: this decorates the page with a
+  // grouping action, and a response that is not the expected shape -- a proxy
+  // error page, a misconfigured deployment -- must not take the whole overview
+  // down with it. The ErrorBoundary would catch it, but a section that renders
+  // without the extra button is a better outcome than one that does not render.
+  const items = Array.isArray(itemsQuery.data) ? itemsQuery.data : [];
+  const owningItem = items.find(item => item.listings?.some(l => l.id === product?.id));
   const sharesProduct = (owningItem?.store_count ?? 1) > 1;
 
   const refreshEverything = () => {

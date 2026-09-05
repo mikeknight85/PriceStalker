@@ -35,6 +35,10 @@ test.beforeEach(async ({ page }) => {
         oidc_provider_name: null,
       },
       '/api/products': [product],
+      // Present so the grouped view and the linking action see the shape they
+      // expect. Without it the catch-all below answers `{}`, which is not the
+      // list they are typed for.
+      '/api/products/items': [],
       '/api/profile': { ...authenticatedUser, categories: ['Games'] },
       '/api/settings/currencies': [],
       '/api/settings/notifications': {},

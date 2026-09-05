@@ -34,10 +34,10 @@ const LinkToItemModal: React.FC<LinkToItemModalProps> = ({
   const itemsQuery = useQuery({ ...itemListQuery(), enabled: isOpen });
 
   const candidates = useMemo(() => {
-    const all: ItemWithListings[] = itemsQuery.data ?? [];
+    const all: ItemWithListings[] = Array.isArray(itemsQuery.data) ? itemsQuery.data : [];
     return all
       // Exclude the product this store already belongs to.
-      .filter(item => !item.listings.some(l => l.id === productId))
+      .filter(item => !item.listings?.some(l => l.id === productId))
       .filter(item => !search || item.name.toLowerCase().includes(search.toLowerCase()));
   }, [itemsQuery.data, productId, search]);
 
