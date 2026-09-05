@@ -26,7 +26,7 @@ Logging behavior is controlled via environment variables in your `.env` file or 
 | `SLOW_QUERY_MS` | Any positive integer | `500` | A SQL statement taking at least this long is logged at `WARN` instead of `DEBUG`. |
 | `AI_TRACE_CHARS` | Any positive integer | `2000` | How much of an AI prompt and response to record at `DEBUG`. Both are capped: a prompt carries the denoised product page. |
 | `LOG_DIR_PATH` | Any valid absolute/relative directory | `./logs` | Directory path where log files are written. |
-| `TZ` | e.g. `Australia/Perth`, `UTC` | `UTC` | Controls the timezone prefix format for both services. |
+| `TZ` | e.g. `Australia/Perth`, `UTC` | `UTC` | Timezone for log timestamps in both services. Unset or `UTC` gives ISO 8601 UTC (`2026-09-04T17:18:02.834Z`); any other zone gives the same format with a local offset (`2026-09-05T01:18:02.834+08:00`). Database rows and API payloads stay UTC regardless. A zone the runtime does not recognise falls back to UTC and is reported once at startup. |
 
 ---
 

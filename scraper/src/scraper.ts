@@ -3,6 +3,7 @@ import { log } from './utils/logger.js';
 import { startWatchdog, cleanupStaleProfiles, shutdownAllSessions } from './core/SessionManager.js';
 import router from './api/routes.js';
 import { errorMessage } from './types.js';
+import { invalidTimezone } from './utils/timestamp.js';
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -31,5 +32,11 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
 }
 
 app.listen(PORT, '0.0.0.0', () => {
+  // Once, at startup: a misspelled TZ falls back to UTC rather than throwing,
+  // so without this the operator has no way to tell why it was ignored.
+  const badTz = invalidTimezone();
+  if (badTz) {
+    log(`TZ="${badTz}" is not a timezone this runtime recognises. Log timestamps will use UTC.`, 'WARN');
+  }
   log(`Scraper API listening at http://0.0.0.0:${PORT}`, 'INFO');
 });
