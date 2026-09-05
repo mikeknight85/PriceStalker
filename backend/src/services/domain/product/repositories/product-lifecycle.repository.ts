@@ -5,6 +5,7 @@ import {
   AIStatus
 } from '../../../../models/types';
 import { getSmartJitter } from '../../../../utils/system/scheduler-helpers';
+import { itemRepository } from './item.repository';
 
 export const productLifecycleRepository = {
   create: async (
@@ -19,13 +20,39 @@ export const productLifecycleRepository = {
   ): Promise<Product> => {
     const jitter = getSmartJitter(refreshInterval);
     const initialDelaySeconds = Math.max(60, Math.floor(refreshInterval / 2) + jitter);
-    const result = await pool.query(
-      `INSERT INTO products (user_id, url, name, image_url, refresh_interval, stock_status, ai_status, next_check_at, category)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP + ($8 || ' seconds')::interval, $9)
-       RETURNING *`,
-      [userId, url, name, imageUrl, refreshInterval, stockStatus, aiStatus, initialDelaySeconds, category]
-    );
-    return result.rows[0];
+
+    // Every product belongs to an item, including one tracked at a single
+    // retailer -- that is an item with one listing (issue #143). Creating them
+    // together in a transaction matters: a product with no item would have
+    // nowhere to keep its alert settings, and would be invisible to the
+    // grouped view without anything indicating why.
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const item = await itemRepository.create(
+        userId,
+        (name && name.trim()) || url,
+        imageUrl,
+        category,
+        client
+      );
+
+      const result = await client.query(
+        `INSERT INTO products (user_id, url, name, image_url, refresh_interval, stock_status, ai_status, next_check_at, category, item_id, is_primary)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP + ($8 || ' seconds')::interval, $9, $10, true)
+         RETURNING *`,
+        [userId, url, name, imageUrl, refreshInterval, stockStatus, aiStatus, initialDelaySeconds, category, item.id]
+      );
+
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   update: async (
@@ -52,9 +79,14 @@ export const productLifecycleRepository = {
     let paramIndex = 1;
 
     // Build fields dynamically
+    // price_drop_threshold, target_price and notify_back_in_stock are absent on
+    // purpose: they moved to the item, because they describe what the user
+    // wants rather than anything about one shop's page (issue #143). They are
+    // routed below. The columns still exist on `products` and are no longer
+    // read -- a later migration drops them, once this has run in beta.
     const updateableFields = [
-      'name', 'image_url', 'refresh_interval', 'price_drop_threshold', 'target_price',
-      'notify_back_in_stock', 'ai_verification_disabled', 'ai_extraction_disabled',
+      'name', 'image_url', 'refresh_interval',
+      'ai_verification_disabled', 'ai_extraction_disabled',
       'checking_paused', 'category', 'stock_status', 'needs_price_review', 'ai_status'
     ];
 
@@ -91,7 +123,42 @@ export const productLifecycleRepository = {
       fields.push('auto_paused = false');
     }
 
-    if (fields.length === 0) return null;
+    // Alert settings belong to the item, so they are written there rather than
+    // here (issue #143). Done before the product update so that a request
+    // carrying only alert settings still resolves to the item's owner, and a
+    // request carrying both is not left half-applied.
+    const alertUpdates = {
+      target_price: (updates as any).target_price,
+      price_drop_threshold: (updates as any).price_drop_threshold,
+      notify_back_in_stock: (updates as any).notify_back_in_stock,
+    };
+    const hasAlertUpdate = Object.values(alertUpdates).some(v => v !== undefined);
+
+    if (hasAlertUpdate) {
+      const owner = await executor.query(
+        `SELECT p.item_id, p.user_id FROM products p
+         WHERE p.id = $1 AND ($3::boolean = true OR p.user_id = $2)`,
+        [id, userId, options?.asAdmin === true]
+      );
+      const itemId = owner.rows[0]?.item_id;
+      if (itemId) {
+        // The item's own user_id, not the caller's -- an admin acting on
+        // another user's product must still write to that user's item.
+        await itemRepository.updateAlertSettings(itemId, owner.rows[0].user_id, alertUpdates, executor);
+      }
+    }
+
+    // Nothing left for the product itself. Returning the row rather than null
+    // matters: a request that only changed a target price did succeed, and a
+    // null here would read to the caller as "product not found".
+    if (fields.length === 0) {
+      if (!hasAlertUpdate) return null;
+      const current = await executor.query(
+        `SELECT * FROM products WHERE id = $1 AND ($3::boolean = true OR user_id = $2)`,
+        [id, userId, options?.asAdmin === true]
+      );
+      return current.rows[0] || null;
+    }
 
     // Order matters: the WHERE clause numbers these as id, userId, admin flag.
     values.push(id, userId, options?.asAdmin === true);
@@ -105,11 +172,38 @@ export const productLifecycleRepository = {
   },
 
   delete: async (id: number, userId: number, options?: { asAdmin?: boolean }): Promise<boolean> => {
-    const result = await pool.query(
-      'DELETE FROM products WHERE id = $1 AND ($3::boolean = true OR user_id = $2)',
-      [id, userId, options?.asAdmin === true]
-    );
-    return (result.rowCount ?? 0) > 0;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Remember the item before the listing goes, so the orphan can be swept.
+      const owner = await client.query(
+        'SELECT item_id FROM products WHERE id = $1 AND ($3::boolean = true OR user_id = $2)',
+        [id, userId, options?.asAdmin === true]
+      );
+
+      const result = await client.query(
+        'DELETE FROM products WHERE id = $1 AND ($3::boolean = true OR user_id = $2)',
+        [id, userId, options?.asAdmin === true]
+      );
+
+      // An item with no listings has nothing to check and nothing to show, so
+      // leaving it would accumulate invisible rows. deleteIfEmpty re-checks
+      // rather than trusting that this was the last one -- an item with a
+      // second store attached must survive.
+      const itemId = owner.rows[0]?.item_id;
+      if (itemId && (result.rowCount ?? 0) > 0) {
+        await itemRepository.deleteIfEmpty(itemId, client);
+      }
+
+      await client.query('COMMIT');
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   /**

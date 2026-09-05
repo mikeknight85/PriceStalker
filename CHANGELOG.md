@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin User Management Single Password UX & Utilities**: Replaced the dual-password input in the Admin user creation and editing forms with a single password input, an integrated cryptographically secure password generator, and a clipboard copy button (#76, #80).
 - **CLI Password Reset Tool**: Added `pnpm run reset-password <email-or-id> [password]` utility (`backend/src/scripts/reset-password.ts`) to recover or assign user passwords from the terminal. Runs the compiled script, so it works inside the production container, which is where a locked-out administrator needs it. Use `reset-password:dev` to run from source. It refuses to set a password on an SSO account unless `--force` is given, because doing so enables local sign-in for an account the identity provider owns.
 - **Optional Display Name on User Creation**: Added an optional Display Name field to the Admin Create User form and backend API route.
+- Groundwork for tracking one product across several retailers (#143). Every
+  product now belongs to a canonical *item* — the thing you want to buy, as
+  opposed to one shop's listing of it. A product tracked at a single retailer
+  is an item with one listing, so nothing looks or behaves differently yet.
+- Price target, drop threshold and back-in-stock alerts are now properties of
+  the item rather than of an individual listing, so that a future product with
+  several stores has one set of alert settings rather than one per store. Your
+  existing settings are carried over on upgrade.
 
 ### Changed
 
