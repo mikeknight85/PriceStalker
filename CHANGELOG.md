@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The `beta` image tag can no longer end up pointing at an older commit than the
+  tip of `main`. Two pushes building at the same time raced for the tag, and the
+  one that finished last won regardless of which commit it was built from --
+  which put a frontend one version behind its own backend into production.
+
 ## [2.1.0-beta.7] - 2026-09-05
 
 ### Added
