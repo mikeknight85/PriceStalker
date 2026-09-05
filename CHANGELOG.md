@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Retailer bot-challenge pages are recognised instead of being scraped as
+  though they were products. Detection matched case-sensitively, so a
+  PerimeterX page (which spells the vendor `PerimeterX`), Amazon's
+  `/errors_page/validateCaptcha`, Amazon's "Server Busy" title and any
+  "Access Denied" title carrying a suffix all went unnoticed. A missed
+  challenge meant no price was found, auto-mapping rejected a config built
+  from challenge HTML, the add failed with an unexplained error, and the
+  browser-scraper fallback never fired.
+- A challenge page whose title names a captcha is now detected regardless of
+  page size. The size limit that stops the word appearing on a genuine product
+  page from triggering a false positive was also being applied to the title,
+  which is far more specific and cheap to check.
+
+### Fixed
+
 - Log timestamps now follow the `TZ` you configure. The backend always printed
   UTC regardless, and the scraper was hardcoded to `Australia/Perth`, so every
   install in the world read its scraper logs in Perth time -- while the
