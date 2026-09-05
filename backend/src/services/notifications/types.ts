@@ -22,6 +22,14 @@ export interface NotificationPayload {
    * redirect and a soft 404 were all reported as a dead page -- while the
    * in-app history, which does receive the reason, said something different.
    */
+  /**
+   * Which store the alert is about, when naming it helps.
+   *
+   * Set only where a product is tracked at more than one shop: with a single
+   * store the alert can only be about that one, and saying so is clutter. See
+   * repositories/store-context.ts (issue #143).
+   */
+  storeName?: string;
   reason?: string;
   /**
    * Whether monitoring actually stopped. Defaults to true when absent, matching

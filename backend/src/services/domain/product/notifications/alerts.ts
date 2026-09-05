@@ -2,6 +2,20 @@ import { Product } from '../../../../models';
 import { ScrapedProductWithVoting } from '../../../../types/scraper';
 import { productNotificationOrchestrator } from './orchestrator';
 import { describeUnavailableReason, type UnavailableReason } from '../../../../types/availability';
+import { getStoreContext, hostOf } from '../repositories/store-context';
+
+/**
+ * The store to name in an alert, or undefined when naming it would be noise.
+ *
+ * Only when the product is tracked at more than one shop. With a single store
+ * the alert can only be about that one, so "at Digitec" adds nothing and makes
+ * every existing user's notifications longer for no reason (issue #143).
+ */
+async function storeToName(product: Product): Promise<string | undefined> {
+  const { storeName, storeCount } = await getStoreContext(product.id);
+  if (storeCount < 2) return undefined;
+  return storeName || hostOf(product.url) || undefined;
+}
 
 export class ProductAlertService {
   /**
@@ -105,7 +119,8 @@ export class ProductAlertService {
         currency: scrapedData.price?.currency || undefined,
         oldStockStatus: previousStatus || product.stock_status || undefined,
         newStockStatus: scrapedData.stockStatus,
-        productId: product.id
+        productId: product.id,
+        storeName: await storeToName(product)
       },
       {
         type: 'back_in_stock',
@@ -145,7 +160,8 @@ export class ProductAlertService {
         newPrice: newPriceObj.price,
         currency: newPriceObj.currency,
         threshold: product.price_drop_threshold!,
-        productId: product.id
+        productId: product.id,
+        storeName: await storeToName(product)
       },
       {
         type: 'price_drop',
@@ -178,7 +194,8 @@ export class ProductAlertService {
         newPrice: newPriceObj.price,
         currency: newPriceObj.currency,
         targetPrice: targetPrice,
-        productId: product.id
+        productId: product.id,
+        storeName: await storeToName(product)
       },
       {
         type: 'target_price',
@@ -207,7 +224,8 @@ export class ProductAlertService {
         type: 'price_announced',
         newPrice: newPriceObj.price,
         currency: newPriceObj.currency,
-        productId: product.id
+        productId: product.id,
+        storeName: await storeToName(product)
       },
       {
         type: 'price_announced',

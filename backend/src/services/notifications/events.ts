@@ -82,9 +82,20 @@ export interface EventPresentation {
   fields: EventField[];
 }
 
+/**
+ * " at Digitec", or nothing.
+ *
+ * Only populated when the product is tracked at more than one store, so a
+ * single-store alert reads exactly as it did before this existed.
+ */
+function atStore(payload: NotificationPayload): string {
+  return payload.storeName ? ` at ${payload.storeName}` : '';
+}
+
 export function describeEvent(payload: NotificationPayload): EventPresentation {
   const price = formatMoney(payload.newPrice, payload.currency);
   const previous = humaniseStockStatus(payload.oldStockStatus);
+  const store = atStore(payload);
 
   switch (payload.type) {
     case 'price_drop': {
@@ -97,8 +108,8 @@ export function describeEvent(payload: NotificationPayload): EventPresentation {
         title: 'Price Drop Alert!',
         emoji: '🔔',
         headline: oldPrice && price
-          ? `Price dropped from ${oldPrice} to ${price}${drop ? ` (-${drop})` : ''}`
-          : 'The price has dropped',
+          ? `Price dropped from ${oldPrice} to ${price}${drop ? ` (-${drop})` : ''}${store}`
+          : `The price has dropped${store}`,
         tags: ['moneybag', 'chart_with_downwards_trend'],
         color: 0x10b981,
         fields: [
@@ -114,8 +125,8 @@ export function describeEvent(payload: NotificationPayload): EventPresentation {
         title: 'Target Price Reached!',
         emoji: '🎯',
         headline: price && target
-          ? `Price is now ${price}, at or below your target of ${target}`
-          : 'The price reached your target',
+          ? `Price is now ${price}${store}, at or below your target of ${target}`
+          : `The price reached your target${store}`,
         tags: ['dart', 'white_check_mark'],
         color: 0xf59e0b,
         fields: [
@@ -131,7 +142,10 @@ export function describeEvent(payload: NotificationPayload): EventPresentation {
         emoji: '🎉',
         // A product can come back in stock before a price is extracted. Saying
         // "available at N/A" is worse than not mentioning price.
-        headline: price ? `This item is now available at ${price}` : 'This item is now available',
+        // "available at Digitec for CHF 49.90" rather than two "at"s.
+        headline: price
+          ? `This item is now available${store ? `${store} for ${price}` : ` at ${price}`}`
+          : `This item is now available${store}`,
         detail: previous ? `Previously ${previous}.` : undefined,
         tags: ['package', 'tada'],
         color: 0x6366f1,
@@ -146,8 +160,8 @@ export function describeEvent(payload: NotificationPayload): EventPresentation {
         title: 'Price Announced',
         emoji: '🏷️',
         headline: price
-          ? `A price has been announced: ${price}`
-          : 'A price has been announced',
+          ? `A price has been announced${store}: ${price}`
+          : `A price has been announced${store}`,
         tags: ['label'],
         color: 0x3b82f6,
         fields: [{ name: 'Price', value: price ?? 'unknown', inline: true }],

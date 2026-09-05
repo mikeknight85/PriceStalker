@@ -62,6 +62,9 @@ export function interpolateTemplate(template: string, payload: NotificationPaylo
     // assemble one and get the unknown-currency case wrong.
     'price': formatMoney(payload.newPrice, payload.currency) ?? 'unavailable',
     'reason': payload.reason || '',
+    // Empty for a single-store product, so a template using it reads naturally
+    // either way rather than rendering a stray label.
+    'store': payload.storeName || '',
   };
 
   let result = template;

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Alerts say which store they are about, when a product is tracked at more than
+  one (#143). "Price dropped from CHF 299.00 to CHF 249.50 at Digitec" tells you
+  where to go; without it a drop across four stores is not actionable. A
+  `{{store}}` variable is available for custom templates.
+- Products tracked at a single store are unaffected: their alerts read exactly
+  as they did before, because naming the only possible store adds nothing.
+
 ## [2.1.0-beta.8] - 2026-09-05
 
 ### Added
