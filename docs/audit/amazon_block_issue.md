@@ -1,3 +1,23 @@
+> **Status: resolved. Kept as a record of the investigation, not as open work.**
+>
+> All three problems below were real and all three are fixed. Read this for how
+> they were diagnosed, not for what to do — in one case the fix that shipped is
+> deliberately *not* the one proposed here.
+>
+> | section | what shipped |
+> |---|---|
+> | **A** User-Agent / `Sec-Ch-Ua` mismatch | Fixed in **#141**, but **not** by pinning the UA to Chrome 121 as proposed in §3.1. The client hints are now *derived* from whichever User-Agent is in play, so a per-retailer override works too and the pair cannot drift again. Pinning would have frozen every install on a browser version that ages. |
+> | **B** Case-sensitive challenge detection | Fixed in **#149**. Worse than described here: `html.includes('perimeterx')` also missed PerimeterX's own casing of its own name, and `title === 'access denied'` missed any title with a suffix. Now regex-based and case-insensitive, with 24 tests where there were none. |
+> | **C** Missed browser-scraper fallback | Not changed, and deliberately. The gate on `!domainConfig` is intentional — auto-discover the browser need for *unknown* domains, and expect an admin to set `use_browser_scraper` for a domain that already has a config. With **B** fixed, a challenge is now detected, which is what §C was really describing. |
+>
+> One correction to §A's verification note: setting the UA to `Chrome/121.0.0.0`
+> did fix amazon.com.au, and that is what identified the bug — but it worked
+> because 121 happened to match the hardcoded hints, not because 121 is special.
+> Any consistent pair works, which is why deriving them was the better fix.
+>
+> The wider "can we scrape Akamai-protected retailers" question is **#67**,
+> where six hypotheses were eliminated by measurement.
+
 # Issue: Standard HTTP Scraper Blocked on Amazon (User-Agent / Client Hint Mismatch & Defective Bot Fallback)
 
 ## 1. Symptoms
