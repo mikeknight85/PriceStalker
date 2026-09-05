@@ -4,14 +4,31 @@ import {
   stockHistoryRepository, 
   userRepository,
   ProductWithLatestPrice,
-  ProductWithSparkline
+  ProductWithSparkline,
+  ItemWithListings
 } from '../../../models';
 import { syncUserCategories } from './utils';
+import { groupIntoItems } from './utils/group-into-items';
 import { logger } from '../../../utils/system/logger';
 
 export class ProductHistoryService {
   async getUserProducts(userId: number): Promise<ProductWithSparkline[]> {
     return await productRepository.findByUserIdWithSparkline(userId);
+  }
+
+  /**
+   * The same listings, grouped into the items they belong to (issue #143).
+   *
+   * Built from getUserProducts rather than its own query, so the flat and
+   * grouped views cannot disagree about a price, and so the exchange rate
+   * triangulation exists in one place.
+   */
+  async getUserItems(userId: number): Promise<ItemWithListings[]> {
+    const [products, user] = await Promise.all([
+      productRepository.findByUserIdWithSparkline(userId),
+      userRepository.findById(userId),
+    ]);
+    return groupIntoItems(products, user?.currency ?? null);
   }
 
   async getProduct(productId: number, userId: number, asAdmin = false): Promise<ProductWithLatestPrice | null> {

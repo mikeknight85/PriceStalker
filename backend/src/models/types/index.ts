@@ -3,6 +3,7 @@ export * from './user';
 export * from './auth';
 export * from './product';
 export * from './item';
+export * from './item-view';
 export * from './stock';
 export * from './notification';
 export * from './retailer';

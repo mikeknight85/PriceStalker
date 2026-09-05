@@ -379,3 +379,31 @@ export interface TestRetailerConfigResult {
   error?: string;
   priceCandidates?: PriceCandidate[];
 }
+
+/**
+ * An item as the grouped dashboard shows it: the thing you want to buy, with
+ * every store selling it (issue #143).
+ *
+ * Mirrors backend ItemWithListings. `best_price` is in the user's own currency
+ * and is null when no store had a price we could convert -- see
+ * `excluded_count`, which exists so the UI can say "cheapest of 2 of your 4
+ * stores" rather than claiming more than we can support.
+ */
+export interface ItemWithListings {
+  id: number;
+  name: string;
+  image_url: string | null;
+  category: string | null;
+  target_price: number | null;
+  price_drop_threshold: number | null;
+  notify_back_in_stock: boolean;
+  listings: Product[];
+  store_count: number;
+  best_price: number | null;
+  best_price_listing_id: number | null;
+  best_price_currency: string | null;
+  price_spread: number | null;
+  comparable_count: number;
+  excluded_count: number;
+  any_in_stock: boolean;
+}

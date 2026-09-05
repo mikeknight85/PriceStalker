@@ -5,7 +5,7 @@ import {
   ProductWithSparkline, 
   SparklinePoint
 } from '../../../../models/types';
-import { ITEM_ALERT_COLUMNS, ITEM_ALERT_JOIN, withItemAlertSettings } from './item-alert-settings';
+import { ITEM_ALERT_COLUMNS, ITEM_ALERT_JOIN, ITEM_DISPLAY_COLUMNS, withItemAlertSettings } from './item-alert-settings';
 
 export const productDashboardRepository = {
   findByUserIdWithSparkline: async (userId: number): Promise<ProductWithSparkline[]> => {
@@ -20,7 +20,7 @@ export const productDashboardRepository = {
                 ELSE ph.price * er.rate 
               END as converted_price,
               COALESCE(p.ai_status, ph.ai_status) as ai_status,
-              COALESCE(rc.name, rc.domain) as retailer_name,${ITEM_ALERT_COLUMNS}
+              COALESCE(rc.name, rc.domain) as retailer_name,${ITEM_ALERT_COLUMNS},${ITEM_DISPLAY_COLUMNS}
        FROM products p
        JOIN users u ON u.id = p.user_id
        ${ITEM_ALERT_JOIN}

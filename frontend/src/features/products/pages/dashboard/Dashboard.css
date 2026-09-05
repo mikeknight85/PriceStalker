@@ -422,3 +422,47 @@
     transform: translateY(0);
   }
 }
+
+/*
+ * The grouped/flat view toggle (issue #143).
+ *
+ * "All stores" lists every retailer listing, which is the behaviour that
+ * predates items and stays the default. "By product" groups them.
+ */
+.dashboard-view-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: var(--background);
+}
+
+.view-toggle-btn {
+  padding: 0.3rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.view-toggle-btn:hover:not(.active) { color: var(--text); }
+
+.view-toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/*
+ * Item cards sit in the same intrinsic grid as product cards, so the two views
+ * have the same rhythm and switching between them does not reflow the page.
+ */
+.items-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}

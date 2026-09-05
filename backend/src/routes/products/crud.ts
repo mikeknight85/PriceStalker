@@ -12,6 +12,18 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json(products);
 }, 'Product', 'Products', 'Failed to fetch products'));
 
+/**
+ * The same listings, grouped into items (issue #143).
+ *
+ * Declared before `/:id` on purpose: Express matches in order, and a route
+ * added below it would be swallowed by the id parameter and fail as
+ * "invalid product id".
+ */
+router.get('/items', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const items = await productHistoryService.getUserItems(req.userId!);
+  res.json(items);
+}, 'Product', 'Products', 'Failed to fetch items'));
+
 router.post('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { url } = req.body;
   const userId = req.userId!;

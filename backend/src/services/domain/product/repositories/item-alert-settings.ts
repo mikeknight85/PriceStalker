@@ -19,6 +19,18 @@ export const ITEM_ALERT_COLUMNS = `
               i.price_drop_threshold AS item_price_drop_threshold,
               i.notify_back_in_stock AS item_notify_back_in_stock`;
 
+/**
+ * The item's own display fields, for queries that render an item rather than a
+ * listing.
+ *
+ * Separate from the alert columns because most callers do not need them, and
+ * because the two have different lifetimes: a listing's name is scraped and
+ * re-scraped, while an item's is the user's own label for the thing.
+ */
+export const ITEM_DISPLAY_COLUMNS = `
+              i.name      AS item_name,
+              i.image_url AS item_image_url`;
+
 /** The join those columns require. */
 export const ITEM_ALERT_JOIN = `LEFT JOIN items i ON i.id = p.item_id`;
 

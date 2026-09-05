@@ -7,9 +7,39 @@ import ConfirmationModal from '../../../../components/ConfirmationModal';
 import { useDashboardState } from '../../hooks/useDashboardState';
 import DashboardControls from './DashboardControls';
 import ProductList from './ProductList';
+import ItemList from './ItemList';
 import './Dashboard.css';
 
+type DashboardView = 'items' | 'all';
+
+/**
+ * Which view the dashboard opens on, remembered per browser (issue #143).
+ *
+ * Flat is the default, not grouped: today every item has exactly one listing,
+ * so the grouped view has nothing extra to show until a user attaches a second
+ * store. It earns the default once that exists.
+ */
+const VIEW_STORAGE_KEY = 'pricestalker.dashboard.view';
+
+function loadView(): DashboardView {
+  try {
+    return localStorage.getItem(VIEW_STORAGE_KEY) === 'items' ? 'items' : 'all';
+  } catch {
+    // Private windows and blocked site data throw on access rather than
+    // returning null, and a dashboard that will not render is worse than one
+    // that forgets a preference.
+    return 'all';
+  }
+}
+
 const Dashboard: React.FC = () => {
+  const [view, setView] = React.useState<DashboardView>(loadView);
+
+  const changeView = (next: DashboardView) => {
+    setView(next);
+    try { localStorage.setItem(VIEW_STORAGE_KEY, next); } catch { /* preference is optional */ }
+  };
+
   const {
     products,
     isLoading,
@@ -114,6 +144,30 @@ const Dashboard: React.FC = () => {
                   />
                 )}
 
+                {!isLoading && products.length > 0 && (
+                  <div className="dashboard-view-toggle" role="group" aria-label="Dashboard view">
+                    <button
+                      type="button"
+                      className={`view-toggle-btn ${view === 'all' ? 'active' : ''}`}
+                      aria-pressed={view === 'all'}
+                      onClick={() => changeView('all')}
+                    >
+                      All stores
+                    </button>
+                    <button
+                      type="button"
+                      className={`view-toggle-btn ${view === 'items' ? 'active' : ''}`}
+                      aria-pressed={view === 'items'}
+                      onClick={() => changeView('items')}
+                    >
+                      By product
+                    </button>
+                  </div>
+                )}
+
+                {view === 'items' ? (
+                  <ItemList searchQuery={searchQuery} activeCategory={activeCategory} />
+                ) : (
                 <ProductList
                   products={filteredAndSortedProducts}
                   isLoading={isLoading}
@@ -127,6 +181,7 @@ const Dashboard: React.FC = () => {
                   hasAnyProducts={products.length > 0}
                   onSelect={(id) => navigate({ to: '/products/$productId', params: { productId: String(id) } })}
                 />
+                )}
           </>}
         </main>
       </div>
