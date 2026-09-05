@@ -277,14 +277,44 @@ tag, which production tracks. Production runs on Docker Swarm; the schema
 migrates one-way on deploy, so **a database backup precedes any production
 deploy**. See `deploy/swarm-stack.yml` and `CHANGELOG.md`.
 
+## Items and products are different things
+
+A **`products`** row is one retailer's listing: a URL, its own schedule, its own
+scrape history. An **`items`** row is the thing the user actually wants to buy,
+which may be listed at several retailers. Every product belongs to exactly one
+item; a product tracked at a single shop is an item with one listing.
+
+The two layers use different words on purpose:
+
+| | canonical thing | one retailer's listing |
+|---|---|---|
+| database | `items` | `products` |
+| UI | "Product" | "Store" |
+
+Users think "I am tracking a product, sold by these stores". Developers need
+names that cannot be misread. Do not try to make these agree — the mismatch is
+the design, and it is why the table is `items` rather than `products`.
+
+**Alert settings live on the item**, not the listing: `target_price`,
+`price_drop_threshold` and `notify_back_in_stock` describe what the user wants
+("tell me when anyone has this under 50"), not anything about a shop's page.
+The identically-named columns still on `products` are dead — retained only so
+migration 020 can be rolled back — and a later migration drops them. Never read
+them. Any query returning a product for code that reads those fields must join
+through `ITEM_ALERT_COLUMNS` / `ITEM_ALERT_JOIN` and map rows with
+`withItemAlertSettings` (`repositories/item-alert-settings.ts`); the aliases
+exist because selecting `i.target_price` beside `p.*` yields two columns of the
+same name and the winner is a driver detail.
+
 ## Things that are intentionally the way they are
 
 - Emoji removed in favour of the icon set (rule 1).
 - The database is named `priceghost`, not `pricestalker` — renaming it would
   orphan existing data. See `deploy/swarm-stack.yml`.
-- `product_groups`, `site_configs`, `user_memberships` tables exist but are
-  unused by current code. Leave them; do not build against them without checking
-  first.
+- `site_configs` and `user_memberships` tables exist but are unused by current
+  code. Leave them; do not build against them without checking first.
+  (`product_groups` used to be on this list. It is now `items` and is in active
+  use — see below.)
 - The daily update-check, per-product currency override and
   notify-on-any-change were dropped from 1.x. Do not "restore" them without
   asking — their absence is deliberate. (OpenRouter was also dropped, but was

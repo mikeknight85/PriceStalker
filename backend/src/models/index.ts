@@ -14,6 +14,7 @@ export {
   exchangeRateRepository as exchangeRateQueries, exchangeRateRepository
 } from '../services/domain/system/repositories/currency.repository';
 export { productRepository as productQueries, productRepository } from '../services/domain/product/repositories/product.repository';
+export { itemRepository } from '../services/domain/product/repositories/item.repository';
 export { priceHistoryRepository as priceHistoryQueries, priceHistoryRepository } from '../services/domain/product/repositories/price-history.repository';
 export { stockHistoryRepository as stockStatusHistoryQueries, stockHistoryRepository } from '../services/domain/product/repositories/stock-history.repository';
 import { retailerQueryRepository as rQueries } from '../services/domain/retailer/repositories/retailer-query.repository';

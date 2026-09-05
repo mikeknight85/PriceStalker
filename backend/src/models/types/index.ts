@@ -2,6 +2,7 @@ export * from './base';
 export * from './user';
 export * from './auth';
 export * from './product';
+export * from './item';
 export * from './stock';
 export * from './notification';
 export * from './retailer';

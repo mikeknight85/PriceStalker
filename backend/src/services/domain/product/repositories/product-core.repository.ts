@@ -3,6 +3,7 @@ import { asExecutor, type Executor } from './executor';
 import { 
   ProductWithLatestPrice, 
 } from '../../../../models/types';
+import { ITEM_ALERT_COLUMNS, ITEM_ALERT_JOIN, withItemAlertSettings } from './item-alert-settings';
 
 export const productQueryCoreRepository = {
   findByUserId: async (userId: number): Promise<ProductWithLatestPrice[]> => {
@@ -13,9 +14,10 @@ export const productQueryCoreRepository = {
                 WHEN ph.currency = u.currency THEN ph.price
                 ELSE ph.price * er.rate
               END as converted_price,
-              COALESCE(rc.name, rc.domain) as retailer_name
+              COALESCE(rc.name, rc.domain) as retailer_name,${ITEM_ALERT_COLUMNS}
        FROM products p
        JOIN users u ON u.id = p.user_id
+       ${ITEM_ALERT_JOIN}
        LEFT JOIN LATERAL (
          SELECT price, currency, ai_status FROM price_history
          WHERE product_id = p.id AND price_type = 'standard'
@@ -49,7 +51,7 @@ export const productQueryCoreRepository = {
        ORDER BY p.created_at DESC`,
       [userId]
     );
-    return result.rows;
+    return result.rows.map(withItemAlertSettings);
   },
 
   /**
@@ -74,9 +76,10 @@ export const productQueryCoreRepository = {
                 ELSE ph.price * er.rate
               END as converted_price,
               COALESCE(rc.name, rc.domain) as retailer_name,
-              (SELECT MIN(price) FROM price_history WHERE product_id = p.id AND price_type = 'standard') as min_price
+              (SELECT MIN(price) FROM price_history WHERE product_id = p.id AND price_type = 'standard') as min_price,${ITEM_ALERT_COLUMNS}
        FROM products p
        JOIN users u ON u.id = p.user_id
+       ${ITEM_ALERT_JOIN}
        LEFT JOIN LATERAL (
          SELECT price, currency, ai_status FROM price_history
          WHERE product_id = p.id AND price_type = 'standard'
@@ -121,6 +124,6 @@ export const productQueryCoreRepository = {
        WHERE p.id = $1 AND ($3::boolean = true OR p.user_id = $2)`,
       [id, userId, options?.asAdmin === true]
     );
-    return result.rows[0] || null;
+    return result.rows[0] ? withItemAlertSettings(result.rows[0]) : null;
   },
 };

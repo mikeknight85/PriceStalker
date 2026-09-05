@@ -5,6 +5,7 @@ import {
   ProductWithSparkline, 
   SparklinePoint
 } from '../../../../models/types';
+import { ITEM_ALERT_COLUMNS, ITEM_ALERT_JOIN, withItemAlertSettings } from './item-alert-settings';
 
 export const productDashboardRepository = {
   findByUserIdWithSparkline: async (userId: number): Promise<ProductWithSparkline[]> => {
@@ -19,9 +20,10 @@ export const productDashboardRepository = {
                 ELSE ph.price * er.rate 
               END as converted_price,
               COALESCE(p.ai_status, ph.ai_status) as ai_status,
-              COALESCE(rc.name, rc.domain) as retailer_name
+              COALESCE(rc.name, rc.domain) as retailer_name,${ITEM_ALERT_COLUMNS}
        FROM products p
        JOIN users u ON u.id = p.user_id
+       ${ITEM_ALERT_JOIN}
        LEFT JOIN LATERAL (
          SELECT price, currency, ai_status FROM price_history
          WHERE product_id = p.id AND price_type = 'standard'
@@ -68,7 +70,7 @@ export const productDashboardRepository = {
       [userId]
     );
 
-    const products = productsResult.rows;
+    const products = productsResult.rows.map(withItemAlertSettings);
     if (products.length === 0) return [];
 
     // Get sparkline data for all products (last 7 days)
