@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated multi-currency documentation: `README.md` now highlights the top 10
   currencies and links to a comprehensive regional table of all 37 supported
   currencies in `docs/user/README.md`.
+- Updated release channel documentation in `README.md` and `.env.example` to
+  reflect that `latest` / `stable` points to 2.0.0+ while `beta` tracks active
+  development on `main`.
 
 ### Changed
 

@@ -164,14 +164,11 @@ PriceStalker features comprehensive user and administrator guides:
 git clone https://github.com/mikeknight85/PriceStalker.git
 cd PriceStalker
 cp .env.example .env
-$EDITOR .env                      # set secrets; use IMAGE_TAG=beta for current v2
+$EDITOR .env                      # set required POSTGRES_PASSWORD and JWT_SECRET
 docker compose up -d
 ```
 
-> **Important for v2 testing:** The default `latest` image is the stable release
-> line and does not currently contain the full v2 overhaul. Set `IMAGE_TAG=beta`
-> in `.env` to run the current v2 beta. The `beta` channel follows `main` and
-> may contain unfinished or breaking changes.
+*Runs the stable release (`latest`) by default. See [Image channels](#image-channels) to switch to beta or pin an exact version.*
 
 Access at <http://localhost>. Create your first account, add a product URL, done.
 
@@ -260,13 +257,13 @@ See [.env.example](.env.example) for all available overrides.
 
 ### Image channels
 
-Three rolling tags are published, in order of stability:
+Rolling and versioned tags are published to GHCR, in order of stability:
 
 | Tag | When it updates | Use for |
 |-----|-----------------|---------|
-| `:latest` | Every tagged release (`vX.Y.Z`) | Latest stable release; currently not the full v2 overhaul. |
-| `:1.2` | Same as `:latest`, but only within the 1.2.x line | Production with auto-patch but no minor bumps. |
-| `:beta` | Every merge to `main` | Current v2 overhaul / pre-release staging. May break. |
+| `:latest` / `:stable` | Every final release (`vX.Y.Z`) | Current stable release (2.0.0+). Recommended for production. |
+| `:2.0` | Minor release line | Production tracking patch updates within the 2.0.x line. |
+| `:beta` | Every merge to `main` | Pre-release staging tracking active development. |
 
 Pin to an immutable version for absolute stability (note: published GHCR image tags omit the leading `v`):
 
