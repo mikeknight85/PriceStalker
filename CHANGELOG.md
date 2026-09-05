@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.8] - 2026-09-05
+
 ### Added
 
 - You can mark a store as selling a product you already track (#143). On a
