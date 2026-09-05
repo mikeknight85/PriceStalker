@@ -18,10 +18,16 @@ export const userAccountRepository = {
     return result.rows[0] || null;
   },
 
-  create: async (email: string, passwordHash: string, currency: string | null = null, locale: string | null = null): Promise<User> => {
+  create: async (
+    email: string,
+    passwordHash: string,
+    currency: string | null = null,
+    locale: string | null = null,
+    name: string | null = null
+  ): Promise<User> => {
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, currency, locale) VALUES ($1, $2, $3, $4) RETURNING *',
-      [email, passwordHash, currency, locale]
+      'INSERT INTO users (email, password_hash, currency, locale, name) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [email, passwordHash, currency, locale, name]
     );
     return result.rows[0];
   },

@@ -11,20 +11,21 @@ router.get('/', asyncHandler(async (_req: AuthRequest, res: Response) => {
 }, 'Admin | Fetch Users', 'Admin', 'Failed to fetch users'));
 
 router.post('/', asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { email, password, is_admin, currency, locale } = req.body;
+  const { email, password, name, is_admin, currency, locale } = req.body;
 
   if (!email || !password) {
     res.status(400).json({ error: 'Email and password are required' });
     return;
   }
 
-  const user = await userService.createUser({ email, password, is_admin, currency, locale });
+  const user = await userService.createUser({ email, password, name, is_admin, currency, locale });
 
   res.status(201).json({
     message: 'User created successfully',
     user: {
       id: user.id,
       email: user.email,
+      name: user.name,
       is_admin: is_admin || false,
       currency: user.currency,
       locale: user.locale

@@ -9,11 +9,12 @@ export class UserAccountService {
   async createUser(data: {
     email: string;
     password: string;
+    name?: string | null;
     is_admin?: boolean;
     currency?: string | null;
     locale?: string | null;
   }): Promise<User> {
-    const { email, password, is_admin, currency, locale } = data;
+    const { email, password, name, is_admin, currency, locale } = data;
 
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
@@ -25,7 +26,7 @@ export class UserAccountService {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    const user = await userRepository.create(email, passwordHash, currency || null, locale || null);
+    const user = await userRepository.create(email, passwordHash, currency || null, locale || null, name || null);
 
     if (is_admin) {
       await userRepository.setAdmin(user.id, true);

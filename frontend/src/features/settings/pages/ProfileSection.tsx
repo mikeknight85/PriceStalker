@@ -7,10 +7,18 @@ import { useAuth } from '../../auth';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import { queryClient } from '../../../api/queryClient';
 import { profileQuery, queryKeys } from '../../../api/queries';
+import { useTheme, ThemeMode } from '../../../context/ThemeContext';
+
+const THEME_MODES: { value: ThemeMode; label: string; hint: string }[] = [
+  { value: 'auto', label: 'Auto', hint: 'Follow your operating system' },
+  { value: 'light', label: 'Light', hint: 'Always light' },
+  { value: 'dark', label: 'Dark', hint: 'Always dark' },
+];
 
 export default function ProfileSection() {
   const { showToast } = useToast();
   const { updateUser } = useAuth();
+  const { mode, setMode } = useTheme();
   const [profileName, setProfileName] = useState('');
   const initializedProfileId = useRef<number | null>(null);
   const profileResult = useQuery(profileQuery());
@@ -54,7 +62,25 @@ export default function ProfileSection() {
         <input type="text" className="form-control" value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="Enter your name" />
       </div>
 
-      <div className="settings-actions">
+      <h2 className="settings-card-title" style={{ marginTop: '2rem' }}>Appearance</h2>
+      <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
+        Choose a color theme, or let it follow your operating system. Applied
+        immediately on this device.
+      </p>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        {THEME_MODES.map(t => (
+          <button
+            key={t.value}
+            className={`btn btn-sm ${mode === t.value ? 'btn-primary' : 'btn-secondary'}`}
+            title={t.hint}
+            onClick={() => setMode(t.value)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="settings-actions" style={{ marginTop: '2rem' }}>
         <button className="btn btn-secondary" onClick={() => setProfileName(profile.name || '')}>Cancel</button>
         <button className="btn btn-primary" onClick={handleSaveProfile} disabled={updateProfile.isPending}>
           {updateProfile.isPending ? 'Saving...' : 'Save Profile'}

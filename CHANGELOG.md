@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Admin User Management Single Password UX & Utilities**: Replaced the dual-password input in the Admin user creation and editing forms with a single password input, an integrated cryptographically secure password generator, and a clipboard copy button (#76, #80).
+- **CLI Password Reset Tool**: Added `pnpm run reset-password <email-or-id> [password]` utility (`backend/src/scripts/reset-password.ts`) to recover or assign user passwords from the terminal. Runs the compiled script, so it works inside the production container, which is where a locked-out administrator needs it. Use `reset-password:dev` to run from source. It refuses to set a password on an SSO account unless `--force` is given, because doing so enables local sign-in for an account the identity provider owns.
+- **Optional Display Name on User Creation**: Added an optional Display Name field to the Admin Create User form and backend API route.
+
+### Changed
+
+- **Relocated Theme / Appearance Settings**: Moved the Appearance (Auto / Light / Dark theme) selector from Regional Settings (`/settings/regional`) to the main Profile page (`/settings/profile`) above the profile action buttons.
+
 ### Fixed
 
 - Retailer bot-challenge pages are recognised instead of being scraped as
@@ -21,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page size. The size limit that stops the word appearing on a genuine product
   page from triggering a false positive was also being applied to the title,
   which is far more specific and cheap to check.
-
-### Fixed
 
 - Log timestamps now follow the `TZ` you configure. The backend always printed
   UTC regardless, and the scraper was hardcoded to `Australia/Perth`, so every

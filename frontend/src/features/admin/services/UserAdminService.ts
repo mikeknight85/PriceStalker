@@ -8,6 +8,6 @@ export const UserAdminService = {
     api.put(`/admin/users/${id}`, data),
   setUserAdmin: (id: number, isAdmin: boolean) => 
     api.put(`/admin/users/${id}/admin`, { is_admin: isAdmin }),
-  createUser: (email: string, pass: string, isAdmin: boolean, currency?: string, locale?: string) => 
-    api.post('/admin/users', { email, password: pass, is_admin: isAdmin, currency, locale }),
+  createUser: (email: string, pass: string, isAdmin: boolean, currency?: string, locale?: string, name?: string) =>
+    api.post('/admin/users', { email, password: pass, is_admin: isAdmin, currency, locale, name }),
 };
