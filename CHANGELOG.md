@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected Docker image tag references across documentation, `.env.example`, and
   deployment stacks: published GHCR image tags follow semver without a leading `v`
   (e.g. `2.1.0-beta.8`).
+- Corrected check interval documentation in `README.md` to match the UI and
+  backend (1 h to 24 h, default 12 h, ±15% jitter) and removed reference to a
+  legacy 5 min aggressive interval warning.
 
 ## [2.1.0-beta.8] - 2026-09-05
 

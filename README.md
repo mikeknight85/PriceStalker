@@ -86,7 +86,7 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 - AI price verification catches `$189 off` scraped as `$189`
 - Interactive price history charts (7d / 30d / 90d / all time)
 - 7-day sparklines on the dashboard
-- Configurable check intervals (5 min to 24 h per product)
+- Configurable check intervals (1 h to 24 h per product)
 - Live countdown timers + progress bars to the next check
 
 ### Multi-currency
@@ -325,11 +325,10 @@ may return in a later 2.x; `DISABLE_UPDATE_CHECK` currently does nothing.
 
 Don't get banned:
 
-- **Staggered checks** — products are scheduled with ±5 min jitter
+- **Staggered checks** — products are scheduled with ±15% jitter
 - **Request delays** — 2–5 s random delay between different products
-- **Reasonable intervals** — default 1 h; go longer if you track many items
+- **Reasonable intervals** — default 12 h; go longer if you track many items
 - **Browser-like headers** — standard User-Agent strings, not a scraper fingerprint
-- **UI warning** when intervals get aggressive (< 5 min)
 
 ---
 
