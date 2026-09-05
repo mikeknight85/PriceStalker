@@ -1,6 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../features/auth';
+import { useQuery } from '@tanstack/react-query';
+import { systemVersionQuery } from '../api/queries';
+
+/**
+ * What is actually running, under the logout button.
+ *
+ * The backend reports its version at runtime; the frontend knows its own from
+ * build time. Normally they match and one line is shown. When they do not, both
+ * are -- frontend and backend ship as separate images, so a half-finished
+ * deploy leaves them disagreeing, and that is exactly the moment this line is
+ * worth having.
+ *
+ * If the backend cannot be reached the frontend's own version is still shown,
+ * because "unknown" would be less useful than the half we are certain of.
+ */
+const VersionLine: React.FC = () => {
+  const { data } = useQuery(systemVersionQuery());
+  const backend = data?.version;
+  const frontend = __APP_VERSION__;
+  const mismatch = backend && backend !== frontend;
+
+  return (
+    <div className="user-dropdown-version">
+      {mismatch ? (
+        <span title="The frontend and backend are running different versions, which usually means a deploy did not finish.">
+          ui v{frontend} &middot; api v{backend}
+        </span>
+      ) : (
+        <span>v{frontend}</span>
+      )}
+    </div>
+  );
+};
 
 const UserDropdown: React.FC = () => {
   const { user, logout } = useAuth();
@@ -103,6 +136,7 @@ const UserDropdown: React.FC = () => {
             </svg>
             Logout
           </button>
+          <VersionLine />
         </div>
       )}
     </div>

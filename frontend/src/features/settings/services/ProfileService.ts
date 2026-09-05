@@ -1,6 +1,11 @@
 import { api, type RequestOptions } from '../../../api/client';
 import { UserProfile, NotificationSettings } from '../../../types/api';
 
+export const SystemService = {
+  /** The version the backend is actually running. */
+  getVersion: (options?: RequestOptions) => api.get<{ version: string }>('/system/version', options),
+};
+
 export const ProfileService = {
   getProfile: (options?: RequestOptions) => api.get<UserProfile>('/profile', options),
 

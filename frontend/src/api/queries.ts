@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 import { ProductService } from '../features/products/services/ProductService';
-import { ProfileService } from '../features/settings/services/ProfileService';
+import { ProfileService, SystemService } from '../features/settings/services/ProfileService';
 import { NotificationService } from '../features/notifications/services/NotificationService';
 import { SharedService } from '../services/SharedService';
 import { AdminSystemService } from '../features/admin/services/AdminSystemService';
@@ -16,6 +16,7 @@ export const queryKeys = {
   profile: ['profile'] as const,
   currencies: ['settings', 'currencies'] as const,
   notificationSettings: ['settings', 'notifications'] as const,
+  systemVersion: ['system', 'version'] as const,
   adminSystemSettings: ['admin', 'system-settings'] as const,
   priceHistory: (productId: number, days: number) => ['products', productId, 'price-history', days] as const,
   stockHistory: (productId: number, days: number) => ['products', productId, 'stock-history', days] as const,
@@ -60,6 +61,17 @@ export const discoveryStatusQuery = () => queryOptions({
   queryKey: queryKeys.discoveryStatus,
   queryFn: ({ signal }) => ProductService.getSearchStatus({ signal }),
   staleTime: 10 * 60_000,
+});
+
+/**
+ * What the backend is running. Fetched once and cached hard: the version cannot
+ * change without the process restarting, at which point the page reloads anyway.
+ */
+export const systemVersionQuery = () => queryOptions({
+  queryKey: queryKeys.systemVersion,
+  queryFn: ({ signal }) => SystemService.getVersion({ signal }),
+  staleTime: Infinity,
+  retry: false,
 });
 
 export const profileQuery = () => queryOptions({
