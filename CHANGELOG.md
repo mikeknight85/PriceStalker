@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A **By product** view on the dashboard, alongside the existing **All stores**
+  list (#143). It shows one card per product with the best price across the
+  stores selling it, how many stores were compared, and the gap between the
+  cheapest and dearest. Your choice of view is remembered.
+- The best price is worked out in your own currency. A store whose currency
+  could not be converted is left out of the comparison and the card says so,
+  rather than ranking amounts in different currencies against each other.
+
 ## [2.1.0-beta.5] - 2026-09-05
 
 ### Added

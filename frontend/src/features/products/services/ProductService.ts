@@ -1,5 +1,6 @@
 import { api, type RequestOptions } from '../../../api/client';
 import { 
+  ItemWithListings,
   Product, 
   ProductWithStats, 
   CreateProductResponse, 
@@ -12,6 +13,8 @@ import {
 
 export const ProductService = {
   getAll: (options?: RequestOptions) => api.get<Product[]>('/products', options),
+  /** The same listings, grouped into items (issue #143). */
+  getItems: (options?: RequestOptions) => api.get<ItemWithListings[]>('/products/items', options),
 
   getById: (id: number, options?: RequestOptions) => api.get<ProductWithStats>(`/products/${id}`, options),
 

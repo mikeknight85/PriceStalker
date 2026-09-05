@@ -1,0 +1,145 @@
+/*
+ * The grouped dashboard card (issue #143).
+ *
+ * Uses container queries rather than viewport breakpoints, matching
+ * ProductCard: the card adapts to the space it is given, which is what keeps it
+ * working in a sidebar layout as well as a full-width grid.
+ */
+.item-card {
+  container-type: inline-size;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.item-card-image {
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  background: var(--background);
+}
+
+.item-card-image-empty {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+.item-card-heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.item-card-name {
+  font-weight: 600;
+  /* The name is the identity of the card, so it wraps rather than truncating
+     to a single ambiguous line, but stops before it dominates. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.item-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.item-card-stock.in { color: var(--secondary, #10b981); }
+.item-card-stock.out { color: var(--text-muted); }
+
+.item-card-price {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.item-card-price-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  /* Prices line up across cards in a grid. */
+  font-variant-numeric: tabular-nums;
+}
+
+.item-card-price-label,
+.item-card-price-absent {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.item-card-price-absent { font-style: italic; }
+
+.item-card-note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.item-card-spread {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.item-card-listings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.item-listing {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  color: inherit;
+  text-decoration: none;
+  background: var(--background);
+}
+
+.item-listing:hover { border-color: var(--primary); }
+
+/* The cheapest store, which is the one the user is most likely to act on. */
+.item-listing.is-best {
+  border-left: 2px solid var(--secondary, #10b981);
+  font-weight: 600;
+}
+
+.item-listing-store {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-listing-price { font-variant-numeric: tabular-nums; }
+
+.item-listing-absent {
+  color: var(--text-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* A single store makes the per-store list redundant with the headline price. */
+@container (max-width: 22rem) {
+  .item-card-head { flex-wrap: wrap; }
+  .item-card-price { text-align: left; width: 100%; }
+}

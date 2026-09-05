@@ -11,7 +11,7 @@ export const queryKeys = {
   adminUsers: ['admin', 'users'] as const,
   adminTokens: ['admin', 'system-tokens'] as const,
   adminRetailers: ['admin', 'retailers'] as const,
-  products: { all: ['products'] as const, detail: (id: number) => ['products', id] as const },
+  products: { all: ['products'] as const, items: ['products', 'items'] as const, detail: (id: number) => ['products', id] as const },
   discoveryStatus: ['settings', 'discovery-status'] as const,
   profile: ['profile'] as const,
   currencies: ['settings', 'currencies'] as const,
@@ -34,6 +34,17 @@ const PRODUCT_DETAIL_POLL_INTERVAL = 30_000;
 export const productListQuery = () => queryOptions({
   queryKey: queryKeys.products.all,
   queryFn: ({ signal }) => ProductService.getAll({ signal }),
+  staleTime: PRODUCT_POLL_INTERVAL,
+  refetchInterval: PRODUCT_POLL_INTERVAL,
+});
+
+/**
+ * The grouped view (issue #143). Same poll interval as the flat list, so
+ * switching between them does not change how fresh the numbers are.
+ */
+export const itemListQuery = () => queryOptions({
+  queryKey: queryKeys.products.items,
+  queryFn: ({ signal }) => ProductService.getItems({ signal }),
   staleTime: PRODUCT_POLL_INTERVAL,
   refetchInterval: PRODUCT_POLL_INTERVAL,
 });
