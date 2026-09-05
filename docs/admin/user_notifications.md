@@ -42,30 +42,58 @@ You can configure and test your notification channels under **User Settings → 
 ### Custom Webhook
 For integrations with Home Assistant, Apprise, n8n, Zapier, or custom APIs, select **Custom Webhook** in Settings → Notifications:
 * **URL**: The endpoint of the receiver.
-* **HTTP Method**: Choose `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.
-* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). The `Content-Type` header defaults to `application/json` for non-GET requests if omitted.
-* **Body Template**: Optional. Leave blank to send PriceStalker's default JSON payload structure. If defined, variables enclosed in `{}` will be substituted:
+* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default.
+* **Body Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
 
-| Token | Meaning |
-|-------|---------|
-| `{title}` / `{product_name}` | Product name |
-| `{type}` | Alert event type (e.g. `price_drop`, `target_price`, `back_in_stock`, `unavailable`, `resumed`) |
-| `{url}` | Product URL |
-| `{currency}` | ISO currency code |
-| `{price}` | Current price formatted with currency |
-| `{new_price}` / `{current_price}` | Raw numeric current price |
-| `{old_price}` | Previous price (when applicable) |
-| `{threshold}` | Configured price drop threshold |
-| `{target_price}` | Configured target price |
-| `{reason}` | Detailed explanation (e.g. for unavailable alerts or stock transitions) |
-| `{timestamp}` | ISO-8601 message timestamp |
+The request is always a `POST`. (v1 had a configurable method; v2 does not.)
+
+**Default payload**, sent when no body template is set:
+
+```json
+{
+  "event": "price_drop",
+  "product": "Sony WH-1000XM5",
+  "productId": 409,
+  "url": "https://shop.example/p/1",
+  "price": 249.99,
+  "oldPrice": 299.00,
+  "targetPrice": 250.00,
+  "currency": "CHF",
+  "oldStockStatus": "out_of_stock",
+  "newStockStatus": "in_stock",
+  "reason": null,
+  "paused": null,
+  "timestamp": "2026-09-05T09:20:00.000Z"
+}
+```
+
+`event` is one of `price_drop`, `target_price`, `back_in_stock`, `price_announced`, `not_available`, `product_restored`. Any field that does not apply to an event is `null` — including `currency`, which is `null` rather than a guessed `USD` when the scrape could not resolve one.
 
 * *Tip: Hit **Send Test** to send a test payload. Webhook.site is an excellent tool for testing webhook payloads.*
 
 ---
 
 ## 2. Customizable Message Templates
-Under your notification channel configurations, you can customize the message formats across channels. Shared template variables (`{{product_name}}`, `{{price}}`, `{{current_price}}`, `{{old_price}}`, `{{url}}`, `{{reason}}`) are resolved dynamically for each event.
+Under your notification channel configurations, you can customize the message formats across channels. The full set of variables, resolved for every channel and every event:
+
+| Variable | Meaning |
+|---|---|
+| `{{product_name}}` | Product name |
+| `{{product_url}}` | Product URL (**not** `{{url}}`) |
+| `{{product_id}}` | Numeric id, or `N/A` |
+| `{{price}}` | Current price with its currency attached, e.g. `CHF 49.90`, or `unavailable` |
+| `{{current_price}}` | Current price as a bare number, e.g. `49.90`, or `unavailable` |
+| `{{old_price}}` | Previous price as a bare number, or `unavailable` |
+| `{{currency}}` | ISO code, or empty when the scrape could not resolve one |
+| `{{currency_symbol}}` | Symbol where one is recognised, otherwise empty |
+| `{{type}}` | Event, de-underscored, e.g. `back in stock` |
+| `{{old_stock_status}}` / `{{new_stock_status}}` | Stock either side of the change, e.g. `Out of stock` |
+| `{{reason}}` | Why a product could not be read, on unavailable alerts |
+
+One template covers **every** event, so wording it around a price drop reads
+oddly on a back-in-stock or unavailable alert. Use `{{type}}` and
+`{{new_stock_status}}` to describe what happened, or leave the field empty to
+get wording chosen per event.
 
 ---
 

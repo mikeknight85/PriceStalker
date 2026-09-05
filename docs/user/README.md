@@ -23,7 +23,50 @@ when you want to check a product before its next scheduled refresh.
 
 ---
 
-## 2. How the Scraper Reads a Product Page
+## 2. Tracking One Product at Several Stores
+
+If the same thing is sold by more than one retailer, you can track each store
+and have PriceStalker compare them.
+
+**Linking two stores.** Add each retailer's page as you would any product, then
+open one of them and choose **Same As Another Product**. Pick the product it is
+the same as, and from then on the two appear as a single entry. **Separate From
+Product** undoes it at any time; nothing is deleted either way, and each store
+keeps its own price history.
+
+Nothing is grouped automatically. Only you know that two pages are the same
+physical item, and guessing wrong would silently merge two things you wanted to
+watch separately.
+
+**Seeing them together.** The dashboard has two views:
+
+* **All stores** — every retailer listing separately. This is the default and is
+  how PriceStalker has always worked.
+* **By product** — one card per product, showing the best price across its
+  stores, the gap between the cheapest and dearest, and each store underneath.
+
+Your choice is remembered.
+
+**How the best price is chosen.** Prices are converted to your preferred
+currency before being compared. A store whose currency could not be resolved is
+**left out of the comparison**, and the card says how many were excluded — for
+example "best of 2" when you are tracking four stores. Comparing an amount in
+one currency against an amount in another and calling one cheaper would be
+misleading, and it is a number you would act on.
+
+**Alerts belong to the product, not the store.** One target price covers every
+store, and a drop at any of them triggers it. This means linking replaces
+whatever alert settings the store had on its own with the ones on the product
+you link it to — you are warned before confirming, and told afterwards if
+anything was replaced.
+
+**Adding a store to something you already track**: add the new URL as a normal
+product first, then link it. Pasting a URL directly onto an existing product is
+not supported yet.
+
+---
+
+## 3. How the Scraper Reads a Product Page
 
 For most retailers, PriceStalker reads the page using a fast standard web
 request. It then removes unrelated page content and looks for the product
@@ -41,7 +84,7 @@ read the page correctly.
 
 ---
 
-## 3. Data Extraction (The Cascade)
+## 4. Data Extraction (The Cascade)
 Once the HTML is downloaded, the system denoises the page—stripping out heavy scripts, footers, headers, and navigation menus to keep only the core product content. It then checks for prices in a **7-layered cascade**:
 1. **Structural Metadata** (JSON-LD data formatted for search engines like Google).
 2. **Deal Selectors** (Temporary deals/sale prices).
@@ -66,7 +109,7 @@ enough evidence to distinguish them.
 
 ---
 
-## 4. When a Page Is Unavailable
+## 5. When a Page Is Unavailable
 
 PriceStalker distinguishes between temporary network glitches and pages that appear
 to have gone away:
@@ -79,7 +122,7 @@ to have gone away:
   * **Resume Monitoring**: Re-activates automatic background checks for a paused product.
   * **Automatic recovery**: If an automatically paused product becomes available again on a subsequent check, monitoring resumes automatically and a back-online notification is sent. (Products paused manually by you remain paused until you choose to resume them).
 
-## 5. Where AI Fits In (Enhanced, but Optional)
+## 6. Where AI Fits In (Enhanced, but Optional)
 PriceStalker is built to be resilient, even without AI. However, enabling the AI Engine unlocks powerful benefits:
 
 ### AI Auto-Mapping
@@ -91,7 +134,7 @@ PriceStalker is built to be resilient, even without AI. However, enabling the AI
 
 ---
 
-## 6. Price Consensus & The Voting Modal
+## 7. Price Consensus & The Voting Modal
 Sometimes, different elements on a page list different prices (e.g., a "Buy Now" price vs. "Save $10" deal tags). PriceStalker handles this gracefully:
 
 * **Consensus Engine**: The system groups all extracted price candidates and tallies them up using a weighting scale. High-priority paths (like JSON-LD) carry more weight than generic HTML scans.
@@ -100,13 +143,13 @@ Sometimes, different elements on a page list different prices (e.g., a "Buy Now"
 
 ---
 
-## 7. The Learning Loop
+## 8. The Learning Loop
 When you manually select the correct price in the Voting Modal (or when a scrape is successful), PriceStalker learns from it:
 * It analyzes which rule successfully found that price.
 * It promotes that rule to the top priority for that store.
 * It tracks rule failure rates. If a rule fails too many times consecutively, it is automatically demoted or evicted.
 
-## 8. Refreshes, Notifications, and Troubleshooting
+## 9. Refreshes, Notifications, and Troubleshooting
 
 Products are checked according to their configured refresh interval. A product
 may not be checked immediately after it is added because the scheduler spreads
@@ -129,7 +172,7 @@ If a product needs attention:
 * **The page is incomplete or blocked**: an administrator may need to enable
   the browser scraper or update the retailer rules.
 
-## 9. Currency and privacy
+## 10. Currency and privacy
 
 PriceStalker can display prices in your preferred currency using its configured
 exchange-rate data. The original retailer currency remains part of the price
@@ -149,6 +192,15 @@ requirements.
   member-only, unavailable, or unknown.
 * **Price candidate**: A possible price found on the page before PriceStalker
   chooses or asks you to confirm the result.
+
+---
+
+## Which version am I running?
+
+The version is shown in the user menu, under **Logout**. Normally one number
+appears. If the interface and the API are somehow on different versions — which
+is what a half-finished deploy looks like — both are shown, and that is worth
+reporting.
 
 ---
 

@@ -39,18 +39,57 @@ Stores user profile information, authentication hashes, locale/currency settings
  - *(Note: AI provider settings and API keys are stored instance-wide in `system_settings`, not in `users`)*.
 
 ### 2. `products`
-The central registry of tracked items across all users.
+One retailer's listing of something: a URL, its own schedule, its own scrape and
+price history. **Not** the thing the user is tracking — that is `items`, below,
+and every product belongs to exactly one.
 * **Key Fields**:
  - `url` & `name`
+ - `item_id`: The canonical item this listing belongs to. Never null in practice.
+ - `is_primary`: Whether this listing supplies the item's identity. At most one
+   per item, enforced by the partial unique index `products_one_primary_per_item`.
  - `refresh_interval`: Frequency (seconds) for scheduled checks.
+ - `next_check_at`: When the scheduler will next pick it up. Bounded at 1.5x
+   `refresh_interval`; see `utils/system/scheduler-helpers.ts`.
  - `stock_status`: Current availability (`in_stock`, `out_of_stock`, `pre_order`, `member_only`, `not_available`, `unknown`).
- - `unavailable_reason`: Specific explanation when a page cannot be reached (e.g. `404/410`, `Bot wall`, `Timeout`).
- - `consecutive_unavailable_count`: Consecutive count of failed scrapes used for de-bouncing before marking unavailable.
- - `paused_by`: Tracks whether monitoring was paused by `user` or `system`.
- - `price_drop_threshold` & `target_price`: Alert targets.
+ - `unavailable_reason`: Specific explanation when a page cannot be reached. See `types/availability.ts` for the codes.
+ - `page_gone_streak`: Consecutive *definitive* failures (404/410/soft-404), used to de-bounce before marking a product unavailable.
+ - `failure_streak` & `last_failure_at`: Consecutive *transient* failures (timeout, DNS, bot challenge). Tracked separately because a transient failure is evidence about the network, not about the product, and never pauses monitoring.
+ - `checking_paused` & `auto_paused`: Whether monitoring is stopped, and whether the system stopped it rather than the user. The system only resumes what the system paused.
  - `preferred_extraction_method`: Stores the winning consensus extraction type.
  - `anchor_price`: Benchmark price used to detect anomalous consensus pricing drift.
  - `needs_price_review`: Boolean flag indicating manual verification required.
+* **Dead columns, do not read**: `target_price`, `price_drop_threshold` and
+  `notify_back_in_stock` still exist here but moved to `items` in migration 020.
+  They are retained only so that migration can be rolled back, and a later
+  migration drops them. Reading them yields whatever they held before the move.
+
+### 2a. `items`
+The canonical thing a user wants to buy, which may be sold by several
+retailers. Introduced by migration `020_canonical_items` (issue #143), which
+renamed the previously unused `product_groups`.
+
+A product tracked at a single retailer is an item with one listing — grouping is
+not optional, so that alert settings have exactly one home rather than living on
+two tables with a rule about which wins.
+
+**Naming**: the UI says "Product" for an item and "Store" for a listing, because
+that is how people think about it. The database says `items` and `products`
+because those are unambiguous to read. The mismatch is deliberate — see CLAUDE.md.
+
+* **Key Fields**:
+ - `name`, `image_url`, `category`: How the item is displayed. Seeded from the primary listing.
+ - `user_id`: Owner. `ON DELETE CASCADE` from `users`.
+ - `target_price`, `price_drop_threshold`, `notify_back_in_stock`: Alert settings.
+   These describe intent about the thing ("tell me when anyone has this under
+   50"), not about one shop's page, which is why they live here.
+* **Constraints**: `products.item_id` references this `ON DELETE SET NULL`, so
+  deleting an item ungroups its listings rather than destroying their history.
+  `idx_products_item_id` supports fetching every listing for an item.
+* **Reading a product's alert settings**: join through
+  `ITEM_ALERT_COLUMNS` / `ITEM_ALERT_JOIN` and map rows with
+  `withItemAlertSettings` (`repositories/item-alert-settings.ts`). The aliases
+  exist because selecting `i.target_price` beside `p.*` yields two columns of the
+  same name, and which one the driver keeps is undocumented.
 
 ### 3. `retailer_configs`
 Houses the extraction selectors and custom routing rules. **Strictly no retailer logic is hardcoded in backend services.**
