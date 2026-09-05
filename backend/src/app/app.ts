@@ -9,6 +9,7 @@ import settingsRoutes from '../routes/settings';
 import profileRoutes from '../routes/profile';
 import adminRoutes from '../routes/admin';
 import notificationRoutes from '../routes/notifications';
+import systemRoutes from '../routes/system';
 import { requestLogger, logger } from '../utils/system/logger';
 import pool from '../config/database';
 
@@ -61,6 +62,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/system', systemRoutes);
 
 // Error handling middleware
 app.use(
