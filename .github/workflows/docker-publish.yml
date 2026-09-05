@@ -15,6 +15,26 @@ on:
       - '.github/workflows/**'
   workflow_dispatch:
 
+# `beta` is a moving tag: whichever run pushes last owns it. Without this, two
+# overlapping pushes to main race, and the *older* commit can win.
+#
+# That is not hypothetical. On 2026-09-05 a merge and the release commit that
+# followed it were building at the same time:
+#
+#   release commit (2.1.0-beta.7)  publish-frontend  09:21:22 -> 09:22:35
+#   the merge before it (beta.6)   publish-frontend  09:21:53 -> 09:23:05
+#
+# The older build finished thirty seconds later and left `beta` pointing at it,
+# so production deployed a frontend one version behind its own backend.
+#
+# Grouping per ref serialises main against itself and cancels the superseded
+# run: a build for a commit that is no longer the tip has nothing useful to
+# publish. Tags each get their own group and are never cancelled -- those
+# publish immutable version tags, and every one of them has to exist.
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
 permissions:
   contents: read
 
