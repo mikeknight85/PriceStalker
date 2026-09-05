@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.5] - 2026-09-05
+
 ### Added
 
 - **Admin User Management Single Password UX & Utilities**: Replaced the dual-password input in the Admin user creation and editing forms with a single password input, an integrated cryptographically secure password generator, and a clipboard copy button (#76, #80).
