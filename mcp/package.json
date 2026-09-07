@@ -1,0 +1,33 @@
+{
+  "name": "pricestalker-mcp",
+  "version": "2.1.0-beta.8",
+  "description": "PriceStalker Model Context Protocol (MCP) Server and CLI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "pricestalker": "dist/index.js",
+    "pricestalker-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "mcp": "tsx src/index.ts mcp",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js mcp"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "axios": "1.14.0",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "4.1.10"
+  }
+}

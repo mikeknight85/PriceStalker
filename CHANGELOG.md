@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Model Context Protocol (MCP) server and interactive CLI workspace (`@pricestalker/mcp`) (#163):
+  exposes tools, dynamic resources, and guided prompts for AI assistants (Claude Desktop,
+  Cursor, Goose, Cline, Home Assistant) and terminal users.
+- Developer and scraper workbench MCP tools: `inspect_url_prices` (discover all candidate prices
+  across DOM, JSON-LD, and meta tags), `generate_retailer_selectors` (derive full `RetailerConfig`
+  proposals), `test_retailer_config` (dry-run custom selectors), `save_retailer_config`,
+  `remap_retailer`, `benchmark_retailer` (multi-URL regression testing), and `debug_extract`.
+- Shopping intelligence and price analysis tools: `search_items`, `search_web_for_products`
+  (SearXNG web discovery), `compare_stores`, `list_deals_and_drops`, `get_price_history`,
+  `analyze_price_trend` (Buy Now vs. Wait advisory), and `optimize_shopping_basket` (split-order
+  vs single-store optimizer).
+- Product management tools: `track_product`, `meta_extract_url` (non-persisted extraction),
+  `update_item_alerts`, `delete_item`, `bulk_toggle_tracking`, `rescan_product`, and
+  `confirm_product_selection`.
+- System operations tools: `test_notification_channel` (live verification for all channels),
+  `test_ai_provider` (credential and model tests for all 10 AI providers), `flush_system_caches`,
+  and `query_system_logs`.
 - Alerts say which store they are about, when a product is tracked at more than
   one (#143). "Price dropped from CHF 299.00 to CHF 249.50 at Digitec" tells you
   where to go; without it a drop across four stores is not actionable. A
