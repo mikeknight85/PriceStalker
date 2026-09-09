@@ -1,6 +1,6 @@
 import { type CheerioAPI } from 'cheerio';
 import { RetailerConfig } from '../../../models';
-import { ScrapedProductWithVoting } from '../../../types/scraper';
+import { ScrapedProductWithVoting, PriceCandidate } from '../../../types/scraper';
 import { resolveScrapeContext } from '../context';
 import { extractAllPriceCandidates } from '../prices';
 import { extractMetadata } from '../metadata';
@@ -68,7 +68,39 @@ export async function runExtractionPhase(
     localeHint, 
     extractionSteps
   );
-  result.priceCandidates = allCandidates;
+  // Merged, not replaced (issue #166).
+  //
+  // Phase 4 runs this a second time after AI auto-mapping generates a retailer
+  // config. A plain assignment threw away everything the first pass had found
+  // -- JSON-LD, generic selectors -- so if the generated config matched fewer
+  // elements, or none, consensus then ran on a smaller pool than before the AI
+  // was consulted. Auto-mapping could make extraction worse.
+  //
+  // Deduplicated on what makes a candidate distinct rather than on identity:
+  // the same figure found twice by the same selector and method is one piece of
+  // evidence, and counting it twice would skew the consensus weighting.
+  result.priceCandidates = mergeCandidates(result.priceCandidates, allCandidates);
 
   return { currencyHint, localeHint };
+}
+
+
+/**
+ * Combines two extraction passes, keeping the earlier candidates.
+ *
+ * Order matters for readability of the trace rather than for correctness --
+ * consensus weighs candidates, it does not take the first.
+ */
+function mergeCandidates(existing: PriceCandidate[] | undefined, found: PriceCandidate[]): PriceCandidate[] {
+  if (!existing || existing.length === 0) return found;
+
+  const seen = new Set<string>();
+  const merged: PriceCandidate[] = [];
+  for (const c of [...existing, ...found]) {
+    const key = `${c.price}|${c.currency}|${c.method}|${c.selector ?? ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(c);
+  }
+  return merged;
 }
