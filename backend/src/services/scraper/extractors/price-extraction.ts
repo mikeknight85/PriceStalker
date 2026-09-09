@@ -112,5 +112,18 @@ export function extractJsonLdCandidates(
       if (Array.isArray(data)) data.forEach(findData); else findData(data);
     } catch (e) {}
   });
-  return candidates;
+
+  // Deduplicated before returning (issue #169). A @graph that cross-references
+  // by @id, or nests priceSpecification inside offers, yields the same figure
+  // several times from one document. Consensus weighs candidates, so the same
+  // price arriving three times counts as three sources agreeing when it is one
+  // source repeated -- which is exactly the corroboration the guardrails rely
+  // on being real.
+  const seen = new Set<string>();
+  return candidates.filter(c => {
+    const key = `${c.price}|${c.currency}|${c.method}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

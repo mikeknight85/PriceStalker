@@ -19,7 +19,14 @@ export function extractCustomCandidates($: CheerioAPI, selectors: string[], html
     0.9, 
     currencyHint, 
     localeHint, 
-    0, 
+    // Bounded (issue #169). 0 means unlimited, so a broad custom selector --
+    // `.price` on a page that lists related items -- could put hundreds of
+    // candidates into consensus and drown the real one.
+    //
+    // 40 rather than the 20 proposed: it matches what generic extraction
+    // already uses, so this is not tighter than a bound the codebase has been
+    // running successfully, while still stopping the flood.
+    40,
     false,
     html
   );

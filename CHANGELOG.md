@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Saving an auto-mapped retailer configuration no longer discards the cached
+  configuration for every other retailer (#169), which made the next scheduled
+  batch re-read all of them from the database at once.
+- Flagging a retailer as blocked, or restoring it, now takes effect
+  immediately instead of after the cache expires. The scraper was carrying on
+  as though a retailer it had just flagged were healthy.
+- A broad custom price selector can no longer flood the candidate pool. Custom
+  rules were unbounded while the generic ones were capped.
+- The same price appearing several times in one structured-data document is
+  counted once. Repeats read as independent sources agreeing, which is the
+  corroboration the out-of-stock safeguards depend on being real.
+
+### Fixed
+
 - A members-only or was-before price can no longer be chosen as a product's
   main price by AI arbitration (#167). Every other path already excluded them.
 - Two prices that differ by more than a few pounds are no longer treated as the
