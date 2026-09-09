@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The By product view compares stores again when your currency is set to
+  Automatic, which is the default every account starts on (#160). Prices are
+  compared in the currency the stores share, so two shops both selling in AUD
+  are compared in AUD. Previously every store was reported as impossible to
+  compare, so the feature did nothing on a fresh install.
+- Stores that tie for the lowest price are all marked as best, instead of one
+  being picked arbitrarily (#161). When every store is at the same price the
+  card says so rather than claiming one is cheapest.
+
 ### Added
 
 - Alerts say which store they are about, when a product is tracked at more than

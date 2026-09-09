@@ -24,9 +24,27 @@ export interface ItemWithListings extends Item {
    * 49.99 CHF and declaring a winner is worse than declining to.
    */
   best_price: number | null;
-  /** Which listing supplies `best_price`, so the UI can name the store. */
-  best_price_listing_id: number | null;
-  /** The currency `best_price` is expressed in: the user's preferred one. */
+  /**
+   * Every listing at the best price — plural because ties are common (issue
+   * #161). Two shops at $379 are both the cheapest, and crowning whichever
+   * happened to sort first tells the user something untrue.
+   */
+  best_price_listing_ids: number[];
+
+  /**
+   * True when every comparable store is at the same price. The UI says so
+   * rather than claiming a winner: "best of 3" is misleading when all three
+   * are identical.
+   */
+  all_tied: boolean;
+  /**
+   * The currency `best_price` is expressed in.
+   *
+   * The user's preferred currency when they have one. When they do not -- the
+   * "Automatic" default, `users.currency IS NULL` -- it is the currency the
+   * stores themselves share, so a comparison still happens rather than
+   * everything being excluded (issue #160).
+   */
   best_price_currency: string | null;
 
   /**

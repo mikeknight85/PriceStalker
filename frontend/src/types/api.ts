@@ -400,7 +400,10 @@ export interface ItemWithListings {
   listings: Product[];
   store_count: number;
   best_price: number | null;
-  best_price_listing_id: number | null;
+  /** Every listing at the best price — plural, because ties are common. */
+  best_price_listing_ids: number[];
+  /** True when every comparable store is at the same price. */
+  all_tied: boolean;
   best_price_currency: string | null;
   price_spread: number | null;
   comparable_count: number;

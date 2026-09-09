@@ -47,12 +47,15 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
                 {formatPrice(item.best_price, item.best_price_currency, userLocale)}
               </div>
               {/*
-                Only claim "best" when there was actually a choice. With one
-                comparable store it is just the price.
+                Only claim "best" when there was actually a choice, and only
+                when there is a difference. With every store at the same price,
+                "best of 3" asserts a gap that does not exist (issue #161).
               */}
               {item.comparable_count > 1 && (
                 <div className="item-card-price-label">
-                  best of {item.comparable_count}
+                  {item.all_tied
+                    ? `same at all ${item.comparable_count}`
+                    : `best of ${item.comparable_count}`}
                 </div>
               )}
             </>
@@ -88,7 +91,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
             key={listing.id}
             to="/products/$productId"
             params={{ productId: String(listing.id) }}
-            className={`item-listing ${listing.id === item.best_price_listing_id ? 'is-best' : ''}`}
+            /*
+              Every listing at the best price is marked, not just whichever
+              sorted first -- and none is when they are all tied, since
+              highlighting all of them says nothing.
+            */
+            className={`item-listing ${!item.all_tied && item.best_price_listing_ids.includes(listing.id) ? 'is-best' : ''}`}
           >
             <span className="item-listing-store">
               {listing.retailer_name || hostOf(listing.url)}

@@ -76,7 +76,7 @@ describe('best price', () => {
       listing({ id: 3, is_primary: false, converted_price: 310 }),
     ], 'CHF');
     expect(items[0].best_price).toBe(249.5);
-    expect(items[0].best_price_listing_id).toBe(2);
+    expect(items[0].best_price_listing_ids).toEqual([2]);
     expect(items[0].best_price_currency).toBe('CHF');
   });
 
@@ -108,7 +108,7 @@ describe('best price', () => {
       listing({ id: 2, is_primary: false, converted_price: null }),
     ], 'CHF');
     expect(items[0].best_price).toBeNull();
-    expect(items[0].best_price_listing_id).toBeNull();
+    expect(items[0].best_price_listing_ids).toEqual([]);
     expect(items[0].best_price_currency).toBeNull();
     expect(items[0].excluded_count).toBe(2);
   });
@@ -134,7 +134,7 @@ describe('best price', () => {
       listing({ id: 2, is_primary: false, converted_price: '249.50' }),
     ], 'CHF');
     expect(items[0].best_price).toBe(249.5);
-    expect(items[0].best_price_listing_id).toBe(2);
+    expect(items[0].best_price_listing_ids).toEqual([2]);
   });
 });
 
@@ -220,9 +220,105 @@ describe('edge cases', () => {
     expect(groupIntoItems([], 'CHF')).toEqual([]);
   });
 
-  it('does not crash when the user has no preferred currency', () => {
-    const items = groupIntoItems([listing()], null);
+  it('compares in the store\'s own currency when the user has no preference', () => {
+    // This previously asserted best_price_currency was null, which encoded the
+    // bug in #160: "Automatic" meant nothing could be compared at all. The
+    // store's own currency is the right answer.
+    const items = groupIntoItems([listing({ converted_price: null })], null);
     expect(items[0].best_price).toBe(299);
-    expect(items[0].best_price_currency).toBeNull();
+    expect(items[0].best_price_currency).toBe('CHF');
+  });
+});
+
+
+describe('a user on the default "Automatic" currency (issue #160)', () => {
+  // users.currency IS NULL is what every new account starts on. The SQL
+  // compares each price against a null currency and the rate join never fires,
+  // so converted_price is null for every listing. Treating that as "nothing is
+  // comparable" told a new user with two shops in one currency that neither
+  // could be compared -- the feature failing on first use.
+  const noConversion = (over: Record<string, any> = {}) =>
+    listing({ converted_price: null, ...over });
+
+  it('compares stores that share a currency, using their own prices', () => {
+    const items = groupIntoItems([
+      noConversion({ id: 1, currency: 'AUD', current_price: 379 }),
+      noConversion({ id: 2, is_primary: false, currency: 'AUD', current_price: 349 }),
+    ], null);
+    expect(items[0].comparable_count).toBe(2);
+    expect(items[0].excluded_count).toBe(0);
+    expect(items[0].best_price).toBe(349);
+    expect(items[0].best_price_currency).toBe('AUD');
+    expect(items[0].price_spread).toBe(30);
+  });
+
+  it('reports the stores own currency, not a guessed one', () => {
+    const items = groupIntoItems([noConversion({ currency: 'AUD', current_price: 379 })], null);
+    expect(items[0].best_price_currency).toBe('AUD');
+  });
+
+  it('still excludes a store in a different currency, since there is no rate', () => {
+    const items = groupIntoItems([
+      noConversion({ id: 1, currency: 'AUD', current_price: 379 }),
+      noConversion({ id: 2, is_primary: false, currency: 'EUR', current_price: 200 }),
+    ], null);
+    expect(items[0].comparable_count).toBe(1);
+    expect(items[0].excluded_count).toBe(1);
+    expect(items[0].best_price).toBe(379);
+  });
+
+  it('takes the comparison currency from the primary listing, so it does not move with prices', () => {
+    const items = groupIntoItems([
+      noConversion({ id: 1, is_primary: true, currency: 'AUD', current_price: 379 }),
+      noConversion({ id: 2, is_primary: false, currency: 'EUR', current_price: 1 }),
+    ], null);
+    expect(items[0].best_price_currency).toBe('AUD');
+    expect(items[0].best_price).toBe(379);
+  });
+
+  it('does not fall back to raw prices when the user HAS a preferred currency', () => {
+    // With a preference, an unconvertible listing must stay excluded rather
+    // than sneaking in at its raw number.
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 300 }),
+      listing({ id: 2, is_primary: false, converted_price: null, currency: 'XYZ', current_price: 5 }),
+    ], 'CHF');
+    expect(items[0].comparable_count).toBe(1);
+    expect(items[0].best_price).toBe(300);
+  });
+});
+
+describe('tied prices (issue #161)', () => {
+  it('marks every store at the best price, not just the first', () => {
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 379 }),
+      listing({ id: 2, is_primary: false, converted_price: 379 }),
+      listing({ id: 3, is_primary: false, converted_price: 400 }),
+    ], 'AUD');
+    expect(items[0].best_price_listing_ids.sort()).toEqual([1, 2]);
+  });
+
+  it('flags an all-tied item, so the card does not claim a difference', () => {
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 379 }),
+      listing({ id: 2, is_primary: false, converted_price: 379 }),
+    ], 'AUD');
+    expect(items[0].all_tied).toBe(true);
+    expect(items[0].price_spread).toBe(0);
+  });
+
+  it('is not all-tied when one store is cheaper', () => {
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 379 }),
+      listing({ id: 2, is_primary: false, converted_price: 349 }),
+    ], 'AUD');
+    expect(items[0].all_tied).toBe(false);
+    expect(items[0].best_price_listing_ids).toEqual([2]);
+  });
+
+  it('is not all-tied with a single store, where there is nothing to tie with', () => {
+    const items = groupIntoItems([listing({ converted_price: 379 })], 'AUD');
+    expect(items[0].all_tied).toBe(false);
+    expect(items[0].best_price_listing_ids).toEqual([1]);
   });
 });
