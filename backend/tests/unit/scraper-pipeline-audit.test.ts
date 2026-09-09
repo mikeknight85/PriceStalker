@@ -82,20 +82,32 @@ describe('JSON-LD stock walking is depth-bounded', () => {
     expect(checkSchemaStock($)[0]?.value).toBe('in_stock');
   });
 
-  it('keeps a reachable offer despite a pathological branch elsewhere', () => {
+  it('keeps a reachable offer despite a deeply nested branch elsewhere', () => {
     // The case that mattered. Unbounded recursion threw a RangeError, which the
     // empty catch swallowed, so the page reported no stock at all -- silently.
+    //
+    // 1,000 rather than the 20,000 this was first written with: the bound is
+    // 64, so 1,000 exercises it fifteen times over, while 20,000 made
+    // JSON.stringify overflow the stack on CI's smaller one -- the fixture
+    // failing, not the code.
     const $ = withGraph({
       '@type': 'Product',
       offers: { '@type': 'Offer', availability: 'https://schema.org/InStock' },
-      unrelated: nest(20000, { junk: true }),
+      unrelated: nest(1000, { junk: true }),
     });
     expect(checkSchemaStock($)[0]?.value).toBe('in_stock');
   });
 
   it('does not throw on a graph nested past any real depth', () => {
-    const $ = withGraph(nest(50000, { '@type': 'Offer', availability: 'https://schema.org/InStock' }));
+    const $ = withGraph(nest(1000, { '@type': 'Offer', availability: 'https://schema.org/InStock' }));
     expect(() => checkSchemaStock($)).not.toThrow();
+  });
+
+  it('stops descending past the bound rather than walking forever', () => {
+    // An offer buried below the limit is not found. That is the trade: a bound
+    // deep enough for any real graph, in exchange for never running away.
+    const $ = withGraph(nest(1000, { '@type': 'Offer', availability: 'https://schema.org/InStock' }));
+    expect(checkSchemaStock($)).toHaveLength(0);
   });
 
   it('still reaches an offer nested deeper than a real page but within the bound', () => {
