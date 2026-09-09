@@ -25,5 +25,5 @@ make verify
 ```
 
 ## 2. Changelog & Documentation
-* For user-facing changes, add an entry to [`CHANGELOG.md`](file:///home/steven/projects/pricestalker/CHANGELOG.md) under `## [Unreleased]` using `### Added`, `### Fixed`, or `### Changed` (Keep a Changelog standard).
+* For user-facing changes, add an entry to `CHANGELOG.md` under `## [Unreleased]` using `### Added`, `### Fixed`, or `### Changed` (Keep a Changelog standard).
 * Verify against real built bundles and real data when applicable.

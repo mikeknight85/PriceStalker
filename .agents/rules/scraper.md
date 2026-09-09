@@ -1,7 +1,7 @@
 # Scraper Pipeline & HTML Extraction Guidelines
 
 ## 1. Pipeline Architecture
-* The scraper engine follows a 7-stage pipeline (see [`docs/developer/SCRAPER_LIFECYCLE.md`](file:///home/steven/projects/pricestalker/docs/developer/SCRAPER_LIFECYCLE.md) and [`docs/admin/selectors.md`](file:///home/steven/projects/pricestalker/docs/admin/selectors.md)).
+* The scraper engine follows a 7-stage pipeline (see `docs/developer/SCRAPER_LIFECYCLE.md` and `docs/admin/selectors.md`).
 * Do not bypass consensus weighting, out-of-stock price nullification, or the AI auto-mapping / voting flows.
 * When debugging retail extraction, inspect `retailer_configs` and `system_logs` first.
 

@@ -15,12 +15,12 @@ The frontend is organized by feature slices under `frontend/src/features/<featur
 * Always use guards: `Array.isArray(data) ? data : []`.
 
 ## 3. UI Icon Standards (No Emoji)
-* Use `<Icon name="..." />` from [`frontend/src/components/Icon/Icon.tsx`](file:///home/steven/projects/pricestalker/frontend/src/components/Icon/Icon.tsx).
+* Use `<Icon name="..." />` from `frontend/src/components/Icon/Icon.tsx`.
 * To add new icons, define them in `Icon.tsx` following the 24×24 viewBox, stroke-based, `currentColor` pattern.
 * Never use raw or unicode-escaped emoji in `.tsx`/`.ts` files.
 
 ## 4. Null-Safe Locale & Currency Formatting
-* Format all price and date values through [`frontend/src/utils/format.ts`](file:///home/steven/projects/pricestalker/frontend/src/utils/format.ts) (`formatPrice`, `formatDate`).
+* Format all price and date values through `frontend/src/utils/format.ts` (`formatPrice`, `formatDate`).
 * Never pass un-sanitized `users.locale` into `Intl` constructors.
 
 ## 5. ErrorBoundary Containment

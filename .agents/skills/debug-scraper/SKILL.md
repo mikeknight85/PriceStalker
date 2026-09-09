@@ -42,4 +42,4 @@ WHERE domain = 'example.com';
 ### 4. Test Selector Invariants
 - Verify that out-of-stock listings correctly nullify price or mark availability.
 - Verify whether the site requires the remote stealth Puppeteer scraper vs basic HTTP acquisition.
-- Refer to [`docs/developer/SCRAPER_LIFECYCLE.md`](file:///home/steven/projects/pricestalker/docs/developer/SCRAPER_LIFECYCLE.md) for stage transitions and [`docs/admin/selectors.md`](file:///home/steven/projects/pricestalker/docs/admin/selectors.md) for the selector DSL syntax.
+- Refer to `docs/developer/SCRAPER_LIFECYCLE.md` for stage transitions and `docs/admin/selectors.md` for the selector DSL syntax.
