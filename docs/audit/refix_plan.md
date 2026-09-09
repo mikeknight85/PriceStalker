@@ -4,6 +4,13 @@ Because **PriceStalker** was branched from an earlier release of the upstream co
 
 This plan details all outstanding issues, references their exact file paths in the `pricestalker` source tree, and provides specific refix steps for each.
 
+> **Status lines added September 2026.** Entries carrying a **Status (this repo)**
+> line have been checked against *our* source and either fixed or deliberately
+> not. Two were not reproducible; the measurements are recorded rather than the
+> entry deleted, so the next reader does not re-derive them. Everything without a
+> status line is untouched and still worth verifying before acting on — this file
+> describes the upstream codebase, not necessarily ours.
+
 ---
 
 ## 🗺️ Master Issue Register & Refix Steps
@@ -31,11 +38,13 @@ This plan details all outstanding issues, references their exact file paths in t
 * **Refix Plan:** Run `detectBotChallenge` on the fallback HTML result and throw a `BotChallengeError` or flag it for review if it remains blocked.
 
 #### 🟢 Issue A-5: Proxy credentials logged in plaintext
+* **Status (this repo, Sept 2026):** **Resolved in #171.** Scrubbed at the source with `scrubUrlCredentials()`. The database was never the exposure — the logger scrubs `details` before `saveToDb` — it was `trace` in the admin retailer-test HTTP response, which bypasses the logger entirely.
 * **File:** [`backend/src/services/scraper/acquisition/standard.ts`](file:///home/steven/projects/pricestalker/backend/src/services/scraper/acquisition/standard.ts#L32)
 * **Description:** The system logs `extractionSteps.push(`Request | Proxy | Using: ${currentProxy}`)`. If the proxy URL contains authentication details (e.g. `http://user:password@host:port`), they are stored in plaintext in the database logs.
 * **Refix Plan:** Sanitize the proxy URL (strip out `user:password` credentials) before pushing it to `extractionSteps`.
 
 #### 🟢 Issue A-6: Stale hardcoded User-Agent & Client Hints
+* **Status (this repo, Sept 2026):** **Resolved in #141.** Client hints are now derived from whichever User-Agent is in play rather than hardcoded, so per-retailer overrides work and the pair cannot drift.
 * **File:** [`backend/src/services/scraper/transport/headers.ts`](file:///home/steven/projects/pricestalker/backend/src/services/scraper/transport/headers.ts#L20-L25)
 * **Description:** The default User-Agent and the `Sec-Ch-Ua` headers are hardcoded to Chrome 121 (from January 2024), which is stale and easily fingerprinted.
 * **Refix Plan:** Update the hardcoded defaults to a current, stable Chrome version (e.g. Chrome 133) and ensure the legacy UA and Client Hint versions match.
@@ -65,11 +74,13 @@ This plan details all outstanding issues, references their exact file paths in t
 * **Refix Plan:** Add a final fallback to container selectors like `$('article, [class*="product"], [data-product]')` before falling back to `$('body')`.
 
 #### 🟢 Issue E-1: ReDoS vulnerability in DOM denoiser regex
+* **Status (this repo, Sept 2026):** **Not reproducible (see #165).** The nested quantifier is the unrolled-loop idiom, which is linear by construction. Measured across five adversarial shapes up to 420KB: worst case 1.8ms. Not changed — rewriting the denoiser affects every scrape, and there is no defect to justify it.
 * **File:** [`backend/src/services/scraper/extractors/dom-denoiser.ts`](file:///home/steven/projects/pricestalker/backend/src/services/scraper/extractors/dom-denoiser.ts#L147-L153)
 * **Description:** The regular expressions used to strip script, style, and noscript blocks contain nested-star quantifiers (`[^<]*(?:(?!<\/script>)<[^<]*)*`). Malformed or unclosed script tags on large pages can cause exponential backtracking and CPU denial of service.
 * **Refix Plan:** Replace the regex patterns with non-backtracking alternatives or leverage Cheerio's native DOM removal (`$('script, style, noscript').remove()`) instead of raw regex replacement.
 
 #### 🟢 Issue E-2: Stack overflow risk in stock JSON-LD recursion
+* **Status (this repo, Sept 2026):** **Part resolved in #172.** A depth bound of 64 was added: the walk previously threw `RangeError` around 5,000 levels, which the empty `catch` swallowed, so a deep graph reported no stock at all, silently. The duplicate `offers` traversal was left alone — the resolution step collapses candidates by presence, not count, so duplicates cannot reach the output.
 * **File:** [`backend/src/services/scraper/extractors/stock/schema.ts`](file:///home/steven/projects/pricestalker/backend/src/services/scraper/extractors/stock/schema.ts#L75-L100)
 * **Description:** The JSON-LD parser recursively traverses object keys using a nested helper function `walk` without keeping track of nesting depth, risking a stack overflow if it encounters a circular structure.
 * **Refix Plan:** Add a maximum depth tracking counter (e.g., limit recursion to `depth > 10`) to prevent stack overflow errors.
@@ -94,6 +105,7 @@ This plan details all outstanding issues, references their exact file paths in t
 ## 3. Orchestration & Consensus Layer
 
 #### 🟢 Issue O-1: `priceCandidates` overwritten on auto-map re-extraction
+* **Status (this repo, Sept 2026):** **Resolved in #172.** The two extraction passes are merged and deduplicated on price, currency, method and selector, so auto-mapping can no longer shrink the candidate pool.
 * **File:** [`backend/src/services/scraper/orchestration/extraction.ts`](file:///home/steven/projects/pricestalker/backend/src/services/scraper/orchestration/extraction.ts#L71)
 * **Description:** When auto-mapping generates a new configuration, it re-runs the extraction phase. Doing so overwrites the first-pass `priceCandidates` array entirely, losing any candidates collected during the initial run.
 * **Refix Plan:** Merge the new candidates into the existing candidate array rather than doing a raw reassignment.

@@ -5,7 +5,11 @@
 > codebase at the time of writing** — NOT necessarily this repo. We transplanted
 > at one point in his history, so a fix marked completed here may or may not be
 > present in our code. **Before acting on any issue, verify it against our actual
-> source.** Issue IDs (S-1, P-2, C-3, V-1, X-2, …) are referenced from
+> source.** Rows reading **FIXED HERE**, **PART FIXED HERE**, **Not a bug here**
+> or **Not reproducible here** were checked against *this* repo in September 2026
+> and carry the PR that resolved them — those are ours, not upstream's. Three
+> findings did not survive that check; the reasoning is on the linked issues
+> rather than deleted, so nobody re-derives it. Issue IDs (S-1, P-2, C-3, V-1, X-2, …) are referenced from
 > docs/SCRAPER_LIFECYCLE.md. Infrastructure specifics removed.
 
 
@@ -2121,7 +2125,7 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 
 | ID | Severity | Layer | Area | Description | Status |
 |----|----------|-------|------|-------------|--------|
-| O-1 | **Critical** | Orchestration | `extraction.ts` | `priceCandidates` overwritten on auto-map re-extract — first-pass candidates permanently lost | Pending |
+| O-1 | **Critical** | Orchestration | `extraction.ts` | `priceCandidates` overwritten on auto-map re-extract — first-pass candidates permanently lost | FIXED HERE #172 — passes merged and deduplicated |
 | O-2 | **High** | Orchestration | `consensus.ts` | `isCorroborated` null-guard inverted — uncorroborated sources bypass OOS guardrail | Completed |
 | O-3 | **High** | Orchestration | `consensus.ts` | OOS drift only checks downward spikes — upward spikes (e.g. $200→$2000) pass unchallenged | Completed |
 | O-4 | **High** | Orchestration | `maintenance.ts` | `configCache.invalidate()` with no domain key — nukes entire cache, thundering herd | Pending |
@@ -2135,10 +2139,10 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 | O-12 | **Low** | Orchestration | `arbitration.ts` | Local `ReviewReason` type missing `'price_drift'` — diverges from canonical type | Completed |
 | O-13 | **Low** | Orchestration | `init.ts` | `globalAiSettings` typed as `any` — loses TypeScript safety | Completed |
 | A-1 | **Critical** | Transport | `transport/remote.ts` | Off-by-one retry loop — max retries sentinel is dead code; attempts miscounted | Pending |
-| A-2 | **High** | Acquisition | `acquisition/index.ts` | `usedRemoteFallback` set before success — blocks Attempt 3 on remote failure | Pending |
-| A-3 | **High** | Acquisition | `acquisition/index.ts` | Challenged remote HTML blocks fallback via flag — no recovery path | Pending |
-| A-4 | **High** | Acquisition | `acquisition/index.ts` | Fallback result never checked for challenge — challenged HTML sent to extraction pipeline | Pending |
-| A-5 | **High** | Acquisition | `standard.ts` | Proxy credentials (`user:password@host`) logged in plaintext to `extractionSteps` DB column | Pending |
+| A-2 | **High** | Acquisition | `acquisition/index.ts` | `usedRemoteFallback` set before success — blocks Attempt 3 on remote failure | Not a bug here (#166) — `!domainConfig` already gates Attempt 3 |
+| A-3 | **High** | Acquisition | `acquisition/index.ts` | Challenged remote HTML blocks fallback via flag — no recovery path | Not a bug here (#166) — same gate as A-2 |
+| A-4 | **High** | Acquisition | `acquisition/index.ts` | Fallback result never checked for challenge — challenged HTML sent to extraction pipeline | Open — the challenge re-check on fallback output is still worth adding |
+| A-5 | **High** | Acquisition | `standard.ts` | Proxy credentials (`user:password@host`) logged in plaintext to `extractionSteps` DB column | FIXED HERE #171 — scrubbed at source; leak was the HTTP `trace`, not logs |
 | A-6 | **High** | Transport | `headers.ts` | Hardcoded Chrome 121 UA + `Sec-Ch-Ua` — stale (Jan 2024), immediately fingerprintable | Pending |
 | A-7 | **High** | Transport | `transport/remote.ts` | Axios 1.x uses `CanceledError` not `AbortError` — abort safety net broken | Pending |
 | A-8 | **High** | Acquisition | `standard.ts` | Inconsistent retry budget — fallback retries 2×; worst-case 150s per URL | Pending |
@@ -2149,12 +2153,12 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 | A-13 | **Medium** | Transport | `detection.ts` | Case-sensitive WAF marker detection — misses capitalization variants | Pending |
 | A-14 | **Low** | Transport | `detection.ts` | Akamai `Reference #18.` pattern too specific — misses other reference numbers | Pending |
 | A-15 | **Low** | Acquisition | `standard.ts` | `withRetry` logs under `'AI'` category for HTTP scraper calls | Pending |
-| E-1 | **High** | Extractor | `dom-denoiser.ts` | `denoiseHtmlForRegex` nested-quantifier regex — ReDoS vulnerability | Pending |
-| E-2 | **High** | Extractor | `stock/schema.ts` | `walk()` no depth guard — infinite recursion on malformed JSON-LD; `offers` visited twice | Pending |
+| E-1 | **High** | Extractor | `dom-denoiser.ts` | `denoiseHtmlForRegex` nested-quantifier regex — ReDoS vulnerability | Not reproducible here (#165) — unrolled-loop idiom is linear, 1.8ms at 420KB |
+| E-2 | **High** | Extractor | `stock/schema.ts` | `walk()` no depth guard — infinite recursion on malformed JSON-LD; `offers` visited twice | PART FIXED HERE #172 — depth bound added; duplicate `offers` walk has no observable effect |
 | E-3 | **High** | Extractor | `arbitration.ts` | AI arbitration passed `allCandidates` including member/original prices | Pending |
 | E-4 | **Medium** | Extractor | `price-extraction.ts` | `priceSpecification` double-processed — duplicate JSON-LD candidates | Pending |
-| E-5 | **Medium** | Extractor | `dom-denoiser.ts` | JSON-LD blocks duplicated in DOM after clone re-append (originals not removed first) | Pending |
-| E-6 | **Medium** | Extractor | `core/selectors.ts` | `normalizeSelector` corrupts CSS attribute selectors containing `\|` (e.g. `[lang\|="en"]`) | Pending |
+| E-5 | **Medium** | Extractor | `dom-denoiser.ts` | JSON-LD blocks duplicated in DOM after clone re-append (originals not removed first) | FIXED HERE #172 — measured 1 block in, 2 out; now restores only removed blocks |
+| E-6 | **Medium** | Extractor | `core/selectors.ts` | `normalizeSelector` corrupts CSS attribute selectors containing `\|` (e.g. `[lang\|="en"]`) | FIXED HERE #172 — splits on last `\|` outside brackets |
 | E-7 | **Medium** | Extractor | `price-utils.ts` | No max price sanity guard — barcodes/SKUs enter candidate pool as valid prices | Pending |
 | E-8 | **Medium** | Extractor | `arbitrators/consensus.ts` | Member/original price group winner is first inserted, not highest-confidence | Pending |
 | E-9 | **Medium** | Extractor | `arbitrators/consensus.ts` | `hasConsensus >= 1.0` — single json-ld source reaches consensus without corroboration | Pending |
@@ -2187,7 +2191,7 @@ Frankfurter does not return the base currency's self-rate. `getRate('AUD', 'AUD'
 | SYS-3 | **High** | System | `DatabaseHealthMonitor.ts` | `warmCache()` hardcodes `WHERE id = 1` — wrong admin on non-default installs | Pending |
 | SYS-4 | **High** | System | `SettingsListenerService.ts` | Reconnect loop flat 5s retry — hammers DB pool (360 attempts/hour during outage) | Pending |
 | SYS-5 | **High** | System | `DatabaseHealthMonitor.ts` | "Outage Resolved" email sent without prior "Outage Started" alert | Pending |
-| SYS-6 | **High** | Routes | `RetailerTestingService.ts` / `admin/debug.ts` | SSRF — unchecked URL passed to scraper / axios with no protocol or IP validation | Pending |
+| SYS-6 | **High** | Routes | `RetailerTestingService.ts` / `admin/debug.ts` | SSRF — unchecked URL passed to scraper / axios with no protocol or IP validation | Open — confirmed (#165), gated behind admin + `debug_page_enabled` |
 | SYS-7 | **High** | Routes | `products/scan.ts` / `bulk.ts` | Raw `async` handlers without `asyncHandler` — inconsistent error propagation | Pending |
 | SYS-8 | **High** | Routes | `RetailerMutationService.ts` | `deleteRetailer()` TOCTOU — non-atomic fetch-then-delete, wrong cache key invalidated | Pending |
 | SYS-9 | **Medium** | System | `DatabaseHealthMonitor.ts` | `sendAlertEmail` fire-and-forget — duplicate alert email risk | Pending |
