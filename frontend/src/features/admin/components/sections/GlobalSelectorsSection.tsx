@@ -126,9 +126,30 @@ export default function GlobalSelectorsSection() {
       </p>
 
       <PriorityNote
-        label="Rule priority"
+        label="Where a rule comes from"
         steps={['Retailer rules', 'These default rules', 'Built-in fallbacks']}
       />
+
+      {/*
+        Two different orderings were being read as one (issue #159). The list
+        above is about which *rule* is consulted; this is about which *kind of
+        price* wins once several have been found. A user with a retailer rule
+        for the standard price saw a deal price win anyway and reasonably
+        concluded their retailer rules were being ignored.
+      */}
+      <PriorityNote
+        label="Which price wins"
+        steps={['Deal / sale price', 'Pre-order price', 'Standard price']}
+      />
+
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '-0.5rem', marginBottom: '1rem', maxWidth: '70ch' }}>
+        These are separate. A deal or sale price wins over a standard price
+        whichever rule found it, because it is what you would pay today. So a
+        retailer rule that matches a sale price will override a standard price
+        found by another retailer rule. If a retailer is showing a price you do
+        not expect, check its Deal/Sale rule first, then use Troubleshoot Price
+        on the product &mdash; the trace names which rule won and why.
+      </p>
 
       <SettingsCacheNotice />
 

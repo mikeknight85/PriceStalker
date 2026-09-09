@@ -252,8 +252,8 @@ export async function extractProductImage(
   // Deduplication & Priority Sorting
   if (result.imageCandidates.length > 0) {
     result.imageCandidates.sort((a, b) => {
-      const confA = (preferJsonLd && a.method === 'json-ld') ? 1.01 : a.confidence;
-      const confB = (preferJsonLd && b.method === 'json-ld') ? 1.01 : b.confidence;
+      const confA = scoreImageCandidate(a, preferJsonLd);
+      const confB = scoreImageCandidate(b, preferJsonLd);
       return confB - confA;
     });
 
@@ -291,3 +291,53 @@ export async function extractProductImage(
   }
 }
 
+
+
+/**
+ * How strongly to trust an image candidate, ahead of picking one.
+ *
+ * Method confidence alone was not enough (issue #164). Enterprise CMSs -- AEM
+ * in the reported case -- put an asset *folder* in JSON-LD:
+ *
+ *   "image": "/content/dam/.../ghdwerb-pbp2/hazel/"
+ *
+ * That resolves to a valid-looking URL and JSON-LD scores highest, so it beat
+ * an `og:image` pointing at an actual file and the product showed a broken
+ * image. The directory returns 404 with text/html.
+ *
+ * A path ending in `/`, or with no extension at all, is demoted rather than
+ * discarded. #102 deliberately kept trailing-slash URLs because some retailers
+ * serve images from dynamic endpoints with no file extension, and those are
+ * still better than nothing -- so this reorders rather than filters, and such a
+ * candidate still wins if it is the only one.
+ *
+ * Deliberately not an HTTP check. Verifying each candidate's status and
+ * content-type would be the certain answer, but it means extra requests per
+ * scrape against a retailer that is already rate-limiting us, on a path that
+ * runs for every product on every refresh.
+ */
+const IMAGE_FILE_EXTENSION = /\.(jpe?g|png|webp|avif|gif|bmp|svg)(?:[?#]|$)/i;
+
+export function scoreImageCandidate(
+  candidate: { value?: unknown; method?: string; confidence: number },
+  preferJsonLd: boolean
+): number {
+  const base = (preferJsonLd && candidate.method === 'json-ld') ? 1.01 : candidate.confidence;
+
+  let path: string;
+  try {
+    path = new URL(String(candidate.value), 'https://example.invalid').pathname;
+  } catch {
+    return base;
+  }
+
+  // A folder, not a file. The clearest signal, and the reported case.
+  if (path.endsWith('/')) return base - 0.5;
+
+  // No extension: might be a dynamic endpoint, might be a path fragment. Worth
+  // less than a candidate that plainly names an image file, worth more than a
+  // directory.
+  if (!IMAGE_FILE_EXTENSION.test(path)) return base - 0.25;
+
+  return base;
+}
