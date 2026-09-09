@@ -89,7 +89,11 @@ export async function handleAutoMapping(
       });
 
       const domainConfig = await retailerRepository.upsert(upsertData);
-      configCache.invalidate();
+      // Scoped to the domain that changed (issue #169). An argument-less call
+      // drops every retailer's config, so one auto-map save made the next
+      // scrape of every other domain re-read from the database -- and they all
+      // arrive together, because the scheduler batches.
+      configCache.invalidate(domain);
       extractionSteps.push(`Retailer | Auto-Map | Saved (Currency Hint: ${currencyHint})`);
       return domainConfig;
     }
