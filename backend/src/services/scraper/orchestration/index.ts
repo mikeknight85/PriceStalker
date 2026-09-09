@@ -124,6 +124,12 @@ export async function scrapeProductWithVoting(
       (!domainConfig.price_selectors || domainConfig.price_selectors.length === 0) &&
       (!domainConfig.deal_price_selectors || domainConfig.deal_price_selectors.length === 0) &&
       (!domainConfig.member_price_selectors || domainConfig.member_price_selectors.length === 0) &&
+      // Pre-order and original price rules count as configuration too (issue
+      // #167). Omitting them meant a retailer configured only for those looked
+      // like an empty shell, so auto-mapping ran and could overwrite work an
+      // admin had done by hand.
+      (!domainConfig.pre_order_price_selectors || domainConfig.pre_order_price_selectors.length === 0) &&
+      (!domainConfig.original_price_selectors || domainConfig.original_price_selectors.length === 0) &&
       (!domainConfig.name_selectors || domainConfig.name_selectors.length === 0) &&
       (!domainConfig.image_selectors || domainConfig.image_selectors.length === 0) &&
       (!domainConfig.stock_selectors || domainConfig.stock_selectors.length === 0) &&

@@ -3,6 +3,7 @@ import { StockStatus } from '../../../../types/scraper';
 import { RetailerConfig } from '../../../../models';
 import { parseSelector } from '../metadata';
 import { evaluateSelector } from '../../core/engine';
+import { logger } from '../../../../utils/system/logger';
 
 import type { StockCandidate } from './index';
 
@@ -69,17 +70,30 @@ export function checkCustomStockSelectors(
               confidence
             });
           } else {
-            candidates.push({
-              value: 'unknown',
-              method: methodLabel,
-              selector: s,
-              context: text.trim(),
-              confidence: 0.10
-            });
+            // Not pushed as a candidate (issue #167).
+            //
+            // The resolver already skips `unknown` when picking a winner, so
+            // these never decided anything -- they only padded the candidate
+            // list surfaced in the debug view, where they outnumbered the
+            // useful entries.
+            //
+            // Logged instead, because the information is worth having: a
+            // selector that matched text nobody recognises usually means the
+            // retailer's phrasing has changed and the phrase lists need a new
+            // entry.
+            logger.debug(
+              `Extract | Stock | Selector matched unrecognised text: ${s} -> "${text.trim().slice(0, 80)}"`,
+              'Scraper'
+            );
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // A broken selector should not take the scrape down, but it should not
+      // vanish either: silently swallowing this is why a malformed custom rule
+      // looked like a retailer that simply had no stock information.
+      logger.debug(`Extract | Stock | Selector failed: ${s} (${(e as Error)?.message ?? e})`, 'Scraper');
+    }
   }
 
   return candidates;

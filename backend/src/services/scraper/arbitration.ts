@@ -25,7 +25,19 @@ export async function performArbitration(
   if (allCandidates.length > 0 && userId && html && !finalSkipAiExtraction) {
     extractionSteps.push(`Consensus | Fail | No majority. Triggering arbitration.`);
     try {
-      const aiResult = await tryAIArbitration(url, html, allCandidates, userId, productId);
+      // standardCandidates, not allCandidates (issue #167).
+      //
+      // The filter above exists precisely so a member or original price cannot
+      // be chosen as the standard price, and every other selection path below
+      // honours it. The AI was handed the unfiltered pool, so it could return a
+      // members-only price as the product's price -- the one number the whole
+      // pipeline exists to get right.
+      //
+      // Falls back to allCandidates when the filter leaves nothing, mirroring
+      // the same choice made for the non-AI path below: an empty pool would
+      // waste the call and guarantee no answer.
+      const arbitrationPool = standardCandidates.length > 0 ? standardCandidates : allCandidates;
+      const aiResult = await tryAIArbitration(url, html, arbitrationPool, userId, productId);
       if (aiResult?.selectedPrice) {
         extractionSteps.push(`Consensus | AI | Arbitration selected ${aiResult.selectedPrice.price} via ${aiResult.selectedPrice.method}`);
         price = aiResult.selectedPrice;
