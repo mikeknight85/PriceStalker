@@ -10,13 +10,38 @@ export function normalizeSelector(selector: string): string {
   if (trimmed.startsWith('~') && trimmed.endsWith('~')) return trimmed; // regex
   if (trimmed.startsWith('!')) return trimmed; // html
 
-  if (trimmed.includes('|')) {
-    const parts = trimmed.split('|');
-    const attr = parts.pop();
-    const base = parts.join('|');
+  // Split only on a `|` outside square brackets (issue #166).
+  //
+  // CSS has its own `|` operators inside attribute selectors -- the dashmatch
+  // `[lang|="en"]`, and namespaces like `[svg|href]`. Splitting on those turned
+  // `span[lang|="en"]` into `span[lang::attr(="en"])`, which is not valid CSS
+  // and matches nothing, so the selector silently found no elements.
+  const pipe = lastPipeOutsideBrackets(trimmed);
+  if (pipe !== -1) {
+    const base = trimmed.slice(0, pipe);
+    const attr = trimmed.slice(pipe + 1);
     return `${base}::attr(${attr})`;
   }
   return trimmed;
+}
+
+/**
+ * Index of the last `|` that is not inside `[...]`, or -1.
+ *
+ * Scanning rather than a regex because the legacy form allows a `|` in the
+ * base -- `a|b|attr` means base `a|b` -- so the *last* separator is the one
+ * that matters, and only when it sits outside an attribute selector.
+ */
+function lastPipeOutsideBrackets(selector: string): number {
+  let depth = 0;
+  let found = -1;
+  for (let i = 0; i < selector.length; i++) {
+    const c = selector[i];
+    if (c === '[') depth++;
+    else if (c === ']') depth = Math.max(0, depth - 1);
+    else if (c === '|' && depth === 0) found = i;
+  }
+  return found;
 }
 
 export interface ParsedSelector {

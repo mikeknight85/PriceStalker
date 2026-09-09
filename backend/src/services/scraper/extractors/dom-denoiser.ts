@@ -132,10 +132,16 @@ export function denoiseDomForExtraction(
   // 1. Compile the set of elements to preserve
   const preservedElements = getPreservedElements($, domainConfig, globalSelectors);
 
-  // 2. Clone and extract JSON-LD script blocks
-  const jsonLdBlocks: any[] = [];
+  // 2. Keep a copy of every JSON-LD block, to restore any that step 4 removes.
+  //
+  // Only their contents are needed. Step 5 used to re-append all of these
+  // unconditionally, but step 3 never removes JSON-LD -- it excludes that type
+  // explicitly -- so the originals were still in the document and every block
+  // ended up present twice (issue #166). Downstream extractors querying
+  // script[type="application/ld+json"] then read each block twice.
+  const jsonLdBefore: string[] = [];
   $('script[type="application/ld+json"]').each((_, el) => {
-    jsonLdBlocks.push($(el).clone());
+    jsonLdBefore.push($(el).html() || '');
   });
 
   // 3. Remove non-JSON-LD scripts, styles, and noscript blocks.
@@ -160,11 +166,30 @@ export function denoiseDomForExtraction(
     }
   });
 
-  // 5. Re-inject preserved JSON-LD blocks at the bottom of <body>
+  // 5. Restore only the JSON-LD blocks that step 4 actually removed.
+  //
+  // A block nested inside a noise container -- a footer, an aside -- goes with
+  // it, and that data is worth rescuing. One that is still in the document does
+  // not need re-adding, and adding it anyway is what caused the duplication.
+  //
+  // Matched on content and counted rather than de-duplicated by identity, so a
+  // page that genuinely ships the same block twice keeps both, and cheerio node
+  // identity does not have to survive removal.
   const body = $('body');
-  if (body.length > 0) {
-    for (const block of jsonLdBlocks) {
-      body.append(block);
+  if (body.length > 0 && jsonLdBefore.length > 0) {
+    const remaining = new Map<string, number>();
+    $('script[type="application/ld+json"]').each((_, el) => {
+      const key = $(el).html() || '';
+      remaining.set(key, (remaining.get(key) ?? 0) + 1);
+    });
+
+    for (const content of jsonLdBefore) {
+      const stillPresent = remaining.get(content) ?? 0;
+      if (stillPresent > 0) {
+        remaining.set(content, stillPresent - 1);
+        continue;
+      }
+      body.append(`<script type="application/ld+json">${content}</script>`);
     }
   }
 }

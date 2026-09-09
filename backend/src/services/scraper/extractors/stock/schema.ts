@@ -72,8 +72,19 @@ export function checkSchemaStock($: CheerioAPI): StockCandidate[] {
       if (!content) return;
       const data = JSON.parse(content);
       
-      const walk = (obj: any) => {
-        if (!obj) return;
+      /**
+       * Depth-limited so a deeply nested graph loses only what is below the
+       * limit, rather than everything (issue #166).
+       *
+       * The recursion had no bound. At around 5,000 levels it threw a
+       * RangeError, which the empty catch below swallowed -- so a page with a
+       * pathological JSON-LD graph reported no stock information at all, with
+       * no error and no log line. Stopping at a depth no real product graph
+       * reaches keeps whatever was found above it.
+       */
+      const MAX_DEPTH = 64;
+      const walk = (obj: any, depth = 0) => {
+        if (!obj || depth > MAX_DEPTH) return;
         
         if (obj['@type'] === 'Offer' && obj.availability) {
           extractFromJsonLdAvailability(obj.availability, 'json-ld.availability');
@@ -89,12 +100,12 @@ export function checkSchemaStock($: CheerioAPI): StockCandidate[] {
         }
 
         if (obj['@graph']) {
-          if (Array.isArray(obj['@graph'])) obj['@graph'].forEach(walk);
-          else walk(obj['@graph']);
+          if (Array.isArray(obj['@graph'])) obj['@graph'].forEach((n: any) => walk(n, depth + 1));
+          else walk(obj['@graph'], depth + 1);
         } else if (Array.isArray(obj)) {
-          obj.forEach(walk);
+          obj.forEach((n: any) => walk(n, depth + 1));
         } else if (typeof obj === 'object') {
-          Object.values(obj).forEach(walk);
+          Object.values(obj).forEach((n: any) => walk(n, depth + 1));
         }
       };
       walk(data);

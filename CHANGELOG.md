@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- AI auto-mapping can no longer make extraction worse (#166). When it generated
+  a retailer configuration it re-ran extraction and discarded everything the
+  first pass had found, so if the generated selectors matched less, the price
+  was decided from a smaller pool than before the AI was consulted. The two
+  passes are now combined.
+- Structured product data is read once rather than twice. Cleaning the page
+  duplicated every JSON-LD block instead of only restoring ones it had removed.
+- A page with an unusually deep JSON-LD graph no longer loses its stock
+  information entirely. The reader hit an internal limit and gave up silently;
+  it now stops descending at a depth no real product page reaches and keeps
+  what it found above.
+- Retailer selectors using CSS attribute operators such as `[lang|="en"]` work.
+  They were being corrupted into invalid CSS and quietly matched nothing.
+
+### Fixed
+
 - A proxy configured with a username and password no longer has them recorded
   in the extraction trace (#165). The trace is returned in the admin retailer
   test response, so the credentials left the server in an HTTP response body.
