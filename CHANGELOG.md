@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A proxy configured with a username and password no longer has them recorded
+  in the extraction trace (#165). The trace is returned in the admin retailer
+  test response, so the credentials left the server in an HTTP response body.
+  Logging was never affected -- it scrubs credentials already -- but the trace
+  does not go through the logger.
+
+### Fixed
+
 - The By product view compares stores again when your currency is set to
   Automatic, which is the default every account starts on (#160). Prices are
   compared in the currency the stores share, so two shops both selling in AUD

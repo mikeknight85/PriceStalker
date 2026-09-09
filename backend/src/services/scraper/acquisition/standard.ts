@@ -10,6 +10,7 @@ import {
 } from '../transport';
 import { RetailerConfig } from '../../../models';
 import { withRetry } from '../../../utils/system/retry';
+import { scrubUrlCredentials } from '../../../utils/system/logging/scrubber';
 
 export interface StandardAcquisitionOptions {
   url: string;
@@ -31,7 +32,20 @@ export async function acquireStandardHtml(options: StandardAcquisitionOptions): 
   const httpsAgent = currentProxy ? new HttpsProxyAgent(currentProxy) : undefined;
   
   if (currentProxy) {
-    extractionSteps.push(`Request | Proxy | Using: ${currentProxy}`);
+    // Scrubbed at the source, not left to the logger (issue #165).
+    //
+    // The logger does scrub `details`, so the console and system_logs were
+    // safe. extractionSteps is not only logged: it is attached to the scrape
+    // result and returned as `trace` in the admin retailer-test response
+    // (routes/admin/retailers.ts), which never passes through the logger at
+    // all. A proxy configured as http://user:pass@host therefore left its
+    // password in an HTTP response body.
+    //
+    // Fixing it here rather than at each consumer means every present and
+    // future path is covered by construction: the secret never enters the
+    // array. CLAUDE.md's rule is not to write credentials in the first place,
+    // and the scrubber is a backstop rather than a licence.
+    extractionSteps.push(`Request | Proxy | Using: ${scrubUrlCredentials(currentProxy)}`);
   }
   extractionSteps.push(`Request | HTTP | UA: ${headers['User-Agent'] ? 'Yes' : 'No'} | Proxy: ${currentProxy ? 'Yes' : 'No'}`);
 
