@@ -48,12 +48,17 @@ tmp/
 # TypeScript incremental build state
 *.tsbuildinfo
 
-# Ignore all agent runtime directories and state
-.agents/
-
-# Un-ignore shared configuration or prompts if needed
+# Ignore agent runtime state while tracking rules and skills
+.agents/*
 !.agents/rules/
+!.agents/skills/
 !.agents/config.json
+
+# Local developer overrides (untracked)
+.agents/local/
+.agents/rules/*.local.md
+.agents/skills/*.local/
+.agents/skills/*-local/
 
 # Ignore Gemini project dir
 .gemini/
