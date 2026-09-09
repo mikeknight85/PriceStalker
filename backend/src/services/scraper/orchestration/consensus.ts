@@ -100,10 +100,20 @@ export async function runConsensusPhase(
       ];
       
       const isHighConfidence = highConfidenceMethods.includes(method) || method.startsWith('expert-');
-      const isCorroborated = !winningGroupSources || winningGroupSources.size > 1;
-      
+      // Absent sources means we do not know it was corroborated, not that it
+      // was (issue #167). The old `!winningGroupSources ||` read a missing set
+      // as proof of corroboration, so an uncorroborated json-ld price walked
+      // straight through the guardrail this block exists to apply.
+      const isCorroborated = !!winningGroupSources && winningGroupSources.size > 1;
+
       const isJsonLdWithoutCorroboration = method === 'json-ld' && !isCorroborated;
-      const isExtremeDrift = anchorPrice && resolvedPrice < (anchorPrice * 0.5);
+
+      // Drift in both directions. Only the downward half was checked, so a
+      // price that spiked -- a currency mix-up, a wrong element, a bundle price
+      // where the unit price belonged -- passed unchallenged while the same
+      // magnitude of error downward was caught.
+      const isExtremeDrift = !!anchorPrice &&
+        (resolvedPrice < anchorPrice * 0.5 || resolvedPrice > anchorPrice * 2.5);
       
       if (!isHighConfidence || isJsonLdWithoutCorroboration || isExtremeDrift) {
         let reason = '';

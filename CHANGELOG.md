@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A members-only or was-before price can no longer be chosen as a product's
+  main price by AI arbitration (#167). Every other path already excluded them.
+- Two prices that differ by more than a few pounds are no longer treated as the
+  same price. A percentage-only rule meant 1000 and 1051 counted as identical,
+  so the price shown could be either.
+- The out-of-stock price guardrail is applied when a price has no corroborating
+  source, instead of being skipped. It also now catches prices that spike
+  upward, not only ones that collapse.
+- A retailer configured only with pre-order or was-before price rules is no
+  longer mistaken for an unconfigured one, which was triggering AI
+  auto-mapping over hand-written rules.
+- Stock selectors that match text the system does not recognise no longer
+  clutter the candidate list shown when reviewing a scrape; the detail is
+  logged instead. A selector that fails outright is logged rather than
+  silently ignored.
+
 ## [2.1.0-beta.9] - 2026-09-09
 
 ### Fixed
