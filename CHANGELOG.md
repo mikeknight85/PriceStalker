@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A product no longer shows a broken image when a retailer's structured data
+  points at an image folder rather than an image file (#164). A candidate that
+  names a real file is now preferred; a folder or extension-less URL is used
+  only when nothing better is available.
+
+### Changed
+
+- The Extraction Rules settings page distinguishes two things that were
+  presented as one (#159): which rule is consulted (retailer, then defaults,
+  then built-ins) and which kind of price wins once several are found (a
+  deal or sale price beats a standard one, whichever rule found it). Reading
+  the first as covering both made a retailer's own standard-price rule look
+  like it was being ignored.
+- Troubleshoot Price now says when a deal or pre-order price won by rule
+  rather than by score, and what it beat.
+
+### Fixed
+
 - Saving an auto-mapped retailer configuration no longer discards the cached
   configuration for every other retailer (#169), which made the next scheduled
   batch re-read all of them from the database at once.

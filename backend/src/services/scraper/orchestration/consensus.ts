@@ -35,6 +35,31 @@ export async function runConsensusPhase(
   if (hasConsensus && consensus) {
     const selectorInfo = consensus.selector ? ` (${consensus.selector})` : '';
     extractionSteps.push(`Consensus | Win | ${consensus.price} via ${consensus.method}${selectorInfo}`);
+
+    // Say when a deal or pre-order price won by rule rather than by weight
+    // (issue #159).
+    //
+    // findPriceConsensus gives those methods strict priority: one deal-price
+    // candidate beats any number of standard ones, whatever their confidence
+    // and wherever their selector came from. That is deliberate -- a deal price
+    // is what you would actually pay -- but it is invisible. A user whose
+    // retailer rule found the right standard price saw a different figure win
+    // and had nothing in the trace to explain it, which reads as the retailer
+    // rules being ignored.
+    const strictPriority = consensus.method === 'deal-price' || consensus.method === 'pre-order-price';
+    if (strictPriority) {
+      const beaten = allCandidates.filter(c =>
+        c.method !== consensus.method &&
+        c.method !== 'member-price' &&
+        c.method !== 'original-price'
+      );
+      if (beaten.length > 0) {
+        const others = [...new Set(beaten.map(c => `${c.method} ${c.price}`))].slice(0, 4).join(', ');
+        extractionSteps.push(
+          `Consensus | Priority | ${consensus.method} takes precedence over standard prices by rule, not by score. Also found: ${others}`
+        );
+      }
+    }
     result.price = { price: consensus.price, currency: consensus.currency };
     result.selectedMethod = consensus.method;
   } else {
