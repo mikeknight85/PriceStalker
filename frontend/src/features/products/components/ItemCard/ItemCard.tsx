@@ -56,6 +56,11 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
                   {item.all_tied
                     ? `same at all ${item.comparable_count}`
                     : `best of ${item.comparable_count}`}
+                  {/*
+                    The label stays even though every store is now highlighted:
+                    the marks say which stores are cheapest, the label says there
+                    is nothing to choose between them.
+                  */}
                 </div>
               )}
             </>
@@ -92,11 +97,16 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
             to="/products/$productId"
             params={{ productId: String(listing.id) }}
             /*
-              Every listing at the best price is marked, not just whichever
-              sorted first -- and none is when they are all tied, since
-              highlighting all of them says nothing.
+              Every listing at the best price is marked, including when they all
+              tie (issue #161).
+
+              This first suppressed the highlight on an all-tied item, reasoning
+              that marking everything says nothing. That was wrong: green means
+              "this store has the lowest price", and when two stores tie both
+              genuinely do. Suppressing it makes the user learn a special case,
+              and asks them to notice an absence rather than read a mark.
             */
-            className={`item-listing ${!item.all_tied && item.best_price_listing_ids.includes(listing.id) ? 'is-best' : ''}`}
+            className={`item-listing ${item.best_price_listing_ids.includes(listing.id) ? 'is-best' : ''}`}
           >
             <span className="item-listing-store">
               {listing.retailer_name || hostOf(listing.url)}

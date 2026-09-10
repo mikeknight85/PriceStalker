@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A product no longer shows a broken image when every image a retailer offers
+  is a folder rather than a file (#164). Suspicious URLs are now checked before
+  being stored, and one that is not an image is discarded — the product shows a
+  placeholder instead of a broken picture.
+- Every store tied for the lowest price is highlighted, rather than none of
+  them (#161). The highlight means "this store has the lowest price", and when
+  stores tie they all do.
+
+### Fixed
+
 - A product no longer shows a broken image when a retailer's structured data
   points at an image folder rather than an image file (#164). A candidate that
   names a real file is now preferred; a folder or extension-less URL is used
