@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.10] - 2026-09-10
+
 ### Fixed
 
 - A product no longer shows a broken image when every image a retailer offers
