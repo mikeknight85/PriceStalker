@@ -6,6 +6,7 @@ import { extractMetaWithCandidates, findInJsonLd, evaluateMetadataSelectors } fr
 import { parseSelector } from '../extractors/metadata';
 import { extractByRegex } from '../extractors/price-extraction';
 import { resolveImageUrl } from './image-url';
+import { looksLikeRealImage, needsVerification } from './image-verify';
 
 export interface ImageDimensions {
   width: number;
@@ -287,8 +288,53 @@ export async function extractProductImage(
   }
 
   if (!result.imageUrl) {
-    result.imageUrl = (result.imageCandidates?.[0]?.value as string) || null;
+    result.imageUrl = await pickVerifiedImage(result.imageCandidates ?? [], extractionSteps);
   }
+}
+
+/**
+ * The best candidate that is actually an image (issue #164).
+ *
+ * Ranking alone is not enough when every candidate is a folder, which is the
+ * reported Telstra case -- reordering then only changes which broken URL wins.
+ * Candidates naming a real image file are taken on trust, as almost all are;
+ * only a suspicious one costs a HEAD request, and only until one passes.
+ *
+ * Returns null rather than a URL known to 404. A product with no image shows a
+ * placeholder; a product with a broken one shows a broken image, which looks
+ * like the app is failing rather than the retailer being unhelpful.
+ */
+async function pickVerifiedImage(
+  candidates: { value?: unknown }[],
+  extractionSteps: string[]
+): Promise<string | null> {
+  // Bounded: a page offering dozens of bad candidates must not turn one scrape
+  // into dozens of requests.
+  const MAX_VERIFICATIONS = 3;
+  let verifications = 0;
+
+  for (const candidate of candidates) {
+    const url = String(candidate?.value || '').trim();
+    if (!url) continue;
+
+    if (!needsVerification(url)) return url;
+
+    if (verifications >= MAX_VERIFICATIONS) {
+      // Out of budget. Returning it unverified matches the old behaviour, which
+      // is the right side to err on: usually right, and never worse than before.
+      extractionSteps.push(`Extract | Image | Verification budget spent; using ${url} unchecked`);
+      return url;
+    }
+
+    verifications++;
+    if (await looksLikeRealImage(url)) return url;
+    extractionSteps.push(`Extract | Image | Discarded ${url} (not an image)`);
+  }
+
+  if (candidates.length > 0) {
+    extractionSteps.push(`Extract | Image | No candidate resolved to an image`);
+  }
+  return null;
 }
 
 
