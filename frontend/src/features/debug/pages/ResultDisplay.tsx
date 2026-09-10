@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatPrice } from '../../../utils/format';
 import PriceSelectionModal from '../../products/components/PriceSelectionModal';
 import Icon from '../../../components/Icon';
+import ImagePreview from '../components/ImagePreview';
 
 interface ResultDisplayProps {
   state: {
@@ -87,7 +88,7 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
           <div className="card-body">
             <div className="product-glance" style={{ flexWrap: 'wrap' }}>
               <div className="product-image-frame">
-                {result.imageUrl ? <img src={result.imageUrl} alt="" /> : <div className="image-placeholder">No Image</div>}
+                <ImagePreview src={result.imageUrl} />
               </div>
               <div className="product-info">
                 <div className="retailer-label">{result.retailerName || 'Generic Extraction'}</div>
@@ -203,7 +204,7 @@ export default function ResultDisplay({ state, actions }: ResultDisplayProps) {
                         <td className="price-val">
                           {activeCandidateTab === 'image' && typeof c.value === 'string' ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <img src={c.value} alt="" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                              <ImagePreview src={c.value} size={24} />
                               <small style={{ fontSize: '0.6rem', color: 'var(--text-muted)', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.value}</small>
                             </div>
                           ) : isPriceTab ? (
