@@ -295,3 +295,18 @@
 
 .fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/*
+ * A candidate that did not load, distinguished from one that was never there
+ * (issue #180). Muted rather than alarming: on the debug page a failed
+ * candidate is information, not an error.
+ */
+.image-placeholder-failed {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--border);
+  border-radius: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  cursor: help;
+}

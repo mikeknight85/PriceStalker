@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The debug page shows a "did not load" marker for an image candidate that
+  resolves to nothing, instead of the browser's broken-image icon (#180). The
+  page deliberately lists candidates the extractor rejected, and a broken icon
+  read as the page malfunctioning rather than as the candidate being bad.
+
 ## [2.1.0-beta.10] - 2026-09-10
 
 ### Fixed
