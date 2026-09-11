@@ -60,6 +60,7 @@ services:
       SMTP_FALLBACK_PORT: ${SMTP_FALLBACK_PORT:-587}
       SMTP_FALLBACK_FROM: ${SMTP_FALLBACK_FROM:-}
       ADMIN_ALERT_EMAIL: ${ADMIN_ALERT_EMAIL:-}
+      REDACT_API_KEYS: ${REDACT_API_KEYS:-false}
     volumes:
       - backend_logs:/app/backend/logs
       - backend_debug:/app/backend/debug_html
