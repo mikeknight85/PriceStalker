@@ -326,6 +326,16 @@ Don't get banned:
 
 ---
 
+## Support
+
+If PriceStalker has saved you money or helped you track items, consider supporting us:
+
+- [@stevene1919](https://github.com/stevene1919) via [Ko-fi](https://ko-fi.com/stevene_)
+
+[![Support on Ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-F16061?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/stevene_)
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Original copyright to @clucraft (PriceGhost),
