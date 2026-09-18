@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { adminRoute } from '../../../routes/-admin-api';
 import Layout from '../../../layouts/Layout';
+import SettingsPageHeader from '../../../components/SettingsPageHeader';
 import Icon from '../../../components/Icon';
+import ErrorBoundary from '../../../components/ErrorBoundary';
 import { currenciesQuery } from '../../../api/queries';
 
 // Section Components
@@ -57,9 +59,7 @@ export default function Admin({ activeSection }: { activeSection: AdminSection }
 
   return (
     <Layout>
-      <div className="settings-header-new">
-        <h1 className="settings-title-new">System Administration</h1>
-      </div>
+      <SettingsPageHeader title="System Administration" />
 
       <div className="settings-container-new">
         <select 
@@ -91,14 +91,16 @@ export default function Admin({ activeSection }: { activeSection: AdminSection }
 
 
         <main className="settings-content-new">
-          {activeSection === 'system' && <SystemSection />}
-          {activeSection === 'selectors' && <GlobalSelectorsSection />}
-          {activeSection === 'retailers' && <RetailersSection globalCurrencies={globalCurrencies} initialSearch={retailerSearch} />}
-          {activeSection === 'users' && <UsersSection globalCurrencies={globalCurrencies} />}
-          {activeSection === 'tokens' && <SystemApiTokensSection />}
-          {activeSection === 'auth' && <AuthSection />}
-          {activeSection === 'ai' && <AISection />}
-          {activeSection === 'logs' && <LogsSection onSearchRetailer={handleSearchRetailer} />}
+          <ErrorBoundary section={`admin-${activeSection}`}>
+            {activeSection === 'system' && <SystemSection />}
+            {activeSection === 'selectors' && <GlobalSelectorsSection />}
+            {activeSection === 'retailers' && <RetailersSection globalCurrencies={globalCurrencies} initialSearch={retailerSearch} />}
+            {activeSection === 'users' && <UsersSection globalCurrencies={globalCurrencies} />}
+            {activeSection === 'tokens' && <SystemApiTokensSection />}
+            {activeSection === 'auth' && <AuthSection />}
+            {activeSection === 'ai' && <AISection />}
+            {activeSection === 'logs' && <LogsSection onSearchRetailer={handleSearchRetailer} />}
+          </ErrorBoundary>
         </main>
       </div>
     </Layout>

@@ -13,6 +13,7 @@ import { useExpandedSections } from '../../../../hooks';
 
 export default function SystemSection() {
   const { showToast } = useToast();
+  const [savedSettings, setSavedSettings] = useState<SystemSettings | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingAdmin, setIsSavingAdmin] = useState(false);
@@ -28,7 +29,6 @@ export default function SystemSection() {
   });
 
   useEffect(() => {
-
     fetchSystemData();
   }, []);
 
@@ -36,8 +36,8 @@ export default function SystemSection() {
     setIsLoading(true);
     try {
       const res = await queryClient.fetchQuery(adminSystemSettingsQuery());
-      const settings = res;
-      setSystemSettings(settings);
+      setSavedSettings(res);
+      setSystemSettings(res);
     } catch {
       showToast('Failed to load system settings', 'error');
     } finally {
@@ -45,44 +45,11 @@ export default function SystemSection() {
     }
   };
 
-  const handleToggleRegistration = async () => {
-    try {
-      const res = await AdminSystemService.updateSystemSettings({ 
-        registration_enabled: !(systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true') 
-      });
-      setSystemSettings(res);
-      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
-      showToast('Registration toggled', 'success');
-    } catch {
-      showToast('Update failed', 'error');
-    }
-  };
-
-  const handleTogglePasswordReset = async () => {
-    try {
-      const res = await AdminSystemService.updateSystemSettings({ 
-        password_reset_enabled: !(systemSettings?.password_reset_enabled === undefined || systemSettings?.password_reset_enabled === true || systemSettings?.password_reset_enabled === 'true') 
-      });
-      setSystemSettings(res);
-      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
-      showToast('Password reset toggled', 'success');
-    } catch {
-      showToast('Update failed', 'error');
-    }
-  };
-
-  const handleToggleDebugPage = async () => {
-    try {
-      const res = await AdminSystemService.updateSystemSettings({ 
-        debug_page_enabled: !(systemSettings?.debug_page_enabled === true || systemSettings?.debug_page_enabled === 'true') 
-      });
-      setSystemSettings(res);
-      queryClient.setQueryData(queryKeys.adminSystemSettings, res);
-      showToast('Debug page toggled', 'success');
-    } catch {
-      showToast('Update failed', 'error');
-    }
-  };
+  const isDirty = Boolean(
+    savedSettings &&
+    systemSettings &&
+    JSON.stringify(savedSettings) !== JSON.stringify(systemSettings)
+  );
 
   const handleTestSearXNG = async () => {
     if (!systemSettings?.searxng_url) return;
@@ -114,6 +81,7 @@ export default function SystemSection() {
       };
 
       const res = await AdminSystemService.updateSystemSettings(payload);
+      setSavedSettings(res);
       setSystemSettings(res);
       queryClient.setQueryData(queryKeys.adminSystemSettings, res);
       showToast('Admin settings saved', 'success');
@@ -124,7 +92,8 @@ export default function SystemSection() {
 
   return (
     <div className="settings-card">
-      <h2 className="settings-card-title">Core System Settings</h2>
+      <form onSubmit={(e) => { e.preventDefault(); void handleSaveSettings(); }}>
+        <h2 className="settings-card-title">Core System Settings</h2>
       
       <CollapsibleCard title="Network & Integration" leadingIcon={<Icon name="globe" />} id="sys_network" isExpanded={expandedSections.sys_network} onToggle={toggleSection}>
         <div className="form-group"><label>Proxy URL/Port</label><input type="text" className="form-control" value={systemSettings?.scraper_proxy || ''} onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)} placeholder="http://proxy:port" /></div>
@@ -194,43 +163,39 @@ export default function SystemSection() {
       </CollapsibleCard>
 
       <CollapsibleCard title="Security & Access" leadingIcon={<Icon name="shield" />} id="sys_security" isExpanded={expandedSections.sys_security} onToggle={toggleSection}>
-
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Allow User Registration</span>
-          <ToggleSwitch active={systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true'} onToggle={handleToggleRegistration} disabled={isSavingAdmin} />
+          <ToggleSwitch
+            active={systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true'}
+            onToggle={() => setSystemSettings(s => s ? { ...s, registration_enabled: !(s.registration_enabled === true || s.registration_enabled === 'true') } : null)}
+          />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Allow Password Reset via Email</span>
-          <ToggleSwitch active={systemSettings?.password_reset_enabled === undefined || systemSettings?.password_reset_enabled === true || systemSettings?.password_reset_enabled === 'true'} onToggle={handleTogglePasswordReset} disabled={isSavingAdmin} />
+          <ToggleSwitch
+            active={systemSettings?.password_reset_enabled === undefined || systemSettings?.password_reset_enabled === true || systemSettings?.password_reset_enabled === 'true'}
+            onToggle={() => setSystemSettings(s => s ? { ...s, password_reset_enabled: !(s.password_reset_enabled === undefined || s.password_reset_enabled === true || s.password_reset_enabled === 'true') } : null)}
+          />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Enable Admin Debug Page</span>
-          <ToggleSwitch active={systemSettings?.debug_page_enabled === true || systemSettings?.debug_page_enabled === 'true'} onToggle={handleToggleDebugPage} disabled={isSavingAdmin} />
+          <ToggleSwitch
+            active={systemSettings?.debug_page_enabled === true || systemSettings?.debug_page_enabled === 'true'}
+            onToggle={() => setSystemSettings(s => s ? { ...s, debug_page_enabled: !(s.debug_page_enabled === true || s.debug_page_enabled === 'true') } : null)}
+          />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Disable Global Scheduler (Price Checks)</span>
-          <ToggleSwitch 
-            active={systemSettings?.scheduler_disabled === true || systemSettings?.scheduler_disabled === 'true'} 
-            onToggle={async () => {
-              const res = await AdminSystemService.updateSystemSettings({ 
-                scheduler_disabled: !(systemSettings?.scheduler_disabled === true || systemSettings?.scheduler_disabled === 'true') 
-              });
-              setSystemSettings(res);
-            }} 
-            disabled={isSavingAdmin} 
+          <ToggleSwitch
+            active={systemSettings?.scheduler_disabled === true || systemSettings?.scheduler_disabled === 'true'}
+            onToggle={() => setSystemSettings(s => s ? { ...s, scheduler_disabled: !(s.scheduler_disabled === true || s.scheduler_disabled === 'true') } : null)}
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Disable Auto Retailer Updates</span>
-          <ToggleSwitch 
-            active={systemSettings?.retailer_updates_disabled === true || systemSettings?.retailer_updates_disabled === 'true'} 
-            onToggle={async () => {
-              const res = await AdminSystemService.updateSystemSettings({ 
-                retailer_updates_disabled: !(systemSettings?.retailer_updates_disabled === true || systemSettings?.retailer_updates_disabled === 'true') 
-              });
-              setSystemSettings(res);
-            }} 
-            disabled={isSavingAdmin} 
+          <ToggleSwitch
+            active={systemSettings?.retailer_updates_disabled === true || systemSettings?.retailer_updates_disabled === 'true'}
+            onToggle={() => setSystemSettings(s => s ? { ...s, retailer_updates_disabled: !(s.retailer_updates_disabled === true || s.retailer_updates_disabled === 'true') } : null)}
           />
         </div>
       </CollapsibleCard>
@@ -242,6 +207,7 @@ export default function SystemSection() {
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Force the backend to immediately reload all settings, selectors, and retailers from the database.</div>
           </div>
           <button 
+            type="button"
             className="btn btn-secondary btn-sm" 
             onClick={async () => {
               try {
@@ -258,9 +224,12 @@ export default function SystemSection() {
       </CollapsibleCard>
 
       <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={fetchSystemData}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSaveSettings} disabled={isSavingAdmin}>Save Changes</button>
+        <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setSystemSettings(savedSettings)} disabled={!isDirty || isSavingAdmin}>Cancel</button>
+        <button type="submit" className="btn btn-primary" disabled={!isDirty || isSavingAdmin}>
+          {isSavingAdmin ? 'Saving...' : 'Save Settings'}
+        </button>
       </div>
+      </form>
     </div>
   );
 }

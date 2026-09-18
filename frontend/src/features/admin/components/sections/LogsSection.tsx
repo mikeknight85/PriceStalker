@@ -106,7 +106,7 @@ export default function LogsSection({ onSearchRetailer }: LogsSectionProps) {
       />
       <div className="settings-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <h2 className="settings-card-title" style={{ margin: 0 }}>System Event Log</h2>
+          <h2 className="settings-card-title">System Event Log</h2>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', flex: '1' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer', marginRight: '0.5rem' }}>
               <input type="checkbox" checked={isAutoRefresh} onChange={e => setIsAutoRefresh(e.target.checked)} />
