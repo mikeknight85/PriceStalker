@@ -1,5 +1,6 @@
 import React from 'react';
-import { CollapsibleCard, ToggleSwitch } from '../../admin/components';
+import CollapsibleCard from '../../../components/CollapsibleCard';
+import ToggleSwitch from '../../../components/ToggleSwitch';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 
 interface NotificationChannelCardProps {
@@ -9,10 +10,11 @@ interface NotificationChannelCardProps {
   onToggle: () => void;
   onTest: () => Promise<void>;
   isTesting: boolean;
-  expandedSections: Record<string, boolean>;
+  isExpanded: boolean;
   onToggleSection: (id: string) => void;
   children: React.ReactNode;
   badge?: string;
+  isDirty?: boolean;
 }
 
 export default function NotificationChannelCard({
@@ -22,17 +24,18 @@ export default function NotificationChannelCard({
   onToggle,
   onTest,
   isTesting,
-  expandedSections,
+  isExpanded,
   onToggleSection,
   children,
-  badge
+  badge,
+  isDirty = false
 }: NotificationChannelCardProps) {
   return (
     <CollapsibleCard 
-      title={title} 
-      id={id} 
-      badge={badge || (enabled ? 'Active' : 'Disabled')} 
-      expandedSections={expandedSections} 
+      title={title}
+      id={id}
+      badge={badge || (enabled ? 'Active' : 'Disabled')}
+      isExpanded={isExpanded}
       onToggle={onToggleSection}
     >
       <div style={{ marginBottom: '1.5rem' }}>
@@ -57,7 +60,8 @@ export default function NotificationChannelCard({
             <button 
               className="btn btn-secondary btn-sm" 
               onClick={onTest} 
-              disabled={isTesting || !enabled}
+              disabled={isTesting || !enabled || isDirty}
+              title={isDirty ? "Save your changes first to test with the new settings" : undefined}
               style={{ width: 'auto' }}
             >
               {isTesting ? <LoadingSpinner size="14px" /> : 'Send Test Notification'}

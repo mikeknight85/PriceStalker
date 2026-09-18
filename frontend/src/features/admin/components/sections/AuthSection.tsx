@@ -9,11 +9,13 @@ import {
 import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import PasswordInput from '../../../../components/PasswordInput';
-import { CollapsibleCard, ToggleSwitch } from '../../components';
+import CollapsibleCard from '../../../../components/CollapsibleCard';
+import ToggleSwitch from '../../../../components/ToggleSwitch';
 import Icon from '../../../../components/Icon';
 import { ApiError, apiErrorMessage } from '../../../../api/error';
 import { useAuth } from '../../../auth';
 import { formatDate } from '../../../../utils/format';
+import { useExpandedSections } from '../../../../hooks';
 
 const toggleRow: React.CSSProperties = {
   display: 'flex',
@@ -53,15 +55,14 @@ export default function AuthSection() {
   const [jitEnabled, setJitEnabled] = useState(true);
   const [requireEmailVerified, setRequireEmailVerified] = useState(true);
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const { expandedSections, toggleSection } = useExpandedSections({
     auth_policy: true,
     auth_provider: true,
     auth_behaviour: false,
   });
-  const toggleSection = (id: string) =>
-    setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   useEffect(() => {
+
     void load();
   }, []);
 
@@ -158,7 +159,7 @@ export default function AuthSection() {
       <CollapsibleCard
         title="Sign-in Policy" leadingIcon={<Icon name="key" />}
         id="auth_policy"
-        expandedSections={expandedSections}
+        isExpanded={expandedSections.auth_policy}
         onToggle={toggleSection}
       >
         <div className="form-group">
@@ -188,13 +189,14 @@ export default function AuthSection() {
       <CollapsibleCard
         title="Provider" leadingIcon={<Icon name="globe" />}
         id="auth_provider"
-        expandedSections={expandedSections}
+        isExpanded={expandedSections.auth_provider}
         onToggle={toggleSection}
       >
         <div className="form-group">
           <label>Display Name</label>
           <input
             type="text"
+            className="form-control"
             value={providerName}
             onChange={e => setProviderName(e.target.value)}
             placeholder="Authentik"
@@ -209,6 +211,7 @@ export default function AuthSection() {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               type="text"
+              className="form-control"
               style={{ flex: 1 }}
               value={issuerUrl}
               onChange={e => setIssuerUrl(e.target.value)}
@@ -256,6 +259,7 @@ export default function AuthSection() {
           <label>Client ID</label>
           <input
             type="text"
+            className="form-control"
             value={clientId}
             onChange={e => setClientId(e.target.value)}
             placeholder="pricestalker"
@@ -305,7 +309,7 @@ export default function AuthSection() {
 
         <div className="form-group">
           <label>Scopes</label>
-          <input type="text" value={scopes} onChange={e => setScopes(e.target.value)} />
+          <input type="text" className="form-control" value={scopes} onChange={e => setScopes(e.target.value)} />
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Space-separated. <code>openid</code> is required; <code>email</code> is required for
             JIT provisioning and for linking to existing accounts by email.
@@ -316,9 +320,10 @@ export default function AuthSection() {
       <CollapsibleCard
         title="Account Behaviour" leadingIcon={<Icon name="user" />}
         id="auth_behaviour"
-        expandedSections={expandedSections}
+        isExpanded={expandedSections.auth_behaviour}
         onToggle={toggleSection}
       >
+
         <div style={toggleRow}>
           <div>
             <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Just-in-Time Provisioning</div>

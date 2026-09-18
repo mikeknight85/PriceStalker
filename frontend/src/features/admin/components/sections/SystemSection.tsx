@@ -4,13 +4,12 @@ import { SystemSettings } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import { apiErrorMessage } from '../../../../api/error';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
-import { 
-  CollapsibleCard, 
-  ToggleSwitch
-} from '../../components';
+import CollapsibleCard from '../../../../components/CollapsibleCard';
+import ToggleSwitch from '../../../../components/ToggleSwitch';
 import Icon from '../../../../components/Icon';
 import { queryClient } from '../../../../api/queryClient';
 import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
+import { useExpandedSections } from '../../../../hooks';
 
 export default function SystemSection() {
   const { showToast } = useToast();
@@ -19,7 +18,7 @@ export default function SystemSection() {
   const [isSavingAdmin, setIsSavingAdmin] = useState(false);
   const [isTestingSearXNG, setIsTestingSearXNG] = useState(false);
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const { expandedSections, toggleSection } = useExpandedSections({
     sys_network: false,
     sys_discovery: false,
     sys_browser: false,
@@ -28,11 +27,8 @@ export default function SystemSection() {
     sys_maintenance: false
   });
 
-  const toggleSection = (name: string) => {
-    setExpandedSections(prev => ({ ...prev, [name]: !prev[name] }));
-  };
-
   useEffect(() => {
+
     fetchSystemData();
   }, []);
 
@@ -98,7 +94,7 @@ export default function SystemSection() {
       } else {
         showToast(res?.error || 'Test failed', 'error');
       }
-    } catch (err: any) {
+    } catch (err) {
       showToast(apiErrorMessage(err, 'Failed to connect to SearXNG'), 'error');
     } finally {
       setIsTestingSearXNG(false);
@@ -130,11 +126,11 @@ export default function SystemSection() {
     <div className="settings-card">
       <h2 className="settings-card-title">Core System Settings</h2>
       
-      <CollapsibleCard title="Network & Integration" leadingIcon={<Icon name="globe" />} id="sys_network" expandedSections={expandedSections} onToggle={toggleSection}>
-        <div className="form-group"><label>Proxy URL/Port</label><input type="text" value={systemSettings?.scraper_proxy || ''} onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)} placeholder="http://proxy:port" /></div>
+      <CollapsibleCard title="Network & Integration" leadingIcon={<Icon name="globe" />} id="sys_network" isExpanded={expandedSections.sys_network} onToggle={toggleSection}>
+        <div className="form-group"><label>Proxy URL/Port</label><input type="text" className="form-control" value={systemSettings?.scraper_proxy || ''} onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)} placeholder="http://proxy:port" /></div>
         <div className="form-group">
           <label>Browser Scraper URL</label>
-          <input type="text" value={systemSettings?.remote_scraper_url || ''} onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_url: e.target.value } : null)} placeholder="http://scraper:5100/scrape" />
+          <input type="text" className="form-control" value={systemSettings?.remote_scraper_url || ''} onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_url: e.target.value } : null)} placeholder="http://scraper:5100/scrape" />
           <small style={{ color: 'var(--text-muted)' }}>
             Where the browser scraper service is running. Retailers with
             &ldquo;Use Browser Scraper&rdquo; enabled are fetched through it.
@@ -142,12 +138,13 @@ export default function SystemSection() {
         </div>
       </CollapsibleCard>
 
-      <CollapsibleCard title="Product Discovery (SearXNG)" leadingIcon={<Icon name="search" />} id="sys_discovery" expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Product Discovery (SearXNG)" leadingIcon={<Icon name="search" />} id="sys_discovery" isExpanded={expandedSections.sys_discovery} onToggle={toggleSection}>
         <div className="form-group">
           <label>SearXNG API URL</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input 
               type="text" 
+              className="form-control"
               value={systemSettings?.searxng_url || ''} 
               onChange={e => setSystemSettings(s => s ? { ...s, searxng_url: e.target.value } : null)} 
               placeholder="https://searxng.example.com" 
@@ -174,16 +171,16 @@ export default function SystemSection() {
         </div>
       </CollapsibleCard>
 
-      <CollapsibleCard title="Browser Configuration" leadingIcon={<Icon name="monitor" />} id="sys_browser" expandedSections={expandedSections} onToggle={toggleSection}>
-        <div className="form-group"><label>Default User-Agent</label><input type="text" value={systemSettings?.default_user_agent || ''} onChange={e => setSystemSettings(s => s ? { ...s, default_user_agent: e.target.value } : null)} /></div>
-        <div className="form-group"><label>Default Referrer</label><input type="text" value={systemSettings?.default_referrer || ''} onChange={e => setSystemSettings(s => s ? { ...s, default_referrer: e.target.value } : null)} placeholder="https://www.google.com/" /></div>
+      <CollapsibleCard title="Browser Configuration" leadingIcon={<Icon name="monitor" />} id="sys_browser" isExpanded={expandedSections.sys_browser} onToggle={toggleSection}>
+        <div className="form-group"><label>Default User-Agent</label><input type="text" className="form-control" value={systemSettings?.default_user_agent || ''} onChange={e => setSystemSettings(s => s ? { ...s, default_user_agent: e.target.value } : null)} /></div>
+        <div className="form-group"><label>Default Referrer</label><input type="text" className="form-control" value={systemSettings?.default_referrer || ''} onChange={e => setSystemSettings(s => s ? { ...s, default_referrer: e.target.value } : null)} placeholder="https://www.google.com/" /></div>
         <div className="form-grid">
-          <div className="form-group"><label>Browser Timeout (ms)</label><input type="number" value={systemSettings?.browser_timeout || 60000} onChange={e => setSystemSettings(s => s ? { ...s, browser_timeout: parseInt(e.target.value) || 0 } : null)} /></div>
-          <div className="form-group"><label>Browser Delay (ms)</label><input type="number" value={systemSettings?.browser_delay || 3000} onChange={e => setSystemSettings(s => s ? { ...s, browser_delay: parseInt(e.target.value) || 0 } : null)} /></div>
+          <div className="form-group"><label>Browser Timeout (ms)</label><input type="number" className="form-control" value={systemSettings?.browser_timeout || 60000} onChange={e => setSystemSettings(s => s ? { ...s, browser_timeout: parseInt(e.target.value) || 0 } : null)} /></div>
+          <div className="form-group"><label>Browser Delay (ms)</label><input type="number" className="form-control" value={systemSettings?.browser_delay || 3000} onChange={e => setSystemSettings(s => s ? { ...s, browser_delay: parseInt(e.target.value) || 0 } : null)} /></div>
         </div>
       </CollapsibleCard>
 
-      <CollapsibleCard title="JSON-LD & Structured Data" leadingIcon={<Icon name="code" />} id="sys_jsonld" expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="JSON-LD & Structured Data" leadingIcon={<Icon name="code" />} id="sys_jsonld" isExpanded={expandedSections.sys_jsonld} onToggle={toggleSection}>
         <div className="form-group" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Prefer JSON-LD for Images</div>
@@ -196,7 +193,8 @@ export default function SystemSection() {
         </div>
       </CollapsibleCard>
 
-      <CollapsibleCard title="Security & Access" leadingIcon={<Icon name="shield" />} id="sys_security" expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Security & Access" leadingIcon={<Icon name="shield" />} id="sys_security" isExpanded={expandedSections.sys_security} onToggle={toggleSection}>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
           <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Allow User Registration</span>
           <ToggleSwitch active={systemSettings?.registration_enabled === true || systemSettings?.registration_enabled === 'true'} onToggle={handleToggleRegistration} disabled={isSavingAdmin} />

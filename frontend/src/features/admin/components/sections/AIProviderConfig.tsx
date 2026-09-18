@@ -1,22 +1,17 @@
-import { AISettings } from '../../../../types/api';
-import { ToggleSwitch } from '../../components';
+import { AISettings, AIModel, AIProviderTestResult } from '../../../../types/api';
+
+import ToggleSwitch from '../../../../components/ToggleSwitch';
 import { AIService } from '../../services/AIService';
 import PasswordInput from '../../../../components/PasswordInput';
 import Icon from '../../../../components/Icon';
 import { useAsyncAction } from '../../../../hooks/useAsyncAction';
 import { useToast } from '../../../../context/ToastContext';
 
-interface GeminiModel {
-  id: string;
-  name: string;
-  description: string;
-}
-
 interface AIProviderConfigProps {
   aiSettings: AISettings | null;
   setAiSettings: React.Dispatch<React.SetStateAction<AISettings | null>>;
-  aiModels: GeminiModel[];
-  setAiModels: React.Dispatch<React.SetStateAction<GeminiModel[]>>;
+  aiModels: AIModel[];
+  setAiModels: React.Dispatch<React.SetStateAction<AIModel[]>>;
   isRefreshingModels: boolean;
   setIsRefreshingModels: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -41,7 +36,9 @@ export default function AIProviderConfig({
   }, { onSuccessMessage: 'AI models refreshed', onErrorFallback: 'Failed to refresh models' });
 
   const handleTestProvider = (provider: string) => runTestProvider(async () => {
-    let res: any;
+    let res: AIProviderTestResult | undefined;
+
+
     if (provider === 'gemini') {
       if (!aiSettings?.gemini_api_key) {
         showToast('Enter a Gemini API key before verifying.', 'error');

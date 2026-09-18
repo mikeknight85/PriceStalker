@@ -1,15 +1,18 @@
 import { formatPrice } from '../../../../../utils/format';
 import Icon from '../../../../../components/Icon';
+import { TestRetailerConfigResult } from '../../../../../types/api';
 
 interface ScrapeValidationHubProps {
   testUrl: string;
   setTestUrl: (url: string) => void;
   onTest: () => void;
   isTesting: boolean;
-  testResult: any;
+  testResult: TestRetailerConfigResult | null;
   userLocale?: string;
-  showToast: (msg: string, type?: 'success' | 'error' | 'info', details?: any) => void;
+  showToast: (msg: string, type?: 'success' | 'error' | 'info', details?: unknown) => void;
 }
+
+
 
 export default function ScrapeValidationHub({
   testUrl,

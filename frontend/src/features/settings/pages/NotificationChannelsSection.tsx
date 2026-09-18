@@ -7,6 +7,7 @@ import NotificationChannelCard from '../components/NotificationChannelCard';
 import { queryClient } from '../../../api/queryClient';
 import { notificationSettingsQuery, queryKeys } from '../../../api/queries';
 import { NotificationSettings } from '../../../types/api';
+import { useExpandedSections } from '../../../hooks';
 
 /*
  * Shown as placeholder text, not prefilled into the fields (issue #92).
@@ -53,12 +54,23 @@ interface ChannelSettings {
   webhook_enabled: boolean;
 }
 
+const channelFields: Record<string, (keyof ChannelSettings)[]> = {
+  telegram: ['telegram_bot_token', 'telegram_chat_id', 'telegram_enabled', 'telegram_message_template'],
+  discord: ['discord_webhook_url', 'discord_enabled', 'discord_message_template'],
+  pushover: ['pushover_user_key', 'pushover_app_token', 'pushover_enabled', 'pushover_message_template'],
+  ntfy: ['ntfy_server_url', 'ntfy_topic', 'ntfy_password', 'ntfy_enabled', 'ntfy_message_template'],
+  gotify: ['gotify_url', 'gotify_app_token', 'gotify_enabled', 'gotify_message_template'],
+  email: ['email_enabled', 'email_to', 'email_subject_template', 'email_body_template'],
+  webhook: ['webhook_url', 'webhook_enabled'],
+};
+
 export default function NotificationChannelsSection() {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState<string | null>(null);
 
+  const [savedSettings, setSavedSettings] = useState<ChannelSettings | null>(null);
   const [draftSettings, setDraftSettings] = useState<ChannelSettings>({
     telegram_bot_token: '', telegram_chat_id: '', telegram_enabled: false, telegram_message_template: '',
     discord_webhook_url: '', discord_enabled: false, discord_message_template: '',
@@ -69,11 +81,16 @@ export default function NotificationChannelsSection() {
     webhook_url: '', webhook_enabled: false
   });
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const { expandedSections, toggleSection } = useExpandedSections({
     telegram: false, discord: false, pushover: false, ntfy: false, gotify: false, email: false, webhook: false
   });
 
-  const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
+  const isChannelDirty = (id: string): boolean => {
+    if (!savedSettings) return false;
+    const fields = channelFields[id];
+    if (!fields) return false;
+    return fields.some(field => draftSettings[field] !== savedSettings[field]);
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -83,7 +100,7 @@ export default function NotificationChannelsSection() {
     try {
       const res = await queryClient.fetchQuery(notificationSettingsQuery());
       const s = res;
-      setDraftSettings({
+      const initial: ChannelSettings = {
         telegram_bot_token: s.telegram_bot_token || '',
         telegram_chat_id: s.telegram_chat_id || '',
         telegram_enabled: !!s.telegram_enabled,
@@ -110,7 +127,9 @@ export default function NotificationChannelsSection() {
         email_body_template: s.email_body_template || '',
         webhook_url: s.webhook_url || '',
         webhook_enabled: !!s.webhook_enabled
-      });
+      };
+      setDraftSettings(initial);
+      setSavedSettings(initial);
     } catch { 
       showToast('Failed to load notification settings', 'error'); 
     } finally { 
@@ -118,7 +137,7 @@ export default function NotificationChannelsSection() {
     }
   };
 
-  const handleUpdateField = (field: keyof ChannelSettings, value: any) => {
+  const handleUpdateField = <K extends keyof ChannelSettings>(field: K, value: ChannelSettings[K]) => {
     setDraftSettings(prev => ({ ...prev, [field]: value }));
   };
 
@@ -127,6 +146,7 @@ export default function NotificationChannelsSection() {
     try {
       const updated = await ProfileService.updateNotificationSettings(draftSettings);
       queryClient.setQueryData<NotificationSettings>(queryKeys.notificationSettings, updated);
+      setSavedSettings(draftSettings);
       showToast('Notification settings saved', 'success');
     } catch { 
       showToast('Save failed', 'error'); 
@@ -134,6 +154,7 @@ export default function NotificationChannelsSection() {
       setIsSaving(false); 
     }
   };
+
 
   const handleTest = async (type: string) => {
     setIsTesting(type);
@@ -182,8 +203,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('telegram_enabled', !draftSettings.telegram_enabled)}
           onTest={() => handleTest('telegram')}
           isTesting={isTesting === 'telegram'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.telegram}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('telegram')}
         >
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}><strong>Tip:</strong> Start a conversation with your bot (<code>/start</code>) to authorize messages.</p>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
@@ -208,8 +230,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('discord_enabled', !draftSettings.discord_enabled)}
           onTest={() => handleTest('discord')}
           isTesting={isTesting === 'discord'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.discord}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('discord')}
         >
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="discord-webhook-url">Webhook URL</label>
@@ -229,8 +252,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('pushover_enabled', !draftSettings.pushover_enabled)}
           onTest={() => handleTest('pushover')}
           isTesting={isTesting === 'pushover'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.pushover}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('pushover')}
         >
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="pushover-user-key">User Key</label>
@@ -254,8 +278,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('ntfy_enabled', !draftSettings.ntfy_enabled)}
           onTest={() => handleTest('ntfy')}
           isTesting={isTesting === 'ntfy'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.ntfy}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('ntfy')}
         >
           <div className="form-group">
             <label>Server URL</label>
@@ -283,8 +308,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('gotify_enabled', !draftSettings.gotify_enabled)}
           onTest={() => handleTest('gotify')}
           isTesting={isTesting === 'gotify'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.gotify}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('gotify')}
         >
           <div className="form-group">
             <label>Server URL</label>
@@ -308,8 +334,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('email_enabled', !draftSettings.email_enabled)}
           onTest={() => handleTest('email')}
           isTesting={isTesting === 'email'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.email}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('email')}
         >
           <div className="form-group">
             <label>Recipient Address</label>
@@ -334,8 +361,9 @@ export default function NotificationChannelsSection() {
           onToggle={() => handleUpdateField('webhook_enabled', !draftSettings.webhook_enabled)}
           onTest={() => handleTest('webhook')}
           isTesting={isTesting === 'webhook'}
-          expandedSections={expandedSections}
+          isExpanded={expandedSections.webhook}
           onToggleSection={toggleSection}
+          isDirty={isChannelDirty('webhook')}
         >
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
             <label htmlFor="webhook-endpoint-url">Endpoint URL (POST)</label>

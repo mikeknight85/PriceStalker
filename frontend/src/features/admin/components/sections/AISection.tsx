@@ -1,29 +1,27 @@
 import { useState, useEffect } from 'react';
 import { AIService } from '../../services/AIService';
-import { AISettings } from '../../../../types/api';
-import { useAsyncAction } from '../../../../hooks/useAsyncAction';
+import { AISettings, AIModel } from '../../../../types/api';
+import { useAsyncAction, useExpandedSections } from '../../../../hooks';
 import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import AIStatusBadge from '../../../../components/AIStatusBadge';
-import { CollapsibleCard } from '../../components';
+import CollapsibleCard from '../../../../components/CollapsibleCard';
 import AIProviderConfig from './AIProviderConfig';
 import AIModelTester from './AIModelTester';
 import Icon from '../../../../components/Icon';
 
 export default function AISection() {
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
-  const [aiModels, setAiModels] = useState<any[]>([]);
+  const [aiModels, setAiModels] = useState<AIModel[]>([]);
   const { execute: runFetchAIData, isLoading } = useAsyncAction(true);
   const { showToast } = useToast();
   const { execute: runSaveAISettings, isLoading: isSavingAI } = useAsyncAction();
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const { expandedSections, toggleSection } = useExpandedSections({
     ai_general: true,
     ai_tester: false,
   });
-
-  const toggleSection = (id: string) => setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
 
   const fetchAIData = () => runFetchAIData(async () => {
     const [settingsRes, modelsRes] = await Promise.all([
@@ -58,7 +56,7 @@ export default function AISection() {
         <AIStatusBadge status={aiSettings?.ai_enabled ? 'verified' : null} />
       </div>
 
-      <CollapsibleCard title="Provider Settings" leadingIcon={<Icon name="cpu" />} id="ai_general" expandedSections={expandedSections} onToggle={toggleSection}>
+      <CollapsibleCard title="Provider Settings" leadingIcon={<Icon name="cpu" />} id="ai_general" isExpanded={expandedSections.ai_general} onToggle={toggleSection}>
         <AIProviderConfig 
           aiSettings={aiSettings}
           setAiSettings={setAiSettings}
