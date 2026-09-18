@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getVertexEndpoint, getVertexAuthToken } from './providers/vertex-auth';
 
 /**
  * Test Connection: Gemini
@@ -19,33 +20,46 @@ export async function testGeminiConnection(apiKey: string, modelName?: string): 
 }
 
 /**
- * Test Connection: OpenAI Compatible (OpenAI, DeepSeek, Groq, Mistral)
+ * Test Connection: Anthropic
  */
-export async function testOpenAICompatibleConnection(params: {
-  apiKey: string;
-  baseUrl?: string;
-  model: string;
-}): Promise<void> {
-  const OpenAI = (await import('openai')).default;
-  const client = new OpenAI({ apiKey: params.apiKey, baseURL: params.baseUrl });
-  await client.chat.completions.create({
-    model: params.model,
-    messages: [{ role: 'user', content: 'Say "valid"' }],
-    max_tokens: 5,
+export async function testAnthropicConnection(apiKey: string, modelName?: string): Promise<string> {
+  const { Anthropic } = await import('@anthropic-ai/sdk');
+  const client = new Anthropic({ apiKey });
+  const response = await client.messages.create({
+    model: modelName || 'claude-3-5-haiku-20241022',
+    max_tokens: 10,
+    messages: [{ role: 'user', content: 'Say "HELLO WORLD"' }]
   });
+  const block = response.content[0];
+  if (block.type === 'text') {
+    return block.text.trim();
+  }
+  throw new Error('Unexpected response format from Anthropic API');
 }
 
 /**
- * Test Connection: Anthropic
+ * Test Connection: OpenAI Compatible (OpenAI, DeepSeek, Groq, Mistral, OpenRouter, Local servers)
  */
-export async function testAnthropicConnection(apiKey: string, modelName?: string): Promise<void> {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default;
-  const client = new Anthropic({ apiKey });
-  await client.messages.create({
-    model: modelName || 'claude-3-haiku-20240307',
-    max_tokens: 5,
-    messages: [{ role: 'user', content: 'Say "valid"' }],
+export async function testOpenAICompatibleConnection(params: {
+  apiKey?: string;
+  baseUrl?: string;
+  model: string;
+}): Promise<string> {
+  const { OpenAI } = await import('openai');
+  const client = new OpenAI({
+    apiKey: params.apiKey || 'dummy-key',
+    baseURL: params.baseUrl
   });
+  const response = await client.chat.completions.create({
+    model: params.model,
+    messages: [{ role: 'user', content: 'Say "HELLO WORLD"' }],
+    max_tokens: 10
+  });
+  const text = response.choices[0]?.message?.content;
+  if (!text) {
+    throw new Error('Empty response from OpenAI-compatible API');
+  }
+  return text.trim();
 }
 
 /**
@@ -61,13 +75,13 @@ export async function testOllamaConnection(baseUrl: string): Promise<string[]> {
  * Test Connection: Vertex AI
  */
 export async function testVertexConnection(params: {
-  apiKey: string;
+  apiKey?: string;
   projectId: string;
   location: string;
   model: string;
 }): Promise<void> {
-  const location = params.location || 'us-central1';
-  const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${params.projectId}/locations/${location}/publishers/google/models/${params.model}:generateContent`;
+  const endpoint = getVertexEndpoint(params.projectId, params.location, params.model);
+  const authToken = await getVertexAuthToken(params.apiKey);
 
   const payload = {
     contents: [{ role: 'user', parts: [{ text: 'Say "valid"' }] }],
@@ -77,7 +91,7 @@ export async function testVertexConnection(params: {
   await axios.post(endpoint, payload, {
     headers: { 
       'Content-Type': 'application/json',
-      'x-goog-api-key': params.apiKey
+      'Authorization': `Bearer ${authToken}`
     },
     timeout: 10000
   });

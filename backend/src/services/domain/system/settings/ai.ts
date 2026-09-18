@@ -16,6 +16,7 @@ export class AISettingsService {
       settings.anthropic_api_key = settings.anthropic_api_key ? maskKey(settings.anthropic_api_key) : null;
       settings.openai_api_key = settings.openai_api_key ? maskKey(settings.openai_api_key) : null;
       settings.gemini_api_key = settings.gemini_api_key ? maskKey(settings.gemini_api_key) : null;
+      settings.vertex_api_key = settings.vertex_api_key ? maskKey(settings.vertex_api_key) : null;
       settings.deepseek_api_key = settings.deepseek_api_key ? maskKey(settings.deepseek_api_key) : null;
       settings.groq_api_key = settings.groq_api_key ? maskKey(settings.groq_api_key) : null;
       settings.mistral_api_key = settings.mistral_api_key ? maskKey(settings.mistral_api_key) : null;

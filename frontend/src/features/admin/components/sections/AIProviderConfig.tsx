@@ -50,8 +50,14 @@ export default function AIProviderConfig({
       }
       res = await AIService.testGemini(aiSettings.gemini_api_key, aiSettings.gemini_model);
     } else if (provider === 'vertex') {
-      if (!aiSettings?.vertex_api_key || !aiSettings?.vertex_project_id || !aiSettings?.vertex_location || !aiSettings?.vertex_model) return;
-      res = await AIService.testVertex(aiSettings.vertex_api_key, aiSettings.vertex_project_id, aiSettings.vertex_location, aiSettings.vertex_model);
+      const projectId = aiSettings?.vertex_project_id;
+      const location = aiSettings?.vertex_location || 'us-central1';
+      const model = aiSettings?.vertex_model || 'gemini-2.5-flash';
+      if (!projectId) {
+        showToast('GCP Project ID is required for Vertex AI', 'error');
+        return;
+      }
+      res = await AIService.testVertex(aiSettings?.vertex_api_key || '', projectId, location, model);
     } else if (provider === 'openai') {
       if (!aiSettings?.openai_api_key) return;
       res = await AIService.testOpenAI(aiSettings.openai_api_key, aiSettings.openai_model || undefined);
@@ -183,7 +189,7 @@ export default function AIProviderConfig({
       {aiSettings?.ai_provider === 'vertex' && (
         <>
           <form onSubmit={(e) => e.preventDefault()} className="form-group">
-            <label htmlFor="vertex-api-key">Vertex API Key</label>
+            <label htmlFor="vertex-api-key">Service Account Key (JSON) / Credentials</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <div style={{ flex: 1 }}>
                 <PasswordInput secret
@@ -191,12 +197,15 @@ export default function AIProviderConfig({
                   name="vertex-api-key"
                   value={aiSettings?.vertex_api_key || ''} 
                   onChange={e => setAiSettings(s => s ? { ...s, vertex_api_key: e.target.value } : null)} 
-                  placeholder="AI..." 
+                  placeholder="Paste Service Account JSON or leave empty for ADC"
                   autoComplete="new-password"
                   allowReveal={!aiSettings?.redact_api_keys}
                 />
               </div>
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('vertex')}>Verify</button>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              Paste GCP Service Account JSON key content with Vertex AI User role, or leave empty if using Application Default Credentials (ADC).
             </div>
           </form>
           <div className="form-group">
@@ -205,11 +214,11 @@ export default function AIProviderConfig({
           </div>
           <div className="form-group">
             <label>Location</label>
-            <input className="form-control" value={aiSettings?.vertex_location || 'us-central1'} onChange={e => setAiSettings(s => s ? { ...s, vertex_location: e.target.value } : null)} placeholder="us-central1" autoComplete="off" />
+            <input className="form-control" value={aiSettings?.vertex_location || 'us-central1'} onChange={e => setAiSettings(s => s ? { ...s, vertex_location: e.target.value } : null)} placeholder="us-central1 (or global, europe-west1, etc.)" autoComplete="off" />
           </div>
           <div className="form-group">
             <label>Model</label>
-            <input className="form-control" value={aiSettings?.vertex_model || ''} onChange={e => setAiSettings(s => s ? { ...s, vertex_model: e.target.value } : null)} placeholder="gemini-1.5-pro-002" autoComplete="off" />
+            <input className="form-control" value={aiSettings?.vertex_model || ''} onChange={e => setAiSettings(s => s ? { ...s, vertex_model: e.target.value } : null)} placeholder="gemini-2.5-flash" autoComplete="off" />
           </div>
         </>
       )}

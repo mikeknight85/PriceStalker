@@ -4,8 +4,9 @@ import { logger } from '../../../utils/system/logger';
 import { withRetry } from '../../../utils/system/retry';
 import { AIProvider, AIRequestOptions, AIResponse } from './types';
 import { traceAiRequest, traceAiResponse } from '../trace';
+import { getVertexEndpoint, getVertexAuthToken } from './vertex-auth';
 
-const DEFAULT_VERTEX_MODEL = 'gemini-1.5-pro-002';
+const DEFAULT_VERTEX_MODEL = 'gemini-2.5-flash';
 
 export class VertexProvider implements AIProvider {
   private settings: AISettings;
@@ -18,14 +19,15 @@ export class VertexProvider implements AIProvider {
     traceAiRequest(prompt, { provider: 'Vertex', productId: options?.productId, label: options?.retryLabel });
     const projectId = this.settings.vertex_project_id;
     const location = this.settings.vertex_location || 'us-central1';
-    const apiKey = this.settings.vertex_api_key;
+    const credentials = this.settings.vertex_api_key;
     const model = this.settings.vertex_model || DEFAULT_VERTEX_MODEL;
 
-    if (!projectId || !apiKey) {
-      throw new Error('Vertex AI requires Project ID and API Key to be configured.');
+    if (!projectId) {
+      throw new Error('Vertex AI requires Project ID to be configured.');
     }
 
-    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:generateContent`;
+    const endpoint = getVertexEndpoint(projectId, location, model);
+    const authToken = await getVertexAuthToken(credentials);
 
     const payload = {
       contents: [
@@ -45,7 +47,7 @@ export class VertexProvider implements AIProvider {
         const response = await axios.post(endpoint, payload, {
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
+            'Authorization': `Bearer ${authToken}`
           },
           timeout: this.settings.ai_timeout || 30000
         });
