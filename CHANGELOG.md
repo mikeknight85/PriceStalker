@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Dynamic AI model discovery, synchronization, and model selection dropdowns with custom model entry support across all AI providers (OpenAI, Anthropic, OpenRouter, Ollama, Groq, Mistral, DeepSeek, Vertex AI, and OpenAI-Compatible), along with scheduled background model discovery refresh (#200).
+
 ### Fixed
 
+- AI provider connection test endpoints now automatically resolve unmasked stored credentials when testing with masked/redacted keys, fixing connection test failures when `REDACT_API_KEYS=true` (#198, #196).
 - The Authentication section is now accessible on mobile screens in the Admin panel (#182). The mobile `<select>` and desktop `<nav>` are now driven from a single source of truth in both Admin and Settings pages.
 - The notification channel "Send Test Notification" button is now disabled when unsaved changes exist on the channel card, with a tooltip explaining that changes must be saved first (#186).
 - The debug page shows a "did not load" marker for an image candidate that

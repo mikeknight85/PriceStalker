@@ -6,6 +6,9 @@ export const AIService = {
   updateAI: (data: Partial<AISettings>) => api.put<AISettings>('/admin/settings/ai', data),
   getGeminiModels: () => api.get<{ models: AIModel[]; refreshed_at: string }>('/admin/settings/ai/gemini/models'),
   refreshGeminiModels: (key?: string) => api.post<{ models: AIModel[]; refreshed_at: string }>('/admin/settings/ai/gemini/models/refresh', { api_key: key }),
+  getProviderModels: (provider: string) => api.get<{ models: AIModel[]; refreshed_at: string }>(`/admin/settings/ai/${provider}/models`),
+  refreshProviderModels: (provider: string, data?: { api_key?: string; base_url?: string }) =>
+    api.post<{ models: AIModel[]; refreshed_at: string }>(`/admin/settings/ai/${provider}/models/refresh`, data || {}),
   testAI: (url: string) => api.post<AIExtractionTestResult>('/admin/settings/ai/test', { url }),
   
   // Specific AI Provider Tests

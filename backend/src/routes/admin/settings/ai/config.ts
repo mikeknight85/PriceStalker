@@ -17,32 +17,19 @@ router.put('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json(settings);
 }, 'Admin | AI Settings Update', 'Admin', 'Failed to update global AI settings'));
 
-// Get cached Gemini models
-router.get('/gemini/models', asyncHandler(async (_req: AuthRequest, res: Response) => {
-  const settings = await systemService.getSettings();
-  const modelsStr = settings.gemini_available_models;
-  const refreshedAt = settings.gemini_models_refreshed_at;
-  res.json({
-    models: modelsStr ? JSON.parse(modelsStr) : [],
-    refreshed_at: refreshedAt,
-  });
-}, 'Admin | Fetch Gemini Models', 'Admin', 'Failed to fetch Gemini models'));
-
-// Refresh Gemini models
-router.post('/gemini/models/refresh', asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { api_key } = req.body;
-  let apiKey = api_key;
-  if (!apiKey) {
-    const settings = await systemService.getAISettings();
-    apiKey = settings.gemini_api_key;
-  }
-  if (!apiKey) {
-    res.status(400).json({ error: 'Gemini API key is required' });
-    return;
-  }
-
-  const result = await systemService.refreshGeminiModels(apiKey);
+// Get cached models for any provider
+router.get('/:provider/models', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { provider } = req.params;
+  const result = await systemService.getProviderModels(provider);
   res.json(result);
-}, 'Admin | Gemini Models Refresh', 'Admin', 'Failed to refresh Gemini models'));
+}, 'Admin | Fetch Provider Models', 'Admin', 'Failed to fetch provider models'));
+
+// Refresh models for any provider
+router.post('/:provider/models/refresh', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { provider } = req.params;
+  const { api_key, base_url } = req.body;
+  const result = await systemService.refreshProviderModels(provider, { apiKey: api_key, baseUrl: base_url });
+  res.json(result);
+}, 'Admin | Provider Models Refresh', 'Admin', 'Failed to refresh provider models'));
 
 export default router;
