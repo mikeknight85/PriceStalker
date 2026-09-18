@@ -52,7 +52,7 @@ export default function AISection() {
   return (
     <div className="settings-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 className="settings-card-title" style={{ margin: 0 }}>AI Configuration</h2>
+        <h2 className="settings-card-title">AI Configuration</h2>
         <AIStatusBadge status={aiSettings?.ai_enabled ? 'verified' : null} />
       </div>
 

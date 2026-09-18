@@ -32,6 +32,8 @@ export default function RegionalSection() {
     setProfileLocale(profile.locale || '');
   }, [profile]);
 
+  const isDirty = profile ? (profileCurrency !== (profile.currency || '') || profileLocale !== (profile.locale || '')) : false;
+
   const handleSaveRegional = async () => {
     try {
       const res = await updateProfile.mutateAsync({
@@ -51,46 +53,48 @@ export default function RegionalSection() {
 
   return (
     <section className="settings-card">
-      <h2 className="settings-card-title">Regional Settings</h2>
-      <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
-        Configure your display currency and local date/number formats.
-      </p>
-      
-      <div className="form-grid">
-        <div className="form-group">
-          <SearchableSelect
-            label="Preferred Currency"
-            options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
-              label: `${gc.iso} (${gc.symbol})`,
-              value: gc.iso,
-              subLabel: gc.currency_name
-            }))]}
-            value={profileCurrency}
-            placeholder="Choose a currency"
-            onChange={(val) => {
-              setProfileCurrency(val);
-              const match = globalCurrencies.find(gc => gc.iso === val);
-              if (match) setProfileLocale(match.locale);
-            }}
-          />
-        </div>
-        <div className="form-group">
-          <SearchableSelect
-            label="Locale Format"
-            options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
-            value={profileLocale}
-            placeholder="Choose a locale"
-            onChange={setProfileLocale}
-          />
-        </div>
-      </div>
+      <form onSubmit={(e) => { e.preventDefault(); void handleSaveRegional(); }}>
+        <h2 className="settings-card-title">Regional Settings</h2>
+        <p className="settings-card-description">
+          Configure your display currency and local date/number formats.
+        </p>
 
-      <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={() => { setProfileCurrency(profile.currency || ''); setProfileLocale(profile.locale || ''); }}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSaveRegional} disabled={updateProfile.isPending}>
-          {updateProfile.isPending ? 'Saving...' : 'Save Regional Settings'}
-        </button>
-      </div>
+        <div className="form-grid">
+          <div className="form-group">
+            <SearchableSelect
+              label="Preferred Currency"
+              options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
+                label: `${gc.iso} (${gc.symbol})`,
+                value: gc.iso,
+                subLabel: gc.currency_name
+              }))]}
+              value={profileCurrency}
+              placeholder="Choose a currency"
+              onChange={(val) => {
+                setProfileCurrency(val);
+                const match = globalCurrencies.find(gc => gc.iso === val);
+                if (match) setProfileLocale(match.locale);
+              }}
+            />
+          </div>
+          <div className="form-group">
+            <SearchableSelect
+              label="Locale Format"
+              options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
+              value={profileLocale}
+              placeholder="Choose a locale"
+              onChange={setProfileLocale}
+            />
+          </div>
+        </div>
+
+        <div className="settings-actions">
+          <button type="button" className="btn btn-secondary" onClick={() => { setProfileCurrency(profile.currency || ''); setProfileLocale(profile.locale || ''); }} disabled={!isDirty || updateProfile.isPending}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={!isDirty || updateProfile.isPending}>
+            {updateProfile.isPending ? 'Saving...' : 'Save Regional Settings'}
+          </button>
+        </div>
+      </form>
     </section>
   );
 }

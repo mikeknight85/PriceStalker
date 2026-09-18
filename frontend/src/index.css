@@ -325,6 +325,10 @@ input, button, select, textarea {
   border: 1px solid var(--border);
 }
 
+.settings-card--active {
+  border-left: 4px solid var(--primary);
+}
+
 .settings-card-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -332,6 +336,25 @@ input, button, select, textarea {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+:is([style*="display: flex"], .settings-card-header, .card-header) > .settings-card-title {
+  margin: 0;
+}
+
+.settings-panel-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-card-description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
 }
 
 .form-grid {

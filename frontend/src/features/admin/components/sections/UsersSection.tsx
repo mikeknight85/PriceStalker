@@ -140,7 +140,7 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
       {!editingUser && !isAddingUser && (
         <div className="settings-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <h2 className="settings-card-title" style={{ margin: 0 }}>User Management</h2>
+            <h2 className="settings-card-title">User Management</h2>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="search"
@@ -223,143 +223,29 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
       )}
 
       {isAddingUser && (
-        <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)' }}>
-          <h3 className="settings-card-title">Create New User</h3>
-          <div className="form-group"><label>Email Address</label><input type="email" className="form-control" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="user@example.com" autoComplete="off" /></div>
-          <div className="form-group"><label>Display Name (Optional)</label><input type="text" className="form-control" value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Jane Doe" autoComplete="off" /></div>
-          <div className="form-group">
-            <label>Account Password</label>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <div style={{ flex: 1 }}>
-                <PasswordInput secret value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} autoComplete="new-password" />
-              </div>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => setNewUserPassword(generateRandomPassword())}
-              >
-                Generate
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={!newUserPassword}
-                onClick={() => copyToClipboard(newUserPassword)}
-                title="Copy password"
-                aria-label="Copy password"
-              >
-                <Icon name="clipboard" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="form-grid">
+        <div className="settings-card settings-card--active">
+          <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleAddUser(); }}>
+            <h3 className="settings-panel-title">Create New User</h3>
+            <div className="form-group"><label>Email Address</label><input type="email" className="form-control" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="user@example.com" autoComplete="off" required /></div>
+            <div className="form-group"><label>Display Name (Optional)</label><input type="text" className="form-control" value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Jane Doe" autoComplete="off" /></div>
             <div className="form-group">
-              <SearchableSelect
-                label="Default Currency"
-                options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
-                  label: `${gc.iso} (${gc.symbol})`,
-                  value: gc.iso,
-                  subLabel: gc.currency_name
-                }))]}
-                value={newUserCurrency}
-                placeholder="Choose a currency"
-                onChange={(val) => {
-                  setNewUserCurrency(val);
-                  const match = globalCurrencies.find(gc => gc.iso === val);
-                  if (match) setNewUserLocale(match.locale);
-                }}
-              />
-            </div>
-            <div className="form-group">
-              <SearchableSelect
-                label="Default Locale"
-                options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
-                value={newUserLocale}
-                placeholder="Choose a locale"
-                onChange={setNewUserLocale}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', marginTop: '1rem' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Grant Administrator Privileges</span>
-            <ToggleSwitch active={newUserIsAdmin} onToggle={() => setNewUserIsAdmin(!newUserIsAdmin)} />
-          </div>
-
-          <div className="settings-actions">
-            <button className="btn btn-secondary" onClick={() => setIsAddingUser(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleAddUser}>Create Account</button>
-          </div>
-        </div>
-      )}
-
-      {editingUser && (
-        <div className="settings-card" style={{ border: '2px solid var(--primary)' }}>
-          <h3 className="settings-card-title">Edit User: {editingUser.email}</h3>
-          {isSsoUser(editingUser) && (
-            <div className="alert" style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              This account signs in through SSO. Its email address and password are
-              managed by the identity provider and cannot be changed here.
-            </div>
-          )}
-          <div className="form-group">
-            <label htmlFor="edit-user-email">Email Address</label>
-            <input
-              id="edit-user-email"
-              type="email"
-              className="form-control"
-              value={editingUser.email || ''}
-              disabled={isSsoUser(editingUser)}
-              onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
-            />
-          </div>
-          <div className="form-group"><label>Display Name</label><input type="text" className="form-control" value={editingUser.name || ''} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} /></div>
-          <div className="form-grid">
-            <div className="form-group">
-              <SearchableSelect
-                label="Currency"
-                options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
-                  label: `${gc.iso} (${gc.symbol})`,
-                  value: gc.iso,
-                  subLabel: gc.currency_name
-                }))]}
-                value={editingUser.currency || ''}
-                onChange={(val) => {
-                  setEditingUser(prev => prev ? { ...prev, currency: val } : null);
-                  const match = globalCurrencies.find(gc => gc.iso === val);
-                  if (match) setEditingUser(prev => prev ? { ...prev, currency: val, locale: match.locale } : null);
-                }}
-              />
-            </div>
-            <div className="form-group">
-              <SearchableSelect
-                label="Locale Format"
-                options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
-                value={editingUser.locale || ''}
-                onChange={(val) => setEditingUser(prev => prev ? { ...prev, locale: val } : null)}
-              />
-            </div>
-          </div>
-          {!isSsoUser(editingUser) && (
-            <div className="form-group" style={{ marginTop: '1rem' }}>
-              <label>New Password (Optional)</label>
+              <label>Account Password</label>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <div style={{ flex: 1 }}>
-                  <PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" />
+                  <PasswordInput secret value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} autoComplete="new-password" />
                 </div>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setEditUserPassword(generateRandomPassword())}
+                  onClick={() => setNewUserPassword(generateRandomPassword())}
                 >
                   Generate
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  disabled={!editUserPassword}
-                  onClick={() => copyToClipboard(editUserPassword)}
+                  disabled={!newUserPassword}
+                  onClick={() => copyToClipboard(newUserPassword)}
                   title="Copy password"
                   aria-label="Copy password"
                 >
@@ -367,27 +253,145 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
                 </button>
               </div>
             </div>
-          )}
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Administrator Access</span>
-            <ToggleSwitch active={!!editingUser.is_admin} onToggle={() => setEditingUser(prev => prev ? { ...prev, is_admin: !prev.is_admin } : null)} />
-          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.875rem', color: editingUser.disabled ? 'var(--danger)' : 'inherit' }}>
-              Disable Account
-            </span>
-            <ToggleSwitch 
-              active={editingUser.disabled || false} 
-              onToggle={() => setEditingUser(prev => prev ? { ...prev, disabled: !prev.disabled } : null)} 
-            />
-          </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <SearchableSelect
+                  label="Default Currency"
+                  options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
+                    label: `${gc.iso} (${gc.symbol})`,
+                    value: gc.iso,
+                    subLabel: gc.currency_name
+                  }))]}
+                  value={newUserCurrency}
+                  placeholder="Choose a currency"
+                  onChange={(val) => {
+                    setNewUserCurrency(val);
+                    const match = globalCurrencies.find(gc => gc.iso === val);
+                    if (match) setNewUserLocale(match.locale);
+                  }}
+                />
+              </div>
+              <div className="form-group">
+                <SearchableSelect
+                  label="Default Locale"
+                  options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
+                  value={newUserLocale}
+                  placeholder="Choose a locale"
+                  onChange={setNewUserLocale}
+                />
+              </div>
+            </div>
 
-          <div className="settings-actions">
-            <button className="btn btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleUpdateUser}>Update User Account</button>
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Administrator Access</span>
+              <ToggleSwitch active={newUserIsAdmin} onToggle={() => setNewUserIsAdmin(!newUserIsAdmin)} />
+            </div>
+
+            <div className="settings-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setIsAddingUser(false)}>Cancel</button>
+              <button type="submit" className="btn btn-primary">Create Account</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {editingUser && (
+        <div className="settings-card settings-card--active">
+          <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleUpdateUser(); }}>
+            <h3 className="settings-panel-title">Edit User: {editingUser.email}</h3>
+            {isSsoUser(editingUser) && (
+              <div className="alert" style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                This account signs in through SSO. Its email address and password are
+                managed by the identity provider and cannot be changed here.
+              </div>
+            )}
+            <div className="form-group">
+              <label htmlFor="edit-user-email">Email Address</label>
+              <input
+                id="edit-user-email"
+                type="email"
+                className="form-control"
+                value={editingUser.email || ''}
+                disabled={isSsoUser(editingUser)}
+                onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
+              />
+            </div>
+            <div className="form-group"><label>Display Name</label><input type="text" className="form-control" value={editingUser.name || ''} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} /></div>
+            <div className="form-grid">
+              <div className="form-group">
+                <SearchableSelect
+                  label="Currency"
+                  options={[AUTOMATIC_CURRENCY_OPTION, ...globalCurrencies.map(gc => ({
+                    label: `${gc.iso} (${gc.symbol})`,
+                    value: gc.iso,
+                    subLabel: gc.currency_name
+                  }))]}
+                  value={editingUser.currency || ''}
+                  onChange={(val) => {
+                    setEditingUser(prev => prev ? { ...prev, currency: val } : null);
+                    const match = globalCurrencies.find(gc => gc.iso === val);
+                    if (match) setEditingUser(prev => prev ? { ...prev, currency: val, locale: match.locale } : null);
+                  }}
+                />
+              </div>
+              <div className="form-group">
+                <SearchableSelect
+                  label="Locale Format"
+                  options={[AUTOMATIC_LOCALE_OPTION, ...LOCALE_OPTIONS]}
+                  value={editingUser.locale || ''}
+                  onChange={(val) => setEditingUser(prev => prev ? { ...prev, locale: val } : null)}
+                />
+              </div>
+            </div>
+            {!isSsoUser(editingUser) && (
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>New Password (Optional)</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <PasswordInput secret value={editUserPassword} onChange={e => setEditUserPassword(e.target.value)} autoComplete="new-password" />
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setEditUserPassword(generateRandomPassword())}
+                  >
+                    Generate
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={!editUserPassword}
+                    onClick={() => copyToClipboard(editUserPassword)}
+                    title="Copy password"
+                    aria-label="Copy password"
+                  >
+                    <Icon name="clipboard" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Administrator Access</span>
+              <ToggleSwitch active={!!editingUser.is_admin} onToggle={() => setEditingUser(prev => prev ? { ...prev, is_admin: !prev.is_admin } : null)} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.875rem', color: editingUser.disabled ? 'var(--danger)' : 'inherit' }}>
+                Disable Account
+              </span>
+              <ToggleSwitch
+                active={editingUser.disabled || false}
+                onToggle={() => setEditingUser(prev => prev ? { ...prev, disabled: !prev.disabled } : null)}
+              />
+            </div>
+
+            <div className="settings-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
+              <button type="submit" className="btn btn-primary">Update User Account</button>
+            </div>
+          </form>
         </div>
       )}
     </div>

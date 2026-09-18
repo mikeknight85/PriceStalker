@@ -34,6 +34,8 @@ export default function ProfileSection() {
     setProfileName(profile.name || '');
   }, [profile]);
 
+  const isDirty = profile ? profileName !== (profile.name || '') : false;
+
   const handleSaveProfile = async () => {
     try {
       const res = await updateProfile.mutateAsync({
@@ -52,40 +54,43 @@ export default function ProfileSection() {
 
   return (
     <section className="settings-card">
-      <h2 className="settings-card-title">User Profile</h2>
-      <div className="form-group">
-        <label>Email Address</label>
-        <input type="email" className="form-control" value={profile?.email || ''} disabled autoComplete="username" />
-      </div>
-      <div className="form-group">
-        <label>Full Name</label>
-        <input type="text" className="form-control" value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="Enter your name" />
-      </div>
+      <form onSubmit={(e) => { e.preventDefault(); void handleSaveProfile(); }}>
+        <h2 className="settings-card-title">User Profile</h2>
+        <div className="form-group">
+          <label>Email Address</label>
+          <input type="email" className="form-control" value={profile?.email || ''} disabled autoComplete="username" />
+        </div>
+        <div className="form-group">
+          <label>Full Name</label>
+          <input type="text" className="form-control" value={profileName} onChange={e => setProfileName(e.target.value)} placeholder="Enter your name" />
+        </div>
 
-      <h2 className="settings-card-title" style={{ marginTop: '2rem' }}>Appearance</h2>
-      <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
-        Choose a color theme, or let it follow your operating system. Applied
-        immediately on this device.
-      </p>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {THEME_MODES.map(t => (
-          <button
-            key={t.value}
-            className={`btn btn-sm ${mode === t.value ? 'btn-primary' : 'btn-secondary'}`}
-            title={t.hint}
-            onClick={() => setMode(t.value)}
-          >
-            {t.label}
+        <h2 className="settings-card-title" style={{ marginTop: '2rem' }}>Appearance</h2>
+        <p className="settings-card-description">
+          Choose a color theme, or let it follow your operating system. Applied
+          immediately on this device.
+        </p>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {THEME_MODES.map(t => (
+            <button
+              key={t.value}
+              type="button"
+              className={`btn btn-sm ${mode === t.value ? 'btn-primary' : 'btn-secondary'}`}
+              title={t.hint}
+              onClick={() => setMode(t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="settings-actions" style={{ marginTop: '2rem' }}>
+          <button type="button" className="btn btn-secondary" onClick={() => setProfileName(profile.name || '')} disabled={!isDirty || updateProfile.isPending}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={!isDirty || updateProfile.isPending}>
+            {updateProfile.isPending ? 'Saving...' : 'Save Profile'}
           </button>
-        ))}
-      </div>
-
-      <div className="settings-actions" style={{ marginTop: '2rem' }}>
-        <button className="btn btn-secondary" onClick={() => setProfileName(profile.name || '')}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSaveProfile} disabled={updateProfile.isPending}>
-          {updateProfile.isPending ? 'Saving...' : 'Save Profile'}
-        </button>
-      </div>
+        </div>
+      </form>
     </section>
   );
 }

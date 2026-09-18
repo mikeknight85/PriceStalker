@@ -15,11 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolves to nothing, instead of the browser's broken-image icon (#180). The
   page deliberately lists candidates the extractor rejected, and a broken icon
   read as the page malfunctioning rather than as the candidate being bad.
+- Unified the save model in the Admin System section so all toggles update local draft state and save via the bottom action bar, removing mixed immediate/deferred toggles (#187).
+- Wrapped plain-text settings forms in `<form onSubmit={...}>` to support Enter key submission (#192).
+- Wrapped all user and administration settings tab sections in `ErrorBoundary` to prevent unhandled render errors from blanking the entire page (#181).
 
 ### Changed
 
 - Moved `ToggleSwitch` into shared components and extracted `useExpandedSections` hook to standardize collapsible sections and eliminate cross-feature import violations (#188, #189, #190).
 - Standardised form input styling (`form-control`) across admin section components and eliminated loose `any` types in AI/retailer settings (#185, #191).
+- Extracted a shared `SettingsPageHeader` component, added `.settings-card-description` typography class, and removed inline card title margin overrides across settings and admin pages (#184).
+- Standardised inline add/edit panel styling across admin sections with `.settings-card--active` and `.settings-panel-title` (#193).
+- Standardised save/cancel action bars and dirty-state tracking across all settings and admin sections (#183).
 
 ## [2.1.0-beta.10] - 2026-09-10
 

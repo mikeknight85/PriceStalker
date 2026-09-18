@@ -92,6 +92,8 @@ export default function NotificationChannelsSection() {
     return fields.some(field => draftSettings[field] !== savedSettings[field]);
   };
 
+  const isDirty = savedSettings ? Object.keys(channelFields).some(id => isChannelDirty(id)) : false;
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -191,7 +193,7 @@ export default function NotificationChannelsSection() {
   return (
     <div className="settings-card">
       <h2 className="settings-card-title">Notification Channels</h2>
-      <p className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
+      <p className="settings-card-description">
         Configure where you want to receive price drop and stock alerts.
       </p>
 
@@ -374,8 +376,8 @@ export default function NotificationChannelsSection() {
       </div>
 
       <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={fetchSettings}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
+        <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setDraftSettings(savedSettings)} disabled={!isDirty || isSaving}>Cancel</button>
+        <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!isDirty || isSaving}>
           {isSaving ? 'Saving...' : 'Save All Channels'}
         </button>
       </div>
