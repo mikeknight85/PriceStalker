@@ -24,6 +24,8 @@ export class SystemService {
   getAISettings = settingsService.getAISettings.bind(settingsService);
   updateAISettings = settingsService.updateAISettings.bind(settingsService);
   refreshGeminiModels = settingsService.refreshGeminiModels.bind(settingsService);
+  getProviderModels = settingsService.getProviderModels.bind(settingsService);
+  refreshProviderModels = settingsService.refreshProviderModels.bind(settingsService);
   getLogs = logService.getLogs.bind(logService);
   deleteLogs = logService.deleteLogs.bind(logService);
   clearLogs = logService.clearLogs.bind(logService);

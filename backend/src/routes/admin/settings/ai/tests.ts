@@ -3,7 +3,11 @@ import { AuthRequest } from '../../../../middleware/auth';
 import { systemService } from '../../../../services/domain/system';
 import { asyncHandler } from '../../../../utils/system/route-helpers';
 
+import { systemSettingsRepository } from '../../../../models';
+
 const router = Router();
+
+const isMasked = (key: string | null | undefined) => !key || (typeof key === 'string' && (key.includes('...') || key.includes('***')));
 
 /**
  * Generic handler for AI provider connection tests.
@@ -13,8 +17,15 @@ function handleAiTest(
   testFn: (ai: any, apiKey: string, model?: string) => Promise<any>
 ) {
   return asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { api_key, model: selectedModel } = req.body;
-    if (!api_key) {
+    let { api_key, model: selectedModel } = req.body;
+
+    if (isMasked(api_key)) {
+      const storedSettings = await systemSettingsRepository.getAISettings();
+      const providerKey = `${provider.toLowerCase().replace(/[^a-z0-9]/g, '_')}_api_key` as keyof typeof storedSettings;
+      api_key = (storedSettings[providerKey] as string) || (storedSettings as any)[`${provider.toLowerCase()}_api_key`] || api_key;
+    }
+
+    if (!api_key || isMasked(api_key)) {
       res.status(400).json({ error: 'API key is required' });
       return;
     }
@@ -53,8 +64,7 @@ router.post('/test', asyncHandler(async (req: AuthRequest, res: Response) => {
 router.post('/test-gemini', handleAiTest('Gemini', (ai, k, m) => ai.testGeminiConnection(k, m)));
 router.post('/test-vertex', asyncHandler(async (req: AuthRequest, res: Response) => {
   let { api_key, project_id, location, model } = req.body;
-  if (typeof api_key === 'string' && (api_key.includes('...') || api_key.includes('*'))) {
-    const { systemSettingsRepository } = await import('../../../../models');
+  if (isMasked(api_key)) {
     const stored = await systemSettingsRepository.getAISettings();
     api_key = stored.vertex_api_key || api_key;
   }
@@ -89,10 +99,14 @@ router.post('/test-openrouter', handleAiTest('OpenRouter', (ai, k, m) =>
 // OpenAI-compatible local servers (vLLM, LM Studio, LocalAI, ...): base_url
 // is required, the API key is optional.
 router.post('/test-openai-compatible', asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { api_key, base_url, model } = req.body;
+  let { api_key, base_url, model } = req.body;
   if (!base_url || !model) {
     res.status(400).json({ error: 'Base URL and model are required' });
     return;
+  }
+  if (isMasked(api_key)) {
+    const stored = await systemSettingsRepository.getAISettings();
+    api_key = stored.openai_compatible_api_key || api_key;
   }
   const { testOpenAICompatibleConnection } = await import('../../../../services/ai');
   await testOpenAICompatibleConnection({ apiKey: api_key || 'not-needed', baseUrl: base_url, model });
