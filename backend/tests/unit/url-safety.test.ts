@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   assertUrlIsSafe,
   isBlockedAddress,
@@ -193,6 +195,143 @@ describe('the ALLOW_INTERNAL_SCRAPING escape hatch', () => {
 
   it('is off when the variable is absent', async () => {
     await expect(assertUrlIsSafe('http://10.0.0.1/')).rejects.toThrow(UnsafeUrlError);
+  });
+});
+
+/**
+ * The product paths -- adding, rescanning, refreshing -- are reachable by any
+ * signed-in user, and a self-hoster tracking a shop at 192.168.1.50 was doing
+ * something legitimate before this guard existed. So those paths allow private
+ * LAN addresses and refuse only what can never be a shop: loopback,
+ * link-local (169.254.169.254, the cloud metadata endpoint), and friends.
+ */
+describe('the allow-private-lan policy', () => {
+  it.each([
+    ['RFC1918 10/8', '10.0.0.5'],
+    ['RFC1918 172.16/12', '172.20.10.1'],
+    ['RFC1918 192.168/16', '192.168.1.50'],
+    ['CGNAT', '100.100.0.1'],
+    ['IPv6 unique-local, the RFC1918 of IPv6', 'fd00::1'],
+  ])('allows %s (%s), which the strict policy refuses', (_label, address) => {
+    expect(isBlockedAddress(address, 'allow-private-lan')).toBe(false);
+    expect(isBlockedAddress(address, 'block-all-private')).toBe(true);
+  });
+
+  it.each([
+    ['the cloud metadata endpoint', '169.254.169.254'],
+    ['the rest of link-local', '169.254.10.1'],
+    ['loopback', '127.0.0.1'],
+    ['the rest of 127/8', '127.0.0.53'],
+    ['0.0.0.0/8', '0.0.0.0'],
+    ['IPv6 loopback', '::1'],
+    ['IPv6 link-local', 'fe80::1'],
+    ['multicast', '224.0.0.1'],
+  ])('still refuses %s (%s)', (_label, address) => {
+    expect(isBlockedAddress(address, 'allow-private-lan')).toBe(true);
+  });
+
+  it('still sees through IPv4-mapped IPv6 for the addresses it blocks', () => {
+    expect(isBlockedAddress('::ffff:169.254.169.254', 'allow-private-lan')).toBe(true);
+    expect(isBlockedAddress('::ffff:127.0.0.1', 'allow-private-lan')).toBe(true);
+    // ...and for the ones it permits, so the mapped form is not stricter either.
+    expect(isBlockedAddress('::ffff:192.168.1.50', 'allow-private-lan')).toBe(false);
+  });
+
+  it('lets a user track a shop on their own LAN', async () => {
+    await expect(
+      assertUrlIsSafe('http://192.168.1.50:8080/product/42', { policy: 'allow-private-lan' })
+    ).resolves.toBeInstanceOf(URL);
+  });
+
+  it('refuses the metadata endpoint however it is reached', async () => {
+    await expect(
+      assertUrlIsSafe('http://169.254.169.254/latest/meta-data/iam/security-credentials/', { policy: 'allow-private-lan' })
+    ).rejects.toThrow(UnsafeUrlError);
+    await expect(
+      assertUrlIsSafe('http://metadata.attacker.test/', {
+        policy: 'allow-private-lan',
+        resolver: resolvesTo('169.254.169.254'),
+      })
+    ).rejects.toThrow(UnsafeUrlError);
+  });
+
+  it('explains itself in plain words, and does not describe the deployment', async () => {
+    // Whoever hits this is adding a product to track, not debugging SSRF: no
+    // jargon, no environment variable to set, and no resolved address they did
+    // not already type -- that would describe the server's own network back to
+    // an ordinary user.
+    const error = await assertUrlIsSafe('http://intranet.example.test/p/1', {
+      policy: 'allow-private-lan',
+      resolver: resolvesTo('127.0.0.1'),
+    }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(UnsafeUrlError);
+    const message = (error as UnsafeUrlError).message;
+    expect(message).toContain('cannot be tracked');
+    expect(message).toContain('intranet.example.test');
+    expect(message).not.toContain('127.0.0.1');
+    expect(message).not.toContain('ALLOW_INTERNAL_SCRAPING');
+  });
+
+  it('by contrast, tells an administrator exactly what it found', async () => {
+    const error = await assertUrlIsSafe('http://intranet.example.test/p/1', {
+      policy: 'block-all-private',
+      resolver: resolvesTo('127.0.0.1'),
+    }).catch((e: unknown) => e);
+    expect((error as UnsafeUrlError).message).toContain('127.0.0.1');
+    expect((error as UnsafeUrlError).message).toContain('ALLOW_INTERNAL_SCRAPING');
+  });
+
+  it('keeps the scheme check absolute', async () => {
+    await expect(assertUrlIsSafe('file:///etc/passwd', { policy: 'allow-private-lan' })).rejects.toThrow(UnsafeUrlError);
+  });
+
+  it('is still waived entirely by the escape hatch', async () => {
+    process.env.ALLOW_INTERNAL_SCRAPING = 'true';
+    await expect(assertUrlIsSafe('http://127.0.0.1:3000/p/1', { policy: 'allow-private-lan' })).resolves.toBeInstanceOf(URL);
+  });
+
+  it('labels a refusal so a caller can tell "will not fetch" from "does not resolve"', async () => {
+    // ProductRefreshService lets `unresolvable` through to the scraper, which
+    // records DNS failure as a transient failure; it must not do that for an
+    // address the guard refuses.
+    const failing: AddressResolver = async () => { throw new Error('ENOTFOUND'); };
+    const unresolvable = await assertUrlIsSafe('http://gone.example.test/', { policy: 'allow-private-lan', resolver: failing })
+      .catch((e: unknown) => e);
+    expect((unresolvable as UnsafeUrlError).reason).toBe('unresolvable');
+
+    const blocked = await assertUrlIsSafe('http://169.254.169.254/', { policy: 'allow-private-lan' })
+      .catch((e: unknown) => e);
+    expect((blocked as UnsafeUrlError).reason).toBe('blocked-address');
+  });
+});
+
+describe('the two policies do not get crossed', () => {
+  it('defaults to the stricter one when none is named', async () => {
+    await expect(assertUrlIsSafe('http://10.0.0.1/')).rejects.toThrow(UnsafeUrlError);
+    expect(isBlockedAddress('10.0.0.1')).toBe(true);
+  });
+
+  const sourceOf = (relativePath: string) =>
+    readFileSync(path.resolve(__dirname, '../../src', relativePath), 'utf8');
+
+  it.each([
+    ['the retailer config test', 'services/domain/retailer/RetailerTestingService.ts'],
+    ['the debug extractor', 'routes/admin/debug.ts'],
+    ['the retailer remap', 'routes/admin/retailers.ts'],
+  ])('keeps %s on block-all-private', (_label, file) => {
+    const source = sourceOf(file);
+    expect(source).toContain("assertUrlIsSafe(url, { policy: 'block-all-private' })");
+    expect(source).not.toContain('allow-private-lan');
+  });
+
+  it.each([
+    ['adding a product', 'services/domain/product/add/discovery.ts'],
+    ['rescanning a product', 'services/domain/product/add/rescan.ts'],
+    ['refreshing a product', 'services/domain/product/ProductRefreshService.ts'],
+  ])('keeps %s on allow-private-lan', (_label, file) => {
+    const source = sourceOf(file);
+    expect(source).toContain("{ policy: 'allow-private-lan' }");
+    expect(source).not.toContain('block-all-private');
   });
 });
 

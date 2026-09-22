@@ -9,6 +9,7 @@ import { logger } from '../../../utils/system/logger';
 import { productNotificationService } from './notifications/index';
 import { productPersistenceService } from './ProductPersistenceService';
 import { isDefinitiveUnavailable, describeUnavailableReason } from '../../../types/availability';
+import { assertUrlIsSafe, UnsafeUrlError } from '../../../utils/system/url-safety';
 import { StockStatus } from '../../../models/types/base';
 
 // Consecutive page-gone scrapes required before a product is marked
@@ -62,6 +63,23 @@ export class ProductRefreshService {
 
     // 0. Capture state before refresh
     const preScrapePrice = await priceHistoryRepository.getLatest(productId, 'standard');
+
+    // A stored URL is not a trusted URL: rows added before the guard existed
+    // were never checked, and a hostname that was public when the product was
+    // added can be repointed at an internal address afterwards -- which on
+    // this path would be fetched on a schedule, unattended, forever (issue
+    // #165). Same lenient policy as adding a product, so a shop on the user's
+    // own LAN keeps working.
+    //
+    // A host that simply does not resolve is deliberately allowed through to
+    // the scraper: DNS failure is a transient condition this method already
+    // records, counts and eventually notifies on a few lines below, and
+    // throwing here would replace that with a bare scheduler log.
+    try {
+      await assertUrlIsSafe(product.url, { policy: 'allow-private-lan' });
+    } catch (error) {
+      if (!(error instanceof UnsafeUrlError) || error.reason !== 'unresolvable') throw error;
+    }
 
     // 1. Scrape
     const scrapedData = await scrapeProductWithVoting(

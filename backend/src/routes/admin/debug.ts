@@ -37,7 +37,7 @@ router.post('/extract', asyncHandler(async (req: AuthRequest, res: Response) => 
   // Both branches below fetch this URL -- bypass hands it to axios, the other
   // to the scraper -- so the check sits ahead of both (issue #165). Throwing
   // lets asyncHandler answer 400 with the reason.
-  await assertUrlIsSafe(url);
+  await assertUrlIsSafe(url, { policy: 'block-all-private' });
 
   let result: any = {};
 

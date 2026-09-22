@@ -78,7 +78,7 @@ router.post('/remap', asyncHandler(async (req: AuthRequest, res: Response) => {
   // Remap fetches the page through acquireHtml, so it is the same
   // user-supplied-URL sink as the retailer test and the debug extractor
   // (issue #165).
-  await assertUrlIsSafe(url);
+  await assertUrlIsSafe(url, { policy: 'block-all-private' });
 
   const { regionalMappingCache, configCache } = await import('../../utils/cache');
   const domain = await regionalMappingCache.getLookupDomain(url);

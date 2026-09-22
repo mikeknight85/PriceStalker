@@ -12,7 +12,7 @@ export class RetailerTestingService {
     // scraper, so it is checked before anything leaves the process (issue
     // #165). UnsafeUrlError carries statusCode 400, which asyncHandler
     // surfaces with its message instead of a generic 500.
-    await assertUrlIsSafe(url);
+    await assertUrlIsSafe(url, { policy: 'block-all-private' });
 
     logger.info(`Retailer ${config?.domain || 'generic'} | Config Test | ${scrubUrlCredentials(url)}`, 'Retailers');
 

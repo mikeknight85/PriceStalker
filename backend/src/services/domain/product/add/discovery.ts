@@ -1,6 +1,7 @@
 import { productRepository } from '../../../../models';
 import { scrapeProductWithVoting } from '../../../scraper';
 import { productPersistenceService } from '../ProductPersistenceService';
+import { assertUrlIsSafe } from '../../../../utils/system/url-safety';
 import type { ScrapeFailureReason } from '../../../../types/scraper';
 
 /**
@@ -30,6 +31,13 @@ export class ProductDiscoveryService {
    * Handles the "Auto-Track" vs "Review Required" logic for a new product.
    */
   async initiateProductDiscovery(userId: number, url: string, category: string | null, refreshInterval?: number) {
+    // Any signed-in user reaches this with a URL of their choosing, and the
+    // server then fetches it (issue #165). The lenient policy still allows a
+    // shop on the user's own LAN -- a thing self-hosters legitimately track --
+    // while refusing loopback and link-local, which is where the cloud
+    // instance metadata endpoint lives and is never a shop.
+    await assertUrlIsSafe(url, { policy: 'allow-private-lan' });
+
     const scrapedData = await scrapeProductWithVoting(url, userId);
 
     if (!scrapedData.price && scrapedData.stockStatus !== 'out_of_stock' && scrapedData.stockStatus !== 'pre_order') {
