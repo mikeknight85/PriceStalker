@@ -27,15 +27,18 @@ By default, any rule you input is treated as a CSS selector. Cheerio parses the 
 * **Syntax**: `.price-amount`, `span[itemprop="price"]`, `#pdp-details .current-price`
 * **Attribute extraction**: Add `::attr(attributeName)` to pull metadata values.
   * *Example*: `link[itemprop="availability"]::attr(href)` (extracts the link URL)
-* **Raw HTML extraction**: Prefix with `!` to extract the outer HTML snippet instead of plain text.
+* **Raw HTML extraction**: Prefix with `!` to extract the HTML snippet instead of plain text.
   * *Example*: `!.product-title`
+  * A CSS rule returns the element's **inner** HTML; an XPath rule returns the
+    node's outer HTML. That difference is in `evaluateSelector`
+    (`backend/src/services/scraper/core/engine.ts`), not a typo here.
 
 ### XPath
 When CSS is not flexible enough (e.g. you need to select elements based on sibling positioning or text contents), you can use XPath queries.
-* **Syntax**: Must start with `xpath://`
-* **Prepend Rule**: If the path does not start with `/` or `.`, PriceStalker automatically prepends `//` for you.
-  * *Example*: `xpath://div[@class="pricing"]`
-  * *Example*: `xpath:span[text()="Out of Stock"]` (becomes `xpath://span[text()="Out of Stock"]`)
+* **Syntax**: Must start with `xpath://` — the full prefix, slashes included. `xpath:` on its own is not recognised and the rule is run as CSS.
+* **Prepend Rule**: The `xpath://` prefix is stripped whole, and if what remains does not start with `/` or `.`, PriceStalker puts `//` back in front of it.
+  * *Example*: `xpath://div[@class="pricing"]` (evaluates `//div[@class="pricing"]`)
+  * *Example*: `xpath:///html/body/span` (evaluates the absolute path `/html/body/span`)
 
 ### Regex (Regular Expressions)
 If the price or details are locked inside script blocks or raw Javascript variables on the page, you can use regular expressions.

@@ -108,6 +108,9 @@ export default function DebugControls({ state, actions, children }: DebugControl
               <span className="checkmark"></span>
               Include raw HTML payload
             </label>
+            <small className="control-hint">
+              Required by the Live Selector Lab and the Interactive Inspector.
+            </small>
             <label className="checkbox-container mt-2">
               <input type="checkbox" checked={useAI} onChange={e => setUseAI(e.target.checked)} />
               <span className="checkmark"></span>

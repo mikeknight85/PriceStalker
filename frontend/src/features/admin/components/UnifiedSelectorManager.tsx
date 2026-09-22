@@ -1,24 +1,15 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/Icon';
+import { normalizeSelector } from '../../../utils/selectorDsl';
 
-/**
- * Normalizes a selector string into the standardized format.
- * Converts legacy "selector|attribute" into "selector::attr(attribute)".
+/*
+ * `normalizeSelector` used to be reimplemented here, and the copy fell behind
+ * the backend: it split on every `|`, so a CSS dashmatch such as `[lang|="en"]`
+ * was rewritten to `[lang::attr(="en"])` and quietly matched nothing (issue
+ * #168). It now lives in one place for the whole frontend; re-exported because
+ * it has always been part of this module's surface.
  */
-export function normalizeSelector(selector: string): string {
-  if (!selector) return selector;
-  const trimmed = selector.trim();
-  if (trimmed.startsWith('~') && trimmed.endsWith('~')) return trimmed; // regex
-  if (trimmed.startsWith('!')) return trimmed; // html
-
-  if (trimmed.includes('|')) {
-    const parts = trimmed.split('|');
-    const attr = parts.pop();
-    const base = parts.join('|');
-    return `${base}::attr(${attr})`;
-  }
-  return trimmed;
-}
+export { normalizeSelector };
 
 interface UnifiedSelectorManagerProps {
   label: string;

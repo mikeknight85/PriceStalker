@@ -21,6 +21,11 @@ describe('selectors.ts Unit Tests', () => {
     it('should ignore html selectors starting with !', () => {
       expect(normalizeSelector('!.product-price')).toBe('!.product-price');
     });
+
+    it('should leave a CSS attribute selector containing | intact', () => {
+      expect(normalizeSelector('span[lang|="en"]')).toBe('span[lang|="en"]');
+      expect(normalizeSelector('[svg|href]')).toBe('[svg|href]');
+    });
   });
 
   describe('parseSelector', () => {
@@ -46,6 +51,13 @@ describe('selectors.ts Unit Tests', () => {
       expect(parsed.method).toBe('attr');
       expect(parsed.attribute).toBe('data-val');
       expect(parsed.modifier).toBeNull();
+    });
+
+    it('should not mistake a CSS dashmatch for the legacy pipe syntax', () => {
+      const parsed = parseSelector('span[lang|="en"]');
+      expect(parsed.realSelector).toBe('span[lang|="en"]');
+      expect(parsed.method).toBe('text');
+      expect(parsed.attribute).toBeUndefined();
     });
 
     it('should parse outer HTML prefix !', () => {

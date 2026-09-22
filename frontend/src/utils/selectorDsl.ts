@@ -1,28 +1,39 @@
-import { CheerioAPI } from 'cheerio';
-
 /**
- * Normalizes a selector string into the standardized format.
- * Converts legacy "selector|attribute" into "selector::attr(attribute)".
+ * The PriceStalker selector DSL, as the browser sees it.
+ *
+ * This mirrors `backend/src/services/scraper/core/selectors.ts`, which is the
+ * source of truth: the backend runs the real extraction, this copy exists so
+ * the admin UI can normalise what an admin types and so the Debug Workstation's
+ * Live Selector Lab can preview a rule the same way the engine would read it.
+ * Frontend and backend are separate workspaces with no shared package, so the
+ * grammar is restated here rather than imported. Keep the two in step; if you
+ * change one, change the other.
+ *
+ * The grammar is documented in `docs/admin/selectors.md`:
+ *
+ *   - CSS (default)        `.price`, `span[itemprop="price"]`
+ *   - Attribute            `.price::attr(content)`, legacy `.price|content`
+ *   - Raw HTML             `!.price`
+ *   - XPath                `xpath://div[@id="price"]`
+ *   - Regex                `regex:/price: ([0-9.]+)/`, legacy `~pattern~`
+ *   - Suffix modifiers     `.stock::contains(sold out)->out_of_stock`
  */
-export function normalizeSelector(selector: string): string {
-  if (!selector) return selector;
-  const trimmed = selector.trim();
-  if (trimmed.startsWith('~') && trimmed.endsWith('~')) return trimmed; // regex
-  if (trimmed.startsWith('!')) return trimmed; // html
 
-  // Split only on a `|` outside square brackets (issue #166).
-  //
-  // CSS has its own `|` operators inside attribute selectors -- the dashmatch
-  // `[lang|="en"]`, and namespaces like `[svg|href]`. Splitting on those turned
-  // `span[lang|="en"]` into `span[lang::attr(="en"])`, which is not valid CSS
-  // and matches nothing, so the selector silently found no elements.
-  const pipe = lastPipeOutsideBrackets(trimmed);
-  if (pipe !== -1) {
-    const base = trimmed.slice(0, pipe);
-    const attr = trimmed.slice(pipe + 1);
-    return `${base}::attr(${attr})`;
-  }
-  return trimmed;
+export type SelectorEngine = 'css' | 'xpath' | 'regex';
+export type SelectorMethod = 'text' | 'attr' | 'html';
+
+export interface SelectorModifier {
+  type: 'equals' | 'contains';
+  value: string;
+  targetStatus: string;
+}
+
+export interface ParsedSelector {
+  realSelector: string;
+  method: SelectorMethod;
+  engine: SelectorEngine;
+  attribute?: string;
+  modifier: SelectorModifier | null;
 }
 
 /**
@@ -44,34 +55,42 @@ function lastPipeOutsideBrackets(selector: string): number {
   return found;
 }
 
-export interface ParsedSelector {
-  realSelector: string;
-  method: 'text' | 'attr' | 'html';
-  engine: 'css' | 'xpath' | 'regex';
-  attribute?: string;
-  modifier?: {
-    type: 'equals' | 'contains';
-    value: string;
-    targetStatus: string;
-  } | null;
+/**
+ * Normalizes a selector string into the standardized format.
+ * Converts legacy "selector|attribute" into "selector::attr(attribute)".
+ *
+ * Splits only on a `|` outside square brackets (issue #166, #168). CSS has its
+ * own `|` operators inside attribute selectors -- the dashmatch `[lang|="en"]`
+ * and namespaces like `[svg|href]`. Splitting on those turned `span[lang|="en"]`
+ * into `span[lang::attr(="en"])`, which is not valid CSS and matches nothing, so
+ * the selector silently found no elements.
+ */
+export function normalizeSelector(selector: string): string {
+  if (!selector) return selector;
+  const trimmed = selector.trim();
+  if (trimmed.startsWith('~') && trimmed.endsWith('~')) return trimmed; // regex
+  if (trimmed.startsWith('!')) return trimmed; // html
+
+  const pipe = lastPipeOutsideBrackets(trimmed);
+  if (pipe !== -1) {
+    const base = trimmed.slice(0, pipe);
+    const attr = trimmed.slice(pipe + 1);
+    return `${base}::attr(${attr})`;
+  }
+  return trimmed;
 }
 
 /**
  * Parses a selector string into its component parts.
- * Supports:
- * - Standard CSS: "#price"
- * - Attributes: "#price::attr(content)" or legacy "#price|content"
- * - Raw HTML: "!#price" (returns outer HTML)
- * - XPath: "xpath://div[@id='price']"
- * - Regex: "regex:/Price: \$(\d+\.\d+)/"
- * - Suffix Modifiers: "selector::attr(name)::equals(value)->status" or "selector::contains(value)->status"
+ *
+ * A port of the backend `parseSelector`; see the module comment.
  */
 export function parseSelector(selector: string): ParsedSelector {
   if (!selector) {
     return { realSelector: '', method: 'text', engine: 'css', modifier: null };
   }
 
-  let engine: 'css' | 'xpath' | 'regex' = 'css';
+  let engine: SelectorEngine = 'css';
   let workingSelector = selector;
 
   if (selector.startsWith('xpath://')) {
@@ -116,14 +135,16 @@ export function parseSelector(selector: string): ParsedSelector {
       modifier: {
         type: modifierType,
         value: targetValue,
-        targetStatus: targetStatus
+        targetStatus
       }
     };
   }
 
-  if (workingSelector.startsWith('!')) return { realSelector: workingSelector.substring(1), method: 'html', engine, modifier: null };
-  
-  // Check for Scrapy-style ::attr(attributeName) syntax
+  if (workingSelector.startsWith('!')) {
+    return { realSelector: workingSelector.substring(1), method: 'html', engine, modifier: null };
+  }
+
+  // Scrapy-style ::attr(attributeName) syntax
   const scrapyAttrMatch = workingSelector.match(/(.*)::attr\(([^)]+)\)$/);
   if (scrapyAttrMatch) {
     let base = scrapyAttrMatch[1];
@@ -131,12 +152,8 @@ export function parseSelector(selector: string): ParsedSelector {
     return { realSelector: base, method: 'attr', engine, attribute: scrapyAttrMatch[2], modifier: null };
   }
 
-  // Backwards compatibility with legacy | syntax.
-  //
-  // Bracket-aware for the same reason normalizeSelector is: a selector that
-  // reached the engine without being normalised -- one already stored, or one
-  // built by auto-mapping -- would otherwise have `[lang|="en"]` torn in half
-  // here too, and the rule would silently match nothing (issue #168).
+  // Backwards compatibility with the legacy | syntax, bracket-aware so that a
+  // CSS dashmatch such as `[lang|="en"]` is left alone.
   const pipe = lastPipeOutsideBrackets(workingSelector);
   if (pipe !== -1) {
     const attr = workingSelector.slice(pipe + 1);
@@ -144,34 +161,10 @@ export function parseSelector(selector: string): ParsedSelector {
     if (engine === 'xpath' && !base.startsWith('/') && !base.startsWith('.')) base = '//' + base;
     return { realSelector: base, method: 'attr', engine, attribute: attr, modifier: null };
   }
-  
+
   if (engine === 'xpath' && !workingSelector.startsWith('/') && !workingSelector.startsWith('.')) {
     workingSelector = '//' + workingSelector;
   }
-  
+
   return { realSelector: workingSelector, method: 'text', engine, modifier: null };
-}
-
-/**
- * Checks if an element is likely part of an ad, coupon, or related product list
- * rather than the main product details.
- */
-export function isNoiseElement(el: any, $: CheerioAPI): boolean {
-  const noiseKeywords = /coupon|savings|save\s*\$|clipcoupon|promoprice|related|recommended|suggested|sponsored|upsell|accessory|carousel|sidebar/i;
-
-  // Check self
-  const id = $(el).attr('id') || '';
-  const className = $(el).attr('class') || '';
-  if (noiseKeywords.test(id + className)) return true;
-
-  // Check parents (up to 10 levels)
-  let parent = $(el).parent();
-  for (let i = 0; i < 10 && parent.length > 0; i++) {
-    const pid = parent.attr('id') || '';
-    const pclass = parent.attr('class') || '';
-    if (noiseKeywords.test(pid + pclass)) return true;
-    parent = parent.parent();
-  }
-
-  return false;
 }
