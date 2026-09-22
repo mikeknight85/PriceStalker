@@ -7,7 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A layout override in Settings > Profile, with Auto, Desktop and Mobile
+  options (#123). Tablets that report a narrow CSS viewport were stuck on the
+  mobile layout even with the browser set to request the desktop site. Desktop
+  now forces the desktop layout at any width, scrolling sideways where it does
+  not fit, and Auto behaves exactly as before.
+
 ### Fixed
+
+- URLs are now validated before the server fetches them, closing a server-side
+  request forgery hole (#165). Admin tools -- retailer configuration test, debug
+  extraction and retailer remap -- refuse any address inside the deployment.
+  Adding, rescanning and refreshing a product refuse loopback and link-local
+  addresses, including the cloud instance metadata endpoint, while continuing to
+  allow shops on a private LAN. Only `http` and `https` URLs are accepted
+  anywhere. Set `ALLOW_INTERNAL_SCRAPING=true` to allow internal targets in
+  development.
+- Terminated Chromium helper processes no longer accumulate as zombies until the
+  scraper container exhausts the host's PID table (#206). The image runs under
+  `tini` as PID 1, and `init: true` is set on the scraper service in the Compose
+  and Swarm stacks. Temporary browser profiles are now removed only after the
+  browser process has actually exited, with retries, ending the repeated
+  `ENOTEMPTY` cleanup warnings.
+- A price selected in Troubleshoot Price now survives later refreshes (#159).
+  The saved extraction method was recorded but never consulted by the scraper,
+  so the next refresh re-derived the price and could pick the same wrong
+  candidate again. A saved choice is honoured whenever that method finds a
+  price, and quietly ignored when it does not, so a stale preference can never
+  leave a product without a price.
+- Retailer extraction rules now take priority over the default rules, as the
+  Extraction Rules page has always stated (#159). A seeded default Sale selector
+  could produce a deal price that outranked a retailer's own standard-price rule,
+  and because the selector was a default rather than the retailer's, editing the
+  retailer could not remove it.
+- The price selection modal no longer squeezes its header, price summary and
+  filter row when the candidate list is long (#162). The filter pills were being
+  sliced in half and the modal grew a second scrollbar.
+- Price History and Stock Availability now show the new reading straight after
+  "Refresh Price Now" or a confirmed "Troubleshoot Price", instead of cached rows
+  until the page was reloaded (#195). The chart also keeps the range you selected
+  across refreshes and tab switches, and "All time" no longer loads only the last
+  30 days.
+- The Live Selector Lab is shown again in the Debug Workstation (#168). The panel
+  existed but was never rendered, so there was no way to try a selector without
+  first saving it to a retailer.
+- Selectors using PriceStalker syntax -- `::attr(name)`, `!selector`, `xpath://`,
+  `~regex~` and stock-status modifiers -- are evaluated in the Live Selector Lab
+  instead of reporting "no elements found" (#168). A selector the browser cannot
+  parse now says it is invalid.
+- The Debug Workstation requests extracted HTML by default, and the "Include raw
+  HTML payload" checkbox now controls the request it previously ignored (#168).
+- Each match in the Live Selector Lab leads with the value the scraper would
+  extract and highlights the attribute it came from, rather than showing
+  "Text: (empty)" for a working meta-tag or offscreen-price selector (#168).
+- A CSS attribute selector containing a pipe, such as `[lang|="en"]`, is no
+  longer corrupted into `[lang::attr(="en"])` when saved in the admin UI or when
+  parsed by the scrape engine (#168).
 
 - The Authentication section is now accessible on mobile screens in the Admin panel (#182). The mobile `<select>` and desktop `<nav>` are now driven from a single source of truth in both Admin and Settings pages.
 - The notification channel "Send Test Notification" button is now disabled when unsaved changes exist on the channel card, with a tooltip explaining that changes must be saved first (#186).
@@ -21,6 +78,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wrapped all user and administration settings tab sections in `ErrorBoundary` to prevent unhandled render errors from blanking the entire page (#181).
 
 ### Changed
+
+- Renamed "Categories" to "Tags" throughout the interface (#147): filter bar,
+  sort options, product form, product detail and the insights chart. Tags now
+  show as chips on dashboard product cards, and the tags on a product's detail
+  page link to the dashboard filtered by that tag. The database columns and API
+  fields keep their existing `category` / `categories` names, so existing system
+  API token integrations are unaffected.
+- Refined the light mode palette (#178). The page canvas is now an off-white that
+  sits below white cards, panels and the navbar, giving real surface elevation
+  instead of hairline borders on a flat white field. Card shadows are softer, and
+  the indigo accent, success green, danger red and muted text were deepened so
+  button labels, links and status text meet WCAG AA contrast. Dark mode is
+  unchanged.
+- Moved the "Prefer JSON-LD for Images" toggle from Admin > System to
+  Admin > Extraction Rules > Product image, beside the image selectors it
+  overrides (#177).
+- Corrected the `xpath://` prefix rule and the `!selector` raw-HTML example in
+  the admin selector guide, which did not match the extraction engine (#168).
 
 - Moved `ToggleSwitch` into shared components and extracted `useExpandedSections` hook to standardize collapsible sections and eliminate cross-feature import violations (#188, #189, #190).
 - Standardised form input styling (`form-control`) across admin section components and eliminated loose `any` types in AI/retailer settings (#185, #191).
