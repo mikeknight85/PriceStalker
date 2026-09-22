@@ -6,8 +6,7 @@ interface CollapsibleCardProps {
   id: string;
   children: React.ReactNode;
   badge?: string | number;
-  isExpanded?: boolean;
-  expandedSections?: Record<string, boolean>;
+  isExpanded: boolean;
   onToggle: (id: string) => void;
   /** The expand/collapse chevron. */
   icon?: string;
@@ -19,17 +18,14 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   title, 
   id, 
   children, 
-  badge, 
+  badge,
   isExpanded,
-  expandedSections, 
   onToggle,
   icon = '▾',
   leadingIcon
 }) => {
-  const expanded = isExpanded !== undefined ? isExpanded : (expandedSections ? expandedSections[id] : false);
-
   return (
-    <div className={`pg-collapsible-card ${expanded ? 'expanded' : ''}`}>
+    <div className={`pg-collapsible-card ${isExpanded ? 'expanded' : ''}`}>
       <button 
         type="button"
         onClick={() => onToggle(id)}
@@ -42,9 +38,9 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
           <span className="pg-collapsible-card-title">{title}</span>
           {badge !== undefined && <span className="pg-collapsible-card-badge">{badge}</span>}
         </div>
-        <span className={`pg-collapsible-card-icon ${expanded ? 'rotated' : ''}`}>{icon}</span>
+        <span className={`pg-collapsible-card-icon ${isExpanded ? 'rotated' : ''}`}>{icon}</span>
       </button>
-      {expanded && <div className="pg-collapsible-card-body">{children}</div>}
+      {isExpanded && <div className="pg-collapsible-card-body">{children}</div>}
     </div>
   );
 };

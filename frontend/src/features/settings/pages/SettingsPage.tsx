@@ -10,6 +10,19 @@ import Icon from '../../../components/Icon';
 
 export type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
 
+interface SettingsNavItem {
+  value: SettingsSection;
+  label: string;
+  icon: Parameters<typeof Icon>[0]['name'];
+}
+
+const NAV_ITEMS: SettingsNavItem[] = [
+  { value: 'profile', label: 'Profile', icon: 'user' },
+  { value: 'regional', label: 'Regional', icon: 'globe' },
+  { value: 'notifications', label: 'Notifications', icon: 'bell' },
+  { value: 'security', label: 'Security', icon: 'lock' },
+];
+
 export default function Settings({ activeSection }: { activeSection: SettingsSection }) {
   const navigate = useNavigate();
 
@@ -30,28 +43,28 @@ export default function Settings({ activeSection }: { activeSection: SettingsSec
           value={activeSection}
           onChange={(e) => setActiveSection(e.target.value as SettingsSection)}
         >
-          <option value="profile">Profile</option>
-          <option value="regional">Regional</option>
-          <option value="notifications">Notifications</option>
-          <option value="security">Security</option>
+          {NAV_ITEMS.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
         </select>
 
         <aside className="settings-sidebar-new">
           <nav className="settings-nav-new">
-            <button className={`settings-nav-item-new ${activeSection === 'profile' ? 'active' : ''}`} onClick={() => setActiveSection('profile')}>
-              <Icon name="user" /><span>Profile</span>
-            </button>
-            <button className={`settings-nav-item-new ${activeSection === 'regional' ? 'active' : ''}`} onClick={() => setActiveSection('regional')}>
-              <Icon name="globe" /><span>Regional</span>
-            </button>
-            <button className={`settings-nav-item-new ${activeSection === 'notifications' ? 'active' : ''}`} onClick={() => setActiveSection('notifications')}>
-              <Icon name="bell" /><span>Notifications</span>
-            </button>
-            <button className={`settings-nav-item-new ${activeSection === 'security' ? 'active' : ''}`} onClick={() => setActiveSection('security')}>
-              <Icon name="lock" /><span>Security</span>
-            </button>
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.value}
+                className={`settings-nav-item-new ${activeSection === item.value ? 'active' : ''}`}
+                onClick={() => setActiveSection(item.value)}
+              >
+                <Icon name={item.icon} />
+                <span>{item.label}</span>
+              </button>
+            ))}
           </nav>
         </aside>
+
 
         <main className="settings-content-new">
           {activeSection === 'profile' && <ProfileSection />}

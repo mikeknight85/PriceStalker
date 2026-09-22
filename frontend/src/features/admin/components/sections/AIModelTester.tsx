@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { AIService } from '../../services/AIService';
 import { useAsyncAction } from '../../../../hooks/useAsyncAction';
+import { AIExtractionTestResult } from '../../../../types/api';
 
 export default function AIModelTester() {
   const [aiTestUrl, setAiTestUrl] = useState('');
-  const [aiTestResult, setAiTestResult] = useState<any>(null);
+  const [aiTestResult, setAiTestResult] = useState<AIExtractionTestResult | null>(null);
   const { execute: runTestAI, isLoading: isTestingAI } = useAsyncAction();
+
 
   const handleTestAI = () => runTestAI(async () => {
     if (!aiTestUrl) return;

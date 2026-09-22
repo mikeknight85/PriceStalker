@@ -18,6 +18,23 @@ import AuthSection from '../components/sections/AuthSection';
 
 export type AdminSection = 'system' | 'selectors' | 'retailers' | 'users' | 'ai' | 'logs' | 'tokens' | 'auth';
 
+interface AdminNavItem {
+  value: AdminSection;
+  label: string;
+  icon: Parameters<typeof Icon>[0]['name'];
+}
+
+const NAV_ITEMS: AdminNavItem[] = [
+  { value: 'system', label: 'System', icon: 'settings' },
+  { value: 'selectors', label: 'Extraction Rules', icon: 'search' },
+  { value: 'retailers', label: 'Retailers', icon: 'store' },
+  { value: 'users', label: 'Users', icon: 'users' },
+  { value: 'tokens', label: 'API Tokens', icon: 'key' },
+  { value: 'auth', label: 'Authentication', icon: 'shield' },
+  { value: 'ai', label: 'AI Engine', icon: 'cpu' },
+  { value: 'logs', label: 'Logs', icon: 'logs' },
+];
+
 export default function Admin({ activeSection }: { activeSection: AdminSection }) {
   const navigate = useNavigate();
   const { retailer } = adminRoute.useSearch();
@@ -50,27 +67,28 @@ export default function Admin({ activeSection }: { activeSection: AdminSection }
           value={activeSection}
           onChange={(e) => setActiveSection(e.target.value as AdminSection)}
         >
-          <option value="system">System</option>
-          <option value="selectors">Extraction Rules</option>
-          <option value="retailers">Retailers</option>
-          <option value="users">Users</option>
-          <option value="tokens">API Tokens</option>
-          <option value="ai">AI Engine</option>
-          <option value="logs">Logs</option>
+          {NAV_ITEMS.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
         </select>
 
         <aside className="settings-sidebar-new">
           <nav className="settings-nav-new">
-            <button className={`settings-nav-item-new ${activeSection === 'system' ? 'active' : ''}`} onClick={() => setActiveSection('system')}><Icon name="settings" /><span>System</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'selectors' ? 'active' : ''}`} onClick={() => setActiveSection('selectors')}><Icon name="search" /><span>Extraction Rules</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'retailers' ? 'active' : ''}`} onClick={() => setActiveSection('retailers')}><Icon name="store" /><span>Retailers</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'users' ? 'active' : ''}`} onClick={() => setActiveSection('users')}><Icon name="users" /><span>Users</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'tokens' ? 'active' : ''}`} onClick={() => setActiveSection('tokens')}><Icon name="key" /><span>API Tokens</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'auth' ? 'active' : ''}`} onClick={() => setActiveSection('auth')}><Icon name="shield" /><span>Authentication</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'ai' ? 'active' : ''}`} onClick={() => setActiveSection('ai')}><Icon name="cpu" /><span>AI Engine</span></button>
-            <button className={`settings-nav-item-new ${activeSection === 'logs' ? 'active' : ''}`} onClick={() => setActiveSection('logs')}><Icon name="logs" /><span>Logs</span></button>
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.value}
+                className={`settings-nav-item-new ${activeSection === item.value ? 'active' : ''}`}
+                onClick={() => setActiveSection(item.value)}
+              >
+                <Icon name={item.icon} />
+                <span>{item.label}</span>
+              </button>
+            ))}
           </nav>
         </aside>
+
 
         <main className="settings-content-new">
           {activeSection === 'system' && <SystemSection />}

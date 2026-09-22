@@ -9,10 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The Authentication section is now accessible on mobile screens in the Admin panel (#182). The mobile `<select>` and desktop `<nav>` are now driven from a single source of truth in both Admin and Settings pages.
+- The notification channel "Send Test Notification" button is now disabled when unsaved changes exist on the channel card, with a tooltip explaining that changes must be saved first (#186).
 - The debug page shows a "did not load" marker for an image candidate that
   resolves to nothing, instead of the browser's broken-image icon (#180). The
   page deliberately lists candidates the extractor rejected, and a broken icon
   read as the page malfunctioning rather than as the candidate being bad.
+
+### Changed
+
+- Moved `ToggleSwitch` into shared components and extracted `useExpandedSections` hook to standardize collapsible sections and eliminate cross-feature import violations (#188, #189, #190).
+- Standardised form input styling (`form-control`) across admin section components and eliminated loose `any` types in AI/retailer settings (#185, #191).
 
 ## [2.1.0-beta.10] - 2026-09-10
 

@@ -190,6 +190,7 @@ export default function SystemApiTokensSection() {
                 <label>Label</label>
                 <input 
                   type="text" 
+                  className="form-control"
                   value={newTokenLabel} 
                   onChange={e => setNewTokenLabel(e.target.value)} 
                   placeholder="e.g. PriceStalker CLI, Integration Server" 
@@ -199,12 +200,14 @@ export default function SystemApiTokensSection() {
               <div className="form-group">
                 <label>Description (Optional)</label>
                 <textarea 
+                  className="form-control"
                   value={newTokenDescription} 
                   onChange={e => setNewTokenDescription(e.target.value)} 
                   placeholder="Briefly describe what this token is for..."
                   style={{ minHeight: '80px' }}
                 />
               </div>
+
               <div className="settings-actions">
                 <button className="btn btn-secondary" onClick={() => setIsAddingToken(false)} disabled={isLoading}>Cancel</button>
                 <button className="btn btn-primary" onClick={handleCreateToken} disabled={isLoading}>

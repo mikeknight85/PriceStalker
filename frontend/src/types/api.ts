@@ -410,3 +410,26 @@ export interface ItemWithListings {
   excluded_count: number;
   any_in_stock: boolean;
 }
+
+export interface AIModel {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface AIProviderTestResult {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+export interface AIExtractionTestResult {
+  success: boolean;
+  price?: number | null;
+  currency?: string | null;
+  title?: string | null;
+  image?: string | null;
+  in_stock?: boolean | null;
+  [key: string]: unknown;
+}

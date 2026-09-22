@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { RetailerConfig, GlobalCurrency } from '../../../../types/api';
+import { RetailerConfig, GlobalCurrency, TestRetailerConfigResult } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import { RetailerAdminService } from '../../services/RetailerAdminService';
 import { useAuth } from '../../../auth';
-import { useAsyncAction } from '../../../../hooks/useAsyncAction';
+import { useAsyncAction, useExpandedSections } from '../../../../hooks';
 import { 
   FieldHelp,
-  SettingsCacheNotice,
-  CollapsibleCard, 
-  ToggleSwitch
+  SettingsCacheNotice
 } from '../../components';
+import CollapsibleCard from '../../../../components/CollapsibleCard';
+import ToggleSwitch from '../../../../components/ToggleSwitch';
 import SearchableSelect from '../../../../components/SearchableSelect';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
 import { apiErrorMessage } from '../../../../api/error';
@@ -74,7 +74,8 @@ export default function RetailerConfigEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [forceNameRemoval, setForceNameRemoval] = useState(false);
   const [testUrl, setTestUrl] = useState('');
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<TestRetailerConfigResult | null>(null);
+
 
   // Form draft states for arrays/JSON
   const [draftPriceSelectors, setDraftPriceSelectors] = useState<string[]>([]);
@@ -94,7 +95,7 @@ export default function RetailerConfigEditor({
   const [draftAiPriceSelectors, setDraftAiPriceSelectors] = useState<string[]>([]);
   const [draftAiImageSelectors, setDraftAiImageSelectors] = useState<string[]>([]);
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const { expandedSections, toggleSection } = useExpandedSections({
     engine: false,
     selectors_product: false,
     selectors_pricing: false,
@@ -104,11 +105,8 @@ export default function RetailerConfigEditor({
     ai_selectors: false,
   });
 
-  const toggleSection = (name: string) => {
-    setExpandedSections(prev => ({ ...prev, [name]: !prev[name] }));
-  };
-
   useEffect(() => {
+
     setDraftConfig(initialRetailer);
     setForceNameRemoval(false);
     setDraftPriceSelectors(initialRetailer.price_selectors || []);
@@ -361,14 +359,14 @@ export default function RetailerConfigEditor({
       <SettingsCacheNotice compact />
 
       <div style={{ marginTop: '2rem' }}>
-        <CollapsibleCard title="Page acquisition" leadingIcon={<Icon name="globe" />} id="engine" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Page acquisition" leadingIcon={<Icon name="globe" />} id="engine" isExpanded={expandedSections.engine} onToggle={toggleSection}>
           <ScraperEngineSection 
             draftConfig={draftConfig} 
             onUpdateConfig={handleUpdateDraft} 
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="Product information" leadingIcon={<Icon name="fileText" />} id="selectors_product" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Product information" leadingIcon={<Icon name="fileText" />} id="selectors_product" isExpanded={expandedSections.selectors_product} onToggle={toggleSection}>
           <ExtractionParamsSection
             draftConfig={draftConfig}
             onUpdateConfig={handleUpdateDraft}
@@ -397,7 +395,7 @@ export default function RetailerConfigEditor({
           <FieldHelp>Title, image and the JSON-LD keys they are read from. Retailer identity is the shop, not the manufacturer.</FieldHelp>
         </CollapsibleCard>
 
-        <CollapsibleCard title="Pricing" leadingIcon={<Icon name="tag" />} id="selectors_pricing" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Pricing" leadingIcon={<Icon name="tag" />} id="selectors_pricing" isExpanded={expandedSections.selectors_pricing} onToggle={toggleSection}>
           <ExtractionParamsSection
             draftConfig={draftConfig}
             onUpdateConfig={handleUpdateDraft}
@@ -426,7 +424,7 @@ export default function RetailerConfigEditor({
           <FieldHelp>Only the standard price becomes the tracked price. Original / RRP is a reference value and is never saved as it.</FieldHelp>
         </CollapsibleCard>
 
-        <CollapsibleCard title="False-positive prevention" leadingIcon={<Icon name="ban" />} id="selectors_pruning" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="False-positive prevention" leadingIcon={<Icon name="ban" />} id="selectors_pruning" isExpanded={expandedSections.selectors_pruning} onToggle={toggleSection}>
           <ExtractionParamsSection
             draftConfig={draftConfig}
             onUpdateConfig={handleUpdateDraft}
@@ -455,7 +453,7 @@ export default function RetailerConfigEditor({
           <FieldHelp>Removed from the page before extraction runs. Carousels and related products are the usual source of a price belonging to a different item.</FieldHelp>
         </CollapsibleCard>
 
-        <CollapsibleCard title="Availability" leadingIcon={<Icon name="package" />} id="phrases" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="Availability" leadingIcon={<Icon name="package" />} id="phrases" isExpanded={expandedSections.phrases} onToggle={toggleSection}>
           <StockPhrasesSection 
             stockSelectors={draftStockSelectors}
             setStockSelectors={setDraftStockSelectors}
@@ -468,7 +466,7 @@ export default function RetailerConfigEditor({
           />
         </CollapsibleCard>
 
-        <CollapsibleCard title="AI Preprocessor Selectors" leadingIcon={<Icon name="cpu" />} id="ai_selectors" expandedSections={expandedSections} onToggle={toggleSection}>
+        <CollapsibleCard title="AI Preprocessor Selectors" leadingIcon={<Icon name="cpu" />} id="ai_selectors" isExpanded={expandedSections.ai_selectors} onToggle={toggleSection}>
           <AISelectorsSection 
             draftAiPriceSelectors={draftAiPriceSelectors}
             setDraftAiPriceSelectors={setDraftAiPriceSelectors}
@@ -489,6 +487,7 @@ export default function RetailerConfigEditor({
           />
         </CollapsibleCard>
       </div>
+
 
     </div>
   );

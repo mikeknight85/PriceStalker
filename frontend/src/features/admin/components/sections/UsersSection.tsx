@@ -10,8 +10,9 @@ import { queryClient } from '../../../../api/queryClient';
 import Icon from '../../../../components/Icon';
 import PasswordInput from '../../../../components/PasswordInput';
 import SearchableSelect from '../../../../components/SearchableSelect';
-import { ToggleSwitch } from '../../components';
+import ToggleSwitch from '../../../../components/ToggleSwitch';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+
 import { AUTOMATIC_CURRENCY_OPTION, AUTOMATIC_LOCALE_OPTION, LOCALE_OPTIONS } from '../../../settings/regionalOptions';
 import { formatDate, formatRelativeDate } from '../../../../utils/format';
 
@@ -224,8 +225,8 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
       {isAddingUser && (
         <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)' }}>
           <h3 className="settings-card-title">Create New User</h3>
-          <div className="form-group"><label>Email Address</label><input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="user@example.com" autoComplete="off" /></div>
-          <div className="form-group"><label>Display Name (Optional)</label><input type="text" value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Jane Doe" autoComplete="off" /></div>
+          <div className="form-group"><label>Email Address</label><input type="email" className="form-control" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="user@example.com" autoComplete="off" /></div>
+          <div className="form-group"><label>Display Name (Optional)</label><input type="text" className="form-control" value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Jane Doe" autoComplete="off" /></div>
           <div className="form-group">
             <label>Account Password</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -307,12 +308,13 @@ export default function UsersSection({ globalCurrencies }: UsersSectionProps) {
             <input
               id="edit-user-email"
               type="email"
+              className="form-control"
               value={editingUser.email || ''}
               disabled={isSsoUser(editingUser)}
               onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
             />
           </div>
-          <div className="form-group"><label>Display Name</label><input type="text" value={editingUser.name || ''} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} /></div>
+          <div className="form-group"><label>Display Name</label><input type="text" className="form-control" value={editingUser.name || ''} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} /></div>
           <div className="form-grid">
             <div className="form-group">
               <SearchableSelect

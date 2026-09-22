@@ -1,5 +1,7 @@
 import { RetailerConfig } from '../../../../../types/api';
-import { ToggleSwitch, PRESET_USER_AGENTS } from '../../index';
+import ToggleSwitch from '../../../../../components/ToggleSwitch';
+import { PRESET_USER_AGENTS } from '../../index';
+
 
 interface ScraperEngineSectionProps {
   draftConfig: Partial<RetailerConfig>;
