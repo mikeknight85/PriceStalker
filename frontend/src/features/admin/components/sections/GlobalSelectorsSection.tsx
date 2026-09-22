@@ -128,7 +128,8 @@ export default function GlobalSelectorsSection() {
     <div className="settings-card">
       <h2 className="settings-card-title">Extraction Rules</h2>
       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '-0.75rem', marginBottom: '1rem', maxWidth: '70ch' }}>
-        Fallbacks used when a retailer has no site-specific rules of its own.
+        Fallbacks, applied per field: each list below is used only for retailers
+        that have no rules of their own for that same field.
       </p>
 
       <PriorityNote
@@ -153,8 +154,10 @@ export default function GlobalSelectorsSection() {
         whichever rule found it, because it is what you would pay today. So a
         retailer rule that matches a sale price will override a standard price
         found by another retailer rule. If a retailer is showing a price you do
-        not expect, check its Deal/Sale rule first, then use Troubleshoot Price
-        on the product &mdash; the trace names which rule won and why.
+        not expect, check its Deal/Sale rule first &mdash; and if it has none,
+        the Sale / deal list below is supplying one. Then use Troubleshoot Price
+        on the product: the trace names which rule won, and whether it came from
+        the retailer or from these defaults.
       </p>
 
       <SettingsCacheNotice />

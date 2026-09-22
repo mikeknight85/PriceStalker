@@ -63,6 +63,11 @@ function traceStep(extractionSteps: string[], message: string): void {
   logger.debug(message, 'Extraction');
 }
 
+/** Trims, drops empties and removes duplicates, preserving order. */
+function cleanSelectors(selectors: string[]): string[] {
+  return Array.from(new Set(selectors.map(s => s.trim()))).filter(Boolean);
+}
+
 export async function extractAllPriceCandidates(
   $: CheerioAPI,
   html: string,
@@ -83,29 +88,53 @@ export async function extractAllPriceCandidates(
   }
 
   // 2. Main Iterative Passes (Deals, Member, Pre-order, Original)
+  //
+  // Retailer rules outrank the global defaults, which are fallbacks (issue
+  // #159). These two sets used to be merged into one list and evaluated
+  // together, which inverted the priority the Extraction Rules page states and
+  // the rest of the engine implements: a *global default* could beat a
+  // *retailer rule*.
+  //
+  // It bit hardest on this pass, because a deal-price candidate takes strict
+  // priority in findPriceConsensus over any standard price however it was
+  // found. On electronic4you.si the seeded default `.special-price .price`
+  // matched a stale sale figure and seized that priority from the retailer's
+  // own standard-price rule -- and because the offending selector was a global
+  // default, clearing the retailer's Deal/Sale rule did not help.
+  //
+  // The cascade is decided per price type by what is *configured*, not by what
+  // matched. An admin who has written a Deal/Sale rule for a retailer owns that
+  // price type for it; silently topping their rule up with the defaults when it
+  // happens not to match is what produced the reported behaviour, and it also
+  // made the rule impossible to reason about -- the same config gave different
+  // answers on different products of the same shop.
   for (const pass of EXTRACTION_PASSES) {
-    const custom = pass.getCustomSelectors(domainConfig);
-    const generic = await pass.getGenericSelectors();
-    
-    const uniqueSelectors = Array.from(new Set([...custom, ...generic].map(s => s.trim()))).filter(Boolean);
-    
-    if (uniqueSelectors.length > 0) {
-      traceStep(extractionSteps, `Extract | ${pass.name} | Selectors: ${JSON.stringify(uniqueSelectors)}`);
-      const candidates = extractCustomCandidates($, uniqueSelectors, html, currencyHint || undefined, localeHint);
-      
-      if (candidates.length > 0) {
-        traceStep(extractionSteps, `Extract | ${pass.name} | Found ${candidates.length} candidates`);
-        for (const c of candidates) {
-          c.method = pass.method;
-          c.confidence = pass.confidence;
-        }
-        allCandidates.push(...candidates);
+    const custom = cleanSelectors(pass.getCustomSelectors(domainConfig));
+    const tier = custom.length > 0 ? 'Retailer' : 'Default';
+    const selectors = custom.length > 0
+      ? custom
+      : cleanSelectors(await pass.getGenericSelectors());
+
+    let candidates: PriceCandidate[] = [];
+    if (selectors.length > 0) {
+      traceStep(extractionSteps, `Extract | ${pass.name} | ${tier} selectors: ${JSON.stringify(selectors)}`);
+      candidates = extractCustomCandidates($, selectors, html, currencyHint || undefined, localeHint);
+    }
+
+    if (candidates.length > 0) {
+      traceStep(extractionSteps, `Extract | ${pass.name} | Found ${candidates.length} candidates`);
+      for (const c of candidates) {
+        c.method = pass.method;
+        c.confidence = pass.confidence;
       }
+      allCandidates.push(...candidates);
     }
   }
 
-  // 3. Site-Specific (Standard)
-  const customSelectors = domainConfig?.price_selectors || [];
+  // 3. Standard price: the retailer's own rules, or the global defaults when it
+  // has none. Same rule as the typed passes above.
+  const customSelectors = cleanSelectors(domainConfig?.price_selectors || []);
+
   if (customSelectors.length > 0) {
     traceStep(extractionSteps, `Extract | Custom | Selectors: ${JSON.stringify(customSelectors)}`);
     const custom = extractCustomCandidates($, customSelectors, html, currencyHint || undefined, localeHint);
@@ -113,19 +142,17 @@ export async function extractAllPriceCandidates(
       allCandidates.push(...custom);
       traceStep(extractionSteps, `Extract | Custom | Found ${custom.length} candidates`);
     }
-  }
+  } else {
+    // 4. Generic (Standard)
+    const genericSelectors = cleanSelectors(await settingsCache.getPriceSelectors());
 
-  // 4. Generic (Standard)
-  const normalizedCustom = new Set(customSelectors.map(s => s.trim().toLowerCase()));
-  const genericSelectors = (await settingsCache.getPriceSelectors())
-    .filter(s => !normalizedCustom.has(s.trim().toLowerCase()));
-    
-  if (genericSelectors.length > 0) {
-    traceStep(extractionSteps, `Extract | Generic | Selectors: ${JSON.stringify(genericSelectors)}`);
-    const generic = await extractGenericPriceCandidates($, currencyHint || undefined, localeHint, genericSelectors, html);
-    if (generic.length > 0) {
-      allCandidates.push(...generic);
-      traceStep(extractionSteps, `Extract | Generic | Found ${generic.length} candidates`);
+    if (genericSelectors.length > 0) {
+      traceStep(extractionSteps, `Extract | Generic | Selectors: ${JSON.stringify(genericSelectors)}`);
+      const generic = await extractGenericPriceCandidates($, currencyHint || undefined, localeHint, genericSelectors, html);
+      if (generic.length > 0) {
+        allCandidates.push(...generic);
+        traceStep(extractionSteps, `Extract | Generic | Found ${generic.length} candidates`);
+      }
     }
   }
 
