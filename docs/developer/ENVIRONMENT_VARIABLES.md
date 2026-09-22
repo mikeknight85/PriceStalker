@@ -39,6 +39,7 @@ Used to customize the database connection and volume persistence.
 | `LOG_LEVEL` | Verbosity of the system logger: `debug`, `info`, `warn`, or `error`. See [LOGGING.md](LOGGING.md) for detailed configuration options. | `info` |
 | `BACKEND_MEM_LIMIT` | Docker container memory constraint for the backend service. | `1g` |
 | `REDACT_API_KEYS` | When set to `true`, AI API credentials stored in settings are masked (`sk-...xxxx`) in the Admin panel and cannot be revealed via the UI. | `false` |
+| `ALLOW_INTERNAL_SCRAPING` | When set to `true`, admin-supplied URLs (retailer config test, debug extract, retailer remap) may point at loopback, private, or link-local addresses. Leave it unset in production: those endpoints otherwise refuse such targets so a URL cannot be used to reach services inside the deployment (including the cloud metadata endpoint). Only the address check is waived — non-`http`/`https` schemes are always refused. | `false` |
 
 ---
 

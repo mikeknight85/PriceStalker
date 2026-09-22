@@ -6,6 +6,7 @@ import { scrapeProductWithVoting } from '../../services/scraper';
 import { tryAIExtraction } from '../../services/ai';
 import { logger } from '../../utils/system/logger';
 import { asyncHandler } from '../../utils/system/route-helpers';
+import { assertUrlIsSafe } from '../../utils/system/url-safety';
 
 const router = Router();
 
@@ -32,6 +33,11 @@ router.post('/extract', asyncHandler(async (req: AuthRequest, res: Response) => 
     res.status(403).json({ error: 'Debug page is currently disabled in system settings.' });
     return;
   }
+
+  // Both branches below fetch this URL -- bypass hands it to axios, the other
+  // to the scraper -- so the check sits ahead of both (issue #165). Throwing
+  // lets asyncHandler answer 400 with the reason.
+  await assertUrlIsSafe(url);
 
   let result: any = {};
 

@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { retailerService } from '../../services/domain/retailer';
 import { asyncHandler, parseIdParam } from '../../utils/system/route-helpers';
+import { assertUrlIsSafe } from '../../utils/system/url-safety';
 import { randomUUID } from 'node:crypto';
 
 const router = Router();
@@ -73,6 +74,11 @@ router.post('/remap', asyncHandler(async (req: AuthRequest, res: Response) => {
     res.status(400).json({ error: 'A product URL from this retailer is required.' });
     return;
   }
+
+  // Remap fetches the page through acquireHtml, so it is the same
+  // user-supplied-URL sink as the retailer test and the debug extractor
+  // (issue #165).
+  await assertUrlIsSafe(url);
 
   const { regionalMappingCache, configCache } = await import('../../utils/cache');
   const domain = await regionalMappingCache.getLookupDomain(url);
