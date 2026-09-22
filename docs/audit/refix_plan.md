@@ -121,6 +121,7 @@ This plan details all outstanding issues, references their exact file paths in t
 * **Refix Plan:** Check both directions: `const isExtremeDrift = anchorPrice && (resolvedPrice < anchorPrice * 0.5 || resolvedPrice > anchorPrice * 2.5);`.
 
 #### 🟢 Issue O-4: Config cache invalidated globally instead of per-domain
+* **Status (this repo, Sept 2026):** **Resolved in #175.** `maintenance.ts` now passes the domain, and `flagBlockedRetailer` / `restoreRetailerStatus` in `retailer-maintenance.ts` — which previously never invalidated at all — do too. All three call sites are per-domain, so one retailer's config being saved no longer makes the next scrape of every other domain re-read from the database.
 * **File:** [`backend/src/services/scraper/orchestration/maintenance.ts`](file:///home/steven/projects/pricestalker/backend/src/services/scraper/orchestration/maintenance.ts#L92)
 * **Description:** In maintenance functions, calling `configCache.invalidate()` without passing a domain key wipes the entire configuration cache, causing a thundering herd when the cache reloads.
 * **Refix Plan:** Pass the target domain string to `configCache.invalidate(domain)` so that only the modified retailer config is evicted.
@@ -169,6 +170,7 @@ This plan details all outstanding issues, references their exact file paths in t
 * **Refix Plan:** Move the API key into the `x-goog-api-key` header configuration.
 
 #### 🟢 Issue SYS-6: Server-Side Request Forgery (SSRF) vulnerability
+* **Status (this repo, Sept 2026):** **Not resolved here — still open, tracked in #165.** Verified against our source: `RetailerTestingService.testRetailerConfig` passes the caller's `url` straight to `scrapeProductWithVoting`, and the `bypass` branch of `routes/admin/debug.ts` passes it straight to `axios.get`. There is no scheme allow-list and no private/loopback/link-local address check anywhere in `backend/src`. Both endpoints are admin-only and the debug route additionally requires `debug_page_enabled`, which narrows exposure but does not close it.
 * **File:** [`backend/src/services/domain/retailer/RetailerTestingService.ts`](file:///home/steven/projects/pricestalker/backend/src/services/domain/retailer/RetailerTestingService.ts#L8)
 * **Description:** The retailer test and admin debug endpoints accept arbitrary URLs from the client and pass them directly to axios/scraper without protocol or IP address range validation.
 * **Refix Plan:** Implement URL scheme validation (allow only `http`/`https`) and IP resolution checks to block requests targeting local/private loopback networks (e.g. `127.0.0.1`, `192.168.x.x`).
