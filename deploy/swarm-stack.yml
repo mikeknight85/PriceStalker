@@ -129,6 +129,14 @@ services:
     image: ghcr.io/mikeknight85/pricestalker-scraper:${PRICESTALKER_TAG:-stable}
     environment:
       PORT: "5100"
+    # Chromium re-parents its orphaned helper processes onto PID 1; without a
+    # reaper they accumulate as <defunct> until the kernel PID table is
+    # exhausted (issue #206). `docker stack deploy` does map this onto the
+    # service's ContainerSpec.Init (Engine 18.09+ / API 1.37+), but it depends
+    # on every node's daemon having its init binary available, so the real
+    # guarantee is the tini entrypoint baked into the image -- this key only
+    # restates it.
+    init: true
     # Chromium needs more than the default 64MB of shared memory or it crashes
     # on content-heavy pages.
     shm_size: 2gb

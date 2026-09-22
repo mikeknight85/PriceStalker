@@ -36,19 +36,101 @@ export const sessions: BrowserSession[] = [];
 // /tmp filled up (issue #52).
 export const PROFILE_BASE = path.join(os.tmpdir(), 'scraper-profiles');
 
+// How long to wait for the Chromium process to actually exit before deleting
+// its profile. `browser.close()` resolves — and 'disconnected' fires — as soon
+// as the DevTools pipe drops, while the process is still flushing and
+// unlinking its lock files under the profile. Deleting underneath it is what
+// produced the ENOTEMPTY warnings in issue #206.
+const BROWSER_EXIT_TIMEOUT_MS = 10_000;
+
+// Even after exit, a dying renderer can briefly recreate a file in the tree, so
+// the removal is retried with a linear backoff before it is given up on.
+const PROFILE_REMOVE_ATTEMPTS = 5;
+const PROFILE_REMOVE_BACKOFF_MS = 250;
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms).unref();
+  });
+}
+
 /**
- * Deletes a session's Chromium profile directory. Safe to call repeatedly;
- * failures are logged and left for the startup sweep.
+ * Resolves once the session's Chromium process has really exited, or after
+ * BROWSER_EXIT_TIMEOUT_MS if it never does. Never rejects: a profile that
+ * cannot be deleted must not take a scrape down with it.
  */
-async function removeProfileDir(session: BrowserSession) {
-  const dir = session.userDataDir;
-  if (!dir) return;
-  session.userDataDir = null;
-  try {
-    await fs.rm(dir, { recursive: true, force: true });
-  } catch (error) {
-    log(`Failed to remove profile dir for ${session.id}: ${errorMessage(error)}`, 'WARN');
+async function waitForBrowserExit(session: BrowserSession): Promise<void> {
+  const proc = session.browser?.process();
+  if (!proc || proc.exitCode !== null || proc.signalCode !== null) return;
+
+  await new Promise<void>(resolve => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      proc.removeListener('exit', finish);
+      resolve();
+    };
+    const timer = setTimeout(() => {
+      log(`Browser process for ${session.id} did not exit within ${BROWSER_EXIT_TIMEOUT_MS}ms; removing profile anyway`, 'WARN');
+      finish();
+    }, BROWSER_EXIT_TIMEOUT_MS);
+    timer.unref();
+    proc.once('exit', finish);
+  });
+}
+
+/**
+ * Deletes a directory, retrying the transient failures (ENOTEMPTY, EBUSY,
+ * EPERM) that a process still releasing its locks produces. Returns whether it
+ * succeeded; it never throws, so a failed cleanup leaves the directory for the
+ * startup sweep instead of breaking the caller.
+ */
+async function removeDirWithRetry(dir: string, label: string): Promise<boolean> {
+  for (let attempt = 1; attempt <= PROFILE_REMOVE_ATTEMPTS; attempt++) {
+    try {
+      await fs.rm(dir, { recursive: true, force: true });
+      return true;
+    } catch (error) {
+      if (attempt === PROFILE_REMOVE_ATTEMPTS) {
+        log(`Failed to remove ${label} after ${attempt} attempts: ${errorMessage(error)}`, 'WARN');
+        return false;
+      }
+      log(`Retrying removal of ${label} (attempt ${attempt}): ${errorMessage(error)}`, 'DEBUG');
+      await delay(PROFILE_REMOVE_BACKOFF_MS * attempt);
+    }
   }
+  return false;
+}
+
+// Both closeSession() and the browser's 'disconnected' handler reap the same
+// profile. Memoising the work per session means the second caller awaits the
+// first one's result rather than racing it or silently skipping the wait.
+const profileRemovals = new WeakMap<BrowserSession, Promise<void>>();
+
+/**
+ * Deletes a session's Chromium profile directory once the browser process has
+ * exited. Safe to call repeatedly and from anywhere: the returned promise
+ * never rejects, and concurrent callers share one removal.
+ */
+function removeProfileDir(session: BrowserSession): Promise<void> {
+  const pending = profileRemovals.get(session);
+  if (pending) return pending;
+
+  const dir = session.userDataDir;
+  if (!dir) return Promise.resolve();
+  session.userDataDir = null;
+
+  const task = (async () => {
+    await waitForBrowserExit(session);
+    await removeDirWithRetry(dir, `profile dir for ${session.id}`);
+  })().catch((error: unknown) => {
+    log(`Profile cleanup for ${session.id} failed: ${errorMessage(error)}`, 'WARN');
+  });
+
+  profileRemovals.set(session, task);
+  return task;
 }
 
 /**
@@ -68,11 +150,8 @@ export async function cleanupStaleProfiles() {
     for (const entry of entries) {
       const full = path.join(base, entry);
       if (!entry.startsWith(prefix) || live.has(full)) continue;
-      try {
-        await fs.rm(full, { recursive: true, force: true });
+      if (await removeDirWithRetry(full, `stale profile ${full}`)) {
         log(`Removed stale browser profile ${full}`, 'INFO');
-      } catch (error) {
-        log(`Failed to remove stale profile ${full}: ${errorMessage(error)}`, 'WARN');
       }
     }
   }

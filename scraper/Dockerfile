@@ -41,9 +41,17 @@ RUN pnpm --filter stealth-scraper run build
 FROM node:24.18.0-slim AS runtime
 
 # Chromium plus the font packages Puppeteer needs to render non-Latin pages.
+#
+# `tini` is not optional. Chromium forks a tree of helper processes (zygote,
+# renderers, GPU) and re-parents the survivors onto PID 1 when they are killed.
+# Node does not reap orphans, so with `node` as PID 1 every terminated helper
+# stays <defunct> forever -- a long-running container accumulated 3,300+ zombies
+# and exhausted the kernel PID table (issue #206). tini runs as PID 1, forwards
+# signals to node, and reaps whatever lands on it.
 RUN apt-get update \
     && apt-get install -y \
       chromium \
+      tini \
       fonts-ipafont-gothic \
       fonts-wqy-zenhei \
       fonts-thai-tlwg \
@@ -77,4 +85,9 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
 
 EXPOSE 5100
 
+# tini is PID 1 so orphaned Chromium helpers get reaped; node stays the child
+# and still receives SIGTERM/SIGINT for the graceful shutdown in scraper.ts.
+# Compose/Swarm `init: true` is belt-and-braces on top of this, not a substitute
+# -- `docker run` with no flags gets the fix from the image alone.
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "dist/scraper.js"]
