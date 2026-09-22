@@ -106,8 +106,8 @@ export default function SystemApiTokensSection() {
         <div className="settings-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <h2 className="settings-card-title" style={{ margin: 0 }}>System API Tokens</h2>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+              <h2 className="settings-card-title">System API Tokens</h2>
+              <p className="settings-card-description">
                 Manage long-lived API tokens for system integrations and external tools.
               </p>
             </div>
@@ -176,14 +176,14 @@ export default function SystemApiTokensSection() {
       )}
 
       {isAddingToken && (
-        <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)' }}>
-          <h3 className="settings-card-title">
+        <div className="settings-card settings-card--active">
+          <h3 className="settings-panel-title">
             {generatedToken ? 'API Token Generated' : 'Generate System API Token'}
           </h3>
           
           {!generatedToken ? (
             <>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              <p className="settings-card-description" style={{ marginBottom: '1.5rem' }}>
                 Provide a label to identify this token. It will be generated and shown exactly once.
               </p>
               <div className="form-group">

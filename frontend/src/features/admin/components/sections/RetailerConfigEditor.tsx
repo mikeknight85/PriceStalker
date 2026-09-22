@@ -205,9 +205,9 @@ export default function RetailerConfigEditor({
   }, { onErrorMessage: 'Live test failed' });
 
   return (
-    <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)' }}>
+    <div className="settings-card settings-card--active">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h3 style={{ margin: 0 }}>{draftConfig.id ? 'Modify' : 'Initialize'} Retailer</h3>
+        <h3 className="settings-panel-title">{draftConfig.id ? 'Modify' : 'Initialize'} Retailer</h3>
         {draftConfig.id && (
           <button className="btn btn-danger btn-sm" onClick={() => setShowDeleteConfirm(true)}>
             Delete Permanent
@@ -251,9 +251,9 @@ export default function RetailerConfigEditor({
       </div>
 
       {showRemap && (
-        <div className="settings-card" style={{ border: '1px solid var(--primary)', marginBottom: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 0.5rem' }}>Re-run auto-mapping</h4>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 0.75rem', maxWidth: '70ch' }}>
+        <div className="settings-card settings-card--active" style={{ marginBottom: '1.5rem' }}>
+          <h4 className="settings-panel-title" style={{ marginBottom: '0.5rem' }}>Re-run auto-mapping</h4>
+          <p className="settings-card-description" style={{ margin: '0 0 0.75rem', maxWidth: '70ch' }}>
             Regenerates this retailer's selectors by reading a real product page. A
             product URL is required &mdash; a home page has no price to learn from.
             The generated configuration replaces what is saved here.

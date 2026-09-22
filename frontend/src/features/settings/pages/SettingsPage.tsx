@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import Layout from '../../../layouts/Layout';
 
 // Section Components
@@ -6,7 +6,9 @@ import ProfileSection from './ProfileSection';
 import RegionalSection from './RegionalSection';
 import SecuritySection from './SecuritySection';
 import NotificationChannelsSection from './NotificationChannelsSection';
+import SettingsPageHeader from '../../../components/SettingsPageHeader';
 import Icon from '../../../components/Icon';
+import ErrorBoundary from '../../../components/ErrorBoundary';
 
 export type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
 
@@ -32,10 +34,11 @@ export default function Settings({ activeSection }: { activeSection: SettingsSec
 
   return (
     <Layout>
-      <div className="settings-header-new">
-        <Link to="/products" className="settings-back-new">← Back to Products</Link>
-        <h1 className="settings-title-new">Account Settings</h1>
-      </div>
+      <SettingsPageHeader
+        title="Account Settings"
+        backTo="/products"
+        backLabel="← Back to Products"
+      />
 
       <div className="settings-container-new">
         <select 
@@ -67,10 +70,12 @@ export default function Settings({ activeSection }: { activeSection: SettingsSec
 
 
         <main className="settings-content-new">
-          {activeSection === 'profile' && <ProfileSection />}
-          {activeSection === 'regional' && <RegionalSection />}
-          {activeSection === 'security' && <SecuritySection />}
-          {activeSection === 'notifications' && <NotificationChannelsSection />}
+          <ErrorBoundary section={`settings-${activeSection}`}>
+            {activeSection === 'profile' && <ProfileSection />}
+            {activeSection === 'regional' && <RegionalSection />}
+            {activeSection === 'security' && <SecuritySection />}
+            {activeSection === 'notifications' && <NotificationChannelsSection />}
+          </ErrorBoundary>
         </main>
       </div>
     </Layout>

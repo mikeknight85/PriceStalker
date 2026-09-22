@@ -54,7 +54,7 @@ export default function RetailersSection({ globalCurrencies, initialSearch }: Re
       {retailersResult.isError && <div className="alert alert-error">Failed to load retailers. <button className="btn btn-secondary btn-sm" onClick={() => void retailersResult.refetch()}>Retry</button></div>}
       <div className="settings-card" style={{ marginBottom: editingRetailer ? '2rem' : '1.25rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <h2 className="settings-card-title" style={{ margin: 0 }}>Retailers</h2>
+          <h2 className="settings-card-title">Retailers</h2>
           {!editingRetailer && (
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', flex: '1', justifyContent: 'flex-end' }}>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '150px', maxWidth: '300px', flex: '1' }}>
