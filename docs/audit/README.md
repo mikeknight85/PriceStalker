@@ -24,6 +24,7 @@ the current implementation.
 | [Logging audit](LOGGING.md) | Logging coverage and identified gaps | Audit material |
 | [Debug interface audit](upstream_debug_interface_audit.md) | Review of the debug interface | Historical reference; verify against source |
 | [Amazon block investigation](amazon_block_issue.md) | Retailer-specific acquisition investigation | Issue investigation |
+| [Akamai Bot Manager investigation](akamai_bot_manager.md) | Why kmart.com.au and target.com.au fail, measured (issue #67) | Issue investigation |
 | [Reference architectures](reference_architectures.md) | Scraping and configuration design references | Reference material |
 
 The large [SCRAPER_AUDIT.md](../SCRAPER_AUDIT.md) file is the broad backend
