@@ -23,7 +23,6 @@ export default function SystemSection() {
     sys_network: false,
     sys_discovery: false,
     sys_browser: false,
-    sys_jsonld: false,
     sys_security: false,
     sys_maintenance: false
   });
@@ -146,19 +145,6 @@ export default function SystemSection() {
         <div className="form-grid">
           <div className="form-group"><label>Browser Timeout (ms)</label><input type="number" className="form-control" value={systemSettings?.browser_timeout || 60000} onChange={e => setSystemSettings(s => s ? { ...s, browser_timeout: parseInt(e.target.value) || 0 } : null)} /></div>
           <div className="form-group"><label>Browser Delay (ms)</label><input type="number" className="form-control" value={systemSettings?.browser_delay || 3000} onChange={e => setSystemSettings(s => s ? { ...s, browser_delay: parseInt(e.target.value) || 0 } : null)} /></div>
-        </div>
-      </CollapsibleCard>
-
-      <CollapsibleCard title="JSON-LD & Structured Data" leadingIcon={<Icon name="code" />} id="sys_jsonld" isExpanded={expandedSections.sys_jsonld} onToggle={toggleSection}>
-        <div className="form-group" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Prefer JSON-LD for Images</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>If found, prioritize high-quality JSON-LD images over CSS selectors.</div>
-          </div>
-          <ToggleSwitch 
-            active={systemSettings?.prefer_jsonld_image === true || systemSettings?.prefer_jsonld_image === 'true'} 
-            onToggle={() => setSystemSettings(s => s ? { ...s, prefer_jsonld_image: !(s.prefer_jsonld_image === true || s.prefer_jsonld_image === 'true') } : null)} 
-          />
         </div>
       </CollapsibleCard>
 
