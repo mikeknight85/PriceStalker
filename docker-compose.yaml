@@ -94,6 +94,12 @@ services:
     container_name: pricestalker-scraper
     restart: unless-stopped
     profiles: ["scraper"]
+    # Chromium re-parents its orphaned helper processes onto PID 1, and PID 1
+    # must reap them or they pile up as <defunct> until the kernel PID table is
+    # exhausted (issue #206). The image already runs tini as its entrypoint;
+    # this is the same guarantee from the other side, for anyone running an
+    # older tag or overriding the entrypoint.
+    init: true
     # Chromium needs more than the default 64MB of shared memory or it will
     # crash on content-heavy pages.
     shm_size: 2gb
