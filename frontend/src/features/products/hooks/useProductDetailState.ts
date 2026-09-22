@@ -13,6 +13,15 @@ import {
   NotificationSettings 
 } from '../../../types/api';
 
+/** The range the Price History chart opens on. */
+const DEFAULT_HISTORY_DAYS = 30;
+/**
+ * "All time" in the chart's range picker. The history endpoint returns every
+ * recorded price when no day count is sent, and `ProductService.getPriceHistory`
+ * omits the parameter for a falsy `days`.
+ */
+const ALL_TIME = 0;
+
 export function useProductDetailState(
   productId: number, 
   onBack?: () => void,
@@ -23,6 +32,7 @@ export function useProductDetailState(
 
   const [product, setProduct] = useState<ProductWithStats | null>(null);
   const [prices, setPrices] = useState<PriceHistory[]>([]);
+  const [historyDays, setHistoryDays] = useState<number>(DEFAULT_HISTORY_DAYS);
   
   const { execute: runFetch, isLoading, error } = useAsyncAction(true);
   const { execute: runSave, isLoading: isSaving } = useAsyncAction();
@@ -66,19 +76,20 @@ export function useProductDetailState(
       else navigate({ to: '/products' });
     },
     onProductUpdated: (_id, data) => {
-      fetchData(30);
+      // Reload the range the chart is currently showing, not a hardcoded month.
+      fetchData();
       if (onUpdated) onUpdated(productId, data);
     }
   });
 
-  const fetchData = (days?: number) => runFetch(async () => {
+  const fetchData = (days: number = historyDays) => runFetch(async () => {
     const [productRes, pricesRes, profileRes] = await Promise.all([
       queryClient.fetchQuery(productDetailQuery(productId)),
-      queryClient.fetchQuery(priceHistoryQuery(productId, days ?? 30)),
+      queryClient.fetchQuery(priceHistoryQuery(productId, days)),
       queryClient.fetchQuery(profileQuery()),
     ]);
     setProduct(productRes);
-    setPrices(pricesRes.prices);
+    setPrices(Array.isArray(pricesRes?.prices) ? pricesRes.prices : []);
     setEditName(productRes.name || '');
     setEditCategories(productRes.category ? productRes.category.split(',').map((c: string) => c.trim()).filter(Boolean) : []);
     setEditImageUrl(productRes.image_url || '');
@@ -108,7 +119,7 @@ export function useProductDetailState(
 
   useEffect(() => {
     if (productId) {
-      fetchData(30);
+      fetchData(DEFAULT_HISTORY_DAYS);
       fetchNotificationSettings();
     }
   }, [productId]);
@@ -194,12 +205,15 @@ export function useProductDetailState(
   }, { onSuccessMessage: 'Check interval updated', onErrorFallback: 'Failed to update refresh interval' });
 
   const handleRangeChange = (days: number | undefined) => {
-    fetchData(days);
+    const range = days ?? ALL_TIME;
+    setHistoryDays(range);
+    fetchData(range);
   };
 
   return {
     product,
     prices,
+    historyDays,
     isLoading,
     isRefreshing,
     isSaving,

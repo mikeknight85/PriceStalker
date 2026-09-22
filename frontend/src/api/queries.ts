@@ -7,6 +7,14 @@ import { AdminSystemService } from '../features/admin/services/AdminSystemServic
 import { UserAdminService } from '../features/admin/services/UserAdminService';
 import { RetailerAdminService } from '../features/admin/services/RetailerAdminService';
 
+/**
+ * The recorded history of a product, without the day count. Every range shares
+ * this prefix so one invalidation covers all of them — a new reading makes the
+ * 7, 30, 90 day and all-time slices wrong together.
+ */
+const priceHistoryPrefix = (productId: number) => ['products', productId, 'price-history'] as const;
+const stockHistoryPrefix = (productId: number) => ['products', productId, 'stock-history'] as const;
+
 export const queryKeys = {
   adminUsers: ['admin', 'users'] as const,
   adminTokens: ['admin', 'system-tokens'] as const,
@@ -18,8 +26,10 @@ export const queryKeys = {
   notificationSettings: ['settings', 'notifications'] as const,
   systemVersion: ['system', 'version'] as const,
   adminSystemSettings: ['admin', 'system-settings'] as const,
-  priceHistory: (productId: number, days: number) => ['products', productId, 'price-history', days] as const,
-  stockHistory: (productId: number, days: number) => ['products', productId, 'stock-history', days] as const,
+  priceHistoryAll: priceHistoryPrefix,
+  priceHistory: (productId: number, days: number) => [...priceHistoryPrefix(productId), days] as const,
+  stockHistoryAll: stockHistoryPrefix,
+  stockHistory: (productId: number, days: number) => [...stockHistoryPrefix(productId), days] as const,
   notifications: { recent: (limit: number) => ['notifications', 'recent', limit] as const, history: (page: number, limit: number, filter: string) => ['notifications', 'history', page, limit, filter] as const },
 };
 

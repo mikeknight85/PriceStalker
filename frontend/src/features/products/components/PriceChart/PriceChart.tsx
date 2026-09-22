@@ -29,6 +29,12 @@ interface PriceChartProps {
   currency: string;
   targetPrice?: number | null;
   onRangeChange?: (days: number | undefined) => void;
+  /**
+   * The range `prices` was loaded for, where the page owns that state; 0 is all
+   * time. Left out, the picker keeps its own — and so forgets which range is on
+   * screen every time the tab unmounts.
+   */
+  rangeDays?: number;
 }
 
 const DATE_RANGES = [
@@ -43,9 +49,12 @@ export default function PriceChart({
   currency,
   targetPrice,
   onRangeChange,
+  rangeDays,
 }: PriceChartProps) {
   const { user } = useAuth();
-  const [selectedRange, setSelectedRange] = useState<number | undefined>(30);
+  const [ownRange, setOwnRange] = useState<number | undefined>(30);
+  // `rangeDays || undefined` because the page spells all time 0, the picker undefined.
+  const selectedRange = rangeDays === undefined ? ownRange : rangeDays || undefined;
   const [themeColors, setThemeColors] = useState(getThemeColors);
 
   useEffect(() => {
@@ -60,7 +69,7 @@ export default function PriceChart({
   }, []);
 
   const handleRangeChange = (days: number | undefined) => {
-    setSelectedRange(days);
+    setOwnRange(days);
     onRangeChange?.(days);
   };
 
