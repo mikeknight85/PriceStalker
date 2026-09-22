@@ -1,18 +1,5 @@
 import { PriceCandidate } from '../../../types/scraper';
-import { groupPriceCandidates, pricesMatch } from './utils';
-
-/**
- * Returns the group's first candidate, backfilling its currency from another
- * group member when the first one could not resolve a currency. Candidates
- * group by price alone, so a currency-less candidate can otherwise win a group
- * whose other members positively identified the currency.
- */
-function withGroupCurrency(group: PriceCandidate[]): PriceCandidate {
-  const first = group[0];
-  if (first.currency) return first;
-  const donor = group.find(c => c.currency);
-  return donor ? { ...first, currency: donor.currency } : first;
-}
+import { groupPriceCandidates, pricesMatch, withGroupCurrency } from './utils';
 
 /**
  * Arbitrates between multiple price candidates to find a consensus value.
