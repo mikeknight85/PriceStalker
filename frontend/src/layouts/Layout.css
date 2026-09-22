@@ -252,24 +252,48 @@
 }
 
 @media (max-width: 640px) {
-  .navbar-email, .user-dropdown-email {
+  :where(:root:not([data-layout="desktop"])) .navbar-email,
+  :where(:root:not([data-layout="desktop"])) .user-dropdown-email {
     display: none;
   }
 
-  .navbar-user {
+  :where(:root:not([data-layout="desktop"])) .navbar-user {
     gap: 0.5rem;
   }
 
-  .navbar-add-product {
+  :where(:root:not([data-layout="desktop"])) .navbar-add-product {
     width: 40px;
     padding: 0;
     justify-content: center;
   }
 
-  .navbar-add-product span {
+  :where(:root:not([data-layout="desktop"])) .navbar-add-product span {
     display: none;
   }
 }
+
+/* Forced-mobile mirror of the 640px block above. Placed here, not at the
+   end of the file, so the cascade order relative to what follows is
+   identical to the media block it mirrors. */
+:where(:root[data-layout="mobile"]) .navbar-email,
+:where(:root[data-layout="mobile"]) .user-dropdown-email {
+  display: none;
+}
+
+:where(:root[data-layout="mobile"]) .navbar-user {
+  gap: 0.5rem;
+}
+
+:where(:root[data-layout="mobile"]) .navbar-add-product {
+  width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+:where(:root[data-layout="mobile"]) .navbar-add-product span {
+  display: none;
+}
+
 
 /*
  * The running version, under the logout button.
