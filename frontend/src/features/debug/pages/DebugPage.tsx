@@ -9,8 +9,10 @@ import { useDebugScraper } from './useDebugScraper';
 import DebugControls from './DebugControls';
 import ManualConfigSection from './ManualConfigSection';
 import ResultDisplay from './ResultDisplay';
+import SelectorTester from './SelectorTester';
 import './DebugPage.css';
 import Icon from '../../../components/Icon';
+import ErrorBoundary from '../../../components/ErrorBoundary';
 
 export default function Debug() {
   const { user } = useAuth();
@@ -145,6 +147,17 @@ export default function Debug() {
             <DebugControls state={state} actions={actions}>
               <ManualConfigSection state={state} />
             </DebugControls>
+
+            {/*
+              The Live Selector Lab: written but never mounted, so the picker's
+              PG_SELECTOR_PICKED message had nowhere to land and no admin could
+              try a selector without saving it to a retailer first (issue #168).
+            */}
+            {state.result && (
+              <ErrorBoundary section="the Live Selector Lab">
+                <SelectorTester state={state} actions={{ addToSelectors }} />
+              </ErrorBoundary>
+            )}
           </aside>
 
           {/* COL 2: MAIN WORKSTATION VIEW */}

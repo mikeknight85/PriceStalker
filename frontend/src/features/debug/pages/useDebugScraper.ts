@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AdminSystemService, RetailerAdminService } from '../../admin';
 import { ProductService } from '../../products/services/ProductService';
 import { RetailerConfig, SystemSettings } from '../../../types/api';
 import { useToast } from '../../../context/ToastContext';
 import { apiErrorMessage } from '../../../api/error';
+import { evaluateLiveSelector, LiveSelectorResult } from '../utils/liveSelector';
 
 export function useDebugScraper() {
   const { showToast } = useToast();
@@ -12,7 +13,10 @@ export function useDebugScraper() {
   const [url, setUrl] = useState('');
   const [productIdInput, setProductIdInput] = useState('');
   const [mode, setMode] = useState<'normal' | 'simulate' | 'bypass'>('normal');
-  const [returnHtml, setReturnHtml] = useState(false);
+  // The Live Selector Lab and the Interactive Inspector both read result.html,
+  // so an admin arriving at the Workstation gets it by default -- opting out is
+  // the deliberate act, not opting in (issue #168).
+  const [returnHtml, setReturnHtml] = useState(true);
   const [useAI, setUseAI] = useState(false);
   const [forceAI, setForceAI] = useState(false);
   const [globalSettings, setGlobalSettings] = useState<SystemSettings | null>(null);
@@ -44,33 +48,18 @@ export function useDebugScraper() {
 
   // Live Selector Testing
   const [liveSelector, setLiveSelector] = useState('');
-  const [liveMatches, setLiveMatches] = useState<any[]>([]);
 
   // Live Selector Testing Logic
-  useEffect(() => {
-    if (!liveSelector || !result?.html) {
-      setLiveMatches([]);
-      return;
-    }
-
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(result.html, 'text/html');
-      const elements = doc.querySelectorAll(liveSelector);
-      const matches = Array.from(elements).slice(0, 10).map(el => ({
-        tagName: el.tagName.toLowerCase(),
-        text: el.textContent?.trim().substring(0, 100),
-        html: el.innerHTML.substring(0, 200),
-        attributes: Array.from(el.attributes).reduce((acc: any, attr) => {
-          acc[attr.name] = attr.value;
-          return acc;
-        }, {})
-      }));
-      setLiveMatches(matches);
-    } catch (e) {
-      setLiveMatches([]);
-    }
-  }, [liveSelector, result?.html]);
+  //
+  // Evaluated through the DSL-aware helper rather than querySelectorAll, so a
+  // valid PriceStalker rule -- ::attr(), !html, xpath://, ~regex~ -- is run
+  // instead of throwing a SyntaxError the Lab then reported as "no matches".
+  const liveResult: LiveSelectorResult = useMemo(
+    () => evaluateLiveSelector(typeof result?.html === 'string' ? result.html : '', liveSelector),
+    [liveSelector, result?.html]
+  );
+  const liveMatches = liveResult.matches;
+  const hasHtml = typeof result?.html === 'string' && result.html.length > 0;
 
   // 1. Initial Access Check & Load system settings
   useEffect(() => {
@@ -272,7 +261,7 @@ export function useDebugScraper() {
     }
 
     try {
-      const res = await RetailerAdminService.debugExtract(processedUrl, finalConfig, mode, true, useAI, forceAI);
+      const res = await RetailerAdminService.debugExtract(processedUrl, finalConfig, mode, returnHtml, useAI, forceAI);
       setResult(res);
       
       // Save to history
@@ -318,7 +307,10 @@ export function useDebugScraper() {
       tempStockSelectors, setTempStockSelectors,
       tempExclusionSelectors, setTempExclusionSelectors,
       liveSelector, setLiveSelector,
-      liveMatches, setLiveMatches
+      liveMatches,
+      liveError: liveResult.error,
+      liveEngine: liveResult.engine,
+      hasHtml
     },
     actions: {
       runExtraction,
