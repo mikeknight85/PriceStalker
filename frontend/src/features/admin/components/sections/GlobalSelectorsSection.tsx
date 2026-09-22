@@ -3,6 +3,7 @@ import { AdminSystemService } from '../../services/AdminSystemService';
 import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import CollapsibleCard from '../../../../components/CollapsibleCard';
+import ToggleSwitch from '../../../../components/ToggleSwitch';
 import {
   UnifiedSelectorManager,
   SettingsCacheNotice,
@@ -31,6 +32,10 @@ export default function GlobalSelectorsSection() {
   const [globalImageSelectors, setGlobalImageSelectors] = useState<string[]>([]);
   const [globalStockSelectors, setGlobalStockSelectors] = useState<string[]>([]);
   const [globalExclusionSelectors, setGlobalExclusionSelectors] = useState<string[]>([]);
+
+  // Extraction behaviour: kept with the image rules it changes, not in Core
+  // System Settings (issue #177). Same `prefer_jsonld_image` system setting.
+  const [preferJsonLdImage, setPreferJsonLdImage] = useState(false);
 
   // Global Phrase states
   const [globalInStockPhrases, setGlobalInStockPhrases] = useState<string[]>([]);
@@ -75,6 +80,8 @@ export default function GlobalSelectorsSection() {
       try { setGlobalStockSelectors(JSON.parse(settings.generic_stock_selectors || '[]')); } catch { setGlobalStockSelectors([]); }
       try { setGlobalExclusionSelectors(JSON.parse(settings.generic_exclusion_selectors || '[]')); } catch { setGlobalExclusionSelectors([]); }
 
+      setPreferJsonLdImage(settings.prefer_jsonld_image === true || settings.prefer_jsonld_image === 'true');
+
       try { setGlobalInStockPhrases(JSON.parse(settings.generic_in_stock_phrases || '[]')); } catch { setGlobalInStockPhrases([]); }
       try { setGlobalOutOfStockPhrases(JSON.parse(settings.generic_out_of_stock_phrases || '[]')); } catch { setGlobalOutOfStockPhrases([]); }
       try { setGlobalPreOrderPhrases(JSON.parse(settings.generic_pre_order_phrases || '[]')); } catch { setGlobalPreOrderPhrases([]); }
@@ -102,6 +109,7 @@ export default function GlobalSelectorsSection() {
         generic_in_stock_phrases: JSON.stringify(globalInStockPhrases),
         generic_out_of_stock_phrases: JSON.stringify(globalOutOfStockPhrases),
         generic_pre_order_phrases: JSON.stringify(globalPreOrderPhrases),
+        prefer_jsonld_image: preferJsonLdImage,
       };
 
       const updated = await AdminSystemService.updateSystemSettings(payload);
@@ -172,6 +180,16 @@ export default function GlobalSelectorsSection() {
         <CollapsibleCard title="Product image" leadingIcon={<Icon name="image" />} id="sys_sel_image" badge={String(globalImageSelectors.length) + ' items'} isExpanded={expandedSections.sys_sel_image} onToggle={toggleSection}>
           <UnifiedSelectorManager label="Product image selectors" items={globalImageSelectors} onChange={setGlobalImageSelectors} placeholder="img.product" />
           <FieldHelp>Identifies the main product image. Relative and protocol-relative URLs are resolved against the product page.</FieldHelp>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginTop: '0.75rem' }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Prefer JSON-LD for images</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                If found, prioritize high-quality JSON-LD images over the selectors
+                above. A retailer can override this in its own extraction parameters.
+              </div>
+            </div>
+            <ToggleSwitch active={preferJsonLdImage} onToggle={() => setPreferJsonLdImage(v => !v)} />
+          </div>
         </CollapsibleCard>
       </RuleGroup>
 
