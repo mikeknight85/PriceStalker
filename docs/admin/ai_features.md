@@ -79,11 +79,11 @@ Designed for enterprise GCP deployments or existing Google Cloud projects.
 * **Console**: [console.cloud.google.com](https://console.cloud.google.com)
 * **Setup Requirements**:
   1. Enable the **Vertex AI API** in your GCP Project.
-  2. Create a Service Account or API key with Vertex AI User permissions.
+  2. Create a Service Account with the **Vertex AI User** (`roles/aiplatform.user`) role and generate a JSON key.
 * **Configuration Fields**:
-  * **Vertex API Key**: Your GCP API Key or authentication token.
+  * **Service Account Key (JSON) / Credentials**: Paste the Service Account JSON key contents, an OAuth bearer token, or leave empty to use server-level Application Default Credentials (ADC / `GOOGLE_APPLICATION_CREDENTIALS`).
   * **GCP Project ID**: The project ID string (e.g. `my-tracking-project-123`).
-  * **Location**: GCP region (e.g. `us-central1`, `europe-west1`).
+  * **Location**: GCP region (e.g. `us-central1`, `europe-west1`, `global`).
   * **Model**: Model ID (e.g. `gemini-1.5-flash-002`, `gemini-1.5-pro-002`).
 * **Cost Note**: Billed directly through Google Cloud invoices.
 

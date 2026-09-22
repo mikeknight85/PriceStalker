@@ -52,9 +52,16 @@ router.post('/test', asyncHandler(async (req: AuthRequest, res: Response) => {
 // Provider Specific Tests
 router.post('/test-gemini', handleAiTest('Gemini', (ai, k, m) => ai.testGeminiConnection(k, m)));
 router.post('/test-vertex', asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { api_key, project_id, location, model } = req.body;
-  if (!api_key || !project_id || !location || !model) {
-    res.status(400).json({ error: 'API Key, Project ID, Location, and Model are required' });
+  let { api_key, project_id, location, model } = req.body;
+  if (typeof api_key === 'string' && (api_key.includes('...') || api_key.includes('*'))) {
+    const { systemSettingsRepository } = await import('../../../../models');
+    const stored = await systemSettingsRepository.getAISettings();
+    api_key = stored.vertex_api_key || api_key;
+  }
+  location = location || 'us-central1';
+  model = model || 'gemini-2.5-flash';
+  if (!project_id) {
+    res.status(400).json({ error: 'GCP Project ID is required' });
     return;
   }
   const { testVertexConnection } = await import('../../../../services/ai');

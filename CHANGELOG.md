@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Authentication section is now accessible on mobile screens in the Admin panel (#182). The mobile `<select>` and desktop `<nav>` are now driven from a single source of truth in both Admin and Settings pages.
 - The notification channel "Send Test Notification" button is now disabled when unsaved changes exist on the channel card, with a tooltip explaining that changes must be saved first (#186).
+- Google Cloud Vertex AI provider now supports IAM / Service Account JSON credentials and Application Default Credentials (ADC), uses bearer token authentication, resolves global vs regional endpoint URLs correctly without 404s, provides UI validation feedback on incomplete configurations, and masks stored credentials when `REDACT_API_KEYS=true` (#199).
 - The debug page shows a "did not load" marker for an image candidate that
   resolves to nothing, instead of the browser's broken-image icon (#180). The
   page deliberately lists candidates the extractor rejected, and a broken icon
