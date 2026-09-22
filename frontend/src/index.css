@@ -4,22 +4,36 @@
   box-sizing: border-box;
 }
 
+/* Light theme (the base set; the dark blocks below override it).
+   Two rules keep this palette honest:
+   1. `--background` is the page canvas *and* the recessed fill inside a
+      surface (disabled inputs, hover rows, dropdown triggers). `--surface` is
+      everything that sits above it: cards, the navbar, modals, dropdowns.
+      They must stay tonally apart or the whole hierarchy collapses into one
+      sheet of white -- which is exactly what it used to do at #f8fafc/#ffffff,
+      a 1.05:1 step nobody can see.
+   2. Accents are used as *text* as often as they are used as button fills
+      (`--danger` on a menu item, `--secondary` on a stock badge), so each one
+      has to clear 4.5:1 against both --surface and --background, not just
+      look correct behind white label text. */
 :root {
   color-scheme: light dark;
-  --primary: #6366f1;
-  --primary-rgb: 99, 102, 241;
-  --primary-dark: #4f46e5;
-  --secondary: #10b981;
-  --danger: #ef4444;
-  --background: #f8fafc;
+  --primary: #4f46e5;
+  --primary-rgb: 79, 70, 229;
+  --primary-dark: #4338ca;
+  --secondary: #047857;
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
+  --background: #eef2f7;
   --surface: #ffffff;
   --text: #1e293b;
-  --text-muted: #64748b;
+  --text-muted: #5a6880;
   --border: #e2e8f0;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --border-strong: #cbd5e1;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
   --chart-grid: #e2e8f0;
-  --chart-text: #94a3b8;
+  --chart-text: #64748b;
 }
 
 /* An explicit light choice must also pin the UA colour scheme. The `only` keyword
@@ -36,11 +50,13 @@
   --primary-dark: #6366f1;
   --secondary: #34d399;
   --danger: #f87171;
+  --danger-dark: #dc2626;
   --background: #0f172a;
   --surface: #1e293b;
   --text: #f1f5f9;
   --text-muted: #94a3b8;
   --border: #334155;
+  --border-strong: #475569;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   --chart-grid: #334155;
@@ -56,11 +72,13 @@
     --primary-dark: #6366f1;
     --secondary: #34d399;
     --danger: #f87171;
+    --danger-dark: #dc2626;
     --background: #0f172a;
     --surface: #1e293b;
     --text: #f1f5f9;
     --text-muted: #94a3b8;
     --border: #334155;
+    --border-strong: #475569;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     --chart-grid: #334155;
@@ -125,7 +143,10 @@ input, button, select, textarea {
 .form-control {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border);
+  /* Inputs keep the --surface fill and take the stronger border: on a card
+     they are white-on-white, so the border is the only thing that says
+     "you can type here". --border is for dividing content, not for that. */
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
   font-size: 1rem;
   background-color: var(--surface);
@@ -142,7 +163,7 @@ input, button, select, textarea {
 .form-control:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.18);
 }
 
 .form-group input:disabled,
@@ -178,7 +199,7 @@ input, button, select, textarea {
 .btn-secondary {
   background-color: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
 }
 
 .btn-secondary:hover {
@@ -191,7 +212,7 @@ input, button, select, textarea {
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  background-color: var(--danger-dark);
 }
 
 .btn:disabled {
@@ -400,7 +421,7 @@ input, button, select, textarea {
 }
 
 .users-table tr:hover {
-  background: rgba(var(--primary-rgb), 0.02);
+  background: rgba(var(--primary-rgb), 0.05);
 }
 
 /* Toggle Switch */
@@ -408,7 +429,8 @@ input, button, select, textarea {
   position: relative;
   width: 44px;
   height: 24px;
-  background: var(--border);
+  /* The off state has to read as a control, not as a divider. */
+  background: var(--border-strong);
   border-radius: 12px;
   border: none;
   cursor: pointer;
@@ -455,7 +477,7 @@ display: block;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     background: var(--surface);
     color: var(--text);
     font-size: 1rem;
