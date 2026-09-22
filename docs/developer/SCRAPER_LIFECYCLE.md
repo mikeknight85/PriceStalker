@@ -96,6 +96,21 @@ Winner = highest-confidence candidate where `value !== 'unknown'`. Supported fin
 
 \* Deal and pre-order candidates use a priority path in `findPriceConsensus`; they do not participate in the weighted fallback. Member and original candidates are collected separately as metadata and do not become the primary price through this function.
 
+**Retailer rules outrank the global defaults, per price type (issue #159).** For each pass, `extractAllPriceCandidates` uses `retailer_configs.<type>_price_selectors` when that array is non-empty, and the matching `generic_*_selectors` system setting otherwise. The two sets are never evaluated as one pool, and the choice is made by what is **configured**, not by what matched — a retailer that has a Deal/Sale rule owns that price type for that shop, and the defaults never top it up.
+
+The cascade is per type, not per retailer: a retailer configured only for the standard price still gets the global deal, member, pre-order and original defaults.
+
+This matters most on the Deals pass, because a `deal-price` candidate takes strict priority in `findPriceConsensus` over any standard price whatever found it. Merging the sets (the behaviour before this fix) let a seeded default such as `.special-price .price` take that priority away from the retailer's own rules. Because the offending selector was a global default rather than anything on the retailer, editing the retailer's own rules could not remove it.
+
+The trace names the tier that supplied the selectors:
+
+```text
+Extract | Deals | Retailer selectors: ["meta[property=\"product:sale_price:amount\"]::attr(content)"]
+Extract | Deals | Default selectors: [".price-item--sale", ".special-price .price", ...]
+```
+
+JSON-LD is not part of this cascade: it is a structured-data source, always evaluated, and carries weight 2.0 in the weighted fallback.
+
 ---
 
 ## Phase 3 — Bot/Maintenance Validation
