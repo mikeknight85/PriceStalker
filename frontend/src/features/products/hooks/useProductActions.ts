@@ -5,7 +5,7 @@ import { useAsyncAction } from '../../../hooks/useAsyncAction';
 import { apiErrorMessage } from '../../../api/error';
 import { queryClient } from '../../../api/queryClient';
 import { queryKeys } from '../../../api/queries';
-import { syncProductCaches } from '../../../api/productCache';
+import { invalidateProductHistory, syncProductCaches } from '../../../api/productCache';
 import { PriceReviewResponse, Product } from '../../../types/api';
 
 interface UseProductActionsProps {
@@ -26,6 +26,9 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
     await ProductService.refreshPrice(id);
     const updatedProductRes = await ProductService.getById(id);
     syncProductCaches(updatedProductRes);
+    // A refresh records a new price and stock reading, so the cached history has
+    // to go before anything reloads it.
+    await invalidateProductHistory(id);
     if (onProductUpdated) onProductUpdated(id, updatedProductRes);
   }, { onSuccessMessage: 'Price refreshed', onErrorFallback: 'Failed to refresh price' });
 
@@ -76,6 +79,8 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
       });
       
       syncProductCaches(res);
+      // Confirming a candidate writes a price row of its own, same as a refresh.
+      await invalidateProductHistory(activeProductId);
       if (onProductUpdated) onProductUpdated(activeProductId, res);
       setShowPriceModal(false);
       setPriceReviewData(null);
