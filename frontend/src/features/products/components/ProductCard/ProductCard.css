@@ -116,6 +116,28 @@
   gap: 0.4rem;
   margin-top: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+/*
+  Tags sit in the badges row rather than a row of their own: the card is
+  already dense, and a user-written label like "xmas presents" reads as
+  another thing this listing is, next to Sale or Paused. Outlined and in
+  sentence case so it is clearly the user's word, not a system status.
+*/
+.pb-card-tag {
+  display: inline-block;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.125rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--background);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  line-height: 1.4;
 }
 
 .pb-card-chart {

@@ -13,6 +13,7 @@ export interface AuthenticatedUser {
   currency: string | null;
   locale: string | null;
   is_admin: boolean;
+  /** Every tag this user has used. Wire name only -- see types/api.ts (#147). */
   categories: string[];
 }
 

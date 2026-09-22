@@ -1,37 +1,38 @@
 import React from 'react';
+import { Link } from '@tanstack/react-router';
 import { useAuth } from '../../../auth';
 import { formatDate } from '../../../../utils/format';
 import { describeUnavailableReason, describeMonitoringState } from '../../../../utils/availability';
 
 interface ProductMetadataProps {
   product: any;
-  isEditingCategory: boolean;
-  setIsEditingCategory: (isEditing: boolean) => void;
-  editCategories: string[];
-  setEditCategories: (categories: string[]) => void;
-  newCategoryInput: string;
-  setNewCategoryInput: (input: string) => void;
-  handleAddCategoryTag: (e?: React.KeyboardEvent | React.FocusEvent) => void;
-  handleRemoveCategoryTag: (tag: string) => void;
-  handleSaveCategory: () => Promise<void>;
+  isEditingTags: boolean;
+  setIsEditingTags: (isEditing: boolean) => void;
+  editTags: string[];
+  setEditTags: (tags: string[]) => void;
+  newTagInput: string;
+  setNewTagInput: (input: string) => void;
+  handleAddTag: (e?: React.KeyboardEvent | React.FocusEvent) => void;
+  handleRemoveTag: (tag: string) => void;
+  handleSaveTags: () => Promise<void>;
   handleRefreshIntervalChange: (newInterval: number) => Promise<void>;
-  availableCategories: string[];
+  availableTags: string[];
   isSaving: boolean;
   REFRESH_INTERVALS: { value: number, label: string }[];
 }
 
 const ProductMetadata: React.FC<ProductMetadataProps> = ({
   product,
-  isEditingCategory,
-  setIsEditingCategory,
-  editCategories,
-  newCategoryInput,
-  setNewCategoryInput,
-  handleAddCategoryTag,
-  handleRemoveCategoryTag,
-  handleSaveCategory,
+  isEditingTags,
+  setIsEditingTags,
+  editTags,
+  newTagInput,
+  setNewTagInput,
+  handleAddTag,
+  handleRemoveTag,
+  handleSaveTags,
   handleRefreshIntervalChange,
-  availableCategories,
+  availableTags,
   isSaving,
   REFRESH_INTERVALS,
 }) => {
@@ -45,17 +46,18 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
   return (
     <div className="product-detail-meta">
       <div className="product-detail-meta-item">
-        <span className="product-detail-meta-label">Category</span>
-        {isEditingCategory ? (
-          <div className="category-tag-input-wrapper">
-            <div className="category-tag-container">
-              {editCategories.map(cat => (
-                <span key={cat} className="category-tag-pill">
-                  {cat}
+        <span className="product-detail-meta-label">Tags</span>
+        {isEditingTags ? (
+          <div className="tag-editor-wrapper">
+            <div className="tag-editor-container">
+              {editTags.map(tag => (
+                <span key={tag} className="tag-editor-pill">
+                  {tag}
                   <button 
                     className="remove-tag-btn" 
-                    onClick={() => handleRemoveCategoryTag(cat)}
-                    title={`Remove ${cat}`}
+                    onClick={() => handleRemoveTag(tag)}
+                    title={`Remove ${tag}`}
+                    aria-label={`Remove tag ${tag}`}
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -66,38 +68,56 @@ const ProductMetadata: React.FC<ProductMetadataProps> = ({
               ))}
               <input
                 className="tag-input-field"
-                list="existing-categories"
-                value={newCategoryInput}
-                onChange={(e) => setNewCategoryInput(e.target.value)}
-                onKeyDown={handleAddCategoryTag}
-                onBlur={() => handleAddCategoryTag()}
-                placeholder={editCategories.length === 0 ? "e.g. Home, Tech" : "Add more..."}
+                list="existing-tags"
+                aria-label="Add a tag"
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+                onBlur={() => handleAddTag()}
+                placeholder={editTags.length === 0 ? "e.g. xmas presents, living room" : "Add more..."}
                 autoFocus
               />
             </div>
-            <datalist id="existing-categories">
-              {availableCategories.map(cat => (
-                <option key={cat} value={cat} />
+            <datalist id="existing-tags">
+              {availableTags.map(tag => (
+                <option key={tag} value={tag} />
               ))}
             </datalist>
             <span className="tag-input-hint">Press Enter or comma to add.</span>
             <div style={{ display: 'flex', gap: '0.25rem' }}>
-              <button className="btn btn-primary btn-sm" onClick={handleSaveCategory} style={{ padding: '0.1rem 0.4rem', fontSize: '0.7rem' }}>Save</button>
-              <button className="btn btn-secondary btn-sm" onClick={() => setIsEditingCategory(false)} style={{ padding: '0.1rem 0.4rem', fontSize: '0.7rem' }}>Cancel</button>
+              <button className="btn btn-primary btn-sm" onClick={handleSaveTags} style={{ padding: '0.1rem 0.4rem', fontSize: '0.7rem' }}>Save</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setIsEditingTags(false)} style={{ padding: '0.1rem 0.4rem', fontSize: '0.7rem' }}>Cancel</button>
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <div className="product-detail-meta-value">
+              {/*
+                `product.category` is the wire field; the UI calls it a tag.
+                Each badge links back to the dashboard filtered by that tag, so
+                "what else did I file under this?" is one click rather than a
+                trip through the filter bar.
+              */}
               {product.category ? (
-                product.category.split(',').map((cat: string, i: number) => (
-                  <span key={i} className="category-badge">{cat.trim()}</span>
-                ))
+                product.category.split(',').map((tag: string, i: number) => {
+                  const trimmed = tag.trim();
+                  return (
+                    <Link
+                      key={i}
+                      className="tag-badge"
+                      to="/products"
+                      search={{ tag: trimmed }}
+                      title={`Show everything tagged ${trimmed}`}
+                    >
+                      {trimmed}
+                    </Link>
+                  );
+                })
               ) : (
                 'None'
               )}
             </div>
-            <button className="edit-title-btn" onClick={() => setIsEditingCategory(true)}>
+            <button className="edit-title-btn" onClick={() => setIsEditingTags(true)} aria-label="Edit tags">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>

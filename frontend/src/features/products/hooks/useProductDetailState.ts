@@ -48,13 +48,13 @@ export function useProductDetailState(
   
   const [editName, setEditName] = useState<string>('');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [isEditingCategory, setIsEditingCategory] = useState(false);
-  const [editCategories, setEditCategories] = useState<string[]>([]);
-  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
   const [editImageUrl, setEditImageUrl] = useState<string>('');
   const [isEditingImage, setIsEditingImage] = useState(false);
   const [isAdvancedCollapsed, setIsAdvancedCollapsed] = useState(false);
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -91,10 +91,11 @@ export function useProductDetailState(
     setProduct(productRes);
     setPrices(Array.isArray(pricesRes?.prices) ? pricesRes.prices : []);
     setEditName(productRes.name || '');
-    setEditCategories(productRes.category ? productRes.category.split(',').map((c: string) => c.trim()).filter(Boolean) : []);
+    // `category` / `categories` are the wire names for tags -- see types/api.ts.
+    setEditTags(productRes.category ? productRes.category.split(',').map((c: string) => c.trim()).filter(Boolean) : []);
     setEditImageUrl(productRes.image_url || '');
     
-    setAvailableCategories(profileRes.categories || []);
+    setAvailableTags(profileRes.categories || []);
 
     if (productRes.price_drop_threshold !== null && productRes.price_drop_threshold !== undefined) {
       setPriceDropThreshold(productRes.price_drop_threshold.toString());
@@ -146,31 +147,31 @@ export function useProductDetailState(
     if (onUpdated) onUpdated(productId, { image_url: editImageUrl });
   }, { onSuccessMessage: 'Image URL updated', onErrorFallback: 'Failed to update image' });
 
-  const handleSaveCategory = () => runSave(async () => {
+  const handleSaveTags = () => runSave(async () => {
     if (!product) return;
-    const catString = editCategories.join(', ');
-    const updated = await ProductService.update(productId, { category: catString });
+    const tagString = editTags.join(', ');
+    const updated = await ProductService.update(productId, { category: tagString });
     syncProductCaches(updated);
     setProduct({ ...product, ...updated });
-    setIsEditingCategory(false);
-    if (onUpdated) onUpdated(productId, { category: catString });
-  }, { onSuccessMessage: 'Categories updated', onErrorFallback: 'Failed to update categories' });
+    setIsEditingTags(false);
+    if (onUpdated) onUpdated(productId, { category: tagString });
+  }, { onSuccessMessage: 'Tags updated', onErrorFallback: 'Failed to update tags' });
 
-  const handleAddCategoryTag = (e?: React.KeyboardEvent | React.FocusEvent) => {
+  const handleAddTag = (e?: React.KeyboardEvent | React.FocusEvent) => {
     if (e && 'key' in e && e.key !== 'Enter' && e.key !== ',') return;
     if (e) e.preventDefault();
     
-    const value = newCategoryInput.trim().replace(/,$/, '');
-    if (value && !editCategories.includes(value)) {
-      setEditCategories([...editCategories, value]);
-      setNewCategoryInput('');
+    const value = newTagInput.trim().replace(/,$/, '');
+    if (value && !editTags.includes(value)) {
+      setEditTags([...editTags, value]);
+      setNewTagInput('');
     } else {
-      setNewCategoryInput('');
+      setNewTagInput('');
     }
   };
 
-  const handleRemoveCategoryTag = (cat: string) => {
-    setEditCategories(editCategories.filter(c => c !== cat));
+  const handleRemoveTag = (tag: string) => {
+    setEditTags(editTags.filter(t => t !== tag));
   };
 
   const handleSaveNotifications = () => runSaveNotifications(async () => {
@@ -228,13 +229,13 @@ export function useProductDetailState(
     checkingPaused, setCheckingPaused,
     editName, setEditName,
     isEditingName, setIsEditingName,
-    isEditingCategory, setIsEditingCategory,
-    editCategories, setEditCategories,
-    newCategoryInput, setNewCategoryInput,
+    isEditingTags, setIsEditingTags,
+    editTags, setEditTags,
+    newTagInput, setNewTagInput,
     editImageUrl, setEditImageUrl,
     isEditingImage, setIsEditingImage,
     isAdvancedCollapsed, setIsAdvancedCollapsed,
-    availableCategories,
+    availableTags,
     showPriceModal,
     priceReviewData,
     showDeleteConfirm, setShowDeleteConfirm,
@@ -246,9 +247,9 @@ export function useProductDetailState(
     handlePriceModalClose: closePriceModal,
     handleSaveName,
     handleSaveImage,
-    handleSaveCategory,
-    handleAddCategoryTag,
-    handleRemoveCategoryTag,
+    handleSaveTags,
+    handleAddTag,
+    handleRemoveTag,
     handleSaveNotifications,
     handleRefreshIntervalChange,
     handleRangeChange,

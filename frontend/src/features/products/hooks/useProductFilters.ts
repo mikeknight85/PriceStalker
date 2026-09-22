@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../../types/api';
-import { SortOption, SortOrder, PauseFilter, getWebsite } from '../pages/dashboard/utils';
+import { SortOption, SortOrder, PauseFilter, SORT_OPTIONS, getWebsite } from '../pages/dashboard/utils';
 
 interface UseProductFiltersProps {
   products: Product[];
-  userCategories: string[];
+  /** Tags the user has used before. Read from the profile's wire `categories`. */
+  userTags: string[];
 }
 
-export function useProductFilters({ products, userCategories }: UseProductFiltersProps) {
+export function useProductFilters({ products, userTags }: UseProductFiltersProps) {
   const [searchQuery, setSearchQuery] = useState(() => {
     return localStorage.getItem('dashboard_search_query') || '';
   });
@@ -16,15 +17,18 @@ export function useProductFilters({ products, userCategories }: UseProductFilter
     return (saved as PauseFilter) || 'all';
   });
   const [sortBy, setSortBy] = useState<SortOption>(() => {
+    // Validated rather than cast: 'category' was a sort option before #147 and
+    // may still be sitting in a returning user's localStorage, which would
+    // leave the select showing nothing.
     const saved = localStorage.getItem('dashboard_sort_by');
-    return (saved as SortOption) || 'date_added';
+    return SORT_OPTIONS.some(option => option.value === saved) ? (saved as SortOption) : 'date_added';
   });
   const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
     const saved = localStorage.getItem('dashboard_sort_order');
     return (saved as SortOrder) || 'desc';
   });
-  const [activeCategory, setActiveCategory] = useState<string | null>(() => {
-    return localStorage.getItem('dashboard_active_category');
+  const [activeTag, setActiveTag] = useState<string | null>(() => {
+    return localStorage.getItem('dashboard_active_tag');
   });
 
   useEffect(() => {
@@ -44,26 +48,27 @@ export function useProductFilters({ products, userCategories }: UseProductFilter
   }, [pauseFilter]);
 
   useEffect(() => {
-    if (activeCategory === null) {
-      localStorage.removeItem('dashboard_active_category');
+    if (activeTag === null) {
+      localStorage.removeItem('dashboard_active_tag');
     } else {
-      localStorage.setItem('dashboard_active_category', activeCategory);
+      localStorage.setItem('dashboard_active_tag', activeTag);
     }
-  }, [activeCategory]);
+  }, [activeTag]);
 
-  const categories = useMemo(() => {
-    const activeCats = new Set<string>();
+  // `p.category` is the wire field; everything above this line calls it a tag.
+  const tags = useMemo(() => {
+    const inUse = new Set<string>();
     products.forEach(p => {
       if (p.category) {
-        p.category.split(',').forEach(c => activeCats.add(c.trim()));
+        p.category.split(',').forEach(c => inUse.add(c.trim()));
       }
     });
-    return Array.from(activeCats).filter(Boolean) as string[];
+    return Array.from(inUse).filter(Boolean) as string[];
   }, [products]);
 
-  const formCategories = useMemo(() => {
-    return Array.from(new Set([...categories, ...userCategories])).filter(Boolean) as string[];
-  }, [categories, userCategories]);
+  const formTags = useMemo(() => {
+    return Array.from(new Set([...tags, ...userTags])).filter(Boolean) as string[];
+  }, [tags, userTags]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
@@ -84,9 +89,9 @@ export function useProductFilters({ products, userCategories }: UseProductFilter
       );
     }
 
-    if (activeCategory) {
+    if (activeTag) {
       result = result.filter(p => 
-        p.category && p.category.split(',').map(c => c.trim()).includes(activeCategory)
+        p.category && p.category.split(',').map(c => c.trim()).includes(activeTag)
       );
     }
 
@@ -99,7 +104,7 @@ export function useProductFilters({ products, userCategories }: UseProductFilter
         case 'name':
           comparison = (a.name || '').localeCompare(b.name || '');
           break;
-        case 'category':
+        case 'tag':
           comparison = (a.category || '').localeCompare(b.category || '');
           break;
         case 'price': {
@@ -135,7 +140,7 @@ export function useProductFilters({ products, userCategories }: UseProductFilter
     });
 
     return result;
-  }, [products, pauseFilter, searchQuery, activeCategory, sortBy, sortOrder]);
+  }, [products, pauseFilter, searchQuery, activeTag, sortBy, sortOrder]);
 
   return {
     searchQuery,
@@ -146,10 +151,10 @@ export function useProductFilters({ products, userCategories }: UseProductFilter
     setSortBy,
     sortOrder,
     setSortOrder,
-    activeCategory,
-    setActiveCategory,
-    categories,
-    formCategories,
+    activeTag,
+    setActiveTag,
+    tags,
+    formTags,
     filteredAndSortedProducts,
   };
 }

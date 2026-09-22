@@ -7,8 +7,13 @@ import { SearchResult } from '../../../../types/api';
 import './ProductForm.css';
 
 interface ProductFormProps {
-  onSubmit: (url: string, refreshInterval: number, category: string) => Promise<void | boolean>;
-  availableCategories?: string[];
+  /**
+   * `tags` arrives as the comma-separated string the API stores in its
+   * `category` field -- the UI-to-wire mapping lives in the dashboard state
+   * hook and ProductService, not here. See the note in types/api.ts (#147).
+   */
+  onSubmit: (url: string, refreshInterval: number, tags: string) => Promise<void | boolean>;
+  availableTags?: string[];
 }
 
 import { REFRESH_INTERVALS } from '../../constants';
@@ -16,7 +21,7 @@ import Icon from '../../../../components/Icon';
 import { isApiError } from '../../../../api/error';
 import { discoveryStatusQuery } from '../../../../api/queries';
 
-const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories }) => {
+const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) => {
   const [url, setUrl] = useState('');
   const [mode, setMode] = useState<'url' | 'search'>('url');
   const discoveryStatus = useQuery(discoveryStatusQuery());
@@ -77,7 +82,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
    * Choosing a result used to drop the user back into the URL form with the
    * field filled in, so tracking something with default settings took an extra
    * step for no decision. Configure still opens that form for anyone who wants
-   * to set an interval or categories first.
+   * to set an interval or tags first.
    */
   const handleQuickTrack = async (resultUrl: string) => {
     // A second click while the first is in flight would add the product twice.
@@ -108,9 +113,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
         if (val && !finalTags.includes(val)) finalTags.push(val);
       }
       
-      const categoryString = finalTags.join(', ');
+      const tagString = finalTags.join(', ');
       
-      const result = await onSubmit(processedUrl, refreshInterval, categoryString);
+      const result = await onSubmit(processedUrl, refreshInterval, tagString);
       
       if (result !== false) {
         setUrl('');
@@ -201,25 +206,26 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableCategories
 
             <div className="product-form-row">
               <div className="form-group" style={{ margin: 0 }}>
-                <label>Category (optional)</label>
-                <div className="category-tag-field">
+                <label htmlFor="product-tags">Tags (optional)</label>
+                <div className="tag-field">
                   {tags.map(tag => (
                     <span key={tag} className="tag-pill">
                       {tag}
-                      <button type="button" className="tag-close" onClick={() => removeTag(tag)}>×</button>
+                      <button type="button" className="tag-close" aria-label={`Remove tag ${tag}`} onClick={() => removeTag(tag)}>×</button>
                     </span>
                   ))}
                   <input
+                    id="product-tags"
                     className="tag-input"
-                    list="form-existing-categories"
+                    list="form-existing-tags"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleAddTag}
                     onBlur={() => handleAddTag()}
-                    placeholder={tags.length === 0 ? "e.g. Tech, Home" : "Add..."}
+                    placeholder={tags.length === 0 ? "e.g. xmas presents, living room" : "Add..."}
                   />
-                  <datalist id="form-existing-categories">
-                    {(availableCategories || []).map(cat => <option key={cat} value={cat} />)}
+                  <datalist id="form-existing-tags">
+                    {(availableTags || []).map(tag => <option key={tag} value={tag} />)}
                   </datalist>
                 </div>
               </div>

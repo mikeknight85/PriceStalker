@@ -110,17 +110,17 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
             <div className="product-detail-metadata-col">
               <ProductMetadata 
                 product={product}
-                isEditingCategory={state.isEditingCategory}
-                setIsEditingCategory={state.setIsEditingCategory}
-                editCategories={state.editCategories}
-                setEditCategories={state.setEditCategories}
-                newCategoryInput={state.newCategoryInput}
-                setNewCategoryInput={state.setNewCategoryInput}
-                handleAddCategoryTag={state.handleAddCategoryTag}
-                handleRemoveCategoryTag={state.handleRemoveCategoryTag}
-                handleSaveCategory={state.handleSaveCategory}
+                isEditingTags={state.isEditingTags}
+                setIsEditingTags={state.setIsEditingTags}
+                editTags={state.editTags}
+                setEditTags={state.setEditTags}
+                newTagInput={state.newTagInput}
+                setNewTagInput={state.setNewTagInput}
+                handleAddTag={state.handleAddTag}
+                handleRemoveTag={state.handleRemoveTag}
+                handleSaveTags={state.handleSaveTags}
                 handleRefreshIntervalChange={state.handleRefreshIntervalChange}
-                availableCategories={state.availableCategories}
+                availableTags={state.availableTags}
                 isSaving={state.isSaving}
                 REFRESH_INTERVALS={REFRESH_INTERVALS}
               />

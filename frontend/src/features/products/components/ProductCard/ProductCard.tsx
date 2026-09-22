@@ -117,6 +117,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     onDelete(product.id);
   };
 
+  // `product.category` is the wire field for what the UI calls tags (#147).
+  const tags = (product.category || '')
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(Boolean);
+
   const isOutOfStock = product.stock_status === 'out_of_stock';
   const isPreOrder = product.stock_status === 'pre_order';
   const isMemberOnly = product.stock_status === 'member_only';
@@ -193,6 +199,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
               <div className="pb-card-badges">
                 <ProductBadges product={product} showPriceTypes={false} />
+                {tags.map(tag => (
+                  <span key={tag} className="pb-card-tag" title={tag}>{tag}</span>
+                ))}
               </div>
             </div>
 

@@ -1,3 +1,18 @@
+/**
+ * The wire format, exactly as the backend sends and accepts it.
+ *
+ * Note on `category` / `categories`: the UI calls these **tags** (issue #147).
+ * The rename stops here on purpose. `products.category` and `users.categories`
+ * are live database columns, and the field names are part of the public API
+ * that system API tokens integrate against -- renaming them would break those
+ * integrations for no visible gain. So the boundary sits at this file and at
+ * the service layer that talks to it: below it the name is `category`, above it
+ * everything a user reads or a component names is a tag.
+ *
+ * This is the same deliberate mismatch as `items` (database) vs "Product" (UI),
+ * documented in CLAUDE.md. Do not "fix" the inconsistency by renaming either
+ * side -- change the mapping, not the wire.
+ */
 export type StockStatus = 'in_stock' | 'out_of_stock' | 'pre_order' | 'not_available' | 'member_only' | 'unknown';
 export type AIStatus = 'verified' | 'corrected' | 'confirmed' | null;
 
@@ -29,6 +44,7 @@ export interface Product {
   ai_verification_disabled: boolean;
   ai_extraction_disabled: boolean;
   checking_paused: boolean;
+  /** Comma-separated tags. Wire name only -- see the note at the top. */
   category: string | null;
   created_at: string;
   current_price: number | null;
@@ -84,6 +100,7 @@ export interface PriceReviewResponse {
   priceCandidates: PriceCandidate[];
   reviewReason: ReviewReason;
   url: string;
+  /** Comma-separated tags. Wire name only -- see the note at the top. */
   category?: string | null;
   html?: string | null;
 }
@@ -152,6 +169,7 @@ export interface UserProfile {
   preferred_currency: string | null;
   is_admin: boolean;
   disabled: boolean;
+  /** Every tag this user has used. Wire name only -- see the note at the top. */
   categories: string[];
   created_at: string;
   /** 'local' or 'oidc'. Decides which fields an administrator may change. */
@@ -393,6 +411,7 @@ export interface ItemWithListings {
   id: number;
   name: string;
   image_url: string | null;
+  /** Comma-separated tags. Wire name only -- see the note at the top. */
   category: string | null;
   target_price: number | null;
   price_drop_threshold: number | null;

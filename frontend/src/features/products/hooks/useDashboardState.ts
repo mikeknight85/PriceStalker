@@ -18,7 +18,8 @@ export function useDashboardState() {
   const productsQuery = useQuery(productListQuery());
   const profile = useQuery(profileQuery());
   const products = productsQuery.data ?? [];
-  const userCategories = profile.data?.categories ?? [];
+  // The profile's wire `categories` field; tags everywhere above here (#147).
+  const userTags = profile.data?.categories ?? [];
   const loadError = productsQuery.error ?? profile.error;
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
@@ -51,15 +52,15 @@ export function useDashboardState() {
   const [priceReviewData, setPriceReviewData] = useState<PriceReviewResponse | null>(null);
   const [pendingRefreshInterval, setPendingRefreshInterval] = useState<number>(3600);
 
-  const filterState = useProductFilters({ products, userCategories });
+  const filterState = useProductFilters({ products, userTags });
 
   const fetchProducts = useCallback(async () => {
     await Promise.all([productsQuery.refetch(), profile.refetch()]);
   }, [productsQuery, profile]);
 
-  const handleAddProduct = async (url: string, refreshInterval: number, category: string) => {
+  const handleAddProduct = async (url: string, refreshInterval: number, tags: string) => {
     try {
-      const response = await ProductService.create({ url, refreshInterval, category: category || null });
+      const response = await ProductService.create({ url, refreshInterval, category: tags || null });
 
       if (isPriceReviewResponse(response)) {
         setPriceReviewData(response);

@@ -24,6 +24,13 @@ interface PriceSelectionModalProps {
   imageUrl: string | null;
   candidates: PriceCandidate[];
   url: string;
+  /**
+   * Kept on the wire name deliberately (issue #147). The modal never shows
+   * this: it receives the API's `category` string on the review response and
+   * hands the same string straight back to the create/confirm call. Nothing
+   * here becomes UI, so there is nothing to rename -- the UI-to-wire boundary
+   * is documented at the top of types/api.ts.
+   */
   category?: string | null;
   reviewReason?: string;
 }

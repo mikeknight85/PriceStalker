@@ -53,9 +53,9 @@ const Dashboard: React.FC = () => {
     setSortBy,
     sortOrder,
     setSortOrder,
-    activeCategory,
-    setActiveCategory,
-    categories,
+    activeTag,
+    setActiveTag,
+    tags,
     filteredAndSortedProducts,
     showPriceModal,
     priceReviewData,
@@ -70,22 +70,22 @@ const Dashboard: React.FC = () => {
   } = useDashboardState();
 
   const navigate = useNavigate();
-  const { category } = productsRoute.useSearch();
+  const { tag } = productsRoute.useSearch();
 
   useEffect(() => {
-    if (category !== undefined && category !== activeCategory) {
-      setActiveCategory(category);
+    if (tag !== undefined && tag !== activeTag) {
+      setActiveTag(tag);
     }
-  }, [activeCategory, category, setActiveCategory]);
+  }, [activeTag, tag, setActiveTag]);
 
-  const handleCategoryClick = (cat: string | null) => {
-    setActiveCategory(cat);
+  const handleTagClick = (next: string | null) => {
+    setActiveTag(next);
     setSearchQuery('');
     setPauseFilter('all');
     setSortBy('date_added');
     setSortOrder('desc');
 
-    navigate({ to: '/products', search: { category: cat || undefined } });
+    navigate({ to: '/products', search: { tag: next || undefined } });
   };
 
   return (
@@ -138,9 +138,9 @@ const Dashboard: React.FC = () => {
                     sortOrder={sortOrder}
                     onSortOrderToggle={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                     filteredCount={filteredAndSortedProducts.length}
-                    activeCategory={activeCategory}
-                    categories={categories}
-                    onCategorySelect={handleCategoryClick}
+                    activeTag={activeTag}
+                    tags={tags}
+                    onTagSelect={handleTagClick}
                   />
                 )}
 
@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {view === 'items' ? (
-                  <ItemList searchQuery={searchQuery} activeCategory={activeCategory} />
+                  <ItemList searchQuery={searchQuery} activeTag={activeTag} />
                 ) : (
                 <ProductList
                   products={filteredAndSortedProducts}

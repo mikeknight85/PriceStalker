@@ -42,13 +42,13 @@
   margin-bottom: 1rem;
 }
 
-.category-row-container {
+.tag-row-container {
   overflow: hidden;
   position: relative;
   margin-top: 0.5rem;
 }
 
-.category-row {
+.tag-row {
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
@@ -57,11 +57,11 @@
   -ms-overflow-style: none;  /* IE/Edge */
 }
 
-.category-row::-webkit-scrollbar {
+.tag-row::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
 
-.category-pill {
+.tag-filter-pill {
   padding: 0.5rem 1rem;
   border-radius: 2rem;
   background: var(--surface);
@@ -74,13 +74,13 @@
   transition: all 0.2s;
 }
 
-.category-pill:hover {
+.tag-filter-pill:hover {
   border-color: var(--primary);
   color: var(--primary);
   background: var(--background);
 }
 
-.category-pill.active {
+.tag-filter-pill.active {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
@@ -107,7 +107,7 @@
   .dashboard-layout {
     grid-template-columns: 1fr;
   }
-  .category-sidebar {
+  .tag-sidebar {
     position: relative;
     top: 0;
     flex-direction: row;
@@ -115,7 +115,7 @@
     padding-bottom: 1rem;
     max-width: 100%;
   }
-  .category-item {
+  .tag-item {
     width: auto;
     flex-shrink: 0;
   }

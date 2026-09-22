@@ -19,7 +19,7 @@
   align-items: end;
 }
 
-.category-tag-field {
+.tag-field {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
@@ -31,7 +31,7 @@
   align-items: center;
 }
 
-.category-tag-field:focus-within {
+.tag-field:focus-within {
   border-color: var(--primary);
 }
 

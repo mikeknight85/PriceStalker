@@ -32,6 +32,14 @@ export const ProductService = {
 
   getById: (id: number, options?: RequestOptions) => api.get<ProductWithStats>(`/products/${id}`, options),
 
+  /**
+   * `category` is the wire name for what the UI calls tags (issue #147).
+   *
+   * This service is the mapping boundary: callers above it speak of tags, the
+   * payload below it keeps `category` because that is the column name and the
+   * field any system-API-token integration already sends. See the note at the
+   * top of types/api.ts before renaming either side.
+   */
   create: (data: {
     url: string,
     refreshInterval?: number,

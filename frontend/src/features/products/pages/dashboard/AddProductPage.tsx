@@ -6,7 +6,7 @@ import { useDashboardState } from '../../hooks/useDashboardState';
 
 export default function AddProductPage() {
   const {
-    formCategories,
+    formTags,
     handleAddProduct,
     showPriceModal,
     priceReviewData,
@@ -19,7 +19,7 @@ export default function AddProductPage() {
       <div className="section-container">
         <ErrorBoundary section="adding a product">
           <div className="settings-card" style={{ maxWidth: '1200px', margin: '0 auto', padding: 0, background: 'transparent', boxShadow: 'none' }}>
-            <ProductForm onSubmit={handleAddProduct} availableCategories={formCategories} />
+            <ProductForm onSubmit={handleAddProduct} availableTags={formTags} />
           </div>
         </ErrorBoundary>
       </div>
