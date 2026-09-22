@@ -1,13 +1,13 @@
 import { Product, PriceReviewResponse } from '../../../../types/api';
 
-export type SortOption = 'date_added' | 'name' | 'category' | 'price' | 'price_change' | 'price_change_percent' | 'status' | 'last_checked' | 'website';
+export type SortOption = 'date_added' | 'name' | 'tag' | 'price' | 'price_change' | 'price_change_percent' | 'status' | 'last_checked' | 'website';
 export type SortOrder = 'asc' | 'desc';
 export type PauseFilter = 'all' | 'active' | 'paused';
 
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'date_added', label: 'Date Added' },
   { value: 'name', label: 'Product Name' },
-  { value: 'category', label: 'Category' },
+  { value: 'tag', label: 'Tags' },
   { value: 'price', label: 'Price' },
   { value: 'price_change', label: 'Price Change ($)' },
   { value: 'price_change_percent', label: 'Price Change (%)' },
@@ -38,7 +38,7 @@ export interface DashboardSummaryData {
   activeProducts: number;
   onSaleCount: number;
   retailerCounts: { name: string; count: number }[];
-  categoryCounts: { name: string; count: number }[];
+  tagCounts: { name: string; count: number }[];
   stockCounts: { name: string; count: number }[];
 }
 
@@ -78,13 +78,14 @@ export function calculateDashboardSummary(products: Product[]): DashboardSummary
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  const categoryMap = products.reduce((acc, p) => {
-    const name = p.category || 'Uncategorized';
+  // `p.category` is the wire field for what the UI calls tags (issue #147).
+  const tagMap = products.reduce((acc, p) => {
+    const name = p.category || 'Untagged';
     acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const categoryCounts = Object.entries(categoryMap)
+  const tagCounts = Object.entries(tagMap)
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
@@ -118,7 +119,7 @@ export function calculateDashboardSummary(products: Product[]): DashboardSummary
     activeProducts,
     onSaleCount,
     retailerCounts,
-    categoryCounts,
+    tagCounts,
     stockCounts
   };
 }

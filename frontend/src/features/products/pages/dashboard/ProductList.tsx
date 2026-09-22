@@ -52,7 +52,7 @@ const ProductList: React.FC<ProductListProps> = ({
         <div className="no-results-icon"><Icon name="search" size="2.5rem" /></div>
         <h3 className="no-results-title">No products found</h3>
         <p className="no-results-text">
-          Try adjusting your search query, status filter or category.
+          Try adjusting your search query, status filter or tag.
         </p>
       </div>
     );

@@ -13,9 +13,9 @@ interface DashboardControlsProps {
   sortOrder: SortOrder;
   onSortOrderToggle: () => void;
   filteredCount: number;
-  activeCategory: string | null;
-  categories: string[];
-  onCategorySelect: (category: string | null) => void;
+  activeTag: string | null;
+  tags: string[];
+  onTagSelect: (tag: string | null) => void;
 }
 
 const DashboardControls: React.FC<DashboardControlsProps> = ({
@@ -28,9 +28,9 @@ const DashboardControls: React.FC<DashboardControlsProps> = ({
   sortOrder,
   onSortOrderToggle,
   filteredCount,
-  activeCategory,
-  categories,
-  onCategorySelect,
+  activeTag,
+  tags,
+  onTagSelect,
 }) => {
   return (
     <>
@@ -107,21 +107,23 @@ const DashboardControls: React.FC<DashboardControlsProps> = ({
           </Link>
         </div>
 
-        <div className="category-row-container">
-          <div className="category-row">
+        <div className="tag-row-container">
+          <div className="tag-row" role="group" aria-label="Filter by tag">
             <button
-              className={`category-pill ${activeCategory === null ? 'active' : ''}`}
-              onClick={() => onCategorySelect(null)}
+              className={`tag-filter-pill ${activeTag === null ? 'active' : ''}`}
+              aria-pressed={activeTag === null}
+              onClick={() => onTagSelect(null)}
             >
               All
             </button>
-            {categories.sort().map((cat) => (
+            {tags.sort().map((tag) => (
               <button
-                key={cat}
-                className={`category-pill ${activeCategory === cat ? 'active' : ''}`}
-                onClick={() => onCategorySelect(cat)}
+                key={tag}
+                className={`tag-filter-pill ${activeTag === tag ? 'active' : ''}`}
+                aria-pressed={activeTag === tag}
+                onClick={() => onTagSelect(tag)}
               >
-                {cat}
+                {tag}
               </button>
             ))}
           </div>
@@ -130,7 +132,7 @@ const DashboardControls: React.FC<DashboardControlsProps> = ({
 
       <div className="products-count" style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
         Showing {filteredCount} product{filteredCount !== 1 ? 's' : ''}
-        {activeCategory && ` in ${activeCategory}`}
+        {activeTag && ` tagged ${activeTag}`}
       </div>
     </>
   );

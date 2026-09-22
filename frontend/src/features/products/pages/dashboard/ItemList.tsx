@@ -9,7 +9,7 @@ import { useAuth } from '../../../auth';
 interface ItemListProps {
   /** Applied to the item name, mirroring the flat view's search. */
   searchQuery: string;
-  activeCategory: string | null;
+  activeTag: string | null;
 }
 
 /**
@@ -21,7 +21,7 @@ interface ItemListProps {
  * view, and recomputing that in the browser would be a second implementation
  * of the rule about which listings may be compared.
  */
-const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeCategory }) => {
+const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeTag }) => {
   const { user } = useAuth();
   const itemsQuery = useQuery(itemListQuery());
 
@@ -42,15 +42,16 @@ const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeCategory }) => {
   // render as "nothing to show" rather than throwing out of the dashboard.
   const items = (Array.isArray(itemsQuery.data) ? itemsQuery.data : []).filter(item => {
     const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !activeCategory || (item.category || '').split(',').map(c => c.trim()).includes(activeCategory);
-    return matchesSearch && matchesCategory;
+    // `item.category` is the wire field for what the UI calls tags (#147).
+    const matchesTag = !activeTag || (item.category || '').split(',').map(c => c.trim()).includes(activeTag);
+    return matchesSearch && matchesTag;
   });
 
   if (items.length === 0) {
     return (
       <div className="products-empty">
         <div className="products-empty-icon"><Icon name="package" /></div>
-        <div>{searchQuery || activeCategory ? 'No items match this filter' : 'Nothing tracked yet'}</div>
+        <div>{searchQuery || activeTag ? 'No items match this filter' : 'Nothing tracked yet'}</div>
       </div>
     );
   }

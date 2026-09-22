@@ -110,7 +110,7 @@ Automatic out-of-stock detection, visual badges, stock-change history timeline p
 PWA installable on mobile · dark/light/auto theme · responsive design · toast notifications · real-time countdowns · manual refresh · per-product pause.
 
 ### Organising your watchers (2.0)
-Product categories with a sidebar filter · dashboard tabs · pagination and sorting · multiple price types per product (standard, deal, member, pre-order) · product search by name via SearXNG.
+Tags with a filter bar · dashboard tabs · pagination and sorting · multiple price types per product (standard, deal, member, pre-order) · product search by name via SearXNG.
 
 ### Retailer configuration (2.0)
 Per-domain scraping control in **Admin → Retailers**: selector sets for price, name, image and stock; in-stock / out-of-stock / pre-order phrase lists; JSON-LD key mapping; custom user-agent and referrer; proxy, browser or remote-scraper engine choice; and a visual selector picker that runs against the live page. Retailer status and history are tracked so you can see what is failing.

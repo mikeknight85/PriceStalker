@@ -17,7 +17,7 @@ interface DashboardSummaryProps {
     activeProducts: number;
     onSaleCount: number;
     retailerCounts: { name: string; count: number }[];
-    categoryCounts: { name: string; count: number }[];
+    tagCounts: { name: string; count: number }[];
     stockCounts: { name: string; count: number }[];
   } | null;
 }
@@ -235,7 +235,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
         </div>
       </div>
 
-      {/* 4. Charts: Stock & Category Breakdown */}
+      {/* 4. Charts: Stock & Tag Breakdown */}
       <div className="summary-dashboard-grid-row">
         {/* Stock Status Donut */}
         <div className="summary-card chart-card">
@@ -278,14 +278,14 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
           </div>
         </div>
 
-        {/* Categories Bar Chart */}
+        {/* Tags Bar Chart */}
         <div className="summary-card chart-card">
-          <div className="summary-card-title">Category Distribution</div>
+          <div className="summary-card-title">Tag Distribution</div>
           <div className="chart-container-summary" style={{ height: '220px' }}>
-            {summary.categoryCounts.length > 0 ? (
+            {summary.tagCounts.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={summary.categoryCounts}
+                  data={summary.tagCounts}
                   layout="vertical"
                   margin={{ left: 5, right: 15, top: 10, bottom: 5 }}
                 >
@@ -310,7 +310,7 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ summary }) => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="no-data-placeholder">No categories configured.</div>
+              <div className="no-data-placeholder">No tags yet.</div>
             )}
           </div>
         </div>
