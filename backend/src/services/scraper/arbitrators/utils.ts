@@ -62,3 +62,20 @@ export function groupPriceCandidates(candidates: PriceCandidate[]): PriceCandida
   }
   return groups;
 }
+
+/**
+ * Returns the group's first candidate, backfilling its currency from another
+ * group member when the first one could not resolve a currency. Candidates
+ * group by price alone, so a currency-less candidate can otherwise win a group
+ * whose other members positively identified the currency.
+ *
+ * Lives here rather than beside `findPriceConsensus` because every path that
+ * picks a representative from a price group needs it -- the deal/pre-order
+ * priority paths, the weighted fallback, and the saved-preference path.
+ */
+export function withGroupCurrency(group: PriceCandidate[]): PriceCandidate {
+  const first = group[0];
+  if (first.currency) return first;
+  const donor = group.find(c => c.currency);
+  return donor ? { ...first, currency: donor.currency } : first;
+}

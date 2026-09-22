@@ -1,5 +1,7 @@
 import { ScrapedProductWithVoting } from '../../../types/scraper';
 import { findPriceConsensus } from '../extractors/prices';
+import { selectPreferredCandidate } from '../arbitrators/preference';
+import { pricesMatch } from '../arbitrators/utils';
 import { performArbitration } from '../arbitration';
 
 export interface ConsensusOptions {
@@ -9,6 +11,14 @@ export interface ConsensusOptions {
   productId?: number;
   finalSkipAiExtraction: boolean;
   anchorPrice?: number;
+  /**
+   * `products.preferred_extraction_method`: the method behind the candidate the
+   * user picked in Troubleshoot Price. Typed as a plain string because the
+   * column also holds values that are not `ExtractionMethod`s -- `manual` for a
+   * hand-typed price, for one -- and those simply match no candidate and fall
+   * through, which is the right answer for them.
+   */
+  preferredMethod?: string | null;
   extractionSteps: string[];
 }
 
@@ -16,12 +26,19 @@ export async function runConsensusPhase(
   options: ConsensusOptions,
   result: ScrapedProductWithVoting
 ): Promise<void> {
-  const { url, html, userId, productId, finalSkipAiExtraction, anchorPrice, extractionSteps } = options;
+  const { url, html, userId, productId, finalSkipAiExtraction, anchorPrice, preferredMethod, extractionSteps } = options;
   const allCandidates = result.priceCandidates || [];
 
   // Consensus & Arbitration
-  const { price: consensus, memberPrice, originalPrice, hasConsensus, winningGroupSources } = findPriceConsensus(allCandidates);
-  
+  //
+  // findPriceConsensus runs unchanged and always: it resolves the member and
+  // original prices too, and its answer is what a saved preference has to beat
+  // -- and what the engine falls back to when there is no preference, or the
+  // preferred method found nothing this time.
+  const consensusResult = findPriceConsensus(allCandidates);
+  const { price: consensus, memberPrice, originalPrice, hasConsensus } = consensusResult;
+  let winningGroupSources = consensusResult.winningGroupSources;
+
   if (memberPrice) {
     result.memberPrice = { price: memberPrice.price, currency: memberPrice.currency };
     extractionSteps.push(`Consensus | Member | Found: ${memberPrice.price} via ${memberPrice.method}`);
@@ -32,7 +49,56 @@ export async function runConsensusPhase(
     extractionSteps.push(`Consensus | Original | Found: ${originalPrice.price} via ${originalPrice.method}`);
   }
 
-  if (hasConsensus && consensus) {
+  // The user's saved Troubleshoot Price choice (issue #159).
+  //
+  // `products.preferred_extraction_method` was written on every confirmation
+  // and read by ProductRefreshService, which passed it all the way down here --
+  // where nothing looked at it. A correction therefore survived exactly one
+  // scrape: the next refresh re-derived the winner from scratch and picked the
+  // same wrong candidate again, which is what "Refresh Price shows the wrong
+  // price again" describes.
+  //
+  // This is the seam because it is the last point at which the standard price
+  // is still undecided but every candidate is already in hand. Putting it
+  // inside findPriceConsensus would have meant threading product state into a
+  // pure arbitration function and reordering its priority paths; putting it in
+  // extraction would have meant a preference could not express "the JSON-LD
+  // one, not the deal one" at all.
+  const preference = selectPreferredCandidate(allCandidates, preferredMethod);
+
+  if (preference.status === 'secondary') {
+    extractionSteps.push(
+      `Consensus | Preference | Saved choice ${preference.method} is a member/original price type and cannot stand in as the standard price; ignoring`
+    );
+  } else if (preference.status === 'unmatched') {
+    extractionSteps.push(
+      `Consensus | Preference | Saved choice ${preference.method} matched no candidate this scrape; falling back to normal arbitration`
+    );
+  }
+
+  if (preference.status === 'applied') {
+    const chosen = preference.selection.candidate;
+    const selectorInfo = chosen.selector ? ` (${chosen.selector})` : '';
+    extractionSteps.push(
+      `Consensus | Preference | Saved choice honoured: ${chosen.price} via ${preference.method}${selectorInfo}` +
+      ` (${preference.selection.groupSize}/${preference.selection.totalMatches} candidates of that method agreed)`
+    );
+
+    if (consensus && !pricesMatch(consensus.price, chosen.price)) {
+      extractionSteps.push(
+        `Consensus | Preference | Overrides ${consensus.price} via ${consensus.method}, which would otherwise have ` +
+        (hasConsensus ? 'won consensus' : 'gone to arbitration')
+      );
+    }
+
+    result.price = { price: chosen.price, currency: chosen.currency };
+    result.selectedMethod = chosen.method;
+
+    // The guardrails below judge corroboration from the sources behind the
+    // price that actually won. Leaving the consensus group's sources in place
+    // would have them grade a different candidate's evidence.
+    winningGroupSources = preference.selection.sources;
+  } else if (hasConsensus && consensus) {
     const selectorInfo = consensus.selector ? ` (${consensus.selector})` : '';
     extractionSteps.push(`Consensus | Win | ${consensus.price} via ${consensus.method}${selectorInfo}`);
 

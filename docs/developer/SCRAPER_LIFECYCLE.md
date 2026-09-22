@@ -19,7 +19,7 @@ Phase 1: acquireHtml → configured browser/remote attempt → standard HTTP →
 Phase 2: runExtractionPhase → DOM denoise → metadata (stock/title/image) → price candidates
 Phase 3: Validation → success-first challenge handling → retailer maintenance state
 Phase 4: handleAutoMapping → active AI provider may generate a retailer config
-Phase 5: runConsensusPhase → findPriceConsensus → weighted arbitration → OOS guardrails
+Phase 5: runConsensusPhase → findPriceConsensus → saved preference → weighted arbitration → OOS guardrails
 Phase 6: runVerificationPhase → Optional AI cross-verification of selected price
  → Result returned to caller (ProductRefreshService / ProductDiscoveryService)
 ```
@@ -147,7 +147,7 @@ Triggers only when all of these are true:
 
 ## Phase 5 — Price Consensus & OOS Guardrails
 
-**Files:** `backend/src/services/scraper/arbitrators/consensus.ts`, `backend/src/services/scraper/orchestration/consensus.ts`
+**Files:** `backend/src/services/scraper/arbitrators/consensus.ts`, `backend/src/services/scraper/arbitrators/preference.ts`, `backend/src/services/scraper/orchestration/consensus.ts`
 
 ### Consensus Algorithm
 
@@ -181,6 +181,36 @@ Weights:
 If the top two groups have effectively equal scores, `hasConsensus` is false and arbitration may be attempted. The no-AI/no-anchor fallback then sorts by candidate confidence and chooses the lowest price when confidence is tied. This remains a known issue; it is not a median or anchor-aware tie-breaker.
 
 Price grouping currently uses a 5% relative tolerance, compares candidates against the first candidate in each group, and does not include currency in the grouping key. Grouping can therefore depend on candidate order and can combine equal numeric prices expressed in different currencies.
+
+### The Saved Extraction Preference
+
+`findPriceConsensus` answers from the page alone. `runConsensusPhase` then gives the product's own history a say: `products.preferred_extraction_method` records the method behind the candidate a user picked in the Voting Modal, and the refresh path passes it down as `preferredMethod` (issue #159).
+
+`selectPreferredCandidate` (`arbitrators/preference.ts`) looks for candidates on *this* scrape carrying that method, groups them by approximate price and returns the largest group's representative — the same rule the deal-price and pre-order-price priority paths use. When it returns one, that candidate becomes the standard price and arbitration is skipped.
+
+It is a preference, not a pin:
+
+| Stored value | This scrape | Result |
+|---|---|---|
+| absent, null or blank | — | Nothing changes. Identical to no preference at all. |
+| a method with candidates | matched | That candidate wins, over a deal-price strict priority if need be. |
+| a method with no candidates | no match | Trace records it; normal consensus/arbitration decides. A stale preference never leaves a product priceless. |
+| `member-price` / `original-price` | any | Refused and traced. A secondary price type may not stand in as the standard price (issue #167). |
+| a method no scrape reproduces (`manual`) | no match | Falls through as an unmatched preference. |
+
+The preference **selects**; it does not **vouch**. It runs before the OOS guardrails below, and the guardrails judge the preferred candidate on its own merits — a preference for `generic-css` is still nullified while out of stock, and corroboration is read from the preferred group's sources, not from the group consensus had settled on.
+
+The preference also composes with the retailer-over-defaults cascade rather than competing with it: extraction decides which selectors were allowed to produce candidates, and the preference chooses among what they produced. It cannot resurrect a selector the cascade excluded.
+
+The trace names the decision:
+
+```text
+Consensus | Preference | Saved choice honoured: 812.32 via custom-css (.e4y-current .amount) (1/1 candidates of that method agreed)
+Consensus | Preference | Overrides 762.5 via deal-price, which would otherwise have won consensus
+Consensus | Preference | Saved choice json-ld matched no candidate this scrape; falling back to normal arbitration
+```
+
+There is no separate staleness counter for the preference, and it is never cleared on a timer. It does not need one: `ProductPersistenceService` rewrites the column with `selectedMethod` every time it records a price, so the first scrape where the preferred method yields nothing and a different method produces a *different* price replaces the preference in place. A preference that survives that is inert by construction — it only ever applies when it matches a candidate.
 
 ### OOS Guardrails (`runConsensusPhase`)
 
@@ -230,6 +260,8 @@ POST /api/products/:id/scan (re-scan existing product)
  → runAutoRetailerConfig() → may promote selector to priority 0 in DB
  → productRepository.update({ needs_price_review: false, ai_status: 'confirmed' })
 ```
+
+The confirmation also writes `products.preferred_extraction_method` (through `saveScrapeResult` → `updateExtractionMethod`), which the next refresh honours. Selector promotion and the preference do different jobs: promotion changes what the *retailer* extracts, while the preference decides which of this *product's* candidates wins. Both are needed, because a selector promoted to index 0 still produces an ordinary candidate that a deal-price priority path or a heavier-weighted source can outrank. See [The Saved Extraction Preference](#the-saved-extraction-preference).
 
 ### Candidate Enrichment
 

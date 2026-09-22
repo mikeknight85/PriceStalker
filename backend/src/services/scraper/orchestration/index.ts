@@ -181,6 +181,10 @@ export async function scrapeProductWithVoting(
       productId,
       finalSkipAiExtraction: session.finalSkipAiExtraction,
       anchorPrice,
+      // The caller's saved Troubleshoot Price choice. Declared here since the
+      // voting modal shipped and never forwarded, so it decided nothing
+      // (issue #159).
+      preferredMethod,
       extractionSteps
     }, result);
 
