@@ -461,19 +461,55 @@ input, button, select, textarea {
 display: none;
 }
 
+/* ---------------------------------------------------------------------------
+   Layout override -- issue #123.
+
+   Layout is chosen purely from viewport width; there is no user-agent sniffing
+   anywhere. That leaves one case with no way out: a high-DPR Android tablet
+   reports roughly 800 CSS px, and Chrome's "Request desktop site" only widens
+   the layout viewport to about 980px. Neither clears the 968px breakpoint, so
+   the mobile layout sticks however hard the user asks for the desktop one.
+
+   `data-layout` on <html> -- stamped by LayoutContext, beside `data-theme` --
+   is the explicit way out:
+
+     auto     no attribute at all. Every narrow rule below behaves exactly as
+              it did before this block existed.
+     desktop  the narrow rules are switched off and the body is held at a
+              desktop width, so a narrow window scrolls horizontally rather
+              than collapsing the layout.
+     mobile   each narrow block is mirrored outside its media query, the mirror
+              sitting immediately after the block it copies so cascade order
+              relative to everything that follows is unchanged.
+
+   Every guard is wrapped in :where(), which contributes no specificity. In
+   "auto" the cascade is therefore bit-for-bit what it was before.
+
+   Forcing desktop also rewrites the viewport meta (see LayoutContext): that is
+   what carries the override into stylesheets with their own breakpoints on a
+   phone or tablet. These guards are what make it work in a desktop browser,
+   where the meta tag is ignored.
+--------------------------------------------------------------------------- */
+:root[data-layout="desktop"] body {
+  /* Wide enough to clear every max-width breakpoint in the app (the widest is
+     1024px). Nothing sets overflow-x: hidden on html or body, so the document
+     simply scrolls sideways -- which is the point, not a defect. */
+  min-width: 1100px;
+}
+
 @media (max-width: 968px) {
-  .settings-container-new {
-  grid-template-columns: 1fr;
-gap: 1rem;
-}
+  :where(:root:not([data-layout="desktop"])) .settings-container-new {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 
-.settings-sidebar-new {
-display: none;
-}
+  :where(:root:not([data-layout="desktop"])) .settings-sidebar-new {
+    display: none;
+  }
 
-.settings-mobile-select {
-display: block;
-  width: 100%;
+  :where(:root:not([data-layout="desktop"])) .settings-mobile-select {
+    display: block;
+    width: 100%;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
@@ -486,7 +522,7 @@ display: block;
     box-shadow: var(--shadow);
   }
 
-  .settings-nav-new {
+  :where(:root:not([data-layout="desktop"])) .settings-nav-new {
     display: flex;
     overflow-x: auto;
     border-radius: 0.5rem;
@@ -494,11 +530,11 @@ display: block;
     -ms-overflow-style: none;  /* IE/Edge */
   }
 
-  .settings-nav-new::-webkit-scrollbar {
+  :where(:root:not([data-layout="desktop"])) .settings-nav-new::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
   }
-  
-  .settings-nav-item-new {
+
+  :where(:root:not([data-layout="desktop"])) .settings-nav-item-new {
     border-bottom: none;
     border-right: 1px solid var(--border);
     white-space: nowrap;
@@ -507,33 +543,90 @@ display: block;
     width: auto;
   }
 
-  .settings-card {
+  :where(:root:not([data-layout="desktop"])) .settings-card {
     padding: 1.5rem;
   }
 
-  .form-grid {
+  :where(:root:not([data-layout="desktop"])) .form-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Forced-mobile mirror of the 968px block above. Placed here, not at the
+   end of the file, so the cascade order relative to what follows is
+   identical to the media block it mirrors. */
+:where(:root[data-layout="mobile"]) .settings-container-new {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+:where(:root[data-layout="mobile"]) .settings-sidebar-new {
+  display: none;
+}
+
+:where(:root[data-layout="mobile"]) .settings-mobile-select {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+:where(:root[data-layout="mobile"]) .settings-nav-new {
+  display: flex;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE/Edge */
+}
+
+:where(:root[data-layout="mobile"]) .settings-nav-new::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+:where(:root[data-layout="mobile"]) .settings-nav-item-new {
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+  width: auto;
+}
+
+:where(:root[data-layout="mobile"]) .settings-card {
+  padding: 1.5rem;
+}
+
+:where(:root[data-layout="mobile"]) .form-grid {
+  grid-template-columns: 1fr;
+}
+
+
 @media (max-width: 640px) {
-  .settings-card {
+  :where(:root:not([data-layout="desktop"])) .settings-card {
     padding: 1rem;
   }
-  
-  .settings-actions {
+
+  :where(:root:not([data-layout="desktop"])) .settings-actions {
     flex-direction: column-reverse;
   }
-  
-  .settings-actions .btn {
+
+  :where(:root:not([data-layout="desktop"])) .settings-actions .btn {
     width: 100%;
   }
 
-  .mobile-hide {
+  :where(:root:not([data-layout="desktop"])) .mobile-hide {
     display: none !important;
   }
-  
-  .mobile-scroll-hint {
+
+  :where(:root:not([data-layout="desktop"])) .mobile-scroll-hint {
     display: block;
     font-size: 0.7rem;
     color: var(--text-muted);
@@ -542,19 +635,19 @@ display: block;
   }
 
   /* Responsive Table-to-Card Transformation for Logs */
-  .responsive-log-table thead {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table thead {
     display: none;
   }
 
-  .responsive-log-table, 
-  .responsive-log-table tbody, 
-  .responsive-log-table tr, 
-  .responsive-log-table td {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table,
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table tbody,
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table tr,
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table td {
     display: block;
     width: 100%;
   }
 
-  .responsive-log-table tr {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table tr {
     margin-bottom: 1.5rem;
     padding: 1rem;
     border: 1px solid var(--border);
@@ -563,37 +656,37 @@ display: block;
     box-shadow: var(--shadow);
   }
 
-  .responsive-log-table tr:last-child {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table tr:last-child {
     margin-bottom: 0;
   }
 
-  .responsive-log-table td {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table td {
     border: none;
     padding: 0;
     text-align: left !important;
   }
 
   /* Create a header row inside the card for Checkbox + Level */
-  .responsive-log-table .log-select-cell {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table .log-select-cell {
     display: inline-block;
     width: auto;
     margin-right: 0.75rem;
     vertical-align: middle;
   }
 
-  .responsive-log-table .log-level-cell {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table .log-level-cell {
     display: inline-block;
     width: auto;
     vertical-align: middle;
   }
 
-  .responsive-log-table .log-message-cell {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table .log-message-cell {
     margin: 0.75rem 0;
     padding-top: 0.75rem;
     border-top: 1px solid rgba(var(--primary-rgb), 0.05);
   }
 
-  .responsive-log-table .log-message-content {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table .log-message-content {
     white-space: normal !important;
     word-break: break-word;
     font-size: 0.85rem;
@@ -601,14 +694,14 @@ display: block;
     color: var(--text);
   }
 
-  .responsive-log-table .log-action-cell {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table .log-action-cell {
     display: flex;
     justify-content: flex-end;
     margin-top: 0.5rem;
   }
 
   /* Handle details row in card mode */
-  .responsive-log-table tr.details-row {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table tr.details-row {
     margin-top: -1.25rem;
     margin-bottom: 2rem;
     padding: 0;
@@ -617,10 +710,118 @@ display: block;
     box-shadow: none;
   }
 
-  .responsive-log-table tr.details-row td {
+  :where(:root:not([data-layout="desktop"])) .responsive-log-table tr.details-row td {
     padding: 0;
   }
 }
+
+/* Forced-mobile mirror of the 640px block above. Placed here, not at the
+   end of the file, so the cascade order relative to what follows is
+   identical to the media block it mirrors. */
+:where(:root[data-layout="mobile"]) .settings-card {
+  padding: 1rem;
+}
+
+:where(:root[data-layout="mobile"]) .settings-actions {
+  flex-direction: column-reverse;
+}
+
+:where(:root[data-layout="mobile"]) .settings-actions .btn {
+  width: 100%;
+}
+
+:where(:root[data-layout="mobile"]) .mobile-hide {
+  display: none !important;
+}
+
+:where(:root[data-layout="mobile"]) .mobile-scroll-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-align: right;
+}
+
+/* Responsive Table-to-Card Transformation for Logs */
+:where(:root[data-layout="mobile"]) .responsive-log-table thead {
+  display: none;
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table,
+:where(:root[data-layout="mobile"]) .responsive-log-table tbody,
+:where(:root[data-layout="mobile"]) .responsive-log-table tr,
+:where(:root[data-layout="mobile"]) .responsive-log-table td {
+  display: block;
+  width: 100%;
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table tr {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table tr:last-child {
+  margin-bottom: 0;
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table td {
+  border: none;
+  padding: 0;
+  text-align: left !important;
+}
+
+/* Create a header row inside the card for Checkbox + Level */
+:where(:root[data-layout="mobile"]) .responsive-log-table .log-select-cell {
+  display: inline-block;
+  width: auto;
+  margin-right: 0.75rem;
+  vertical-align: middle;
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table .log-level-cell {
+  display: inline-block;
+  width: auto;
+  vertical-align: middle;
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table .log-message-cell {
+  margin: 0.75rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(var(--primary-rgb), 0.05);
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table .log-message-content {
+  white-space: normal !important;
+  word-break: break-word;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table .log-action-cell {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+/* Handle details row in card mode */
+:where(:root[data-layout="mobile"]) .responsive-log-table tr.details-row {
+  margin-top: -1.25rem;
+  margin-bottom: 2rem;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+:where(:root[data-layout="mobile"]) .responsive-log-table tr.details-row td {
+  padding: 0;
+}
+
 
 .mobile-scroll-hint {
   display: none;
@@ -757,7 +958,14 @@ display: block;
 }
 
 @media (max-width: 640px) {
-  .retailer-editor-header {
+  :where(:root:not([data-layout="desktop"])) .retailer-editor-header {
     position: static;
   }
+}
+
+/* Forced-mobile mirror of the 640px block above. Placed here, not at the
+   end of the file, so the cascade order relative to what follows is
+   identical to the media block it mirrors. */
+:where(:root[data-layout="mobile"]) .retailer-editor-header {
+  position: static;
 }
