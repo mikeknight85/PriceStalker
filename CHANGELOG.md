@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `Sec-Ch-Ua` now carries the GREASE brand and the brand order Chromium uses
+  for the major version in the User-Agent. Both were fixed, as
+  `"Not)A;Brand";v="8"` in first place, so the seeded Chrome 146 identity sent a
+  list Chrome 146 never sends. Opera also gets the Chromium version from its
+  `Chrome/` token instead of reusing the `OPR/` number for both.
 - URLs are now validated before the server fetches them, closing a server-side
   request forgery hole (#165). Admin tools -- retailer configuration test, debug
   extraction and retailer remap -- refuse any address inside the deployment.
