@@ -25,6 +25,49 @@ import { type CheerioAPI } from 'cheerio';
 
 /** Body markers, compiled once. Order is irrelevant; each is tried in turn. */
 const AKAMAI_BODY = /Reference\s*#18\.|errors\.edgesuite\.net/i;
+
+/**
+ * Akamai Bot Manager's *second* block page: the behavioural-challenge
+ * interstitial (issue #67).
+ *
+ * It is nothing like the Access Denied page. It arrives with **HTTP 200**, is
+ * about 2.7KB, and has **no `<title>` element at all**, so every pattern above
+ * -- and every Cloudflare, DataDome, Incapsula and PerimeterX pattern below --
+ * returned zero matches against the captured sample. The measured consequence:
+ * it is scraped as a product page that happens to have no price, so
+ * `challengeReason` stays null, the browser fallback never fires, auto-mapping
+ * runs on challenge HTML, and the user is advised to enable the Browser
+ * Scraper for what was in fact a bot wall.
+ *
+ * These markers come from Akamai's own interstitial template -- the "cpt"
+ * container, the behavioural tile widget, and the "protected by Akamai"
+ * footer. They are names no product page has any reason to contain, which is
+ * why they are matched on their own:
+ *
+ *   <div id="sec-if-cpt-container" role="main" style="display: none">
+ *     <div class="behavioral-content">
+ *       <div id="sec-bc-text-container"></div>
+ *       <div id="sec-bc-tile-parent">…
+ *       <div class="scf-akamai-logo-sec-abc">
+ *
+ * Deliberately *not* matched here: the word "akamai" on its own, and
+ * `behavioral-content` on its own. A false positive stops a scrape that works,
+ * and plenty of retailers mention their CDN in a script URL or a comment.
+ */
+const AKAMAI_BEHAVIORAL_BODY = /sec-if-cpt-container|scf-akamai-logo|sec-bc-tile-parent|sec-bc-text-container/i;
+
+/**
+ * The Bot Manager sensor pixel, which is only evidence when the page is tiny.
+ *
+ * `/akam/13/pixel_<hex>` is the `<noscript>` fallback for Akamai's sensor. The
+ * edge injects that sensor into **ordinary protected pages too**, not only
+ * challenges, so on its own it would flag every working page on a
+ * Bot-Manager-protected retailer -- exactly the false positive that stops a
+ * scrape that was succeeding. It is therefore only read together with the size
+ * guard below: a 2.7KB document carrying the sensor and nothing else is a
+ * challenge, a 387KB product page carrying the same sensor is a product page.
+ */
+const AKAMAI_SENSOR_PIXEL = /\/akam\/\d+\/pixel_/i;
 const CLOUDFLARE_BODY = /cloudflare-static|cf-browser-verification|\/cdn-cgi\/challenge-platform/i;
 const DATADOME_BODY = /geo\.captcha|dd-captcha|datadome\.co/i;
 const INCAPSULA_BODY = /Incapsula incident ID|_Incapsula_Resource/i;
@@ -57,6 +100,18 @@ export function detectBotChallenge(html: string, $: CheerioAPI): string | null {
   // Target Australia" -- fell straight through.
   if (AKAMAI_TITLE.test(title) || AKAMAI_BODY.test(html)) {
     return 'Akamai Access Denied';
+  }
+
+  // Akamai's other block page. Named separately from Access Denied because the
+  // two are different responses from different parts of Bot Manager, arrive
+  // with different status codes, and the log line saying which one happened is
+  // the difference between "we were refused" and "we were asked to prove
+  // ourselves in a browser".
+  if (
+    AKAMAI_BEHAVIORAL_BODY.test(html) ||
+    (html.length < GENERIC_BODY_MAX_BYTES && AKAMAI_SENSOR_PIXEL.test(html))
+  ) {
+    return 'Akamai Behavioural Challenge';
   }
 
   // Retailer-specific robot interstitials (e.g. digitec/galaxus "Are you a

@@ -104,6 +104,99 @@ describe('genuine product pages are left alone', () => {
   });
 });
 
+/**
+ * Akamai's second block page, measured in #67: HTTP 200, about 2.7KB, and no
+ * `<title>` element at all. Every pattern in detection.ts was tested against the
+ * captured file and none matched, so it was scraped as a product page that
+ * happens to have no price -- which meant no challengeReason, no browser
+ * fallback, auto-mapping run on challenge HTML, and the user advised to enable
+ * the Browser Scraper for a bot wall.
+ *
+ * Reproduced from the capture quoted in docs/audit/akamai_bot_manager.md.
+ */
+const AKAMAI_INTERSTITIAL = `<!DOCTYPE html><html><body>
+<script type="text/javascript" src="/GMhXa/m/x0/MOFy/9tCqmXA4JjZC/RoqPUw/dzZmVXNs/YEUwIA?v=8083001e-1234-abcd&t=330639649"></script>
+<div id="sec-if-cpt-container" role="main" style="display: none">
+  <div class="behavioral-content">
+    <div id="sec-bc-text-container"></div>
+    <div id="sec-bc-tile-parent"></div>
+    <div class="behavioral-button progress-btn-disabled"></div>
+    <div class="scf-akamai-logo-sec-abc">
+      <p class="scf-akamai-protected-by">Powered and protected by Akamai</p>
+    </div>
+  </div>
+</div>
+<noscript><img src="https://www.target.com.au/akam/13/pixel_5f33a13e?a=dD1lNzQ="></noscript>
+</body></html>`;
+
+describe('the Akamai behavioural interstitial (issue #67)', () => {
+  it('recognises the captured page, which nothing matched before', () => {
+    expect(detect(AKAMAI_INTERSTITIAL)).toBe('Akamai Behavioural Challenge');
+  });
+
+  it('is the shape the old patterns could not see: 200, small, and untitled', () => {
+    const $ = load(AKAMAI_INTERSTITIAL);
+    expect($('title').length).toBe(0);
+    expect(AKAMAI_INTERSTITIAL.length).toBeLessThan(15000);
+    // The two Akamai markers that do exist are absent here, which is why the
+    // Access Denied branch never fired.
+    expect(AKAMAI_INTERSTITIAL).not.toMatch(/access denied/i);
+    expect(AKAMAI_INTERSTITIAL).not.toMatch(/Reference\s*#18\.|errors\.edgesuite\.net/i);
+  });
+
+  it.each([
+    ['the cpt container', '<div id="sec-if-cpt-container" role="main"></div>'],
+    ['the logo block', '<div class="scf-akamai-logo-sec-abc"></div>'],
+    ['the tile widget', '<div id="sec-bc-tile-parent"></div>'],
+    ['the text container', '<div id="sec-bc-text-container"></div>'],
+  ])('matches on %s alone', (_label, marker) => {
+    expect(detect(`<html><body>${marker}</body></html>`)).toBe('Akamai Behavioural Challenge');
+  });
+
+  it('reads the sensor pixel only on a small page', () => {
+    const pixel = '<noscript><img src="/akam/13/pixel_5f33a13e?a=dD0x"></noscript>';
+    expect(detect(`<html><body>${pixel}</body></html>`)).toBe('Akamai Behavioural Challenge');
+  });
+
+  it('does not flag a real product page carrying the same sensor pixel', () => {
+    // This is the false positive that matters most. Akamai injects the sensor
+    // into ordinary protected pages too, so matching /akam/n/pixel_ on its own
+    // would flag every working page on every Bot-Manager retailer -- taking a
+    // scrape that succeeds and calling it a block.
+    const real = page(
+      'Star Wars Zero Company - PlayStation 5 | Target Australia',
+      `<span class="price">$79.00</span>${bulk(40000)}<noscript><img src="/akam/13/pixel_5f33a13e?a=dD0x"></noscript>`
+    );
+    expect(real.length).toBeGreaterThan(15000);
+    expect(detect(real)).toBeNull();
+  });
+
+  it('does not flag a product page that merely mentions akamai', () => {
+    // A retailer naming its CDN in a script URL, a preconnect or a comment is
+    // not a challenge, at any page size.
+    const mentions = page('Sony WH-1000XM5 | Retailer', [
+      '<link rel="preconnect" href="https://retailer.akamaized.net">',
+      '<script src="https://cdn.akamai.com/libs/boomerang.js"></script>',
+      '<!-- served via Akamai -->',
+      '<span class="price">$399.00</span>',
+    ].join(''));
+    expect(mentions.length).toBeLessThan(15000);
+    expect(detect(mentions)).toBeNull();
+  });
+
+  it('does not flag a page whose own classes look similar', () => {
+    // Nothing here is Akamai's template: a shop with behavioural analytics of
+    // its own, or a "secure checkout" container, must still scrape.
+    const lookalike = page('Robot Vacuum | Retailer', [
+      '<div class="behavioral-content">Recommended for you</div>',
+      '<div id="sec-checkout-container"></div>',
+      '<div class="akamai-logo"></div>',
+      '<span class="price">$599.00</span>',
+    ].join(''));
+    expect(detect(lookalike)).toBeNull();
+  });
+});
+
 describe('real captures from this project', () => {
   it('recognises the target.com.au block page', () => {
     // 8,315 bytes, title "Access Denied" -- measured in #67.
