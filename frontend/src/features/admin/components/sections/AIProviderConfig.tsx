@@ -31,12 +31,19 @@ export default function AIProviderConfig({
     }
   }, [currentProvider]);
 
+  // The endpoint answers with a list, but a proxy -- or the route test suite --
+  // can answer with {} instead, and ModelSelector maps over whatever it is
+  // given. Anything that is not an array becomes an empty list rather than
+  // taking the section down.
+  const modelList = (models: unknown): AIModel[] => (Array.isArray(models) ? models : []);
+
   const loadCachedModels = async (provider: string) => {
     try {
       const res = await AIService.getProviderModels(provider);
-      setModelsCache(prev => ({ ...prev, [provider]: res.models || [] }));
+      setModelsCache(prev => ({ ...prev, [provider]: modelList(res?.models) }));
     } catch {
-      // ignore
+      // A missing cached list is not an error worth a toast: the dropdown says
+      // so itself and offers the Sync button that fills it.
     }
   };
 
@@ -60,8 +67,9 @@ export default function AIProviderConfig({
       }
 
       const res = await AIService.refreshProviderModels(provider, { api_key: apiKey, base_url: baseUrl });
-      setModelsCache(prev => ({ ...prev, [provider]: res.models || [] }));
-      showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} models refreshed (${res.models.length} available)`, 'success');
+      const models = modelList(res?.models);
+      setModelsCache(prev => ({ ...prev, [provider]: models }));
+      showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} models refreshed (${models.length} available)`, 'success');
     } catch (err) {
       showToast(apiErrorMessage(err, `Failed to refresh ${provider} models`), 'error');
     } finally {

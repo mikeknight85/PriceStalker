@@ -29,7 +29,7 @@ export function startScheduler(): void {
     updateExchangeRates().catch((err) => logger.error('Scheduler | Exchange Rates | Unhandled error', 'Scheduler', err));
   });
 
-  // 4. Gemini model list refresh every day at 5 AM
+  // 4. Model list refresh for every configured AI provider, daily at 5 AM
   cron.schedule('0 5 * * *', () => {
     refreshAIModels().catch((err) => logger.error('Scheduler | AI Models | Unhandled error', 'Scheduler', err));
   });

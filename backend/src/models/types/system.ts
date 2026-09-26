@@ -35,6 +35,20 @@ export interface AISettings {
   redact_api_keys?: boolean;
 }
 
+/**
+ * One entry in a provider's model list, as discovered from its API and cached in
+ * `system_settings` under `<provider>_available_models` (issue #200).
+ *
+ * `id` is what gets sent to the provider; `name` is what the admin UI shows and
+ * sorts by, and falls back to `id` when the provider offers no display name.
+ * Matches `AIModel` in the frontend's `types/api.ts` -- this is the wire shape.
+ */
+export interface DiscoveredModel {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface SystemLog {
   id: number;
   level: string;
