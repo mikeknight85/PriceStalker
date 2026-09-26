@@ -25,6 +25,14 @@ export class SettingsService {
   async refreshGeminiModels(apiKey: string) {
     return await aiSettingsService.refreshGeminiModels(apiKey);
   }
+
+  async getProviderModels(provider: string) {
+    return await aiSettingsService.getProviderModels(provider);
+  }
+
+  async refreshProviderModels(provider: string, credentials?: { apiKey?: string; baseUrl?: string }) {
+    return await aiSettingsService.refreshProviderModels(provider, credentials);
+  }
 }
 
 export const settingsService = new SettingsService();

@@ -1,54 +1,91 @@
+import React, { useState, useEffect } from 'react';
 import { AISettings, AIModel, AIProviderTestResult } from '../../../../types/api';
-
 import ToggleSwitch from '../../../../components/ToggleSwitch';
 import { AIService } from '../../services/AIService';
 import PasswordInput from '../../../../components/PasswordInput';
-import Icon from '../../../../components/Icon';
 import { useAsyncAction } from '../../../../hooks/useAsyncAction';
 import { useToast } from '../../../../context/ToastContext';
+import { apiErrorMessage } from '../../../../api/error';
+import ModelSelector from './ModelSelector';
 
 interface AIProviderConfigProps {
   aiSettings: AISettings | null;
   setAiSettings: React.Dispatch<React.SetStateAction<AISettings | null>>;
-  aiModels: AIModel[];
-  setAiModels: React.Dispatch<React.SetStateAction<AIModel[]>>;
-  isRefreshingModels: boolean;
-  setIsRefreshingModels: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function AIProviderConfig({
-  aiSettings, setAiSettings, aiModels, setAiModels,
-  isRefreshingModels, setIsRefreshingModels
+  aiSettings,
+  setAiSettings,
 }: AIProviderConfigProps) {
-  const { execute: runFetchAIModels } = useAsyncAction();
   const { execute: runTestProvider } = useAsyncAction();
   const { showToast } = useToast();
 
-  const handleFetchAIModels = () => runFetchAIModels(async () => {
-    setIsRefreshingModels(true);
-    try {
-      await AIService.refreshGeminiModels(aiSettings?.gemini_api_key || undefined);
-      const res = await AIService.getGeminiModels();
-      setAiModels(res.models);
-    } finally {
-      setIsRefreshingModels(false);
+  const [modelsCache, setModelsCache] = useState<Record<string, AIModel[]>>({});
+  const [isSyncingMap, setIsSyncingMap] = useState<Record<string, boolean>>({});
+
+  const currentProvider = aiSettings?.ai_provider || 'gemini';
+
+  useEffect(() => {
+    if (currentProvider && !modelsCache[currentProvider]) {
+      void loadCachedModels(currentProvider);
     }
-  }, { onSuccessMessage: 'AI models refreshed', onErrorFallback: 'Failed to refresh models' });
+  }, [currentProvider]);
+
+  // The endpoint answers with a list, but a proxy -- or the route test suite --
+  // can answer with {} instead, and ModelSelector maps over whatever it is
+  // given. Anything that is not an array becomes an empty list rather than
+  // taking the section down.
+  const modelList = (models: unknown): AIModel[] => (Array.isArray(models) ? models : []);
+
+  const loadCachedModels = async (provider: string) => {
+    try {
+      const res = await AIService.getProviderModels(provider);
+      setModelsCache(prev => ({ ...prev, [provider]: modelList(res?.models) }));
+    } catch {
+      // A missing cached list is not an error worth a toast: the dropdown says
+      // so itself and offers the Sync button that fills it.
+    }
+  };
+
+  const handleSyncModels = async (provider: string) => {
+    setIsSyncingMap(prev => ({ ...prev, [provider]: true }));
+    try {
+      let apiKey: string | undefined;
+      let baseUrl: string | undefined;
+
+      if (provider === 'gemini') apiKey = aiSettings?.gemini_api_key || undefined;
+      else if (provider === 'openai') apiKey = aiSettings?.openai_api_key || undefined;
+      else if (provider === 'anthropic') apiKey = aiSettings?.anthropic_api_key || undefined;
+      else if (provider === 'deepseek') apiKey = aiSettings?.deepseek_api_key || undefined;
+      else if (provider === 'groq') apiKey = aiSettings?.groq_api_key || undefined;
+      else if (provider === 'mistral') apiKey = aiSettings?.mistral_api_key || undefined;
+      else if (provider === 'openrouter') apiKey = aiSettings?.openrouter_api_key || undefined;
+      else if (provider === 'ollama') baseUrl = aiSettings?.ollama_base_url || undefined;
+      else if (provider === 'openai_compatible') {
+        baseUrl = aiSettings?.openai_compatible_base_url || undefined;
+        apiKey = aiSettings?.openai_compatible_api_key || undefined;
+      }
+
+      const res = await AIService.refreshProviderModels(provider, { api_key: apiKey, base_url: baseUrl });
+      const models = modelList(res?.models);
+      setModelsCache(prev => ({ ...prev, [provider]: models }));
+      showToast(`${provider.charAt(0).toUpperCase() + provider.slice(1)} models refreshed (${models.length} available)`, 'success');
+    } catch (err) {
+      showToast(apiErrorMessage(err, `Failed to refresh ${provider} models`), 'error');
+    } finally {
+      setIsSyncingMap(prev => ({ ...prev, [provider]: false }));
+    }
+  };
 
   const handleTestProvider = (provider: string) => runTestProvider(async () => {
     let res: AIProviderTestResult | undefined;
-
 
     if (provider === 'gemini') {
       if (!aiSettings?.gemini_api_key) {
         showToast('Enter a Gemini API key before verifying.', 'error');
         return;
       }
-      if (!aiSettings.gemini_model) {
-        showToast('Verify needs a model: press Sync to load the model list, then select one.', 'error');
-        return;
-      }
-      res = await AIService.testGemini(aiSettings.gemini_api_key, aiSettings.gemini_model);
+      res = await AIService.testGemini(aiSettings.gemini_api_key, aiSettings.gemini_model || undefined);
     } else if (provider === 'vertex') {
       const projectId = aiSettings?.vertex_project_id;
       const location = aiSettings?.vertex_location || 'us-central1';
@@ -157,32 +194,18 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('gemini')}>Verify</button>
             </div>
           </form>
-          {aiModels.length === 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 0.75rem', borderRadius: '0.5rem', background: 'var(--background)', border: '1px solid var(--warning, #f59e0b)', color: 'var(--text)', fontSize: '0.8rem' }}>
-              <Icon name="alertTriangle" /> No cached Gemini model list. Enter your API key and press
-              Sync to load the available models — model selection, Verify, and saving need it.
-            </div>
-          )}
-          <div className="form-group">
-            <label style={{ display: 'flex', justifyContent: 'space-between' }}>
-              Primary Model
-              {aiModels.length > 0 && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{aiModels.length} models available</span>}
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <select className="form-control" style={{ flex: 1 }} value={aiSettings?.gemini_model || ''} onChange={e => setAiSettings(s => s ? { ...s, gemini_model: e.target.value } : null)}>
-                <option value="" disabled>Select Model...</option>
-                {aiModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-              <button 
-                className="btn btn-secondary btn-sm" 
-                onClick={handleFetchAIModels}
-                disabled={isRefreshingModels || !aiSettings?.gemini_api_key}
-                title="Sync with Google API"
-              >
-                {isRefreshingModels ? '...' : '↻ Sync'}
-              </button>
-            </div>
-          </div>
+
+          <ModelSelector
+            providerName="Google Gemini"
+            value={aiSettings?.gemini_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, gemini_model: val } : null)}
+            models={modelsCache['gemini'] || []}
+            onSync={() => handleSyncModels('gemini')}
+            isSyncing={!!isSyncingMap['gemini']}
+            canSync={Boolean(aiSettings?.gemini_api_key)}
+            syncDisabledTooltip="Enter a Gemini API key before syncing"
+            customPlaceholder="e.g. gemini-2.0-flash"
+          />
         </>
       )}
 
@@ -242,10 +265,18 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('openai')}>Verify</button>
             </div>
           </form>
-          <div className="form-group">
-            <label>OpenAI Model</label>
-            <input type="text" className="form-control" value={aiSettings?.openai_model || ''} onChange={e => setAiSettings(s => s ? { ...s, openai_model: e.target.value } : null)} placeholder="gpt-4o" />
-          </div>
+
+          <ModelSelector
+            providerName="OpenAI"
+            value={aiSettings?.openai_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, openai_model: val } : null)}
+            models={modelsCache['openai'] || []}
+            onSync={() => handleSyncModels('openai')}
+            isSyncing={!!isSyncingMap['openai']}
+            canSync={Boolean(aiSettings?.openai_api_key)}
+            syncDisabledTooltip="Enter an OpenAI API key before syncing"
+            customPlaceholder="e.g. gpt-4o, o1"
+          />
         </>
       )}
 
@@ -268,10 +299,18 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('anthropic')}>Verify</button>
             </div>
           </form>
-          <div className="form-group">
-            <label>Anthropic Model</label>
-            <input type="text" className="form-control" value={aiSettings?.anthropic_model || ''} onChange={e => setAiSettings(s => s ? { ...s, anthropic_model: e.target.value } : null)} placeholder="claude-3-5-sonnet-latest" />
-          </div>
+
+          <ModelSelector
+            providerName="Anthropic"
+            value={aiSettings?.anthropic_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, anthropic_model: val } : null)}
+            models={modelsCache['anthropic'] || []}
+            onSync={() => handleSyncModels('anthropic')}
+            isSyncing={!!isSyncingMap['anthropic']}
+            canSync={Boolean(aiSettings?.anthropic_api_key)}
+            syncDisabledTooltip="Enter an Anthropic API key before syncing"
+            customPlaceholder="e.g. claude-3-7-sonnet-20250219"
+          />
         </>
       )}
 
@@ -294,10 +333,18 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('deepseek')}>Verify</button>
             </div>
           </form>
-          <div className="form-group">
-            <label>DeepSeek Model</label>
-            <input type="text" className="form-control" value={aiSettings?.deepseek_model || ''} onChange={e => setAiSettings(s => s ? { ...s, deepseek_model: e.target.value } : null)} placeholder="deepseek-chat" />
-          </div>
+
+          <ModelSelector
+            providerName="DeepSeek"
+            value={aiSettings?.deepseek_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, deepseek_model: val } : null)}
+            models={modelsCache['deepseek'] || []}
+            onSync={() => handleSyncModels('deepseek')}
+            isSyncing={!!isSyncingMap['deepseek']}
+            canSync={Boolean(aiSettings?.deepseek_api_key)}
+            syncDisabledTooltip="Enter a DeepSeek API key before syncing"
+            customPlaceholder="e.g. deepseek-chat"
+          />
         </>
       )}
 
@@ -320,10 +367,18 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('groq')}>Verify</button>
             </div>
           </form>
-          <div className="form-group">
-            <label>Groq Model</label>
-            <input type="text" className="form-control" value={aiSettings?.groq_model || ''} onChange={e => setAiSettings(s => s ? { ...s, groq_model: e.target.value } : null)} placeholder="llama-3.1-70b-versatile" />
-          </div>
+
+          <ModelSelector
+            providerName="Groq"
+            value={aiSettings?.groq_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, groq_model: val } : null)}
+            models={modelsCache['groq'] || []}
+            onSync={() => handleSyncModels('groq')}
+            isSyncing={!!isSyncingMap['groq']}
+            canSync={Boolean(aiSettings?.groq_api_key)}
+            syncDisabledTooltip="Enter a Groq API key before syncing"
+            customPlaceholder="e.g. llama-3.3-70b-versatile"
+          />
         </>
       )}
 
@@ -346,10 +401,18 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('mistral')}>Verify</button>
             </div>
           </form>
-          <div className="form-group">
-            <label>Mistral Model</label>
-            <input type="text" className="form-control" value={aiSettings?.mistral_model || ''} onChange={e => setAiSettings(s => s ? { ...s, mistral_model: e.target.value } : null)} placeholder="mistral-large-latest" />
-          </div>
+
+          <ModelSelector
+            providerName="Mistral"
+            value={aiSettings?.mistral_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, mistral_model: val } : null)}
+            models={modelsCache['mistral'] || []}
+            onSync={() => handleSyncModels('mistral')}
+            isSyncing={!!isSyncingMap['mistral']}
+            canSync={Boolean(aiSettings?.mistral_api_key)}
+            syncDisabledTooltip="Enter a Mistral API key before syncing"
+            customPlaceholder="e.g. mistral-large-latest"
+          />
         </>
       )}
 
@@ -372,10 +435,17 @@ export default function AIProviderConfig({
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('openrouter')}>Verify</button>
             </div>
           </form>
-          <div className="form-group">
-            <label>OpenRouter Model</label>
-            <input type="text" className="form-control" value={aiSettings?.openrouter_model || ''} onChange={e => setAiSettings(s => s ? { ...s, openrouter_model: e.target.value } : null)} placeholder="meta-llama/llama-3.1-8b-instruct:free" />
-          </div>
+
+          <ModelSelector
+            providerName="OpenRouter"
+            value={aiSettings?.openrouter_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, openrouter_model: val } : null)}
+            models={modelsCache['openrouter'] || []}
+            onSync={() => handleSyncModels('openrouter')}
+            isSyncing={!!isSyncingMap['openrouter']}
+            canSync={true}
+            customPlaceholder="e.g. meta-llama/llama-3.1-8b-instruct:free"
+          />
         </>
       )}
 
@@ -403,10 +473,18 @@ export default function AIProviderConfig({
               allowReveal={!aiSettings?.redact_api_keys}
             />
           </form>
-          <div className="form-group">
-            <label>Model</label>
-            <input type="text" className="form-control" value={aiSettings?.openai_compatible_model || ''} onChange={e => setAiSettings(s => s ? { ...s, openai_compatible_model: e.target.value } : null)} placeholder="e.g. Qwen/Qwen2.5-7B-Instruct" />
-          </div>
+
+          <ModelSelector
+            providerName="OpenAI-Compatible"
+            value={aiSettings?.openai_compatible_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, openai_compatible_model: val } : null)}
+            models={modelsCache['openai_compatible'] || []}
+            onSync={() => handleSyncModels('openai_compatible')}
+            isSyncing={!!isSyncingMap['openai_compatible']}
+            canSync={Boolean(aiSettings?.openai_compatible_base_url)}
+            syncDisabledTooltip="Enter an Endpoint Base URL before syncing"
+            customPlaceholder="e.g. Qwen/Qwen2.5-7B-Instruct"
+          />
         </>
       )}
 
@@ -423,13 +501,21 @@ export default function AIProviderConfig({
                 onChange={e => setAiSettings(s => s ? { ...s, ollama_base_url: e.target.value } : null)} 
                 placeholder="http://localhost:11434" 
               />
-              <button className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('ollama')}>Verify</button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleTestProvider('ollama')}>Verify</button>
             </div>
           </div>
-          <div className="form-group">
-            <label>Ollama Model</label>
-            <input type="text" className="form-control" value={aiSettings?.ollama_model || ''} onChange={e => setAiSettings(s => s ? { ...s, ollama_model: e.target.value } : null)} placeholder="llama3" />
-          </div>
+
+          <ModelSelector
+            providerName="Ollama"
+            value={aiSettings?.ollama_model || ''}
+            onChange={val => setAiSettings(s => s ? { ...s, ollama_model: val } : null)}
+            models={modelsCache['ollama'] || []}
+            onSync={() => handleSyncModels('ollama')}
+            isSyncing={!!isSyncingMap['ollama']}
+            canSync={Boolean(aiSettings?.ollama_base_url)}
+            syncDisabledTooltip="Enter an Ollama Base URL before syncing"
+            customPlaceholder="e.g. llama3.2"
+          />
         </>
       )}
 

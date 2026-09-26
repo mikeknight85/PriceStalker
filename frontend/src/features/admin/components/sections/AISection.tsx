@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AIService } from '../../services/AIService';
-import { AISettings, AIModel } from '../../../../types/api';
+import { AISettings } from '../../../../types/api';
 import { useAsyncAction, useExpandedSections } from '../../../../hooks';
 import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
@@ -12,11 +12,9 @@ import Icon from '../../../../components/Icon';
 
 export default function AISection() {
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
-  const [aiModels, setAiModels] = useState<AIModel[]>([]);
   const { execute: runFetchAIData, isLoading } = useAsyncAction(true);
   const { showToast } = useToast();
   const { execute: runSaveAISettings, isLoading: isSavingAI } = useAsyncAction();
-  const [isRefreshingModels, setIsRefreshingModels] = useState(false);
 
   const { expandedSections, toggleSection } = useExpandedSections({
     ai_general: true,
@@ -24,12 +22,8 @@ export default function AISection() {
   });
 
   const fetchAIData = () => runFetchAIData(async () => {
-    const [settingsRes, modelsRes] = await Promise.all([
-      AIService.getAI(),
-      AIService.getGeminiModels(),
-    ]);
+    const settingsRes = await AIService.getAI();
     setAiSettings(settingsRes);
-    setAiModels(modelsRes.models);
   }, { onErrorFallback: 'Failed to load AI settings' });
 
   useEffect(() => {
@@ -38,11 +32,15 @@ export default function AISection() {
 
   const handleSaveAISettings = () => runSaveAISettings(async () => {
     if (!aiSettings) return;
-    // A Gemini configuration without a selected model cannot extract anything;
-    // require a model (synced from the API) before allowing the save.
-    if (aiSettings.ai_provider === 'gemini' && !aiSettings.gemini_model) {
-      showToast('Select a Gemini model before saving — press Sync next to the model dropdown to load the list.', 'error');
-      return;
+    // Require a model when an AI provider is active
+    const provider = aiSettings.ai_provider;
+    if (provider) {
+      const modelKey = `${provider}_model` as keyof AISettings;
+      const modelVal = aiSettings[modelKey];
+      if (!modelVal) {
+        showToast(`Select or enter a model for ${provider} before saving.`, 'error');
+        return;
+      }
     }
     await AIService.updateAI(aiSettings);
   }, { onSuccessMessage: 'AI settings saved', onErrorFallback: 'Save failed' });
@@ -60,10 +58,6 @@ export default function AISection() {
         <AIProviderConfig 
           aiSettings={aiSettings}
           setAiSettings={setAiSettings}
-          aiModels={aiModels}
-          setAiModels={setAiModels}
-          isRefreshingModels={isRefreshingModels}
-          setIsRefreshingModels={setIsRefreshingModels}
         />
         <div className="settings-actions">
            <button className="btn btn-primary btn-sm" onClick={handleSaveAISettings} disabled={isSavingAI}>Save AI Configuration</button>

@@ -3,6 +3,10 @@ import { AuthRequest } from '../../../../middleware/auth';
 import { systemService } from '../../../../services/domain/system';
 import { asyncHandler } from '../../../../utils/system/route-helpers';
 
+import { systemSettingsRepository } from '../../../../models';
+import { AISettings } from '../../../../models/types';
+import { isMaskedSecret } from '../../../../services/ai/masking';
+
 const router = Router();
 
 /**
@@ -13,8 +17,19 @@ function handleAiTest(
   testFn: (ai: any, apiKey: string, model?: string) => Promise<any>
 ) {
   return asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { api_key, model: selectedModel } = req.body;
-    if (!api_key) {
+    let { api_key, model: selectedModel } = req.body;
+
+    // A masked key is the placeholder `getAISettings` handed the admin UI when
+    // REDACT_API_KEYS=true, not a credential: resolve the stored one behind it
+    // (issues #196, #198). A missing key stays a 400 -- see isMaskedSecret.
+    if (isMaskedSecret(api_key)) {
+      const storedSettings = await systemSettingsRepository.getAISettings();
+      const providerKey = `${provider.toLowerCase().replace(/[^a-z0-9]/g, '_')}_api_key` as keyof AISettings;
+      const stored = storedSettings[providerKey];
+      if (typeof stored === 'string' && stored.length > 0) api_key = stored;
+    }
+
+    if (!api_key || isMaskedSecret(api_key)) {
       res.status(400).json({ error: 'API key is required' });
       return;
     }
@@ -53,8 +68,7 @@ router.post('/test', asyncHandler(async (req: AuthRequest, res: Response) => {
 router.post('/test-gemini', handleAiTest('Gemini', (ai, k, m) => ai.testGeminiConnection(k, m)));
 router.post('/test-vertex', asyncHandler(async (req: AuthRequest, res: Response) => {
   let { api_key, project_id, location, model } = req.body;
-  if (typeof api_key === 'string' && (api_key.includes('...') || api_key.includes('*'))) {
-    const { systemSettingsRepository } = await import('../../../../models');
+  if (isMaskedSecret(api_key)) {
     const stored = await systemSettingsRepository.getAISettings();
     api_key = stored.vertex_api_key || api_key;
   }
@@ -89,10 +103,14 @@ router.post('/test-openrouter', handleAiTest('OpenRouter', (ai, k, m) =>
 // OpenAI-compatible local servers (vLLM, LM Studio, LocalAI, ...): base_url
 // is required, the API key is optional.
 router.post('/test-openai-compatible', asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { api_key, base_url, model } = req.body;
+  let { api_key, base_url, model } = req.body;
   if (!base_url || !model) {
     res.status(400).json({ error: 'Base URL and model are required' });
     return;
+  }
+  if (isMaskedSecret(api_key)) {
+    const stored = await systemSettingsRepository.getAISettings();
+    api_key = stored.openai_compatible_api_key || api_key;
   }
   const { testOpenAICompatibleConnection } = await import('../../../../services/ai');
   await testOpenAICompatibleConnection({ apiKey: api_key || 'not-needed', baseUrl: base_url, model });
