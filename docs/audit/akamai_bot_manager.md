@@ -352,12 +352,23 @@ and no per-retailer User-Agent — the state kmart.com.au and target.com.au woul
 be in — sends no UA to the scraper service, which passes no
 `--user-agent` to Chromium, which then announces whatever it announces.
 
-**Whether that is a live bug depends on one thing this investigation could not
-check:** `puppeteer-extra-plugin-stealth`'s `user-agent-override` evasion
-normally strips the `Headless` token, and `scraper/` loads the full stealth
-plugin set. If it does strip it, the configured browser path behaves like the
-3-of-6 row rather than the 0-of-6 row, and the fix is worth less. The package
-is not installed in this working tree, so this is stated as a thing to verify
+**ANSWERED (2026-09-26, #226): stealth already strips the token, so this is
+not the 0-of-6 lever.** `puppeteer-extra-plugin-stealth@2.11.2` lists
+`user-agent-override` in its default `enabledEvasions` set (`index.js:96`), and
+that evasion does
+`(await page.browser().userAgent()).replace('HeadlessChrome/', 'Chrome/')`
+(`evasions/user-agent-override/index.js:69`). Verified against the installed
+package. The measurement in §4.1 was taken with raw headless Chromium, not with
+our stealth-configured scraper, so the configured browser path already behaves
+like the 3-of-6 row. 5d was still done in #226, because the asymmetry with
+`fallback.ts` is a defect on its own -- it aligns the identity across the two
+paths rather than leaving the browser attempt to announce the container
+Chromium's own version and platform. Three caveats found while checking: the
+override is fire-and-forget (`client.send` is not awaited), it covers only
+pages created through puppeteer-extra, and `maskLinux` also rewrites the
+container's `(X11; Linux x86_64)` to Windows.
+
+The original text follows, for the record: the package
 first, not as a defect to go and fix. **Verify before building** — it decides
 whether option 5d in §6 is worth anything.
 
@@ -601,13 +612,14 @@ conclusions:
   twelve minutes while being probed once a minute, never clean. Reported on the
   issue: three days of silence was enough. Everything between is unmeasured,
   and no measurement here separates "time elapsed" from "requests not made".
-- **Whether `puppeteer-extra-plugin-stealth` already strips the `Headless`
-  token from the User-Agent.** This is the most important open question in the
-  document, because it decides whether option 5d is a three-line fix with a
-  0-of-6 result behind it or a change to code that is already correct. The
-  package is not installed in this working tree. Checking it is a one-line
-  experiment against the running scraper container: request any page and look
-  at what arrives.
+- ~~**Whether `puppeteer-extra-plugin-stealth` already strips the `Headless`
+  token from the User-Agent.**~~ **Answered in #226: it does.** See section 4.1.
+  The evasion is in the default set and rewrites `HeadlessChrome/` to `Chrome/`,
+  so option 5d was a change to code that was already mostly correct rather than
+  the three-line fix with a 0-of-6 result behind it. It was still worth doing
+  for identity consistency, but it is not the win this document hoped for, and
+  the residual headless gap in section 4.1 is now entirely unexplained by the
+  User-Agent.
 - **What the residual headless gap actually is.** §4.1's 3-of-6 against
   headful's 9-of-9 is suggestive and no more. Whether it is a real signal, and
   if so whether it is `navigator.webdriver`, window dimensions, the absence of
