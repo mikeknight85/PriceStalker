@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.11] - 2026-09-26
+
 ### Added
 
+- Dynamic AI model discovery, with per-provider model dropdowns and custom model
+  entry across OpenAI, Anthropic, OpenRouter, Ollama, Groq, Mistral, DeepSeek,
+  Vertex AI and OpenAI-compatible endpoints, plus a daily background refresh of
+  the cached lists (#200).
 - A layout override in Settings > Profile, with Auto, Desktop and Mobile
   options (#123). Tablets that report a narrow CSS viewport were stuck on the
   mobile layout even with the browser set to request the desktop site. Desktop
@@ -21,7 +27,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for the major version in the User-Agent. Both were fixed, as
   `"Not)A;Brand";v="8"` in first place, so the seeded Chrome 146 identity sent a
   list Chrome 146 never sends. Opera also gets the Chromium version from its
-  `Chrome/` token instead of reusing the `OPR/` number for both.
+  `Chrome/` token instead of reusing the `OPR/` number for both. Edge on iOS,
+  which sends no client hints at all, is no longer given invented ones (#223).
+- Akamai's behavioural-challenge interstitial is recognised as a bot challenge
+  instead of being scraped as a product page with no price (#67). It arrives as
+  HTTP 200 with no title, so nothing matched it: the browser-scraper fallback
+  never fired and AI auto-mapping ran against the challenge page.
+- A retailer serving a bot check during a scheduled refresh is now recorded and
+  counted, rather than silently clearing the product's failure state (#67). The
+  "served a bot check" explanation existed but could never be shown, because
+  nothing ever set it.
+- Scheduled refreshes are ordered and spaced per retailer, so several listings at
+  one shop are no longer checked at the same moment (#67).
+- The browser scraper is always sent a User-Agent, not only when a retailer has
+  an override, so the browser attempt presents the same identity as the HTTP
+  attempt (#67).
+- Connection tests and model syncs resolve the stored credential when the admin
+  UI posts back a masked key, instead of failing with `REDACT_API_KEYS=true`
+  (#198, #196). One helper now recognises both mask shapes, so a key short
+  enough to be masked wholesale is no longer sent to the provider verbatim.
 - URLs are now validated before the server fetches them, closing a server-side
   request forgery hole (#165). Admin tools -- retailer configuration test, debug
   extraction and retailer remap -- refuse any address inside the deployment.
