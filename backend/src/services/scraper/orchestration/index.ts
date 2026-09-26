@@ -212,6 +212,21 @@ export async function scrapeProductWithVoting(
       if (challenge) {
         result.failureReason = 'bot_challenge';
         result.failureDetail = challenge;
+        // The refresh path reads `unavailableReason`, not `failureReason`, and
+        // nothing ever set this one (issue #67). `unavailableReason` is only
+        // assigned in the catch below, and a challenge never reaches it:
+        // acquisition converts BotChallengeError into a challenge string and
+        // returns normally. So a denied scheduled refresh arrived at
+        // ProductRefreshService with no reason at all, took the `else if
+        // (!reason)` branch -- the one for "the page was actually read" -- and
+        // *cleared* the failure state. A retailer could deny every refresh
+        // indefinitely while the failure counter stayed at zero, nothing was
+        // notified, and the product page showed nothing.
+        //
+        // 'bot_or_challenge' is in the transient group, so this counts the
+        // failure and notifies on the streak without ever marking the product
+        // gone. A bot wall is not evidence the listing was removed.
+        result.unavailableReason = 'bot_or_challenge';
       } else if (autoMapAttempted && !domainConfig) {
         result.failureReason = 'auto_map_rejected';
       } else {
