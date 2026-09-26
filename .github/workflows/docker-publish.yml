@@ -31,6 +31,14 @@ on:
 # run: a build for a commit that is no longer the tip has nothing useful to
 # publish. Tags each get their own group and are never cancelled -- those
 # publish immutable version tags, and every one of them has to exist.
+#
+# Cancelling is only safe as long as the surviving run still knows about work
+# the cancelled ones were going to publish. That is what the `changes` job below
+# is careful about, and why it diffs against the published images rather than
+# against this commit's parent -- read its comment before touching either
+# mechanism. The two are a pair: on 2026-09-22 cancellation plus a per-commit
+# filter silently dropped eight commits' worth of backend and scraper builds
+# (issue #222).
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
@@ -44,23 +52,145 @@ jobs:
     permissions:
       contents: read
 
+  # Which of the three images need rebuilding.
+  #
+  # The obvious answer -- "whatever the triggering commit touched" -- is wrong on
+  # main, and it cost us a mismatched `:beta` on 2026-09-22 (issue #222). Twelve
+  # PRs merged in a row; `cancel-in-progress` above cancelled the first eleven
+  # runs, and the surviving twelfth commit touched frontend files only. The
+  # filter was entirely correct about that commit, so only the frontend was
+  # published and `:beta` ended up with a current frontend against a backend and
+  # scraper from before the batch -- precisely the mismatch the concurrency block
+  # exists to prevent. Nothing went red, either: a cancelled run is not a failed
+  # one and a skipped job is not an error.
+  #
+  # So the question the filter has to answer is not "what changed in this commit"
+  # but "what changed since the commit that is currently published". Phrased that
+  # way it no longer matters how many runs were cancelled in between: anything
+  # left unbuilt is still on the near side of the base.
+  #
+  # The base comes from the images themselves. docker/metadata-action stamps
+  # `org.opencontainers.image.revision` into every image it builds (see
+  # docker-image.yml), so reading that label back off `:beta` describes the
+  # artefact actually sitting in the registry rather than our idea of what should
+  # be there. That is the most truthful source available and it needs no
+  # side-channel state: a git tag or a stored file can drift away from the
+  # registry, a label on the image cannot.
+  #
+  # Each image is resolved separately, because they drift apart independently --
+  # that is the entire failure mode. One shared base would have to be the oldest
+  # of the three to stay safe, and would rebuild the other two for nothing.
+  #
+  # Every failure path here degrades to "build it": no image published yet,
+  # registry unreachable, an image built before this label existed, or a revision
+  # that is no longer an ancestor of main after a history rewrite. Building
+  # something that did not change wastes a few CI minutes; skipping something
+  # that did ships a mismatched deployment. The trade is not close.
   changes:
     needs: verify
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Read-only, and only to inspect the labels on the published images.
+      packages: read
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      scraper: ${{ steps.filter.outputs.scraper }}
+      backend: ${{ steps.decide.outputs.backend }}
+      frontend: ${{ steps.decide.outputs.frontend }}
+      scraper: ${{ steps.decide.outputs.scraper }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+          # Full history. The published revision can be a long way back after a
+          # batch of merges, and both the ancestry check below and the diff need
+          # that commit present locally.
+          fetch-depth: 0
 
-      - name: Check for changes
-        id: filter
+      - name: Log in to GitHub Container Registry
+        # Only main pushes filter. Tag pushes and manual dispatches build all
+        # three unconditionally (see the publish jobs), so there is nothing to
+        # look up for them.
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Resolve the commit each published image was built from
+        id: published
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+        env:
+          OWNER: ${{ github.repository_owner }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -uo pipefail
+          # Deliberately no `set -e`. Every failure in here has to fall through
+          # to an empty output, which the steps below read as "build it".
+          for service in backend frontend scraper; do
+            image="ghcr.io/${OWNER}/pricestalker-${service}:beta"
+            revision=""
+            reason=""
+
+            # `.Image` is the image config for a single-platform image and a map
+            # of platform -> config for a multi-platform one (ours are amd64 +
+            # arm64, plus attestation manifests), so pull the label out by
+            # recursive descent instead of assuming a shape.
+            if ! config="$(docker buildx imagetools inspect "$image" --format '{{ json .Image }}' 2>/tmp/inspect.err)"; then
+              config=""
+              reason="cannot inspect ${image}: $(tr '\n' ' ' < /tmp/inspect.err | cut -c1-200)"
+            elif [ -z "$config" ]; then
+              reason="empty inspect output for ${image}"
+            fi
+
+            if [ -n "$config" ]; then
+              revision="$(printf '%s' "$config" | jq -r '
+                [ .. | objects | ."org.opencontainers.image.revision"? ]
+                  | map(select(type == "string" and test("^[0-9a-f]{40}$")))
+                  | first // empty
+              ' 2>/dev/null)" || revision=""
+              if [ -z "$revision" ]; then
+                reason="no org.opencontainers.image.revision label on ${image}"
+              fi
+            fi
+
+            if [ -n "$revision" ] && ! git cat-file -e "${revision}^{commit}" 2>/dev/null; then
+              reason="${revision} is not a commit in this repository"
+              revision=""
+            fi
+
+            # Not an ancestor means history moved under us -- a rewrite, or this
+            # run is itself the superseded one and `:beta` is already ahead. A
+            # diff across divergent history would be meaningless either way, and
+            # in the superseded case concurrency is about to cancel this run
+            # regardless.
+            if [ -n "$revision" ] && ! git merge-base --is-ancestor "$revision" "$HEAD_SHA" 2>/dev/null; then
+              reason="${revision} is not an ancestor of ${HEAD_SHA}"
+              revision=""
+            fi
+
+            if [ -n "$revision" ]; then
+              echo "${service}: published :beta was built from ${revision}"
+            else
+              echo "${service}: no usable base (${reason}) -- will build"
+            fi
+            echo "${service}=${revision}" >> "$GITHUB_OUTPUT"
+          done
+
+      # One paths-filter per image, each against its own base. A 40-character
+      # SHA in `base` makes paths-filter diff `base..HEAD` directly instead of
+      # falling back to the push event's `before` commit.
+      #
+      # Keep the three filter lists identical apart from the service directory:
+      # a change to a workspace-wide file (the lockfile, the root package.json,
+      # the reusable build workflow) can change any image's contents.
+      - name: Diff backend against its published revision
+        id: filter-backend
+        if: steps.published.outputs.backend != ''
         uses: dorny/paths-filter@v4
         with:
+          base: ${{ steps.published.outputs.backend }}
           filters: |
             backend:
               - 'backend/**'
@@ -68,18 +198,88 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/docker-image.yml'
+
+      - name: Diff frontend against its published revision
+        id: filter-frontend
+        if: steps.published.outputs.frontend != ''
+        uses: dorny/paths-filter@v4
+        with:
+          base: ${{ steps.published.outputs.frontend }}
+          filters: |
             frontend:
               - 'frontend/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/docker-image.yml'
+
+      - name: Diff scraper against its published revision
+        id: filter-scraper
+        if: steps.published.outputs.scraper != ''
+        uses: dorny/paths-filter@v4
+        with:
+          base: ${{ steps.published.outputs.scraper }}
+          filters: |
             scraper:
               - 'scraper/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/docker-image.yml'
+
+      # The 2026-09-22 mismatch stayed invisible until someone compared image
+      # revisions by hand, so write the decision and the base it was made
+      # against into the run summary. The next gap should be readable straight
+      # off the run page.
+      - name: Decide what to publish
+        id: decide
+        env:
+          BACKEND_BASE: ${{ steps.published.outputs.backend }}
+          FRONTEND_BASE: ${{ steps.published.outputs.frontend }}
+          SCRAPER_BASE: ${{ steps.published.outputs.scraper }}
+          BACKEND_CHANGED: ${{ steps.filter-backend.outputs.backend }}
+          FRONTEND_CHANGED: ${{ steps.filter-frontend.outputs.frontend }}
+          SCRAPER_CHANGED: ${{ steps.filter-scraper.outputs.scraper }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Image publish decisions"
+            echo
+            echo "| image | base | publish |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for service in backend frontend scraper; do
+            prefix="$(printf '%s' "$service" | tr '[:lower:]' '[:upper:]')"
+            base_var="${prefix}_BASE"
+            changed_var="${prefix}_CHANGED"
+            base="${!base_var:-}"
+            changed="${!changed_var:-}"
+
+            # `false` is the only answer that skips a build. Everything else --
+            # an unresolved base, a filter step that did not run, an empty
+            # output -- builds. Same reasoning as the resolve step: a wasted
+            # build is cheap, a missing one is a mismatched deployment.
+            if [ -z "$base" ]; then
+              # Unresolved base, or a tag/dispatch run where the publish jobs
+              # force all three anyway.
+              publish=true
+              base_note="unresolved - building everything"
+            elif [ "$changed" = 'false' ]; then
+              publish=false
+              base_note="unchanged since ${base:0:12}"
+            elif [ "$changed" = 'true' ]; then
+              publish=true
+              base_note="changed since ${base:0:12}"
+            else
+              publish=true
+              base_note="filter gave no answer for base ${base:0:12} - building"
+            fi
+
+            echo "${service}: publish=${publish} (${base_note})"
+            echo "${service}=${publish}" >> "$GITHUB_OUTPUT"
+            echo "| ${service} | ${base_note} | ${publish} |" >> "$GITHUB_STEP_SUMMARY"
+          done
 
   publish-backend:
     needs: changes
