@@ -34,6 +34,12 @@ export interface UserAgentIdentity {
   family: BrandFamily;
   /** Major version, as a string because that is what the hint carries. */
   majorVersion: string | null;
+  /**
+   * Major version of the Chromium underneath, from the Chrome/ token. The same
+   * as majorVersion for Chrome and Edge; Opera numbers itself separately, so
+   * OPR/136 runs on Chromium 152.
+   */
+  chromiumVersion: string | null;
   /** The `Sec-CH-UA-Platform` value, quoted form without the quotes. */
   platform: string;
   mobile: boolean;
@@ -42,13 +48,32 @@ export interface UserAgentIdentity {
 }
 
 /**
- * A GREASE brand, as Chromium sends alongside the real ones.
+ * The GREASE brand Chromium sends alongside the real ones, and the order of
+ * the list, both follow the major version. Chromium takes the brand's two
+ * punctuation characters and its version, and the position of each entry,
+ * from fixed tables indexed by the major
+ * (components/embedder_support/user_agent_utils.cc,
+ * GetGreasedUserAgentBrandVersion and GetRandomOrder).
  *
- * Chrome varies this deliberately to stop servers hardcoding the list. A fixed
- * plausible value is fine here -- what matters is that the *versions* agree
- * with the User-Agent, which is what was broken.
+ * So Chrome 146 sends "Chromium";v="146", "Not-A.Brand";v="24",
+ * "Google Chrome";v="146", and a fixed GREASE entry in a fixed position is
+ * visible to a server on every major where the tables give something else.
  */
-const GREASE_BRAND = { brand: 'Not)A;Brand', version: '8' };
+const GREASE_CHARS = [' ', '(', ':', '-', '.', '/', ')', ';', '=', '?', '_'];
+const GREASE_VERSIONS = ['8', '99', '24'];
+
+/** Entry i of [GREASE, Chromium, own brand] goes to position ORDERS[major % 6][i]. */
+const ORDERS = [
+  [0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0],
+];
+
+export function greaseBrand(major: number): { brand: string; version: string } {
+  const n = GREASE_CHARS.length;
+  return {
+    brand: `Not${GREASE_CHARS[major % n]}A${GREASE_CHARS[(major + 1) % n]}Brand`,
+    version: GREASE_VERSIONS[major % GREASE_VERSIONS.length],
+  };
+}
 
 function detectPlatform(ua: string): { platform: string; mobile: boolean } {
   // Order matters: an Android UA also contains "Linux", and an iPad UA in
@@ -93,39 +118,56 @@ export function parseUserAgent(userAgent: string): UserAgentIdentity {
   // anyway announces a browser that cannot exist.
   const isChromium = family === 'chrome' || family === 'edge' || family === 'opera';
 
+  const chromium = isChromium ? ua.match(/Chrome\/(\d+)/) : null;
+  const chromiumVersion = chromium ? chromium[1] : null;
+
   return {
     userAgent: ua,
     family,
     majorVersion,
+    chromiumVersion,
     platform,
     mobile,
-    supportsClientHints: isChromium && majorVersion !== null,
+    supportsClientHints: isChromium && majorVersion !== null && chromiumVersion !== null,
   };
+}
+
+/**
+ * The brands in the order Chromium sends them: GREASE, "Chromium" at the
+ * Chromium major, and the browser's own brand at its own major.
+ */
+function orderedBrands(identity: UserAgentIdentity): { brand: string; version: string }[] | null {
+  if (!identity.supportsClientHints || !identity.majorVersion || !identity.chromiumVersion) return null;
+
+  let own: string;
+  switch (identity.family) {
+    case 'chrome': own = 'Google Chrome'; break;
+    case 'edge': own = 'Microsoft Edge'; break;
+    case 'opera': own = 'Opera'; break;
+    default: return null;
+  }
+
+  const major = Number(identity.chromiumVersion);
+  const list = [
+    greaseBrand(major),
+    { brand: 'Chromium', version: identity.chromiumVersion },
+    { brand: own, version: identity.majorVersion },
+  ];
+  const placed: { brand: string; version: string }[] = new Array(list.length);
+  ORDERS[major % ORDERS.length].forEach((pos, i) => { placed[pos] = list[i]; });
+  return placed;
 }
 
 /**
  * The `Sec-CH-UA` brand list for an identity, or null where the browser sends
  * none.
  *
- * Chromium lists the GREASE brand, "Chromium", and its own brand, all at the
- * same major version -- which is exactly the agreement that was missing.
+ * Chromium lists the GREASE brand, "Chromium" and its own brand, with the
+ * versions the User-Agent carries, in the order the major version dictates.
  */
 export function buildBrandList(identity: UserAgentIdentity): string | null {
-  if (!identity.supportsClientHints || !identity.majorVersion) return null;
-
-  const v = identity.majorVersion;
-  const brands: { brand: string; version: string }[] = [
-    GREASE_BRAND,
-    { brand: 'Chromium', version: v },
-  ];
-
-  switch (identity.family) {
-    case 'chrome': brands.push({ brand: 'Google Chrome', version: v }); break;
-    case 'edge': brands.push({ brand: 'Microsoft Edge', version: v }); break;
-    case 'opera': brands.push({ brand: 'Opera', version: v }); break;
-    default: break;
-  }
-
+  const brands = orderedBrands(identity);
+  if (!brands) return null;
   return brands.map(b => `"${b.brand}";v="${b.version}"`).join(', ');
 }
 
@@ -157,17 +199,12 @@ export function buildClientHintHeaders(identity: UserAgentIdentity): Record<stri
  * had, arrived at from the other direction.
  */
 export function buildUserAgentMetadata(identity: UserAgentIdentity) {
-  if (!identity.supportsClientHints || !identity.majorVersion) return undefined;
-
-  const v = identity.majorVersion;
-  const brands = [GREASE_BRAND, { brand: 'Chromium', version: v }];
-  if (identity.family === 'chrome') brands.push({ brand: 'Google Chrome', version: v });
-  if (identity.family === 'edge') brands.push({ brand: 'Microsoft Edge', version: v });
-  if (identity.family === 'opera') brands.push({ brand: 'Opera', version: v });
+  const brands = orderedBrands(identity);
+  if (!brands) return undefined;
 
   return {
     brands,
-    fullVersion: `${v}.0.0.0`,
+    fullVersion: `${identity.chromiumVersion}.0.0.0`,
     platform: identity.platform,
     platformVersion: platformVersionFor(identity),
     architecture: identity.mobile ? '' : 'x86',

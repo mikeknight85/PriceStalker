@@ -115,6 +115,48 @@ describe('which browsers get client hints at all', () => {
   });
 });
 
+describe('what Chromium actually sends', () => {
+  // Sec-Ch-Ua as captured from real browsers on Windows, read in arrival order
+  // by a local server. The GREASE brand and the order both change with the
+  // major version, so these pin the tables and not only the versions.
+  const captured: [string, string, string][] = [
+    [
+      'Chrome 152',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
+      '"Chromium";v="152", "Not?A_Brand";v="24", "Google Chrome";v="152"',
+    ],
+    [
+      'Chrome 153',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
+      '"Google Chrome";v="153", "Not_A Brand";v="8", "Chromium";v="153"',
+    ],
+    [
+      'Edge 153',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0',
+      '"Microsoft Edge";v="153", "Not_A Brand";v="8", "Chromium";v="153"',
+    ],
+  ];
+
+  it.each(captured)('%s', (_name, ua, sent) => {
+    expect(buildBrandList(parseUserAgent(ua))).toBe(sent);
+  });
+
+  it('does not send the same GREASE brand for every major', () => {
+    // The seeded default. Chrome 146 puts "Not-A.Brand";v="24" second.
+    expect(buildBrandList(parseUserAgent(CHROME_146_WIN)))
+      .toBe('"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"');
+  });
+
+  it('gives Opera its own version and Chromium the one it is built on', () => {
+    // Opera GX 136 was captured on Chromium 152 sending
+    // "Chromium";v="152", "Not?A_Brand";v="24", "Opera GX";v="136".
+    const opera = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 OPR/136.0.0.0';
+    expect(buildBrandList(parseUserAgent(opera)))
+      .toBe('"Chromium";v="152", "Not?A_Brand";v="24", "Opera";v="136"');
+    expect(buildUserAgentMetadata(parseUserAgent(opera))?.fullVersion).toBe('152.0.0.0');
+  });
+});
+
 describe('the header set', () => {
   it('names the brand matching the User-Agent', () => {
     expect(buildBrandList(parseUserAgent(CHROME_146_WIN))).toContain('"Google Chrome";v="146"');
