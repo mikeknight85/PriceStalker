@@ -103,24 +103,6 @@
   }
 }
 
-@media (max-width: 1024px) {
-  .dashboard-layout {
-    grid-template-columns: 1fr;
-  }
-  .tag-sidebar {
-    position: relative;
-    top: 0;
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    max-width: 100%;
-  }
-  .tag-item {
-    width: auto;
-    flex-shrink: 0;
-  }
-}
-
 .search-container {
   flex: 1;
   min-width: 200px;

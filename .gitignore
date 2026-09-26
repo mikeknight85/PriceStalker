@@ -62,3 +62,6 @@ tmp/
 
 # Ignore Gemini project dir
 .gemini/
+
+# Agent worktrees and local agent state (Claude Code and similar tools)
+.claude/worktrees/
