@@ -67,7 +67,7 @@ const ORDERS = [
   [0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0],
 ];
 
-export function greaseBrand(major: number): { brand: string; version: string } {
+function greaseBrand(major: number): { brand: string; version: string } {
   const n = GREASE_CHARS.length;
   return {
     brand: `Not${GREASE_CHARS[major % n]}A${GREASE_CHARS[(major + 1) % n]}Brand`,
@@ -204,7 +204,10 @@ export function buildUserAgentMetadata(identity: UserAgentIdentity) {
 
   return {
     brands,
-    fullVersion: `${identity.chromiumVersion}.0.0.0`,
+    // The browser's own version, as Sec-CH-UA-Full-Version carries it. Opera
+    // GX 136 on Chromium 152 sends "136.0.6008.67" there, so Opera's number
+    // and not Chromium's; for Chrome and Edge the two are the same.
+    fullVersion: `${identity.majorVersion}.0.0.0`,
     platform: identity.platform,
     platformVersion: platformVersionFor(identity),
     architecture: identity.mobile ? '' : 'x86',
