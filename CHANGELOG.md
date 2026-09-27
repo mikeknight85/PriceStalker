@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0-beta.12] - 2026-09-27
+
 ### Fixed
 
 - Opera reports its own full version in `Sec-CH-UA-Full-Version` again, rather
