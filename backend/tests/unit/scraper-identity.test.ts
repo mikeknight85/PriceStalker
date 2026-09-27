@@ -141,6 +141,17 @@ describe('what Chromium actually sends', () => {
     expect(buildBrandList(parseUserAgent(ua))).toBe(sent);
   });
 
+  it('matches two more real strings, which cover the other orders', () => {
+    // 121 is the string this repo hardcoded before #141, 120 the one Chrome
+    // 120 is widely documented with. Together with the cases above they reach
+    // four of the six entries in the order table.
+    const chrome120 = CHROME_121_WIN.replace('Chrome/121', 'Chrome/120');
+    expect(buildBrandList(parseUserAgent(chrome120)))
+      .toBe('"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"');
+    expect(buildBrandList(parseUserAgent(CHROME_121_WIN)))
+      .toBe('"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"');
+  });
+
   it('does not send the same GREASE brand for every major', () => {
     // The seeded default. Chrome 146 puts "Not-A.Brand";v="24" second.
     expect(buildBrandList(parseUserAgent(CHROME_146_WIN)))
@@ -149,11 +160,15 @@ describe('what Chromium actually sends', () => {
 
   it('gives Opera its own version and Chromium the one it is built on', () => {
     // Opera GX 136 was captured on Chromium 152 sending
-    // "Chromium";v="152", "Not?A_Brand";v="24", "Opera GX";v="136".
+    // "Chromium";v="152", "Not?A_Brand";v="24", "Opera GX";v="136". The UA
+    // carries no GX marker, so the brand that can be recovered is "Opera".
+    // The GREASE entry is the one for 152: seeded from 136 it would be
+    // "Not.A/Brand";v="99". Asked for Sec-CH-UA-Full-Version, the same browser
+    // sent "136.0.6008.67", its own version.
     const opera = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 OPR/136.0.0.0';
     expect(buildBrandList(parseUserAgent(opera)))
       .toBe('"Chromium";v="152", "Not?A_Brand";v="24", "Opera";v="136"');
-    expect(buildUserAgentMetadata(parseUserAgent(opera))?.fullVersion).toBe('152.0.0.0');
+    expect(buildUserAgentMetadata(parseUserAgent(opera))?.fullVersion).toBe('136.0.0.0');
   });
 });
 
