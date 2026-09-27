@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Opera reports its own full version in `Sec-CH-UA-Full-Version` again, rather
+  than the Chromium version it is built on (#229). A regression in
+  2.1.0-beta.11: taking the version from the `Chrome/` token is right for the
+  `"Chromium"` brand entry but wrong for the full-version hint, which carries
+  the browser's own number. Measured against Opera GX 136 on Chromium 152,
+  which sends `136.0.6008.67`. Chrome and Edge were unaffected, because for
+  them the two numbers are the same.
+
 ## [2.1.0-beta.11] - 2026-09-26
 
 ### Added
