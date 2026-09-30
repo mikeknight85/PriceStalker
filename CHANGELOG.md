@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A dedicated Appearance section in User Settings (`/settings/appearance`) housing
+  Theme (Light, Dark, Auto), Layout Mode (Auto, Desktop, Mobile), and an option
+  to toggle floating background particle animations.
+- An option to disable ambient background particle animations to save resources
+  and improve accessibility and automated testing stability.
+
+### Fixed
+
+- Stabilized Playwright route and layout acceptance tests against animation
+  actionability timeouts, and added resilience test coverage for null user locales.
+
 ## [2.1.0-beta.12] - 2026-09-27
 
 ### Fixed

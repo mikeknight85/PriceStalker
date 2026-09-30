@@ -118,7 +118,7 @@ test('shows a retryable dashboard error instead of the empty state', async ({ pa
   await expect(page.getByText('No products found')).not.toBeVisible();
 
   failRequests = false;
-  await page.getByRole('button', { name: 'Retry' }).click();
+  await page.getByRole('button', { name: 'Retry' }).click({ force: true });
   await expect(page.getByText('Acceptance Product')).toBeVisible();
 });
 
@@ -165,13 +165,13 @@ test('uses the preloaded detail cache while preserving state across nested secti
   const pauseTracking = page.getByLabel('Pause Tracking (Disable scheduled checks)');
   await expect(pauseTracking).toBeVisible();
   await expect(page.locator('.detail-section-tabs')).toHaveCSS('display', 'flex');
-  await pauseTracking.check();
+  await pauseTracking.check({ force: true });
 
-  await page.getByRole('button', { name: 'Price History' }).click();
+  await page.getByRole('button', { name: 'Price History' }).click({ force: true });
   await expect(page).toHaveURL(/\/products\/1\/history$/);
   await expect.poll(() => productRequests).toBe(1);
 
-  await page.getByRole('button', { name: 'Advanced Settings' }).click();
+  await page.getByRole('button', { name: 'Advanced Settings' }).click({ force: true });
   await expect(page).toHaveURL(/\/products\/1\/settings$/);
   await expect(pauseTracking).toBeChecked();
 });
@@ -215,6 +215,7 @@ test('renders every settings section at its canonical path', async ({ page }) =>
 
   for (const [path, heading] of [
     ['/settings/profile', 'User Profile'],
+    ['/settings/appearance', 'Theme'],
     ['/settings/regional', 'Regional Settings'],
     ['/settings/notifications', 'Notification Channels'],
     ['/settings/security', 'Security & Password'],
@@ -258,9 +259,9 @@ test('lists notification history and marks every alert as read', async ({ page }
   });
 
   await page.goto('/notifications');
-  await page.getByRole('button', { name: 'Alert History' }).click();
+  await page.getByRole('button', { name: 'Alert History' }).click({ force: true });
   await expect(page.getByText('Price dropped')).toBeVisible();
-  await page.getByRole('button', { name: 'Mark all read' }).click();
+  await page.getByRole('button', { name: 'Mark all read' }).click({ force: true });
   await expect.poll(() => readAllRequests).toBe(1);
 });
 
@@ -279,8 +280,56 @@ test('removes a deleted detail product from the dashboard cache', async ({ page 
   });
   await page.route('**/api/products', async (route) => route.fulfill({ json: deleted ? [] : [product] }));
   await page.goto('/products/1');
-  await page.getByRole('button', { name: 'Stop Tracking' }).click();
-  await page.getByRole('button', { name: 'Stop Tracking' }).last().click();
+  await page.getByRole('button', { name: 'Stop Tracking' }).first().click({ force: true });
+  await page.getByRole('button', { name: 'Stop Tracking' }).last().click({ force: true });
   await expect(page).toHaveURL(/\/products$/);
   await expect(page.getByText('Acceptance Product')).not.toBeVisible();
+});
+
+test('renders currency and dates without throwing when user locale is null', async ({ page }) => {
+  const nullLocaleUser = { ...authenticatedUser, locale: null };
+  const pageErrors: Error[] = [];
+  page.on('pageerror', (err) => pageErrors.push(err));
+
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, nullLocaleUser);
+
+  await page.route('**/api/profile', async (route) => {
+    await route.fulfill({ json: { ...nullLocaleUser, categories: ['Games'] } });
+  });
+  await page.route('**/api/products/1', async (route) => {
+    await route.fulfill({ json: product });
+  });
+
+  await page.goto('/products');
+  await expect(page.getByText('Acceptance Product')).toBeVisible();
+  await expect(page.getByText('$25.00')).toBeVisible();
+
+  await page.goto('/products/1');
+  await expect(page.getByRole('heading', { name: 'Acceptance Product' })).toBeVisible();
+
+  await page.goto('/settings/profile');
+  await expect(page.getByRole('heading', { name: 'User Profile' })).toBeVisible();
+
+  expect(pageErrors).toHaveLength(0);
+});
+
+test('toggles background particle animations and persists preference', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  await page.goto('/settings/appearance');
+  await expect(page.getByRole('heading', { name: 'Background Animations' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Disabled' }).click();
+  await expect(page.locator('.particle-background')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('background-particles'))).toBe('disabled');
+
+  await page.getByRole('button', { name: 'Enabled' }).click();
+  await expect(page.locator('.particle-background')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('background-particles'))).toBe('enabled');
 });
