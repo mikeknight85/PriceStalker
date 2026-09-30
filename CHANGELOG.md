@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Standardised save and cancel action bars across all user and admin settings
+  sections (#183). Primary buttons now consistently read `Save` (`Saving...`
+  while pending) and remain disabled until inputs are modified (`!isDirty`).
+  Secondary actions now consistently read `Cancel`, sit on the left within
+  `.settings-actions`, and revert form state to the last-saved values.
+
 ## [2.1.0-beta.12] - 2026-09-27
 
 ### Fixed

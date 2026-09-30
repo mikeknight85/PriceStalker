@@ -92,6 +92,21 @@ export default function AuthSection() {
     setClearSecret(false);
   };
 
+  const isDirty = Boolean(
+    config && (
+      policy !== config.policy ||
+      oidcEnabled !== config.oidc_enabled ||
+      providerName !== (config.oidc_provider_name || '') ||
+      issuerUrl !== (config.oidc_issuer_url || '') ||
+      clientId !== (config.oidc_client_id || '') ||
+      scopes !== config.oidc_scopes ||
+      jitEnabled !== config.oidc_jit_enabled ||
+      requireEmailVerified !== config.oidc_require_email_verified ||
+      clientSecret !== '' ||
+      clearSecret !== false
+    )
+  );
+
   const handleTestDiscovery = async () => {
     if (!issuerUrl) {
       showToast('Enter an issuer URL first', 'error');
@@ -351,15 +366,29 @@ export default function AuthSection() {
         </div>
       </CollapsibleCard>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1rem' }}>
-        <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Authentication Settings'}
+      {config && (
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '1rem', textAlign: 'right' }}>
+          Last updated {formatDate(config.updated_at, user?.locale, true)}
+        </div>
+      )}
+
+      <div className="settings-actions">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => config && applyConfig(config)}
+          disabled={!isDirty || isSaving}
+        >
+          Cancel
         </button>
-        {config && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Last updated {formatDate(config.updated_at, user?.locale, true)}
-          </span>
-        )}
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleSave}
+          disabled={!isDirty || isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
       </div>
     </div>
   );

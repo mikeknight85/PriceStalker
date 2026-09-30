@@ -378,7 +378,7 @@ export default function NotificationChannelsSection() {
       <div className="settings-actions">
         <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setDraftSettings(savedSettings)} disabled={!isDirty || isSaving}>Cancel</button>
         <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!isDirty || isSaving}>
-          {isSaving ? 'Saving...' : 'Save All Channels'}
+          {isSaving ? 'Saving...' : 'Save'}
         </button>
       </div>
     </div>
