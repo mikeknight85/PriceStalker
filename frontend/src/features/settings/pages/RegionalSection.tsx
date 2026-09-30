@@ -91,7 +91,7 @@ export default function RegionalSection() {
         <div className="settings-actions">
           <button type="button" className="btn btn-secondary" onClick={() => { setProfileCurrency(profile.currency || ''); setProfileLocale(profile.locale || ''); }} disabled={!isDirty || updateProfile.isPending}>Cancel</button>
           <button type="submit" className="btn btn-primary" disabled={!isDirty || updateProfile.isPending}>
-            {updateProfile.isPending ? 'Saving...' : 'Save Regional Settings'}
+            {updateProfile.isPending ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>
