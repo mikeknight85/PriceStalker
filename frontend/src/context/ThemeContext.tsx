@@ -8,6 +8,8 @@ interface ThemeContextType {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
+  backgroundParticles: boolean;
+  setBackgroundParticles: (enabled: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -46,12 +48,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setModeState(next);
   };
 
+  const [backgroundParticles, setBackgroundParticlesState] = useState<boolean>(() => {
+    const saved = localStorage.getItem('background-particles');
+    if (saved === 'disabled') return false;
+    if (saved === 'enabled') return true;
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+
+  const setBackgroundParticles = (enabled: boolean) => {
+    localStorage.setItem('background-particles', enabled ? 'enabled' : 'disabled');
+    setBackgroundParticlesState(enabled);
+  };
+
   const toggleTheme = () => {
     setMode(theme === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, mode, setMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, mode, setMode, toggleTheme, backgroundParticles, setBackgroundParticles }}>
       {children}
     </ThemeContext.Provider>
   );

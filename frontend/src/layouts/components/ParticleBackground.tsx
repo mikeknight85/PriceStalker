@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 // Generate random box-shadow particles
 function generateParticles(count: number, spacing: number, color: string): string {
@@ -55,7 +56,12 @@ function ParticleLayer({ count, size, duration, color, spacing }: ParticleLayerP
 }
 
 export default function ParticleBackground() {
+  const { backgroundParticles } = useTheme();
   const spacing = 2000;
+
+  if (!backgroundParticles) {
+    return null;
+  }
 
   return (
     <div className="particle-background">

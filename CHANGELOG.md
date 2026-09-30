@@ -10,10 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Toast notifications for product actions (such as price refreshes, tracking pause/resume, deletion, and property updates) now identify the product by name (#232).
+- A dedicated Appearance section in User Settings (`/settings/appearance`) housing
+  Theme (Light, Dark, Auto), Layout Mode (Auto, Desktop, Mobile), and an option
+  to toggle floating background particle animations (#237).
+- An option to disable ambient background particle animations to save resources
+  and improve accessibility and automated testing stability (#237).
 
 ### Fixed
 
 - Added solid surface styling, borders, padding, and elevation to the "Which product is this the same as?" modal (`LinkToItemModal`), resolving see-through background issues across light and dark themes (#233).
+- Stabilized Playwright route and layout acceptance tests against animation
+  actionability timeouts, and added resilience test coverage for null user locales (#237).
 
 ## [2.1.0-beta.12] - 2026-09-27
 
