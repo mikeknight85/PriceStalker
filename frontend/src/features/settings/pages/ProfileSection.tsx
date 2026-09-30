@@ -115,10 +115,10 @@ export default function ProfileSection() {
           ))}
         </div>
 
-        <div className="settings-actions" style={{ marginTop: '2rem' }}>
+        <div className="settings-actions">
           <button type="button" className="btn btn-secondary" onClick={() => setProfileName(profile.name || '')} disabled={!isDirty || updateProfile.isPending}>Cancel</button>
           <button type="submit" className="btn btn-primary" disabled={!isDirty || updateProfile.isPending}>
-            {updateProfile.isPending ? 'Saving...' : 'Save Profile'}
+            {updateProfile.isPending ? 'Saving...' : 'Save'}
           </button>
         </div>
       </form>

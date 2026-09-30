@@ -212,7 +212,7 @@ export default function SystemSection() {
       <div className="settings-actions">
         <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setSystemSettings(savedSettings)} disabled={!isDirty || isSavingAdmin}>Cancel</button>
         <button type="submit" className="btn btn-primary" disabled={!isDirty || isSavingAdmin}>
-          {isSavingAdmin ? 'Saving...' : 'Save Settings'}
+          {isSavingAdmin ? 'Saving...' : 'Save'}
         </button>
       </div>
       </form>
