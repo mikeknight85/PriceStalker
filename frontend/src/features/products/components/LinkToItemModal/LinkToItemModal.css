@@ -1,9 +1,16 @@
 .link-item-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
   max-width: 34rem;
-  width: 100%;
+  width: 90%;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  animation: modal-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .link-item-title {
@@ -81,4 +88,9 @@
   gap: 0.375rem;
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

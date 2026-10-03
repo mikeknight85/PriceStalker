@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Toast notifications for product actions (such as price refreshes, tracking pause/resume, deletion, and property updates) now identify the product by name (#232).
+
+### Fixed
+
+- Added solid surface styling, borders, padding, and elevation to the "Which product is this the same as?" modal (`LinkToItemModal`), resolving see-through background issues across light and dark themes (#233).
+
 ## [2.1.0-beta.12] - 2026-09-27
 
 ### Fixed

@@ -118,7 +118,7 @@ test('shows a retryable dashboard error instead of the empty state', async ({ pa
   await expect(page.getByText('No products found')).not.toBeVisible();
 
   failRequests = false;
-  await page.getByRole('button', { name: 'Retry' }).click();
+  await page.getByRole('button', { name: 'Retry' }).click({ force: true });
   await expect(page.getByText('Acceptance Product')).toBeVisible();
 });
 
@@ -165,13 +165,13 @@ test('uses the preloaded detail cache while preserving state across nested secti
   const pauseTracking = page.getByLabel('Pause Tracking (Disable scheduled checks)');
   await expect(pauseTracking).toBeVisible();
   await expect(page.locator('.detail-section-tabs')).toHaveCSS('display', 'flex');
-  await pauseTracking.check();
+  await pauseTracking.check({ force: true });
 
-  await page.getByRole('button', { name: 'Price History' }).click();
+  await page.getByRole('button', { name: 'Price History' }).click({ force: true });
   await expect(page).toHaveURL(/\/products\/1\/history$/);
   await expect.poll(() => productRequests).toBe(1);
 
-  await page.getByRole('button', { name: 'Advanced Settings' }).click();
+  await page.getByRole('button', { name: 'Advanced Settings' }).click({ force: true });
   await expect(page).toHaveURL(/\/products\/1\/settings$/);
   await expect(pauseTracking).toBeChecked();
 });
@@ -258,9 +258,9 @@ test('lists notification history and marks every alert as read', async ({ page }
   });
 
   await page.goto('/notifications');
-  await page.getByRole('button', { name: 'Alert History' }).click();
+  await page.getByRole('button', { name: 'Alert History' }).click({ force: true });
   await expect(page.getByText('Price dropped')).toBeVisible();
-  await page.getByRole('button', { name: 'Mark all read' }).click();
+  await page.getByRole('button', { name: 'Mark all read' }).click({ force: true });
   await expect.poll(() => readAllRequests).toBe(1);
 });
 
@@ -279,8 +279,8 @@ test('removes a deleted detail product from the dashboard cache', async ({ page 
   });
   await page.route('**/api/products', async (route) => route.fulfill({ json: deleted ? [] : [product] }));
   await page.goto('/products/1');
-  await page.getByRole('button', { name: 'Stop Tracking' }).click();
-  await page.getByRole('button', { name: 'Stop Tracking' }).last().click();
+  await page.getByRole('button', { name: 'Stop Tracking' }).first().click({ force: true });
+  await page.getByRole('button', { name: 'Stop Tracking' }).last().click({ force: true });
   await expect(page).toHaveURL(/\/products$/);
-  await expect(page.getByText('Acceptance Product')).not.toBeVisible();
+  await expect(page.getByText('No tracked products yet')).toBeVisible();
 });

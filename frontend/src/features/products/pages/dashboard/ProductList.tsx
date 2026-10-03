@@ -7,9 +7,9 @@ import Icon from '../../../../components/Icon';
 interface ProductListProps {
   products: Product[];
   isLoading: boolean;
-  onDelete: (id: number) => void;
-  onRefresh: (id: number) => Promise<void>;
-  onTogglePause: (id: number, paused: boolean) => Promise<void>;
+  onDelete: (id: number, name?: string | null) => void;
+  onRefresh: (id: number, name?: string | null) => Promise<any>;
+  onTogglePause: (id: number, paused: boolean, name?: string | null) => Promise<any>;
   onAddClick: () => void;
   hasAnyProducts: boolean;
   onSelect?: (id: number) => void;
