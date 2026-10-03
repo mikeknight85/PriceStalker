@@ -22,7 +22,7 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [activeProductId, setActiveProductId] = useState<number | null>(null);
 
-  const handleRefresh = (id: number) => runAction(async () => {
+  const handleRefresh = (id: number, fallbackName?: string | null) => runAction(async () => {
     await ProductService.refreshPrice(id);
     const updatedProductRes = await ProductService.getById(id);
     syncProductCaches(updatedProductRes);
@@ -30,7 +30,14 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
     // to go before anything reloads it.
     await invalidateProductHistory(id);
     if (onProductUpdated) onProductUpdated(id, updatedProductRes);
-  }, { onSuccessMessage: 'Price refreshed', onErrorFallback: 'Failed to refresh price' });
+    return updatedProductRes;
+  }, {
+    onSuccessMessage: (res) => {
+      const name = res?.name || fallbackName;
+      return name ? `${name} price refreshed` : `Product #${id} price refreshed`;
+    },
+    onErrorFallback: 'Failed to refresh price'
+  });
 
   const handleRescan = (id: number) => runAction(async () => {
     setActiveProductId(id);
@@ -39,7 +46,7 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
     setShowPriceModal(true);
   }, { onErrorMessage: 'Failed to start re-scan' });
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: number, fallbackName?: string | null) => {
     return runAction(async () => {
       await ProductService.delete(id);
       queryClient.removeQueries({ queryKey: queryKeys.products.detail(id) });
@@ -47,8 +54,8 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
         products?.filter((product) => product.id !== id) ?? [],
       );
       if (onProductDeleted) onProductDeleted(id);
-    }, { 
-      onSuccessMessage: 'Product deleted', 
+    }, {
+      onSuccessMessage: fallbackName ? `${fallbackName} deleted` : `Product #${id} deleted`,
       onErrorFallback: 'Failed to delete product',
       throwError: true
     }).catch((err) => {
@@ -57,11 +64,21 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
     });
   };
 
-  const handleTogglePause = (id: number, targetPaused: boolean) => runAction(async () => {
+  const handleTogglePause = (id: number, targetPaused: boolean, fallbackName?: string | null) => runAction(async () => {
     const res = await ProductService.update(id, { checking_paused: targetPaused });
     syncProductCaches(res);
     if (onProductUpdated) onProductUpdated(id, res);
-  }, { onSuccessMessage: targetPaused ? 'Tracking paused' : 'Tracking resumed', onErrorFallback: 'Failed to toggle pause state' });
+    return res;
+  }, {
+    onSuccessMessage: (res) => {
+      const name = res?.name || fallbackName;
+      if (name) {
+        return targetPaused ? `${name} tracking paused` : `${name} tracking resumed`;
+      }
+      return targetPaused ? `Product #${id} tracking paused` : `Product #${id} tracking resumed`;
+    },
+    onErrorFallback: 'Failed to toggle pause state'
+  });
 
   const handlePriceSelected = async (selectedPrice: number, selectedMethod: string, selectedCurrency: string, _category: string | null, selector?: string) => {
     if (!priceReviewData || activeProductId === null) return;
@@ -84,8 +101,12 @@ export function useProductActions({ onProductDeleted, onProductDeleteFailed, onP
       if (onProductUpdated) onProductUpdated(activeProductId, res);
       setShowPriceModal(false);
       setPriceReviewData(null);
+      const updatedName = res?.name || priceReviewData.name;
+      const successMsg = updatedName
+        ? `${updatedName} updated via re-scan`
+        : `Product #${activeProductId} updated via re-scan`;
       setActiveProductId(null);
-      showToast('Product updated via re-scan', 'success');
+      showToast(successMsg, 'success');
     } catch (err: any) {
       showToast('Failed to confirm selection', 'error', apiErrorMessage(err));
     }

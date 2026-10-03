@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 import { apiErrorMessage } from '../api/error';
 import { useToast } from '../context/ToastContext';
 
-interface UseAsyncActionOptions {
-  onSuccessMessage?: string;
+interface UseAsyncActionOptions<T = any> {
+  onSuccessMessage?: string | ((result: T) => string);
   onErrorMessage?: string;
   onErrorFallback?: string;
   throwError?: boolean;
@@ -16,14 +16,19 @@ export function useAsyncAction(initialLoadingState = false) {
 
   const execute = useCallback(async <T,>(
     action: () => Promise<T>,
-    options?: UseAsyncActionOptions
+    options?: UseAsyncActionOptions<T>
   ): Promise<T | undefined> => {
     setIsLoading(true);
     setError(null);
     try {
       const result = await action();
       if (options?.onSuccessMessage) {
-        showToast(options.onSuccessMessage, 'success');
+        const msg = typeof options.onSuccessMessage === 'function'
+          ? options.onSuccessMessage(result)
+          : options.onSuccessMessage;
+        if (msg) {
+          showToast(msg, 'success');
+        }
       }
       return result;
     } catch (err: any) {

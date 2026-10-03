@@ -10,9 +10,9 @@ import Icon from '../../../../components/Icon';
 
 interface ProductCardProps {
   product: Product;
-  onDelete: (id: number) => void;
-  onRefresh: (id: number) => Promise<void>;
-  onTogglePause: (id: number, paused: boolean) => Promise<void>;
+  onDelete: (id: number, name?: string | null) => void;
+  onRefresh: (id: number, name?: string | null) => Promise<any>;
+  onTogglePause: (id: number, paused: boolean, name?: string | null) => Promise<any>;
   onSelect?: (id: number) => void;
 }
 
@@ -89,7 +89,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     setIsRefreshing(true);
     try {
-      await onRefresh(product.id);
+      await onRefresh(product.id, product.name);
     } catch (err: any) {
       // Toast notifications are handled by useProductActions
     } finally {
@@ -103,7 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setIsPausing(true);
     try {
       const newState = !product.checking_paused;
-      await onTogglePause(product.id, newState);
+      await onTogglePause(product.id, newState, product.name);
     } catch (err: any) {
       // Toast notifications are handled by useProductActions
     } finally {
@@ -114,7 +114,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onDelete(product.id);
+    onDelete(product.id, product.name);
   };
 
   // `product.category` is the wire field for what the UI calls tags (#147).
