@@ -21,11 +21,10 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
 
     await client.query(
       `
-      INSERT INTO system_settings (key, value, description)
+      INSERT INTO system_settings (key, value)
       VALUES (
         'generic_challenge_phrases',
-        $1,
-        'JSON array of challenge phrases that trigger browser scraper auto-resolve interstitial loops'
+        $1
       )
       ON CONFLICT (key) DO NOTHING;
     `,
