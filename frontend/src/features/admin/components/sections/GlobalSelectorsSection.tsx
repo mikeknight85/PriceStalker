@@ -31,6 +31,7 @@ interface SavedSelectors {
   inStockPhrases: string[];
   outOfStockPhrases: string[];
   preOrderPhrases: string[];
+  challengePhrases: string[];
 }
 
 const parseList = (val?: string | null): string[] => {
@@ -63,6 +64,7 @@ export default function GlobalSelectorsSection() {
   const [globalInStockPhrases, setGlobalInStockPhrases] = useState<string[]>([]);
   const [globalOutOfStockPhrases, setGlobalOutOfStockPhrases] = useState<string[]>([]);
   const [globalPreOrderPhrases, setGlobalPreOrderPhrases] = useState<string[]>([]);
+  const [globalChallengePhrases, setGlobalChallengePhrases] = useState<string[]>([]);
 
   const applySelectors = (data: SavedSelectors) => {
     setGlobalPriceSelectors(data.priceSelectors);
@@ -79,6 +81,7 @@ export default function GlobalSelectorsSection() {
     setGlobalInStockPhrases(data.inStockPhrases);
     setGlobalOutOfStockPhrases(data.outOfStockPhrases);
     setGlobalPreOrderPhrases(data.preOrderPhrases);
+    setGlobalChallengePhrases(data.challengePhrases);
   };
 
   const { expandedSections, toggleSection } = useExpandedSections({
@@ -94,7 +97,8 @@ export default function GlobalSelectorsSection() {
     sys_phrases: false,
     sys_phr_instock: false,
     sys_phr_outofstock: false,
-    sys_phr_preorder: false
+    sys_phr_preorder: false,
+    sys_phr_challenge: false
   });
 
   useEffect(() => {
@@ -122,6 +126,7 @@ export default function GlobalSelectorsSection() {
         inStockPhrases: parseList(settings.generic_in_stock_phrases),
         outOfStockPhrases: parseList(settings.generic_out_of_stock_phrases),
         preOrderPhrases: parseList(settings.generic_pre_order_phrases),
+        challengePhrases: parseList(settings.generic_challenge_phrases),
       };
 
       applySelectors(data);
@@ -148,6 +153,7 @@ export default function GlobalSelectorsSection() {
     inStockPhrases: globalInStockPhrases,
     outOfStockPhrases: globalOutOfStockPhrases,
     preOrderPhrases: globalPreOrderPhrases,
+    challengePhrases: globalChallengePhrases,
   };
 
   const isDirty = Boolean(
@@ -171,6 +177,7 @@ export default function GlobalSelectorsSection() {
         generic_in_stock_phrases: JSON.stringify(globalInStockPhrases),
         generic_out_of_stock_phrases: JSON.stringify(globalOutOfStockPhrases),
         generic_pre_order_phrases: JSON.stringify(globalPreOrderPhrases),
+        generic_challenge_phrases: JSON.stringify(globalChallengePhrases),
         prefer_jsonld_image: preferJsonLdImage,
       };
 
@@ -303,7 +310,7 @@ export default function GlobalSelectorsSection() {
           <FieldHelp>Where availability text or purchase controls are found.</FieldHelp>
         </CollapsibleCard>
 
-        <CollapsibleCard title="Status phrases" leadingIcon={<Icon name="fileText" />} id="sys_phrases" badge={String(globalInStockPhrases.length + globalOutOfStockPhrases.length + globalPreOrderPhrases.length) + ' total'} isExpanded={expandedSections.sys_phrases} onToggle={toggleSection}>
+        <CollapsibleCard title="Status phrases" leadingIcon={<Icon name="fileText" />} id="sys_phrases" badge={String(globalInStockPhrases.length + globalOutOfStockPhrases.length + globalPreOrderPhrases.length + globalChallengePhrases.length) + ' total'} isExpanded={expandedSections.sys_phrases} onToggle={toggleSection}>
           <PriorityNote
             label="Detection order"
             steps={['Member only', 'Pre-order', 'Out of stock', 'In stock']}
@@ -319,6 +326,11 @@ export default function GlobalSelectorsSection() {
 
             <CollapsibleCard title="Pre-order" leadingIcon={<Icon name="clock" />} id="sys_phr_preorder" badge={String(globalPreOrderPhrases.length) + ' items'} isExpanded={expandedSections.sys_phr_preorder} onToggle={toggleSection}>
               <UnifiedSelectorManager label="Pre-order phrases" items={globalPreOrderPhrases} onChange={setGlobalPreOrderPhrases} placeholder="pre-order, preorder" />
+            </CollapsibleCard>
+
+            <CollapsibleCard title="Challenge / Interstitial" leadingIcon={<Icon name="shield" />} id="sys_phr_challenge" badge={String(globalChallengePhrases.length) + ' items'} isExpanded={expandedSections.sys_phr_challenge} onToggle={toggleSection}>
+              <UnifiedSelectorManager label="Challenge interstitial phrases" items={globalChallengePhrases} onChange={setGlobalChallengePhrases} placeholder="pardon our interruption, verify you are human" />
+              <FieldHelp>Interstitials and bot challenges detected by the browser scraper to pause for verification reloads.</FieldHelp>
             </CollapsibleCard>
           </div>
           <FieldHelp>Specific states take priority over generic "available" text.</FieldHelp>

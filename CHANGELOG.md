@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to toggle floating background particle animations (#237).
 - An option to disable ambient background particle animations to save resources
   and improve accessibility and automated testing stability (#237).
+- Configurable scraper pool limits via environment variables (`MAX_BROWSERS`,
+  `MAX_PAGES_PER_BROWSER`, `MAX_SCRAPES_PER_BROWSER`, `ENABLE_ADBLOCKER`) to
+  fine-tune memory footprint and concurrency (#235).
+- Admin UI and database setting (`generic_challenge_phrases`) for customizing
+  anti-bot challenge interstitial detection phrases without container rebuilds
+  (migration 021) (#234).
 
 ### Fixed
 

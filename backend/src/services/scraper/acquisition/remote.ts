@@ -22,6 +22,7 @@ interface RemoteScraperOptions {
   useProxy?: boolean;
   proxyUrl?: string;
   referrer?: string;
+  challengePatterns?: string[];
 }
 
 export interface RemoteAcquisitionOptions {
@@ -77,6 +78,7 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
       isDiscovery,
       requestId,
       userAgent: await resolveUserAgent(domainConfig?.user_agent),
+      challengePatterns: await settingsCache.getGenericChallengePhrases(),
     };
 
     if (currentProxy) {
