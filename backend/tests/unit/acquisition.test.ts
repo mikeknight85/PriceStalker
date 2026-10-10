@@ -14,6 +14,8 @@ vi.mock('../../src/utils/cache', () => ({
     getRemoteScraperUrl: vi.fn().mockResolvedValue('http://scraper:5100'),
     getDefaultReferrer: vi.fn().mockResolvedValue(null),
     getGenericChallengePhrases: vi.fn().mockResolvedValue(['pardon our interruption', 'security check']),
+    getBrowserDelay: vi.fn().mockResolvedValue(3000),
+    getBrowserTimeout: vi.fn().mockResolvedValue(60000),
   }
 }));
 

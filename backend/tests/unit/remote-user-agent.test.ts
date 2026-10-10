@@ -35,6 +35,8 @@ vi.mock('../../src/utils/cache', () => ({
     getDefaultReferrer: vi.fn().mockResolvedValue(null),
     getDefaultUserAgent,
     getGenericChallengePhrases: vi.fn().mockResolvedValue(['pardon our interruption', 'security check']),
+    getBrowserDelay: vi.fn().mockResolvedValue(3000),
+    getBrowserTimeout: vi.fn().mockResolvedValue(60000),
   },
 }));
 

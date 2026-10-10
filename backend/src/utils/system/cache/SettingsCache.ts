@@ -30,6 +30,11 @@ const DEFAULT_CONFIG = {
     'unusual activity',
     'captcha-delivery',
     'datadome',
+    'access to this page has been denied',
+    'px-captcha',
+    'perimeterx',
+    'press & hold',
+    'press and hold',
   ],
   genericAIPriceSelectors: [
     '[class*="price" i]',

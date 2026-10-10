@@ -48,7 +48,9 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
         productId,
         isDiscovery,
         userAgent: await resolveUserAgent(userAgent),
-        challengePatterns: await settingsCache.getGenericChallengePhrases()
+        challengePatterns: await settingsCache.getGenericChallengePhrases(),
+        delay: await settingsCache.getBrowserDelay(),
+        timeout: await settingsCache.getBrowserTimeout(),
       };
       // Referrer policy: system default or none — never a fabricated random
       // one (issue #44).
