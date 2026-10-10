@@ -43,7 +43,7 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
   }
 
   // --- Attempt 2: Standard HTTP (if remote failed or not configured) ---
-  if (!html) {
+  if (!html && !useBrowserScraper) {
     try {
       html = await acquireStandardHtml({
         url,

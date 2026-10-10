@@ -11,6 +11,8 @@ vi.mock('../../src/utils/cache', () => ({
     getScraperProxy: vi.fn().mockResolvedValue('http://proxy.com:8888'),
     get: vi.fn().mockResolvedValue('45000'),
     getDefaultUserAgent: vi.fn().mockResolvedValue('Mozilla/5.0 Mock UA'),
+    getRemoteScraperUrl: vi.fn().mockResolvedValue('http://scraper:5100'),
+    getDefaultReferrer: vi.fn().mockResolvedValue(null),
   }
 }));
 
@@ -192,3 +194,43 @@ describe('acquireHtml Soft-404 Heuristics Unit Tests', () => {
   });
 });
 
+describe('acquireHtml browser scraper fallback prevention', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should not fall back to standard HTTP when browser scraper fails for a required retailer', async () => {
+    vi.mocked(axios.post).mockRejectedValue(new Error('Browser Scraper failed (500): Navigation timeout of 45000ms exceeded'));
+
+    const steps: string[] = [];
+    const domainConfig = { use_browser_scraper: true } as any;
+
+    await expect(acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    })).rejects.toThrow('Browser Scraper failed');
+
+    // axios.get (plain HTTP) must NEVER have been called
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(steps.some(s => s.startsWith('Scraper | Remote | Failed:'))).toBe(true);
+  });
+
+  it('should re-throw if remote scraper URL is not configured when browser scraper is required', async () => {
+    const { settingsCache } = await import('../../src/utils/cache');
+    vi.mocked(settingsCache.getRemoteScraperUrl).mockResolvedValueOnce(null);
+
+    const steps: string[] = [];
+    const domainConfig = { use_browser_scraper: true } as any;
+
+    await expect(acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    })).rejects.toThrow('Browser Scraper URL is not configured');
+
+    expect(axios.get).not.toHaveBeenCalled();
+  });
+});

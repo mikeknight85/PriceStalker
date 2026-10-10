@@ -259,6 +259,10 @@ export async function scrapeProductWithVoting(
       // refresh can count it separately and leave the product's status alone,
       // rather than the previous behaviour of silently returning 'unknown'.
       result.unavailableReason = classifyTransportError(error);
+      if (result.unavailableReason === 'remote_scraper_failure' || (error instanceof Error && error.message.includes('Browser Scraper'))) {
+        result.failureReason = 'browser_scraper_failed';
+        result.failureDetail = error instanceof Error ? error.message : String(error);
+      }
       logger.error(`Product | Scrape Failed | ${url} (${result.unavailableReason})`, 'Scraper', { product_id: productId, error, requestId });
     }
     result.extractionSteps = extractionSteps;
