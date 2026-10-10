@@ -106,6 +106,10 @@ services:
     environment:
       PORT: 5100
       TZ: ${TZ:-UTC}
+      MAX_BROWSERS: ${SCRAPER_MAX_BROWSERS:-3}
+      MAX_PAGES_PER_BROWSER: ${SCRAPER_MAX_PAGES:-4}
+      MAX_SCRAPES_PER_BROWSER: ${SCRAPER_MAX_SCRAPES:-50}
+      ENABLE_ADBLOCKER: ${SCRAPER_ENABLE_ADBLOCKER:-true}
     expose:
       - "5100"
     # Existing installs store http://remotescraper:5100/scrape as the Remote
