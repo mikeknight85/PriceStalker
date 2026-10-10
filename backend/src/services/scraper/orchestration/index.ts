@@ -117,7 +117,17 @@ export async function scrapeProductWithVoting(
       challenge = null;
     }
 
-    await handleRetailerMaintenance(domainConfig, challenge, !!overrideConfig, extractionSteps, productId);
+    const maintainedConfig = await handleRetailerMaintenance(
+      domainConfig,
+      challenge,
+      !!overrideConfig,
+      extractionSteps,
+      productId,
+      { domain: session.lookupDomain, learnedFlags: acqResult.learnedFlags }
+    );
+    if (maintainedConfig) {
+      domainConfig = maintainedConfig;
+    }
 
     // --- Phase 4: Auto-Mapping ---
     const isShellConfig = domainConfig && 
