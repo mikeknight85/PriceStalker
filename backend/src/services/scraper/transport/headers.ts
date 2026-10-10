@@ -10,7 +10,7 @@ import { parseUserAgent, buildClientHintHeaders } from './user-agent';
  * contradiction -- but there is no reason for them to.
  */
 export const FALLBACK_USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36';
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36';
 
 /**
  * The User-Agent this scrape will present: retailer override, then the system

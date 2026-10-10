@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and misleading advice to enable the browser scraper (#234).
 - Staggered timeouts between backend Axios (70s) and Puppeteer navigation (45s)
   so auto-resolve loops finish and return structured JSON before socket drops (#234).
+- Stealth browser hardening: Added `--disable-blink-features=AutomationControlled`
+  flag, modern headless mode, and subreaper registration for zombie reaping (#67).
+- Full CDP emulation: Emulated `Network.setUserAgentOverride` with legacy
+  `navigator.platform` (`Win32`), `acceptLanguage`, and complete high-entropy
+  client hints (`fullVersionList`, `bitness`, `wow64`) preventing Linux host and
+  patch version leaks (#67).
+- Prevented anti-bot verification failure by ensuring adblocker does not suppress
+  challenge telemetry scripts, with support for `ENABLE_ADBLOCKER` toggling.
+- Updated default fallback User-Agent baseline to Chrome 154.
 
 ## [2.1.0-beta.12] - 2026-09-27
 

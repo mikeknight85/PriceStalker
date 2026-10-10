@@ -2,7 +2,8 @@ import { log } from '../utils/logger.js';
 import { performHumanLikeActions } from '../core/Actions.js';
 import type { BrowserSession, ScrapeOptions, ScrapeResult, ScraperPage } from '../types.js';
 import { errorMessage } from '../types.js';
-import { parseUserAgent, buildUserAgentMetadata } from '../utils/userAgent.js';
+import { parseUserAgent, buildUserAgentMetadata, legacyPlatformFor } from '../utils/userAgent.js';
+import { DEFAULT_SCRAPER_USER_AGENT } from '../core/SessionManager.js';
 
 export class ScraperService {
   /**
@@ -60,23 +61,28 @@ export class ScraperService {
         abortSignal.addEventListener('abort', onAbort);
       }
 
-      if (options.userAgent) {
-        if (context.forceDebug) log(`Applying User-Agent: ${options.userAgent}`, 'DEBUG', context);
-        // The metadata is what keeps Sec-CH-UA in step with the string. Calling
-        // setUserAgent with the string alone leaves Chrome reporting its own
-        // build in the client hints, so the page announces one browser in the
-        // User-Agent and another in the hints -- and overrides the coordinated
-        // override the stealth plugin had already set up.
-        const identity = parseUserAgent(options.userAgent);
-        const metadata = buildUserAgentMetadata(identity);
-        if (metadata) {
-          await page.setUserAgent(options.userAgent, metadata);
-        } else {
-          // Firefox and Safari send no client hints, so there is nothing to
-          // keep in step and the bare string is correct.
-          if (context.forceDebug) log(`No client hints for ${identity.family} UA`, 'DEBUG', context);
-          await page.setUserAgent(options.userAgent);
-        }
+      const targetUa = options.userAgent || DEFAULT_SCRAPER_USER_AGENT;
+      if (context.forceDebug) log(`Applying User-Agent: ${targetUa}`, 'DEBUG', context);
+      const identity = parseUserAgent(targetUa);
+      const metadata = buildUserAgentMetadata(identity);
+
+      try {
+        const client = await page.target().createCDPSession();
+        await client.send('Network.setUserAgentOverride', {
+          userAgent: targetUa,
+          acceptLanguage: options.acceptLanguage || 'en-US,en;q=0.9',
+          platform: legacyPlatformFor(identity.platform),
+          userAgentMetadata: metadata
+        });
+      } catch (cdpErr) {
+        log(`CDP UserAgentOverride notice: ${errorMessage(cdpErr)}`, 'DEBUG', context);
+      }
+
+      if (metadata) {
+        await page.setUserAgent(targetUa, metadata);
+      } else {
+        if (context.forceDebug) log(`No client hints for ${identity.family} UA`, 'DEBUG', context);
+        await page.setUserAgent(targetUa);
       }
 
       if (options.referrer) {

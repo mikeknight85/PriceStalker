@@ -19,7 +19,14 @@ const createAdblockerPlugin = AdblockerPlugin as unknown as (options: { blockTra
 
 // Initialize Puppeteer with plugins
 puppeteer.use(StealthPlugin());
-puppeteer.use(createAdblockerPlugin({ blockTrackers: true }));
+if (process.env.ENABLE_ADBLOCKER !== 'false') {
+  // blockTrackers: false ensures anti-bot verification scripts (Turnstile, Reese84, Datadome)
+  // are not blocked from reporting telemetry.
+  puppeteer.use(createAdblockerPlugin({ blockTrackers: false }));
+}
+
+export const DEFAULT_SCRAPER_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36';
 
 // Browser Pool Configuration
 export const MAX_BROWSERS = 3;
@@ -235,6 +242,7 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
     '--disable-gpu',
+    '--disable-blink-features=AutomationControlled',
     '--window-size=1920,1080'
   ];
 
@@ -242,15 +250,14 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     args.push(`--proxy-server=${proxyUrl}`);
   }
 
-  if (userAgent) {
-    args.push(`--user-agent=${userAgent}`);
-  }
+  const effectiveUa = userAgent || DEFAULT_SCRAPER_USER_AGENT;
+  args.push(`--user-agent=${effectiveUa}`);
 
   log(`Launching new browser instance for ${id} (Proxy: ${proxyUrl || 'None'}, UA: ${userAgent ? 'Custom' : 'Default'})`, 'INFO');
   
   session.launchPromise = fs.mkdir(userDataDir, { recursive: true }).then(() => puppeteer.launch({
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-    headless: 'new',
+    headless: true,
     userDataDir,
     args
   })).then((browser: Browser) => {

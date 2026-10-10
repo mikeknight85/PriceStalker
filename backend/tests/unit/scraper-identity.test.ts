@@ -4,6 +4,7 @@ import {
   buildBrandList,
   buildClientHintHeaders,
   buildUserAgentMetadata,
+  legacyPlatformFor,
 } from '../../src/services/scraper/transport/user-agent';
 
 /**
@@ -206,14 +207,30 @@ describe('Puppeteer metadata', () => {
     expect(meta.platformVersion).toBe('10.15.7');
     expect(meta.brands).toContainEqual({ brand: 'Google Chrome', version: '140' });
     expect(meta.fullVersion).toBe('140.0.0.0');
+    expect(meta.bitness).toBe('64');
+    expect(meta.wow64).toBe(false);
+    expect(meta.fullVersionList).toContainEqual({ brand: 'Google Chrome', version: '140.0.0.0' });
+    expect(meta.fullVersionList).toContainEqual({ brand: 'Chromium', version: '140.0.0.0' });
   });
 
-  it('reads an Android platform version', () => {
-    expect(buildUserAgentMetadata(parseUserAgent(CHROME_ANDROID))!.platformVersion).toBe('14');
+  it('reads an Android platform version and mobile bitness', () => {
+    const meta = buildUserAgentMetadata(parseUserAgent(CHROME_ANDROID))!;
+    expect(meta.platformVersion).toBe('14');
+    expect(meta.mobile).toBe(true);
+    expect(meta.bitness).toBe('32');
   });
 
   it('is withheld where the browser sends no hints, so the bare string is used', () => {
     expect(buildUserAgentMetadata(parseUserAgent(FIREFOX_WIN))).toBeUndefined();
     expect(buildUserAgentMetadata(parseUserAgent(SAFARI_MAC))).toBeUndefined();
+  });
+
+  it('maps platform names to legacy navigator.platform strings', () => {
+    expect(legacyPlatformFor('Windows')).toBe('Win32');
+    expect(legacyPlatformFor('macOS')).toBe('MacIntel');
+    expect(legacyPlatformFor('Linux')).toBe('Linux x86_64');
+    expect(legacyPlatformFor('Android')).toBe('Linux armv81');
+    expect(legacyPlatformFor('iOS')).toBe('iPhone');
+    expect(legacyPlatformFor('unknown')).toBe('Win32');
   });
 });
