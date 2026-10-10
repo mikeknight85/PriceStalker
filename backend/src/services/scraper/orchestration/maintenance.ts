@@ -9,16 +9,54 @@ export async function handleRetailerMaintenance(
   challenge: string | null,
   overrideConfig: boolean,
   extractionSteps: string[],
-  productId?: number
-): Promise<void> {
+  productId?: number,
+  fallbackContext?: { domain: string; learnedFlags?: any }
+): Promise<RetailerConfig | null> {
   if (challenge) {
     logger.info(`Scraper | Block | Persistent challenge: ${challenge}`, 'Scraper', { product_id: productId });
     extractionSteps.push(`Scraper | Block | Persistent: ${challenge}`);
     
     if (domainConfig && !overrideConfig) {
+      if (fallbackContext?.learnedFlags?.use_browser_scraper && !domainConfig.use_browser_scraper) {
+        domainConfig.use_browser_scraper = true;
+      }
       await flagBlockedRetailer(domainConfig, challenge, extractionSteps);
+      return domainConfig;
+    } else if (!domainConfig && fallbackContext?.domain) {
+      const domain = fallbackContext.domain;
+      const baseName = domain.split('.')[0];
+      const autoName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+      const newConfig: Partial<RetailerConfig> = {
+        domain,
+        name: autoName,
+        status: 'BLOCKED',
+        use_browser_scraper: Boolean(fallbackContext.learnedFlags?.use_browser_scraper),
+        description: `Auto-flagged: ${challenge} detected during extraction`,
+        active: true
+      };
+      const created = await retailerRepository.upsert(newConfig);
+      configCache.invalidate(domain);
+      extractionSteps.push(`Retailer | Config | Auto-created as BLOCKED with Browser Scraper: ${Boolean(fallbackContext.learnedFlags?.use_browser_scraper)}`);
+      return created;
     }
+  } else if (!domainConfig && fallbackContext?.domain && fallbackContext.learnedFlags?.use_browser_scraper) {
+    const domain = fallbackContext.domain;
+    const baseName = domain.split('.')[0];
+    const autoName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+    const newConfig: Partial<RetailerConfig> = {
+      domain,
+      name: autoName,
+      status: 'OK',
+      use_browser_scraper: true,
+      description: 'Auto-created: Browser scraper required (fallback triggered)',
+      active: true
+    };
+    const created = await retailerRepository.upsert(newConfig);
+    configCache.invalidate(domain);
+    extractionSteps.push(`Retailer | Config | Auto-created with Browser Scraper enabled`);
+    return created;
   }
+  return domainConfig;
 }
 
 export async function handleAutoMapping(

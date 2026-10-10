@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Auto-create retailer config shell with `use_browser_scraper` enabled when an
+  unknown domain encounters bot blocks or requires fallback, ensuring the retailer
+  appears under Admin -> Retailers for proxy and selector configuration.
+- Clarified product discovery failure message when the browser scraper was
+  already used during fallback rather than misleadingly prompting to enable it.
 - Scraper navigation default switched from `networkidle2` to `domcontentloaded`
   to prevent timeouts on retailers streaming telemetry and ad beacons (#234).
 - Scraper interstitial auto-resolve recognition expanded to include Imperva's

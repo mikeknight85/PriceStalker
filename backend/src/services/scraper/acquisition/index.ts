@@ -91,6 +91,7 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
         usedRemoteFallback: true
       };
     }
+    learnedFlags = { use_browser_scraper: true };
   }
 
   return { html, $, challengeReason, usedRemoteFallback, learnedFlags };
