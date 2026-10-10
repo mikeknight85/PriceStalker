@@ -72,6 +72,22 @@ describe('acquireStandardHtml Unit Tests', () => {
     expect(axios.get).toHaveBeenCalledTimes(2);
     expect(steps).toContain('Request | Proxy Fallback | Proxy failed (ECONNREFUSED). Retrying without proxy.');
   });
+
+  it('should throw BotChallengeError when axios hits ERR_FR_TOO_MANY_REDIRECTS', async () => {
+    const error = new Error('Maximum number of redirects exceeded') as any;
+    error.code = 'ERR_FR_TOO_MANY_REDIRECTS';
+
+    vi.mocked(axios.get).mockRejectedValue(error);
+
+    const steps: string[] = [];
+    await expect(acquireStandardHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      extractionSteps: steps
+    })).rejects.toThrow('Redirect Loop (Queue-it / Anti-Bot Challenge)');
+
+    expect(steps.some(s => s.includes('Redirect Loop'))).toBe(true);
+  });
 });
 
 describe('acquireHtml Soft-404 Heuristics Unit Tests', () => {
