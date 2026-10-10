@@ -283,6 +283,7 @@ export interface SystemSettings {
   generic_in_stock_phrases?: string;
   generic_out_of_stock_phrases?: string;
   generic_pre_order_phrases?: string;
+  generic_challenge_phrases?: string;
   prefer_jsonld_image?: boolean | string;
   jsonld_name_key?: string;
   jsonld_image_key?: string;

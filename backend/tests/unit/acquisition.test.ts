@@ -13,6 +13,7 @@ vi.mock('../../src/utils/cache', () => ({
     getDefaultUserAgent: vi.fn().mockResolvedValue('Mozilla/5.0 Mock UA'),
     getRemoteScraperUrl: vi.fn().mockResolvedValue('http://scraper:5100'),
     getDefaultReferrer: vi.fn().mockResolvedValue(null),
+    getGenericChallengePhrases: vi.fn().mockResolvedValue(['pardon our interruption', 'security check']),
   }
 }));
 

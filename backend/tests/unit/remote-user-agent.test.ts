@@ -34,6 +34,7 @@ vi.mock('../../src/utils/cache', () => ({
     getScraperProxy: vi.fn().mockResolvedValue('http://proxy:8888'),
     getDefaultReferrer: vi.fn().mockResolvedValue(null),
     getDefaultUserAgent,
+    getGenericChallengePhrases: vi.fn().mockResolvedValue(['pardon our interruption', 'security check']),
   },
 }));
 

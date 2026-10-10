@@ -35,6 +35,7 @@ export class SystemSettingsService {
       'generic_in_stock_phrases',
       'generic_out_of_stock_phrases',
       'generic_pre_order_phrases',
+      'generic_challenge_phrases',
       'debug_page_enabled',
       'retailer_updates_disabled',
       'scheduler_disabled',
