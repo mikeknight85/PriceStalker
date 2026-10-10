@@ -91,7 +91,7 @@ export async function scrapeProductWithVoting(
 
     // Surface acquisition-learned flags on the result so the retailer config
     // is updated on save even when AI auto-mapping is disabled (issue #45).
-    if (acqResult.learnedFlags?.use_browser_scraper) {
+    if (acqResult.learnedFlags?.use_browser_scraper || acqResult.usedRemoteFallback || domainConfig?.use_browser_scraper) {
       result.learnedFlags = { use_browser_scraper: true };
     }
 
