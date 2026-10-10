@@ -8,6 +8,10 @@ const DEFAULT_CHALLENGE_PHRASES = JSON.stringify([
   'pardon our interruption',
   'security check',
   'attention required',
+  'access is temporarily restricted',
+  'unusual activity',
+  'captcha-delivery',
+  'datadome',
 ]);
 
 /**
