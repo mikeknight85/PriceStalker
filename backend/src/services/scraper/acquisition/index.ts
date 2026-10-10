@@ -36,6 +36,7 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
   // --- Attempt 1: Remote/Browser (if configured) ---
   if (useBrowserScraper) {
     usedRemoteFallback = true;
+    learnedFlags = { use_browser_scraper: true };
     const remoteHtml = await acquireRemoteHtml(options);
     if (remoteHtml) {
       html = remoteHtml;
