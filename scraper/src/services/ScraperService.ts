@@ -135,7 +135,11 @@ export class ScraperService {
         'verify you are human',
         'pardon our interruption',
         'security check',
-        'attention required'
+        'attention required',
+        'access is temporarily restricted',
+        'unusual activity',
+        'captcha-delivery',
+        'datadome'
       ];
       const phrases = options.challengePatterns && options.challengePatterns.length > 0
         ? options.challengePatterns

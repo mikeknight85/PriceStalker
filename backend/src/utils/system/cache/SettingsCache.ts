@@ -26,6 +26,10 @@ const DEFAULT_CONFIG = {
     'pardon our interruption',
     'security check',
     'attention required',
+    'access is temporarily restricted',
+    'unusual activity',
+    'captcha-delivery',
+    'datadome',
   ],
   genericAIPriceSelectors: [
     '[class*="price" i]',
