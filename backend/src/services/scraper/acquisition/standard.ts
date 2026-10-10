@@ -154,6 +154,9 @@ function handleAxiosError(err: any, url: string, extractionSteps: string[], requ
 
   if (err instanceof AxiosError && status === 403) {
     throw new BotChallengeError('HTTP 403 Forbidden');
+  } else if (err.code === 'ERR_FR_TOO_MANY_REDIRECTS' || err.message?.toLowerCase().includes('maximum number of redirects exceeded')) {
+    extractionSteps.push(`Request | Redirect Loop | ${err.message || 'Maximum number of redirects exceeded'}`);
+    throw new BotChallengeError('Redirect Loop (Queue-it / Anti-Bot Challenge)');
   } else {
     extractionSteps.push(`Request | Error | ${errCode}: ${err.message}`);
     throw err;
