@@ -34,12 +34,16 @@ export interface UserAgentIdentity {
   family: BrandFamily;
   /** Major version, as a string because that is what the hint carries. */
   majorVersion: string | null;
+  /** Full version string of the browser (e.g. "154.0.0.0"). */
+  fullVersion: string | null;
   /**
    * Major version of the Chromium underneath, from the Chrome/ token. The same
    * as majorVersion for Chrome and Edge; Opera numbers itself separately, so
    * OPR/136 runs on Chromium 152.
    */
   chromiumVersion: string | null;
+  /** Full version string of Chromium underneath. */
+  chromiumFullVersion: string | null;
   /** The `Sec-CH-UA-Platform` value, quoted form without the quotes. */
   platform: string;
   mobile: boolean;
@@ -88,44 +92,47 @@ function detectPlatform(ua: string): { platform: string; mobile: boolean } {
   return { platform: 'Unknown', mobile: false };
 }
 
-function detectBrand(ua: string): { family: BrandFamily; majorVersion: string | null } {
+function detectBrand(ua: string): { family: BrandFamily; majorVersion: string | null; fullVersion: string | null } {
   // Checked before Chrome: every Chromium derivative also claims "Chrome".
-  const edge = ua.match(/Edg(?:e|A|iOS)?\/(\d+)/);
-  if (edge) return { family: 'edge', majorVersion: edge[1] };
+  const edge = ua.match(/Edg(?:e|A|iOS)?\/([\d.]+)/);
+  if (edge) return { family: 'edge', majorVersion: edge[1].split('.')[0], fullVersion: edge[1] };
 
-  const opera = ua.match(/OPR\/(\d+)/);
-  if (opera) return { family: 'opera', majorVersion: opera[1] };
+  const opera = ua.match(/OPR\/([\d.]+)/);
+  if (opera) return { family: 'opera', majorVersion: opera[1].split('.')[0], fullVersion: opera[1] };
 
-  const firefox = ua.match(/Firefox\/(\d+)/);
-  if (firefox) return { family: 'firefox', majorVersion: firefox[1] };
+  const firefox = ua.match(/Firefox\/([\d.]+)/);
+  if (firefox) return { family: 'firefox', majorVersion: firefox[1].split('.')[0], fullVersion: firefox[1] };
 
-  const chrome = ua.match(/Chrome\/(\d+)/);
-  if (chrome) return { family: 'chrome', majorVersion: chrome[1] };
+  const chrome = ua.match(/Chrome\/([\d.]+)/);
+  if (chrome) return { family: 'chrome', majorVersion: chrome[1].split('.')[0], fullVersion: chrome[1] };
 
   // Safari last: Chrome and Edge UAs both end in a Safari token.
-  const safari = ua.match(/Version\/(\d+)[\d.]*\s+Safari\//);
-  if (safari) return { family: 'safari', majorVersion: safari[1] };
+  const safari = ua.match(/Version\/([\d.]+)\s+Safari\//);
+  if (safari) return { family: 'safari', majorVersion: safari[1].split('.')[0], fullVersion: safari[1] };
 
-  return { family: 'unknown', majorVersion: null };
+  return { family: 'unknown', majorVersion: null, fullVersion: null };
 }
 
 export function parseUserAgent(userAgent: string): UserAgentIdentity {
   const ua = userAgent.trim();
-  const { family, majorVersion } = detectBrand(ua);
+  const { family, majorVersion, fullVersion } = detectBrand(ua);
   const { platform, mobile } = detectPlatform(ua);
 
   // Firefox and Safari do not implement User-Agent Client Hints. Sending them
   // anyway announces a browser that cannot exist.
   const isChromium = family === 'chrome' || family === 'edge' || family === 'opera';
 
-  const chromium = isChromium ? ua.match(/Chrome\/(\d+)/) : null;
-  const chromiumVersion = chromium ? chromium[1] : null;
+  const chromium = isChromium ? ua.match(/Chrome\/([\d.]+)/) : null;
+  const chromiumFullVersion = chromium ? chromium[1] : null;
+  const chromiumVersion = chromiumFullVersion ? chromiumFullVersion.split('.')[0] : null;
 
   return {
     userAgent: ua,
     family,
     majorVersion,
+    fullVersion,
     chromiumVersion,
+    chromiumFullVersion,
     platform,
     mobile,
     supportsClientHints: isChromium && majorVersion !== null && chromiumVersion !== null,
@@ -191,6 +198,50 @@ export function buildClientHintHeaders(identity: UserAgentIdentity): Record<stri
 }
 
 /**
+ * Maps high-level platform name to legacy navigator.platform string expected by CDP.
+ */
+export function legacyPlatformFor(platform: string): string {
+  switch (platform.toLowerCase()) {
+    case 'windows': return 'Win32';
+    case 'macos': return 'MacIntel';
+    case 'linux': return 'Linux x86_64';
+    case 'android': return 'Linux armv81';
+    case 'ios': return 'iPhone';
+    default: return 'Win32';
+  }
+}
+
+/**
+ * The brands with full version strings for Sec-CH-UA-Full-Version-List.
+ */
+export function orderedFullBrands(identity: UserAgentIdentity): { brand: string; version: string }[] | null {
+  if (!identity.supportsClientHints || !identity.majorVersion || !identity.chromiumVersion) return null;
+
+  let own: string;
+  switch (identity.family) {
+    case 'chrome': own = 'Google Chrome'; break;
+    case 'edge': own = 'Microsoft Edge'; break;
+    case 'opera': own = 'Opera'; break;
+    default: return null;
+  }
+
+  const major = Number(identity.chromiumVersion);
+  const grease = greaseBrand(major);
+  const greaseFullVersion = `${grease.version}.0.0.0`;
+  const chromiumFull = identity.chromiumFullVersion || `${identity.chromiumVersion}.0.0.0`;
+  const ownFull = identity.fullVersion || `${identity.majorVersion}.0.0.0`;
+
+  const list = [
+    { brand: grease.brand, version: greaseFullVersion },
+    { brand: 'Chromium', version: chromiumFull },
+    { brand: own, version: ownFull },
+  ];
+  const placed: { brand: string; version: string }[] = new Array(list.length);
+  ORDERS[major % ORDERS.length].forEach((pos, i) => { placed[pos] = list[i]; });
+  return placed;
+}
+
+/**
  * Puppeteer's `userAgentMetadata`, so an overridden UA in the browser scraper
  * carries matching client hints.
  *
@@ -202,17 +253,20 @@ export function buildUserAgentMetadata(identity: UserAgentIdentity) {
   const brands = orderedBrands(identity);
   if (!brands) return undefined;
 
+  const fullVersionList = orderedFullBrands(identity) || brands;
+  const fullVersion = identity.fullVersion || `${identity.majorVersion}.0.0.0`;
+
   return {
     brands,
-    // The browser's own version, as Sec-CH-UA-Full-Version carries it. Opera
-    // GX 136 on Chromium 152 sends "136.0.6008.67" there, so Opera's number
-    // and not Chromium's; for Chrome and Edge the two are the same.
-    fullVersion: `${identity.majorVersion}.0.0.0`,
+    fullVersionList,
+    fullVersion,
     platform: identity.platform,
     platformVersion: platformVersionFor(identity),
     architecture: identity.mobile ? '' : 'x86',
     model: '',
     mobile: identity.mobile,
+    bitness: identity.mobile ? '32' : '64',
+    wow64: false,
   };
 }
 

@@ -81,7 +81,8 @@ WORKDIR /app/scraper
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
     NODE_ENV=production \
-    PORT=5100
+    PORT=5100 \
+    TINI_SUBREAPER=1
 
 EXPOSE 5100
 
