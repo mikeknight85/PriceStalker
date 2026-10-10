@@ -17,7 +17,7 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
 
   while (retryCount <= maxRetries) {
     const controller = new AbortController();
-    const abortTimeout = setTimeout(() => controller.abort(), 65000); // 65s safety timeout
+    const abortTimeout = setTimeout(() => controller.abort(), 75000); // 75s safety timeout
 
     try {
       const logPrefix = `Browser Scraper | [${requestId}]${productId ? ` [PROD-${productId}]` : ''}`;
@@ -44,7 +44,7 @@ export async function fetchRemoteHtml(url: string, remoteScraperUrl: string, opt
 
       const start = Date.now();
       const response = await axios.post(endpoint, payload, { 
-        timeout: 60000,
+        timeout: 70000,
         signal: controller.signal
       });
 

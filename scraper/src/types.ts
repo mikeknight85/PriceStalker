@@ -14,6 +14,7 @@ export interface ScrapeOptions {
   waitForSelector?: string;
   delay?: number;
   captureScreenshot?: boolean;
+  challengePatterns?: string[];
 }
 
 export interface LogContext {

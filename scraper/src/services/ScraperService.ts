@@ -94,8 +94,8 @@ export class ScraperService {
       
       log(`Navigating to ${url}...`, 'DEBUG', context);
       await page.goto(url, {
-        waitUntil: options.waitUntil || 'networkidle2',
-        timeout: options.timeout || 60000,
+        waitUntil: options.waitUntil || 'domcontentloaded',
+        timeout: options.timeout || 45000,
         referer: options.referrer || undefined
       });
       log(`Navigation complete: ${url}`, 'DEBUG', context);
@@ -119,10 +119,26 @@ export class ScraperService {
       if (abortSignal?.aborted) return null;
       let html = await page.content();
 
-      // Some challenge interstitials ("Are you a robot?", "Just a moment...")
-      // auto-resolve after their JS fingerprinting finishes. Give them a
-      // couple of chances before returning the wall page.
-      const challengePattern = /are you a robot|just a moment|access denied|verify you are human/i;
+      // Some challenge interstitials ("Are you a robot?", "Just a moment...",
+      // "Pardon our interruption") auto-resolve after their JS fingerprinting finishes.
+      // Give them a couple of chances before returning the wall page.
+      const defaultPhrases = [
+        'are you a robot',
+        'just a moment',
+        'access denied',
+        'verify you are human',
+        'pardon our interruption',
+        'security check',
+        'attention required'
+      ];
+      const phrases = options.challengePatterns && options.challengePatterns.length > 0
+        ? options.challengePatterns
+        : defaultPhrases;
+      const challengePattern = new RegExp(
+        phrases.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
+        'i'
+      );
+
       for (let attempt = 1; attempt <= 2 && challengePattern.test(html); attempt++) {
         log(`Challenge interstitial detected, waiting for auto-resolve (${attempt}/2)...`, 'INFO', context);
         await new Promise(resolve => setTimeout(resolve, 8000));

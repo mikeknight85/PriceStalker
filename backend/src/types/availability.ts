@@ -77,6 +77,9 @@ export function classifyTransportError(error: unknown): UnavailableReason {
   const code = String(err?.code || err?.errno || '').toUpperCase();
   const message = String(err?.message || '').toLowerCase();
 
+  if (message.includes('browser scraper') || message.includes('remote scraper')) {
+    return 'remote_scraper_failure';
+  }
   if (code === 'ENOTFOUND' || code === 'EAI_AGAIN' || message.includes('getaddrinfo')) {
     return 'dns_failure';
   }

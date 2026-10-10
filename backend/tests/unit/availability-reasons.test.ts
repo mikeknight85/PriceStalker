@@ -67,6 +67,8 @@ describe('Unavailable reasons', () => {
       [{ code: 'ECONNREFUSED' }, 'connection_failure'],
       [{ code: 'ECONNRESET' }, 'connection_failure'],
       [{ code: 'EHOSTUNREACH' }, 'connection_failure'],
+      [{ message: 'Browser Scraper failed (500): Navigation timeout of 45000ms exceeded' }, 'remote_scraper_failure'],
+      [{ message: 'remote scraper request failed' }, 'remote_scraper_failure'],
     ])('%o -> %s', (error, expected) => {
       expect(classifyTransportError(error)).toBe(expected);
     });

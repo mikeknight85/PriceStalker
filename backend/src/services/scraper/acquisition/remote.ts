@@ -40,6 +40,9 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
   if (!rsUrl) {
     extractionSteps.push(`Scraper | Remote | URL not configured, falling back`);
     logger.warn(`Scraper | Remote | Enabled for ${domain} but remote_scraper_url is not configured.`, 'Scraper');
+    if (domainConfig?.use_browser_scraper) {
+      throw new Error('Browser Scraper URL is not configured — set Remote Scraper URL under Admin -> System');
+    }
     return null;
   }
 
@@ -101,6 +104,10 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
   } catch (e) {
     if (e instanceof PageNotAvailableError) throw e;
     extractionSteps.push(`Scraper | Remote | Failed: ${(e as any).message}`);
+    if (domainConfig?.use_browser_scraper) {
+      logger.warn(`Scraper | Remote | Failed for ${domain} (Browser required): ${(e as any).message}`, 'Scraper');
+      throw e;
+    }
     logger.warn(`Scraper | Remote | Failed for ${domain}, will fallback: ${(e as any).message}`, 'Scraper');
     return null;
   }

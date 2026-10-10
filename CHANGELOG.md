@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Scraper navigation default switched from `networkidle2` to `domcontentloaded`
+  to prevent timeouts on retailers streaming telemetry and ad beacons (#234).
+- Scraper interstitial auto-resolve recognition expanded to include Imperva's
+  "pardon our interruption" and modern security verification screens (#234).
+- Prevented flawed fallback to plain HTTP (Axios) when a retailer explicitly
+  has the Browser Scraper enabled, avoiding false-positive `BLOCKED` status flags
+  and misleading advice to enable the browser scraper (#234).
+- Staggered timeouts between backend Axios (70s) and Puppeteer navigation (45s)
+  so auto-resolve loops finish and return structured JSON before socket drops (#234).
+
 ## [2.1.0-beta.12] - 2026-09-27
 
 ### Fixed

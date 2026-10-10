@@ -40,6 +40,7 @@ export type ScrapeFailureReason =
   | 'bot_challenge'
   | 'page_unavailable'
   | 'auto_map_rejected'
+  | 'browser_scraper_failed'
   | 'no_price_found';
 
 export type ReviewReason = 'no_consensus' | 'ai_correction' | 'oos_guardrail' | 'manual_rescan' | 'first_scan' | 'missing_currency';

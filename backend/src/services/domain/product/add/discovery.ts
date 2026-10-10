@@ -20,6 +20,8 @@ function describeScrapeFailure(reason?: ScrapeFailureReason, detail?: string): s
       return 'The product page could not be found. Check the URL is still live and points at a product rather than a search or category page.';
     case 'auto_map_rejected':
       return 'AI auto-mapping could not find a usable price on this page, so no retailer configuration was saved. Add price selectors for this retailer under Admin -> Retailers, or use the Live Tester to work them out.';
+    case 'browser_scraper_failed':
+      return `The Browser Scraper failed to fetch the page${detail ? ` (${detail})` : ''}. Check the Browser Scraper container and settings in Admin -> System.`;
     case 'no_price_found':
     default:
       return 'No price could be found on this page. If the price is rendered by JavaScript, enable the Browser Scraper for this retailer under Admin -> Retailers.';
