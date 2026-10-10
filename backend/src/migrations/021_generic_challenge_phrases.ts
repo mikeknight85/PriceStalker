@@ -12,6 +12,11 @@ const DEFAULT_CHALLENGE_PHRASES = JSON.stringify([
   'unusual activity',
   'captcha-delivery',
   'datadome',
+  'access to this page has been denied',
+  'px-captcha',
+  'perimeterx',
+  'press & hold',
+  'press and hold',
 ]);
 
 /**

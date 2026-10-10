@@ -139,7 +139,12 @@ export class ScraperService {
         'access is temporarily restricted',
         'unusual activity',
         'captcha-delivery',
-        'datadome'
+        'datadome',
+        'access to this page has been denied',
+        'px-captcha',
+        'perimeterx',
+        'press & hold',
+        'press and hold'
       ];
       const phrases = options.challengePatterns && options.challengePatterns.length > 0
         ? options.challengePatterns
