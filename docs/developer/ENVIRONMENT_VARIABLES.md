@@ -64,3 +64,44 @@ These parameters enable and coordinate Single Sign-On integrations. Detailed set
 | `SMTP_FALLBACK_PORT` | Port number of the fallback SMTP email server. | `587` |
 | `SMTP_FALLBACK_FROM` | The sender email address used for system fallback notifications. | *(Empty)* |
 | `ADMIN_ALERT_EMAIL` | The recipient email address where database-health alert logs are forwarded on failure. | *(Empty)* |
+
+---
+
+## Browser Scraper Configuration
+
+Read by the optional `scraper` service only (`scraper/src/core/SessionManager.ts`),
+and only when that service is deployed. The backend scrapes over plain HTTP
+without it; these change nothing on an install that has no browser scraper.
+
+Each of the four numeric limits must be a **positive integer**. Anything else —
+a negative number, a fraction, text — is refused with a warning at startup and
+the default stands. A negative limit used to be accepted at face value and
+quietly made the pool unusable: `sessions.length >= -1` is true on an empty
+pool, so every scrape came back as "all browser instances at capacity".
+
+| Variable | Description | Default |
+|:---|:---|:---|
+| `MAX_BROWSERS` | Maximum concurrent Chromium processes. The main lever for memory: each browser is a separate process with its own renderer children. Lower it to `1` on a 1–2 GB VPS. | `3` |
+| `MAX_PAGES_PER_BROWSER` | Maximum concurrent tabs per browser process. Raising it increases throughput per browser at the cost of per-process memory. | `4` |
+| `MAX_SCRAPES_PER_BROWSER` | Scrapes a browser serves before it is recycled, to reclaim the memory Chromium does not return. | `50` |
+| `IDLE_TIMEOUT_MS` | Idle time, in milliseconds, before an unused browser is closed. | `300000` (5 minutes) |
+| `ENABLE_ADBLOCKER` | Set to `false` to disable the built-in adblocker. It runs with `blockTrackers: false` so anti-bot verification scripts (Turnstile, Reese84, DataDome) can still report their telemetry; disable it entirely only when adblocking interferes with rendering. | `true` |
+| `PROFILE_BASE_DIR` | Base directory for Chromium's per-session profiles. Set it to a path under `/dev/shm` to trade RAM for disk I/O. The default lives under the container's `/tmp`, which `docker-compose.yaml` and `deploy/swarm-stack.yml` back with a capped `tmpfs` so leaked profiles cannot fill the node's overlay storage (issue #52). | `<os tmpdir>/scraper-profiles` |
+
+`docker-compose.yaml` and `deploy/swarm-stack.yml` both pass these through from
+`SCRAPER_`-prefixed host variables (`SCRAPER_MAX_BROWSERS`, `SCRAPER_MAX_PAGES`,
+`SCRAPER_MAX_SCRAPES`, `SCRAPER_IDLE_TIMEOUT_MS`, `SCRAPER_ENABLE_ADBLOCKER`,
+`SCRAPER_PROFILE_BASE_DIR`), so set the prefixed names in `.env` rather than
+editing the compose files.
+
+### Per-scrape options, which are not environment variables
+
+Navigation strategy, the scrape budget, the hydration delay and the challenge
+auto-resolve knobs (`interstitialWaitMs`, `interstitialRetries`) arrive per
+request over the scraper's HTTP API, not from the environment. The backend
+sources the first three from the `browser_timeout` and `browser_delay` system
+settings under **Admin -> System**; `browser_timeout` is the budget for the
+*whole* scrape, which the scraper splits across navigation and the
+post-navigation phase. The challenge phrase list is the
+`generic_challenge_phrases` system setting, editable under
+**Admin -> Extraction Rules**.
