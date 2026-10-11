@@ -4,6 +4,7 @@ import { productsRoute } from '../../../../routes/-products-api';
 import Layout from '../../../../layouts/Layout';
 import PriceSelectionModal from '../../components/PriceSelectionModal';
 import ConfirmationModal from '../../../../components/ConfirmationModal';
+import ErrorBoundary from '../../../../components/ErrorBoundary';
 import { useDashboardState } from '../../hooks/useDashboardState';
 import DashboardControls from './DashboardControls';
 import ProductList from './ProductList';
@@ -47,8 +48,10 @@ const Dashboard: React.FC = () => {
     retryLoad,
     searchQuery,
     setSearchQuery,
-    pauseFilter,
-    setPauseFilter,
+    trackingFilter,
+    setTrackingFilter,
+    stockFilter,
+    setStockFilter,
     sortBy,
     setSortBy,
     sortOrder,
@@ -81,7 +84,8 @@ const Dashboard: React.FC = () => {
   const handleTagClick = (next: string | null) => {
     setActiveTag(next);
     setSearchQuery('');
-    setPauseFilter('all');
+    setTrackingFilter('all');
+    setStockFilter('all');
     setSortBy('date_added');
     setSortOrder('desc');
 
@@ -131,13 +135,14 @@ const Dashboard: React.FC = () => {
                   <DashboardControls
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
-                    pauseFilter={pauseFilter}
-                    onPauseFilterChange={setPauseFilter}
+                    trackingFilter={trackingFilter}
+                    onTrackingFilterChange={setTrackingFilter}
+                    stockFilter={stockFilter}
+                    onStockFilterChange={setStockFilter}
                     sortBy={sortBy}
                     onSortByChange={setSortBy}
                     sortOrder={sortOrder}
                     onSortOrderToggle={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                    filteredCount={filteredAndSortedProducts.length}
                     activeTag={activeTag}
                     tags={tags}
                     onTagSelect={handleTagClick}
@@ -165,17 +170,29 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
+                {/*
+                  Both views are handed every piece of filter and sort state.
+                  The grouped view silently ignoring some of it is the bug
+                  behind #241 and #248, so nothing is passed to one list and
+                  withheld from the other.
+                */}
                 {view === 'items' ? (
-                  <ItemList
-                    searchQuery={searchQuery}
-                    activeTag={activeTag}
-                    sortBy={sortBy}
-                    sortOrder={sortOrder}
-                  />
+                  <ErrorBoundary section="the product list">
+                    <ItemList
+                      searchQuery={searchQuery}
+                      activeTag={activeTag}
+                      trackingFilter={trackingFilter}
+                      stockFilter={stockFilter}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                    />
+                  </ErrorBoundary>
                 ) : (
+                <ErrorBoundary section="the store list">
                 <ProductList
                   products={filteredAndSortedProducts}
                   isLoading={isLoading}
+                  activeTag={activeTag}
                   onDelete={(id) => {
                     const p = products.find(prod => prod.id === id);
                     if (p) setProductToDelete(p);
@@ -186,6 +203,7 @@ const Dashboard: React.FC = () => {
                   hasAnyProducts={products.length > 0}
                   onSelect={(id) => navigate({ to: '/products/$productId', params: { productId: String(id) } })}
                 />
+                </ErrorBoundary>
                 )}
           </>}
         </main>

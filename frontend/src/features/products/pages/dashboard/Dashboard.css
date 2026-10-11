@@ -140,6 +140,13 @@
   align-items: center;
   gap: 0.5rem;
   margin-left: auto;
+  /*
+   * Wraps because the row now carries two filters as well as the sort (issue
+   * #246); without this the third select pushes the add-product button off the
+   * right edge on a phone.
+   */
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .add-product-link {

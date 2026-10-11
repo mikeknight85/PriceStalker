@@ -1,8 +1,95 @@
-import { Product, PriceReviewResponse } from '../../../../types/api';
+import { Product, PriceReviewResponse, StockStatus } from '../../../../types/api';
 
 export type SortOption = 'date_added' | 'name' | 'tag' | 'price' | 'price_change' | 'price_change_percent' | 'status' | 'last_checked' | 'website';
 export type SortOrder = 'asc' | 'desc';
-export type PauseFilter = 'all' | 'active' | 'paused';
+
+/**
+ * The two dashboard filters, kept apart on purpose (issue #246).
+ *
+ * They used to be one control labelled "All Status", which filtered on
+ * `checking_paused` -- whether PriceStalker is still checking the page. Users
+ * read it as stock and got nothing of the sort, and there was no way to ask the
+ * dashboard the question they actually had ("what is out of stock?").
+ *
+ * `TrackingFilter` is about us: are we still looking at this page.
+ * `StockFilter` is about the retailer: can you buy the thing.
+ * Neither implies the other -- an actively checked listing is routinely out of
+ * stock, and a paused one can be sitting in stock -- so they are separate
+ * dropdowns with separate wording, and they compose.
+ */
+export type TrackingFilter = 'all' | 'active' | 'paused';
+
+/** 'all' plus every `StockStatus`, so no status is unreachable from the UI. */
+export type StockFilter = 'all' | StockStatus;
+
+export const TRACKING_FILTER_OPTIONS: { value: TrackingFilter; label: string }[] = [
+  { value: 'all', label: 'All Tracking' },
+  { value: 'active', label: 'Active' },
+  { value: 'paused', label: 'Paused' },
+];
+
+/**
+ * How the UI names each stock status. One table, read by the filter dropdown,
+ * so the filter and the summary card cannot drift apart.
+ */
+export const STOCK_STATUS_LABELS: Record<StockStatus, string> = {
+  in_stock: 'In Stock',
+  out_of_stock: 'Out of Stock',
+  pre_order: 'Pre-Order',
+  not_available: 'Not Available',
+  member_only: 'Member Only',
+  unknown: 'Unknown',
+};
+
+/**
+ * Most available first. Also the order the dropdown lists them in, and the
+ * precedence used to give a grouped item one status out of several stores --
+ * see `filters.ts`.
+ */
+export const STOCK_STATUS_BY_AVAILABILITY: StockStatus[] = [
+  'in_stock',
+  'member_only',
+  'pre_order',
+  'unknown',
+  'out_of_stock',
+  'not_available',
+];
+
+export const STOCK_FILTER_OPTIONS: { value: StockFilter; label: string }[] = [
+  { value: 'all', label: 'All Stock' },
+  ...STOCK_STATUS_BY_AVAILABILITY.map(status => ({
+    value: status as StockFilter,
+    label: STOCK_STATUS_LABELS[status],
+  })),
+];
+
+/**
+ * A remembered dropdown choice, or the default when nothing valid is stored.
+ *
+ * Validated against the option list rather than cast: a value left behind by an
+ * older build (or by hand) would otherwise leave the select showing nothing,
+ * which is how the `sortBy` guard below came to exist. Reads are wrapped
+ * because a private window throws on access instead of returning null, and a
+ * dashboard that will not render is worse than one that forgets a preference.
+ */
+export function readStoredChoice<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(key);
+  } catch {
+    return fallback;
+  }
+  return allowed.some(value => value === saved) ? (saved as T) : fallback;
+}
+
+/** Stores a dropdown choice, treating the preference as optional. */
+export function writeStoredChoice(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* preference is optional */
+  }
+}
 
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'date_added', label: 'Date Added' },
@@ -95,20 +182,11 @@ export function calculateDashboardSummary(products: Product[]): DashboardSummary
     return acc;
   }, {} as Record<string, number>);
 
-  const stockCounts = Object.entries(stockMap).map(([status, count]) => {
-    const stockLabels: Record<string, string> = {
-      in_stock: 'In Stock',
-      out_of_stock: 'Out of Stock',
-      pre_order: 'Pre-Order',
-      not_available: 'Not Available',
-      member_only: 'Member Only',
-      unknown: 'Unknown'
-    };
-    return {
-      name: stockLabels[status] || status,
-      count
-    };
-  });
+  const stockCounts = Object.entries(stockMap).map(([status, count]) => ({
+    // The same table the filter dropdown reads, so the two cannot drift.
+    name: STOCK_STATUS_LABELS[status as StockStatus] || status,
+    count
+  }));
 
   return {
     totalProducts,

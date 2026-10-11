@@ -5,13 +5,23 @@ import LoadingSpinner from '../../../../components/LoadingSpinner';
 import Icon from '../../../../components/Icon';
 import { itemListQuery } from '../../../../api/queries';
 import { useAuth } from '../../../auth';
-import { SortOption, SortOrder } from './utils';
+import { SortOption, SortOrder, StockFilter, TrackingFilter } from './utils';
 import { sortItems } from './itemSort';
+import { itemMatchesStockFilter, itemMatchesTrackingFilter } from './filters';
+import ResultCount from './ResultCount';
 
 interface ItemListProps {
   /** Applied to the item name, mirroring the flat view's search. */
   searchQuery: string;
   activeTag: string | null;
+  /**
+   * The dashboard's filters, which apply here too (issues #246 and #248).
+   * `filters.ts` sets out what each one means for an item; in short, the best
+   * answer among the item's stores wins, so one live store keeps an item
+   * Active and one store with stock keeps it In Stock.
+   */
+  trackingFilter: TrackingFilter;
+  stockFilter: StockFilter;
   /**
    * The dashboard's sort, which applies here too (issue #241). It used to be
    * wired only to the flat list, so every option in this view did nothing and
@@ -30,7 +40,14 @@ interface ItemListProps {
  * view, and recomputing that in the browser would be a second implementation
  * of the rule about which listings may be compared.
  */
-const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeTag, sortBy, sortOrder }) => {
+const ItemList: React.FC<ItemListProps> = ({
+  searchQuery,
+  activeTag,
+  trackingFilter,
+  stockFilter,
+  sortBy,
+  sortOrder,
+}) => {
   const { user } = useAuth();
   const itemsQuery = useQuery(itemListQuery());
   const data = itemsQuery.data;
@@ -43,11 +60,16 @@ const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeTag, sortBy, sor
       const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
       // `item.category` is the wire field for what the UI calls tags (#147).
       const matchesTag = !activeTag || (item.category || '').split(',').map(c => c.trim()).includes(activeTag);
-      return matchesSearch && matchesTag;
+      return (
+        matchesSearch &&
+        matchesTag &&
+        itemMatchesTrackingFilter(item, trackingFilter) &&
+        itemMatchesStockFilter(item, stockFilter)
+      );
     });
 
     return sortItems(filtered, sortBy, sortOrder);
-  }, [data, searchQuery, activeTag, sortBy, sortOrder]);
+  }, [data, searchQuery, activeTag, trackingFilter, stockFilter, sortBy, sortOrder]);
 
   if (itemsQuery.isError) {
     return (
@@ -62,21 +84,30 @@ const ItemList: React.FC<ItemListProps> = ({ searchQuery, activeTag, sortBy, sor
 
   if (itemsQuery.isLoading) return <LoadingSpinner centered />;
 
+  const isFiltered = Boolean(searchQuery) || activeTag !== null || trackingFilter !== 'all' || stockFilter !== 'all';
+
   if (items.length === 0) {
     return (
-      <div className="products-empty">
-        <div className="products-empty-icon"><Icon name="package" /></div>
-        <div>{searchQuery || activeTag ? 'No items match this filter' : 'Nothing tracked yet'}</div>
-      </div>
+      <>
+        {isFiltered && <ResultCount count={0} noun="product" activeTag={activeTag} />}
+        <div className="products-empty">
+          <div className="products-empty-icon"><Icon name="package" /></div>
+          <div>{isFiltered ? 'No products match these filters' : 'Nothing tracked yet'}</div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="items-list">
-      {items.map(item => (
-        <ItemCard key={item.id} item={item} userLocale={user?.locale ?? undefined} />
-      ))}
-    </div>
+    <>
+      {/* Items, counted as items: this view's cards are products, not stores. */}
+      <ResultCount count={items.length} noun="product" activeTag={activeTag} />
+      <div className="items-list">
+        {items.map(item => (
+          <ItemCard key={item.id} item={item} userLocale={user?.locale ?? undefined} />
+        ))}
+      </div>
+    </>
   );
 };
 
