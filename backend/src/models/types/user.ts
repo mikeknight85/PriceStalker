@@ -57,6 +57,11 @@ export interface UserProfile {
   locale: string | null;
   /** @deprecated Currency guessing no longer uses a user preference. */
   preferred_currency: string | null;
+  /**
+   * Seconds between checks for products this user adds (issue #239).
+   * Null means follow the instance default in `system_settings`.
+   */
+  default_refresh_interval: number | null;
   is_admin: boolean;
   disabled: boolean;
   categories: string[];

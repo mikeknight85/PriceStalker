@@ -24,6 +24,7 @@ export const queryKeys = {
   profile: ['profile'] as const,
   currencies: ['settings', 'currencies'] as const,
   notificationSettings: ['settings', 'notifications'] as const,
+  productDefaults: ['settings', 'product-defaults'] as const,
   systemVersion: ['system', 'version'] as const,
   adminSystemSettings: ['admin', 'system-settings'] as const,
   priceHistoryAll: priceHistoryPrefix,
@@ -93,6 +94,20 @@ export const profileQuery = () => queryOptions({
 export const currenciesQuery = () => queryOptions({
   queryKey: queryKeys.currencies,
   queryFn: ({ signal }) => SharedService.getCurrencies({ signal }),
+  staleTime: 10 * 60_000,
+});
+
+/**
+ * The interval a new product starts at for this user (issue #239).
+ *
+ * Cached for ten minutes like the other settings reads: it only changes when
+ * the user edits their own preference -- which invalidates this key -- or when
+ * an administrator changes the instance default, which is not worth polling
+ * for. The Add Product form renders the 12-hour fallback until this resolves.
+ */
+export const productDefaultsQuery = () => queryOptions({
+  queryKey: queryKeys.productDefaults,
+  queryFn: ({ signal }) => ProfileService.getProductDefaults({ signal }),
   staleTime: 10 * 60_000,
 });
 

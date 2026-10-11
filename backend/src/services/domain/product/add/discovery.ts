@@ -2,6 +2,7 @@ import { productRepository } from '../../../../models';
 import { scrapeProductWithVoting } from '../../../scraper';
 import { productPersistenceService } from '../ProductPersistenceService';
 import { assertUrlIsSafe } from '../../../../utils/system/url-safety';
+import { FALLBACK_REFRESH_INTERVAL_SECONDS } from '../../../../utils/system/check-interval';
 import type { ScrapeFailureReason } from '../../../../types/scraper';
 
 /**
@@ -54,7 +55,7 @@ export class ProductDiscoveryService {
         url,
         scrapedData.name ? scrapedData.name.substring(0, 255) : null,
         scrapedData.imageUrl || null,
-        refreshInterval || 43200,
+        refreshInterval || FALLBACK_REFRESH_INTERVAL_SECONDS,
         scrapedData.stockStatus as any,
         scrapedData.aiStatus || null,
         category

@@ -22,15 +22,36 @@ export const userProfileRepository = {
 
   getProfile: async (id: number): Promise<UserProfile | null> => {
     const result = await pool.query(
-      'SELECT id, email, name, currency, locale, preferred_currency, is_admin, categories, created_at FROM users WHERE id = $1',
+      'SELECT id, email, name, currency, locale, preferred_currency, default_refresh_interval, is_admin, categories, created_at FROM users WHERE id = $1',
       [id]
     );
     return result.rows[0] || null;
   },
 
+  /**
+   * Just this user's preferred check interval for new products (issue #239).
+   *
+   * A separate, one-column read because the product-add path needs it on every
+   * add and has no use for the rest of the profile. NULL means the account has
+   * no preference and should follow the instance default.
+   */
+  getDefaultRefreshInterval: async (id: number): Promise<number | null> => {
+    const result = await pool.query(
+      'SELECT default_refresh_interval FROM users WHERE id = $1',
+      [id]
+    );
+    return result.rows[0]?.default_refresh_interval ?? null;
+  },
+
   updateProfile: async (
     id: number,
-    updates: { name?: string; currency?: string | null; locale?: string | null; preferred_currency?: string | null }
+    updates: {
+      name?: string;
+      currency?: string | null;
+      locale?: string | null;
+      preferred_currency?: string | null;
+      default_refresh_interval?: number | null;
+    }
   ): Promise<UserProfile | null> => {
     const fields: string[] = [];
     const values: (string | number | null)[] = [];
@@ -52,13 +73,19 @@ export const userProfileRepository = {
       fields.push(`preferred_currency = $${paramIndex++}`);
       values.push(updates.preferred_currency);
     }
+    // null is a value here, not an omission: it clears the preference so new
+    // products follow the instance default again (issue #239).
+    if (updates.default_refresh_interval !== undefined) {
+      fields.push(`default_refresh_interval = $${paramIndex++}`);
+      values.push(updates.default_refresh_interval);
+    }
 
     if (fields.length === 0) return null;
 
     values.push(id);
     const result = await pool.query(
       `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex}
-       RETURNING id, email, name, currency, locale, preferred_currency, is_admin, categories, created_at`,
+       RETURNING id, email, name, currency, locale, preferred_currency, default_refresh_interval, is_admin, categories, created_at`,
       values
     );
     return result.rows[0] || null;

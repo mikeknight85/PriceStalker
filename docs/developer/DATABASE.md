@@ -35,6 +35,10 @@ Stores user profile information, authentication hashes, locale/currency settings
  - `currency` & `locale` are optional display preferences. A null locale uses
    the browser format and a null currency leaves prices in the retailer's
    original currency.
+ - `default_refresh_interval`: Seconds between checks for products *this user*
+   adds, used to pre-fill the Add Product form (issue #239, migration 022).
+   Null means follow `system_settings.default_refresh_interval`. Only ever read
+   when a product is being created -- it never changes an existing listing.
  - **Notification Integrations**: Stores activation state, webhook tokens, and customizable templates for `telegram`, `discord`, `pushover`, `ntfy`, `gotify`, `webhook`, and `email`.
  - *(Note: AI provider settings and API keys are stored instance-wide in `system_settings`, not in `users`)*.
 
@@ -127,6 +131,12 @@ Global instance configuration managed via Admin.
 * **Key Fields**:
  - `key` (primary key, e.g. `ai_provider`, `remote_scraper_url`, `generic_*` selectors).
  - `value`: Stored setting or JSON string.
+ - `default_refresh_interval`: Seconds between checks for newly added products,
+   for every account that has not set its own (issue #239). Seeded with 43200 by
+   migration 022, held to one hour at the low end and one week at the high end
+   by `utils/system/check-interval.ts`. Read directly rather than through
+   `SettingsCache`, so a change takes effect on the next product added instead
+   of after the cache's 30-minute TTL.
 
 ### 8. `system_api_tokens`
 API access tokens for machine authorization.

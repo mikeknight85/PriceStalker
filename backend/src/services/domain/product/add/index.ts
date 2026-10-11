@@ -3,6 +3,7 @@ import { cleanUrl } from '../../../../utils/scraping/urlHelper';
 import { productDiscoveryService } from './discovery';
 import { productConfirmationService } from './confirmation';
 import { productRescanService } from './rescan';
+import { defaultCheckIntervalService } from '../DefaultCheckIntervalService';
 
 export class ProductAddService {
   /**
@@ -23,11 +24,20 @@ export class ProductAddService {
     const { selectedPrice, selectedMethod, category: rawCategory, refresh_interval } = options;
     const category = rawCategory?.trim() || null;
 
+    // Resolved once, here, so both paths below create the product with the same
+    // interval and neither needs its own fallback (issue #239). An interval the
+    // request carried wins; otherwise this is the user's default, then the
+    // instance default, then 12 hours.
+    const refreshInterval = await defaultCheckIntervalService.resolveForNewProduct(userId, refresh_interval);
+
     if (selectedPrice !== undefined && selectedMethod) {
-      return productConfirmationService.confirmNewProduct(userId, cleanedUrl, options);
+      return productConfirmationService.confirmNewProduct(userId, cleanedUrl, {
+        ...options,
+        refresh_interval: refreshInterval,
+      });
     } 
     
-    return productDiscoveryService.initiateProductDiscovery(userId, cleanedUrl, category, refresh_interval);
+    return productDiscoveryService.initiateProductDiscovery(userId, cleanedUrl, category, refreshInterval);
   }
 
   async scanProduct(userId: number, productId: number): Promise<any> {
