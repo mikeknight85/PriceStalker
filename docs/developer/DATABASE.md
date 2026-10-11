@@ -141,8 +141,19 @@ Global instance configuration managed via Admin.
 ### 8. `system_api_tokens`
 API access tokens for machine authorization.
 * **Key Fields**:
- - `token`: Hashed bearer token (prefixed with `ps_`).
- - `user_id`: Owning user account.
+ - `token_hash`: bcrypt hash of the bearer token. The plaintext (`ps_` + 64 hex)
+   is shown once at creation and never stored.
+ - `token_prefix`: the token's first 11 characters (`ps_` + 8 hex), indexed, so
+   verification finds one candidate row instead of bcrypt-comparing every row.
+   Null for tokens issued before migration 022 — the prefix cannot be recovered
+   from a bcrypt hash, so those rows are found by the legacy scan and are shown
+   as deprecated in Admin.
+ - `scopes` (`text[]`): what the token may do. Backfilled to `{'*'}` (full
+   access) for rows that predate migration 022. Enforced by
+   `middleware/scope.ts`.
+ - `admin_id`: the user account the token acts as. Required in practice — a token
+   with no linked user is refused at authentication.
+ - `expires_at`: optional; an expired token is refused before scopes are checked.
 
 ### 9. `password_reset_tokens`
 Short-lived tokens for self-service password reset.
