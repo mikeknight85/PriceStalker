@@ -1,5 +1,11 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../../middleware/auth';
+import { requireScopeByMethod } from '../../middleware/scope';
+import {
+  SCOPE_ADMIN_READ,
+  SCOPE_ADMIN_WRITE,
+  SCOPE_MCP_READ
+} from '../../services/domain/token/scopes';
 import { systemService } from '../../services/domain/system';
 import { defaultCheckIntervalService } from '../../services/domain/product';
 import { settingsCache } from '../../utils/cache';
@@ -11,6 +17,16 @@ const router = Router();
 
 // All routes require authentication
 router.use(authMiddleware);
+
+// Writes here change where notifications go and what currency prices are shown
+// in. For a machine credential that is an administrative change, not a
+// catalogue one, so it takes `admin:write` rather than `mcp:write` (#217).
+router.use(
+  requireScopeByMethod({
+    read: [SCOPE_MCP_READ, SCOPE_ADMIN_READ],
+    write: [SCOPE_ADMIN_WRITE]
+  })
+);
 
 // Check if product search is enabled
 router.get('/discovery/status', async (_req: AuthRequest, res: Response) => {

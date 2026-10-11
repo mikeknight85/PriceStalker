@@ -105,6 +105,23 @@ export const userAccountRepository = {
   },
 
   /**
+   * Administrators, oldest first.
+   *
+   * Used when a system API token has to be linked to a real account and the
+   * caller named none -- the token CLI script. Oldest first because the first
+   * administrator created on an installation is the owner, which is the least
+   * surprising account for a host-generated token to act as.
+   */
+  findAdmins: async (): Promise<User[]> => {
+    const result = await pool.query(
+      `SELECT * FROM users
+        WHERE is_admin = true AND (disabled IS NULL OR disabled = false)
+        ORDER BY created_at ASC, id ASC`
+    );
+    return result.rows;
+  },
+
+  /**
    * Stamps a successful sign-in. Called from both the local and the OIDC paths.
    *
    * Failures are swallowed by the caller rather than blocking the login: not

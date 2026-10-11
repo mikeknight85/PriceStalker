@@ -1,5 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../../middleware/auth';
+import { requireScopeByMethod } from '../../middleware/scope';
+import { SCOPE_MCP_READ, SCOPE_MCP_WRITE } from '../../services/domain/token/scopes';
 import { productHistoryService, productRefreshService } from '../../services/domain/product';
 import { logger } from '../../utils/system/logger';
 import { asyncHandler, callerIsAdmin } from '../../utils/system/route-helpers';
@@ -8,6 +10,10 @@ const router = Router();
 
 // All routes require authentication
 router.use(authMiddleware);
+
+// Price and stock history read with `mcp:read`; forcing a refresh is a write,
+// because it spends a scrape and moves the schedule (issue #217).
+router.use(requireScopeByMethod({ read: [SCOPE_MCP_READ], write: [SCOPE_MCP_WRITE] }));
 
 // Get price history for a product
 router.get('/:productId/history', asyncHandler(async (req: AuthRequest, res: Response) => {
