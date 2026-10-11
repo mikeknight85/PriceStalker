@@ -10,6 +10,7 @@ import Icon from '../../../../components/Icon';
 import { queryClient } from '../../../../api/queryClient';
 import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 import { useExpandedSections } from '../../../../hooks';
+import { REFRESH_INTERVALS, snapToOfferedInterval } from '../../../../utils/refreshInterval';
 
 export default function SystemSection() {
   const { showToast } = useToast();
@@ -21,6 +22,7 @@ export default function SystemSection() {
 
   const { expandedSections, toggleSection } = useExpandedSections({
     sys_network: false,
+    sys_tracking: false,
     sys_discovery: false,
     sys_browser: false,
     sys_security: false,
@@ -102,6 +104,29 @@ export default function SystemSection() {
           <small style={{ color: 'var(--text-muted)' }}>
             Where the browser scraper service is running. Retailers with
             &ldquo;Use Browser Scraper&rdquo; enabled are fetched through it.
+          </small>
+        </div>
+      </CollapsibleCard>
+
+      <CollapsibleCard title="Product Tracking" leadingIcon={<Icon name="clock" />} id="sys_tracking" isExpanded={expandedSections.sys_tracking} onToggle={toggleSection}>
+        <div className="form-group">
+          <label htmlFor="instance-default-refresh-interval">Default Check Interval</label>
+          <select
+            id="instance-default-refresh-interval"
+            className="form-control"
+            value={snapToOfferedInterval(Number(systemSettings?.default_refresh_interval))}
+            onChange={e => setSystemSettings(s => s ? { ...s, default_refresh_interval: parseInt(e.target.value, 10) } : null)}
+          >
+            {REFRESH_INTERVALS.map(interval => (
+              <option key={interval.value} value={interval.value}>{interval.label}</option>
+            ))}
+          </select>
+          <small style={{ color: 'var(--text-muted)' }}>
+            What a newly added product is checked every, for every account that
+            has not set its own default under Settings -&gt; Tracking. Products
+            already being tracked keep the interval they have. Shorter intervals
+            mean more requests to each retailer; one hour is the shortest
+            allowed.
           </small>
         </div>
       </CollapsibleCard>

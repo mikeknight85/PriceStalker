@@ -41,6 +41,7 @@ test.beforeEach(async ({ page }) => {
       '/api/products/items': [],
       '/api/profile': { ...authenticatedUser, categories: ['Games'] },
       '/api/settings/currencies': [],
+      '/api/settings/product-defaults': { refresh_interval: 43200, instance_refresh_interval: 43200 },
       '/api/settings/notifications': {},
       '/api/notifications/recent': { notifications: [] },
       '/api/admin/debug/status': { enabled: false },
@@ -217,6 +218,7 @@ test('renders every settings section at its canonical path', async ({ page }) =>
     ['/settings/profile', 'User Profile'],
     ['/settings/appearance', 'Theme'],
     ['/settings/regional', 'Regional Settings'],
+    ['/settings/tracking', 'Default Check Interval'],
     ['/settings/notifications', 'Notification Channels'],
     ['/settings/security', 'Security & Password'],
   ] as const) {

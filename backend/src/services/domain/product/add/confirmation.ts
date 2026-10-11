@@ -1,6 +1,7 @@
 import { productRepository, ProductWithLatestPrice } from '../../../../models';
 import { productPersistenceService } from '../ProductPersistenceService';
 import { logger } from '../../../../utils/system/logger';
+import { FALLBACK_REFRESH_INTERVAL_SECONDS } from '../../../../utils/system/check-interval';
 
 export class ProductConfirmationService {
   /**
@@ -32,7 +33,7 @@ export class ProductConfirmationService {
       url,
       name ? name.substring(0, 255) : null,
       imageUrl || null,
-      refresh_interval || 43200,
+      refresh_interval || FALLBACK_REFRESH_INTERVAL_SECONDS,
       (stockStatus || 'unknown') as any,
       'confirmed',
       category || null

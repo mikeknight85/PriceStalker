@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { userRepository, UserProfile } from '../../../models';
 import { logger } from '../../../utils/system/logger';
+import { normaliseDefaultRefreshInterval } from '../../../utils/system/check-interval';
 
 export class UserProfileService {
   /**
@@ -18,8 +19,18 @@ export class UserProfileService {
   async updateProfile(userId: number, data: any): Promise<UserProfile | null> {
     const { name, currency, locale } = data;
 
+    // Only written when the request mentions it, so a save from any other
+    // settings section cannot clear the preference (issue #239). Anything
+    // unusable -- '', null, 'auto', a negative -- means "no preference", which
+    // is null and falls back to the instance default. A usable value is held to
+    // the floor in utils/system/check-interval.
+    const updates: Parameters<typeof userRepository.updateProfile>[1] = { name, currency, locale };
+    if (data.default_refresh_interval !== undefined) {
+      updates.default_refresh_interval = normaliseDefaultRefreshInterval(data.default_refresh_interval);
+    }
+
     const oldProfile = await userRepository.getProfile(userId);
-    const profile = await userRepository.updateProfile(userId, { name, currency, locale });
+    const profile = await userRepository.updateProfile(userId, updates);
 
     if (!profile) return null;
 

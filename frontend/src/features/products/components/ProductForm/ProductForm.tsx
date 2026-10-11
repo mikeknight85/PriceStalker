@@ -19,7 +19,8 @@ interface ProductFormProps {
 import { REFRESH_INTERVALS } from '../../constants';
 import Icon from '../../../../components/Icon';
 import { isApiError } from '../../../../api/error';
-import { discoveryStatusQuery } from '../../../../api/queries';
+import { discoveryStatusQuery, productDefaultsQuery } from '../../../../api/queries';
+import { snapToOfferedInterval } from '../../../../utils/refreshInterval';
 
 const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) => {
   const [url, setUrl] = useState('');
@@ -32,7 +33,22 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) =>
 
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [refreshInterval, setRefreshInterval] = useState(43200);
+  /**
+   * The check interval, or null for "whatever the default is" (issue #239).
+   *
+   * Null rather than a number so the field follows the default as soon as it
+   * arrives, without an effect racing the user's first click -- and so clearing
+   * it after a successful add returns it to the default rather than to a
+   * hardcoded 12 hours.
+   */
+  const [refreshInterval, setRefreshInterval] = useState<number | null>(null);
+  const productDefaults = useQuery(productDefaultsQuery());
+  // Snapped because the stored default need not be one of the offered options,
+  // and a select whose value matches no option renders blank. An unmocked or
+  // failed request answers with no number at all, which snaps to 12 hours --
+  // exactly what this field did before the setting existed.
+  const defaultRefreshInterval = snapToOfferedInterval(productDefaults.data?.refresh_interval);
+  const effectiveRefreshInterval = refreshInterval ?? defaultRefreshInterval;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ReactNode>('');
   // Which search result is being tracked, so only that row shows a spinner.
@@ -115,13 +131,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) =>
       
       const tagString = finalTags.join(', ');
       
-      const result = await onSubmit(processedUrl, refreshInterval, tagString);
+      const result = await onSubmit(processedUrl, effectiveRefreshInterval, tagString);
       
       if (result !== false) {
         setUrl('');
         setTags([]);
         setTagInput('');
-        setRefreshInterval(43200);
+        setRefreshInterval(null);
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -235,7 +251,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) =>
                 <select
                   id="refresh-interval"
                   className="form-control"
-                  value={refreshInterval}
+                  value={effectiveRefreshInterval}
                   onChange={(e) => setRefreshInterval(parseInt(e.target.value, 10))}
                   style={{ height: '46px' }}
                 >

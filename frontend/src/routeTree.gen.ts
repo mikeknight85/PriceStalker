@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authenticated/products/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedSettingsTrackingRouteImport } from './routes/_authenticated/settings/tracking'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings/security'
 import { Route as AuthenticatedSettingsRegionalRouteImport } from './routes/_authenticated/settings/regional'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
@@ -130,6 +131,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedSettingsTrackingRoute =
+  AuthenticatedSettingsTrackingRouteImport.update({
+    id: '/tracking',
+    path: '/tracking',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsSecurityRoute =
   AuthenticatedSettingsSecurityRouteImport.update({
     id: '/security',
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/regional': typeof AuthenticatedSettingsRegionalRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/settings/tracking': typeof AuthenticatedSettingsTrackingRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/products/': typeof AuthenticatedProductsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -313,6 +321,7 @@ export interface FileRoutesByTo {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/regional': typeof AuthenticatedSettingsRegionalRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/settings/tracking': typeof AuthenticatedSettingsTrackingRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/products': typeof AuthenticatedProductsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -353,6 +362,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/settings/regional': typeof AuthenticatedSettingsRegionalRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/_authenticated/settings/tracking': typeof AuthenticatedSettingsTrackingRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/settings/regional'
     | '/settings/security'
+    | '/settings/tracking'
     | '/admin/'
     | '/products/'
     | '/settings/'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/settings/regional'
     | '/settings/security'
+    | '/settings/tracking'
     | '/admin'
     | '/products'
     | '/settings'
@@ -464,6 +476,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/profile'
     | '/_authenticated/settings/regional'
     | '/_authenticated/settings/security'
+    | '/_authenticated/settings/tracking'
     | '/_authenticated/admin/'
     | '/_authenticated/products/'
     | '/_authenticated/settings/'
@@ -594,6 +607,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/settings/tracking': {
+      id: '/_authenticated/settings/tracking'
+      path: '/tracking'
+      fullPath: '/settings/tracking'
+      preLoaderRoute: typeof AuthenticatedSettingsTrackingRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/security': {
       id: '/_authenticated/settings/security'
@@ -829,6 +849,7 @@ interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsProfileRoute: typeof AuthenticatedSettingsProfileRoute
   AuthenticatedSettingsRegionalRoute: typeof AuthenticatedSettingsRegionalRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
+  AuthenticatedSettingsTrackingRoute: typeof AuthenticatedSettingsTrackingRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -840,6 +861,7 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsProfileRoute: AuthenticatedSettingsProfileRoute,
     AuthenticatedSettingsRegionalRoute: AuthenticatedSettingsRegionalRoute,
     AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
+    AuthenticatedSettingsTrackingRoute: AuthenticatedSettingsTrackingRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

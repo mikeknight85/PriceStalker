@@ -167,6 +167,11 @@ export interface UserProfile {
   currency: string | null;
   locale: string | null;
   preferred_currency: string | null;
+  /**
+   * Seconds between checks for products this user adds (issue #239).
+   * Null means follow the instance default set under Admin.
+   */
+  default_refresh_interval?: number | null;
   is_admin: boolean;
   disabled: boolean;
   /** Every tag this user has used. Wire name only -- see the note at the top. */
@@ -256,6 +261,18 @@ export interface RetailerConfig {
   ai_selectors?: { price?: string[]; image?: string[] } | null;
 }
 
+/**
+ * The check interval a new product starts at, resolved server-side (issue #239).
+ *
+ * `refresh_interval` is what this user's Add Product form should show;
+ * `instance_refresh_interval` is the instance default behind it, so the settings
+ * screen can say what "follow the instance default" currently means.
+ */
+export interface ProductCheckDefaults {
+  refresh_interval: number;
+  instance_refresh_interval: number;
+}
+
 export interface SystemSettings {
   registration_enabled: boolean | string;
   password_reset_enabled?: boolean | string;
@@ -284,6 +301,8 @@ export interface SystemSettings {
   generic_out_of_stock_phrases?: string;
   generic_pre_order_phrases?: string;
   prefer_jsonld_image?: boolean | string;
+  /** Seconds. The instance-wide default check interval for new products (#239). */
+  default_refresh_interval?: number | string;
   jsonld_name_key?: string;
   jsonld_image_key?: string;
   jsonld_price_key?: string;
