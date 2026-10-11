@@ -56,13 +56,25 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 ## Administrative Management (Admin Only)
 *All admin endpoints require an active user account with `is_admin: true` or a valid system token.*
 
+A system token must additionally hold a scope that covers the route. The scopes
+are `*` (full access), `mcp:read`, `mcp:write`, `mcp:extract`, `admin:read`,
+`admin:write` and `admin:system`; a denial answers `403` with the scopes that
+would have been accepted. Tokens issued before scopes existed hold `*` and are
+unaffected. See [API Tokens](tokens.md).
+
 <details><summary><b>System API Tokens</b></summary>
 
 | Method | Endpoint | Description |
 |----------|--------|-------------|
-| `GET` | `/api/admin/system-tokens` | List all active system tokens |
+| `GET` | `/api/admin/system-tokens` | List all active system tokens (never returns a hash or a token value) |
+| `GET` | `/api/admin/system-tokens/scopes` | List the scope vocabulary a token can be granted |
 | `POST` | `/api/admin/system-tokens` | Generate a new system token |
 | `DELETE` | `/api/admin/system-tokens/:id` | Revoke a system token |
+
+`POST` accepts `{ label, description?, expires_at?, scopes? }`. Omitting `scopes`
+grants `["*"]` (full access) for backwards compatibility and logs a warning;
+pass an explicit list to narrow the token. An unknown scope is rejected with
+`400` rather than ignored.
 </details>
 
 <details><summary><b>User Administation</b></summary>

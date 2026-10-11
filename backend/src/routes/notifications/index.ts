@@ -1,5 +1,11 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../../middleware/auth';
+import { requireScopeByMethod } from '../../middleware/scope';
+import {
+  SCOPE_ADMIN_READ,
+  SCOPE_ADMIN_WRITE,
+  SCOPE_MCP_READ
+} from '../../services/domain/token/scopes';
 import { notificationService } from '../../services/domain/notification';
 import { logger } from '../../utils/system/logger';
 
@@ -7,6 +13,15 @@ const router = Router();
 
 // All routes require authentication
 router.use(authMiddleware);
+
+// Reading the feed is a read; marking it read or clearing it alters the
+// account's own record of what it has seen (#217).
+router.use(
+  requireScopeByMethod({
+    read: [SCOPE_MCP_READ, SCOPE_ADMIN_READ],
+    write: [SCOPE_ADMIN_WRITE]
+  })
+);
 
 // Get recent notifications for the feed drawer
 router.get('/recent', async (req: AuthRequest, res: Response) => {

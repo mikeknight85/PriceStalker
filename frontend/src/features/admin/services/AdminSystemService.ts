@@ -3,7 +3,8 @@ import {
   SystemSettings, 
   SystemApiToken, 
   CreateSystemApiTokenResponse,
-  SystemLogsResponse
+  SystemLogsResponse,
+  TokenScopeOption
 } from '../../../types/api';
 
 export const AdminSystemService = {
@@ -21,7 +22,9 @@ export const AdminSystemService = {
 
   // System API Tokens
   getSystemApiTokens: (options?: RequestOptions) => api.get<SystemApiToken[]>('/admin/system-tokens', options),
-  createSystemApiToken: (data: { label: string; description?: string; expires_at?: string }) => 
+  getSystemApiTokenScopes: (options?: RequestOptions) =>
+    api.get<{ scopes: TokenScopeOption[] }>('/admin/system-tokens/scopes', options),
+  createSystemApiToken: (data: { label: string; description?: string; expires_at?: string; scopes?: string[] }) =>
     api.post<CreateSystemApiTokenResponse>('/admin/system-tokens', data),
   deleteSystemApiToken: (id: number) => api.delete(`/admin/system-tokens/${id}`),
 };

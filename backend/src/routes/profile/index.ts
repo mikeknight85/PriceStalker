@@ -1,5 +1,11 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../../middleware/auth';
+import { requireScopeByMethod } from '../../middleware/scope';
+import {
+  SCOPE_ADMIN_READ,
+  SCOPE_FULL,
+  SCOPE_MCP_READ
+} from '../../services/domain/token/scopes';
 import { userService } from '../../services/domain/user';
 import { logger } from '../../utils/system/logger';
 
@@ -7,6 +13,17 @@ const router = Router();
 
 // All routes require authentication
 router.use(authMiddleware);
+
+// Writing here changes the account the token is attached to -- including its
+// email address, which is where a password reset would be sent. That is
+// account takeover rather than an integration task, so it takes full access: a
+// scoped token can read the profile it acts as and nothing more (#217).
+router.use(
+  requireScopeByMethod({
+    read: [SCOPE_MCP_READ, SCOPE_ADMIN_READ],
+    write: [SCOPE_FULL]
+  })
+);
 
 // Get profile
 router.get('/', async (req: AuthRequest, res: Response) => {
