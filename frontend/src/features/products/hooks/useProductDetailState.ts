@@ -136,7 +136,7 @@ export function useProductDetailState(
     setProduct({ ...product, ...updated });
     setIsEditingName(false);
     if (onUpdated) onUpdated(productId, { name: editName });
-  }, { onSuccessMessage: 'Product name updated', onErrorFallback: 'Failed to update name' });
+  }, { onSuccessMessage: () => `${editName.trim()} name updated`, onErrorFallback: 'Failed to update name' });
 
   const handleSaveImage = () => runSave(async () => {
     if (!product) return;
@@ -145,7 +145,7 @@ export function useProductDetailState(
     setProduct({ ...product, ...updated });
     setIsEditingImage(false);
     if (onUpdated) onUpdated(productId, { image_url: editImageUrl });
-  }, { onSuccessMessage: 'Image URL updated', onErrorFallback: 'Failed to update image' });
+  }, { onSuccessMessage: () => product?.name ? `${product.name} image updated` : 'Image URL updated', onErrorFallback: 'Failed to update image' });
 
   const handleSaveTags = () => runSave(async () => {
     if (!product) return;
@@ -155,7 +155,7 @@ export function useProductDetailState(
     setProduct({ ...product, ...updated });
     setIsEditingTags(false);
     if (onUpdated) onUpdated(productId, { category: tagString });
-  }, { onSuccessMessage: 'Tags updated', onErrorFallback: 'Failed to update tags' });
+  }, { onSuccessMessage: () => product?.name ? `${product.name} tags updated` : 'Tags updated', onErrorFallback: 'Failed to update tags' });
 
   const handleAddTag = (e?: React.KeyboardEvent | React.FocusEvent) => {
     if (e && 'key' in e && e.key !== 'Enter' && e.key !== ',') return;
@@ -188,7 +188,7 @@ export function useProductDetailState(
     syncProductCaches(updated);
     setProduct({ ...product, ...updated });
     if (onUpdated) onUpdated(productId, data);
-  }, { onSuccessMessage: 'Settings updated', onErrorFallback: 'Failed to update settings' });
+  }, { onSuccessMessage: () => product?.name ? `${product.name} settings updated` : 'Settings updated', onErrorFallback: 'Failed to update settings' });
 
   const priceChange = useMemo(() => {
     if (!product || !product.current_price || !product.original_price) return null;
@@ -203,7 +203,7 @@ export function useProductDetailState(
     syncProductCaches(updated);
     setProduct({ ...product, ...updated });
     if (onUpdated) onUpdated(productId, { refresh_interval: newInterval });
-  }, { onSuccessMessage: 'Check interval updated', onErrorFallback: 'Failed to update refresh interval' });
+  }, { onSuccessMessage: () => product?.name ? `${product.name} check interval updated` : 'Check interval updated', onErrorFallback: 'Failed to update refresh interval' });
 
   const handleRangeChange = (days: number | undefined) => {
     const range = days ?? ALL_TIME;
@@ -239,10 +239,10 @@ export function useProductDetailState(
     showPriceModal,
     priceReviewData,
     showDeleteConfirm, setShowDeleteConfirm,
-    handleRefresh: () => handleRefreshAction(productId),
+    handleRefresh: () => handleRefreshAction(productId, product?.name),
     handleRescan: () => handleRescanAction(productId),
-    handleDelete: () => handleDeleteAction(productId),
-    handleResumeMonitoring: () => handleTogglePauseAction(productId, false),
+    handleDelete: () => handleDeleteAction(productId, product?.name),
+    handleResumeMonitoring: () => handleTogglePauseAction(productId, false, product?.name),
     handlePriceSelected,
     handlePriceModalClose: closePriceModal,
     handleSaveName,

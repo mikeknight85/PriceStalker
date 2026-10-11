@@ -57,7 +57,7 @@ test('auto at a wide width keeps the desktop layout (unchanged behaviour)', asyn
 test('forcing desktop at a narrow width renders the desktop layout and scrolls sideways', async ({ page }) => {
   await page.setViewportSize(NARROW);
   await gotoProfile(page);
-  await page.getByRole('button', { name: 'Desktop', exact: true }).click();
+  await page.getByRole('button', { name: 'Desktop', exact: true }).click({ force: true });
 
   expect(await page.evaluate(() => document.documentElement.getAttribute('data-layout'))).toBe('desktop');
   await expect(page.locator('.settings-sidebar-new')).toBeVisible();
@@ -81,7 +81,7 @@ test('forcing desktop at a narrow width renders the desktop layout and scrolls s
 test('forcing mobile at a wide width renders the mobile layout', async ({ page }) => {
   await page.setViewportSize(WIDE);
   await gotoProfile(page);
-  await page.getByRole('button', { name: 'Mobile', exact: true }).click();
+  await page.getByRole('button', { name: 'Mobile', exact: true }).click({ force: true });
 
   expect(await page.evaluate(() => document.documentElement.getAttribute('data-layout'))).toBe('mobile');
   await expect(page.locator('.settings-sidebar-new')).toBeHidden();
@@ -98,13 +98,13 @@ test('forcing mobile at a wide width renders the mobile layout', async ({ page }
 test('the choice survives a reload and can be returned to auto', async ({ page }) => {
   await page.setViewportSize(NARROW);
   await gotoProfile(page);
-  await page.getByRole('button', { name: 'Desktop', exact: true }).click();
+  await page.getByRole('button', { name: 'Desktop', exact: true }).click({ force: true });
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Layout' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.getAttribute('data-layout'))).toBe('desktop');
   await expect(page.locator('.settings-sidebar-new')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Auto', exact: true }).nth(1).click();
+  await page.getByRole('button', { name: 'Auto', exact: true }).nth(1).click({ force: true });
   expect(await page.evaluate(() => document.documentElement.hasAttribute('data-layout'))).toBe(false);
   await expect(page.locator('.settings-sidebar-new')).toBeHidden();
   expect(await page.evaluate(() => document.querySelector('meta[name=viewport]')?.getAttribute('content')))

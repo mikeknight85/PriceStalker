@@ -174,9 +174,9 @@ export function useDashboardState() {
       }
     },
     handleRescanProduct: (id: number) => handleRescan(id),
-    handleDeleteProduct: (id: number) => handleDelete(id),
-    handleRefreshProduct: (id: number) => handleRefresh(id),
-    handlePauseToggle: (id: number, paused: boolean) => handleTogglePause(id, paused),
+    handleDeleteProduct: (id: number, name?: string | null) => handleDelete(id, name),
+    handleRefreshProduct: (id: number, name?: string | null) => handleRefresh(id, name),
+    handlePauseToggle: (id: number, paused: boolean, name?: string | null) => handleTogglePause(id, paused, name),
     isRefreshingProduct: isRefreshing,
     productToDelete,
     setProductToDelete,
