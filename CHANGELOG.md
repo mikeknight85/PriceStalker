@@ -15,14 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Admin UI and database setting (`generic_challenge_phrases`) for customizing
   anti-bot challenge interstitial detection phrases without container rebuilds
   (migration 021) (#234).
+- Added DataDome (`datadome`, `captcha-delivery`, `access is temporarily restricted`,
+  `unusual activity`) and PerimeterX / HUMAN (`px-captcha`, `perimeterx`,
+  `press & hold`) detection phrases to default anti-bot challenge signatures (#234).
+- Scraper options support for configurable DOM hydration delay (`options.delay`)
+  forwarded to Puppeteer for JavaScript-heavy and single-page application pages (#234).
 
 ### Fixed
 
 - Auto-create retailer config shell with `use_browser_scraper` enabled when an
   unknown domain encounters bot blocks or requires fallback, ensuring the retailer
-  appears under Admin -> Retailers for proxy and selector configuration.
+  appears under Admin -> Retailers for proxy and selector configuration (#234).
 - Clarified product discovery failure message when the browser scraper was
   already used during fallback rather than misleadingly prompting to enable it.
+- Trigger automatic browser fallback when standard HTTP encounters redirect
+  loops caused by anti-bot challenge queues such as Queue-it (#234).
+- Propagate `use_browser_scraper = true` flag to scrape requests whenever
+  configured on the retailer config or when remote transport is invoked (#234).
+- Expanded AI auto-mapping quality gate to accept deal, member, and pre-order
+  price selectors in addition to standard price selectors.
 - Scraper navigation default switched from `networkidle2` to `domcontentloaded`
   to prevent timeouts on retailers streaming telemetry and ad beacons (#234).
 - Scraper interstitial auto-resolve recognition expanded to include Imperva's
