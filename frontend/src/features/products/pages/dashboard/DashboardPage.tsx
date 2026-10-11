@@ -166,7 +166,12 @@ const Dashboard: React.FC = () => {
                 )}
 
                 {view === 'items' ? (
-                  <ItemList searchQuery={searchQuery} activeTag={activeTag} />
+                  <ItemList
+                    searchQuery={searchQuery}
+                    activeTag={activeTag}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                  />
                 ) : (
                 <ProductList
                   products={filteredAndSortedProducts}
