@@ -16,10 +16,32 @@ import { queryClient } from '../../../../api/queryClient';
 import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 import { useExpandedSections } from '../../../../hooks';
 
+interface SavedSelectors {
+  priceSelectors: string[];
+  dealPriceSelectors: string[];
+  memberPriceSelectors: string[];
+  originalPriceSelectors: string[];
+  preOrderPriceSelectors: string[];
+  nameSelectors: string[];
+  retailerNameSelectors: string[];
+  imageSelectors: string[];
+  stockSelectors: string[];
+  exclusionSelectors: string[];
+  preferJsonLdImage: boolean;
+  inStockPhrases: string[];
+  outOfStockPhrases: string[];
+  preOrderPhrases: string[];
+}
+
+const parseList = (val?: string | null): string[] => {
+  try { return JSON.parse(val || '[]'); } catch { return []; }
+};
+
 export default function GlobalSelectorsSection() {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedData, setSavedData] = useState<SavedSelectors | null>(null);
 
   // Global Selector states
   const [globalPriceSelectors, setGlobalPriceSelectors] = useState<string[]>([]);
@@ -42,6 +64,23 @@ export default function GlobalSelectorsSection() {
   const [globalOutOfStockPhrases, setGlobalOutOfStockPhrases] = useState<string[]>([]);
   const [globalPreOrderPhrases, setGlobalPreOrderPhrases] = useState<string[]>([]);
 
+  const applySelectors = (data: SavedSelectors) => {
+    setGlobalPriceSelectors(data.priceSelectors);
+    setGlobalDealPriceSelectors(data.dealPriceSelectors);
+    setGlobalMemberPriceSelectors(data.memberPriceSelectors);
+    setGlobalOriginalPriceSelectors(data.originalPriceSelectors);
+    setGlobalPreOrderPriceSelectors(data.preOrderPriceSelectors);
+    setGlobalNameSelectors(data.nameSelectors);
+    setGlobalRetailerNameSelectors(data.retailerNameSelectors);
+    setGlobalImageSelectors(data.imageSelectors);
+    setGlobalStockSelectors(data.stockSelectors);
+    setGlobalExclusionSelectors(data.exclusionSelectors);
+    setPreferJsonLdImage(data.preferJsonLdImage);
+    setGlobalInStockPhrases(data.inStockPhrases);
+    setGlobalOutOfStockPhrases(data.outOfStockPhrases);
+    setGlobalPreOrderPhrases(data.preOrderPhrases);
+  };
+
   const { expandedSections, toggleSection } = useExpandedSections({
     sys_sel_price: false,
     sys_sel_deal: false,
@@ -59,7 +98,6 @@ export default function GlobalSelectorsSection() {
   });
 
   useEffect(() => {
-
     fetchSelectorData();
   }, []);
 
@@ -68,29 +106,53 @@ export default function GlobalSelectorsSection() {
     try {
       const res = await queryClient.fetchQuery(adminSystemSettingsQuery());
       const settings = res;
-      
-      try { setGlobalPriceSelectors(JSON.parse(settings.generic_price_selectors || '[]')); } catch { setGlobalPriceSelectors([]); }
-      try { setGlobalDealPriceSelectors(JSON.parse(settings.generic_deal_price_selectors || '[]')); } catch { setGlobalDealPriceSelectors([]); }
-      try { setGlobalMemberPriceSelectors(JSON.parse(settings.generic_member_price_selectors || '[]')); } catch { setGlobalMemberPriceSelectors([]); }
-      try { setGlobalOriginalPriceSelectors(JSON.parse(settings.generic_original_price_selectors || '[]')); } catch { setGlobalOriginalPriceSelectors([]); }
-      try { setGlobalPreOrderPriceSelectors(JSON.parse(settings.generic_pre_order_price_selectors || '[]')); } catch { setGlobalPreOrderPriceSelectors([]); }
-      try { setGlobalNameSelectors(JSON.parse(settings.generic_name_selectors || '[]')); } catch { setGlobalNameSelectors([]); }
-      try { setGlobalRetailerNameSelectors(JSON.parse(settings.generic_retailer_name_selectors || '[]')); } catch { setGlobalRetailerNameSelectors([]); }
-      try { setGlobalImageSelectors(JSON.parse(settings.generic_image_selectors || '[]')); } catch { setGlobalImageSelectors([]); }
-      try { setGlobalStockSelectors(JSON.parse(settings.generic_stock_selectors || '[]')); } catch { setGlobalStockSelectors([]); }
-      try { setGlobalExclusionSelectors(JSON.parse(settings.generic_exclusion_selectors || '[]')); } catch { setGlobalExclusionSelectors([]); }
 
-      setPreferJsonLdImage(settings.prefer_jsonld_image === true || settings.prefer_jsonld_image === 'true');
+      const data: SavedSelectors = {
+        priceSelectors: parseList(settings.generic_price_selectors),
+        dealPriceSelectors: parseList(settings.generic_deal_price_selectors),
+        memberPriceSelectors: parseList(settings.generic_member_price_selectors),
+        originalPriceSelectors: parseList(settings.generic_original_price_selectors),
+        preOrderPriceSelectors: parseList(settings.generic_pre_order_price_selectors),
+        nameSelectors: parseList(settings.generic_name_selectors),
+        retailerNameSelectors: parseList(settings.generic_retailer_name_selectors),
+        imageSelectors: parseList(settings.generic_image_selectors),
+        stockSelectors: parseList(settings.generic_stock_selectors),
+        exclusionSelectors: parseList(settings.generic_exclusion_selectors),
+        preferJsonLdImage: settings.prefer_jsonld_image === true || settings.prefer_jsonld_image === 'true',
+        inStockPhrases: parseList(settings.generic_in_stock_phrases),
+        outOfStockPhrases: parseList(settings.generic_out_of_stock_phrases),
+        preOrderPhrases: parseList(settings.generic_pre_order_phrases),
+      };
 
-      try { setGlobalInStockPhrases(JSON.parse(settings.generic_in_stock_phrases || '[]')); } catch { setGlobalInStockPhrases([]); }
-      try { setGlobalOutOfStockPhrases(JSON.parse(settings.generic_out_of_stock_phrases || '[]')); } catch { setGlobalOutOfStockPhrases([]); }
-      try { setGlobalPreOrderPhrases(JSON.parse(settings.generic_pre_order_phrases || '[]')); } catch { setGlobalPreOrderPhrases([]); }
+      applySelectors(data);
+      setSavedData(data);
     } catch {
       showToast('Failed to load global selectors', 'error');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const currentData: SavedSelectors = {
+    priceSelectors: globalPriceSelectors,
+    dealPriceSelectors: globalDealPriceSelectors,
+    memberPriceSelectors: globalMemberPriceSelectors,
+    originalPriceSelectors: globalOriginalPriceSelectors,
+    preOrderPriceSelectors: globalPreOrderPriceSelectors,
+    nameSelectors: globalNameSelectors,
+    retailerNameSelectors: globalRetailerNameSelectors,
+    imageSelectors: globalImageSelectors,
+    stockSelectors: globalStockSelectors,
+    exclusionSelectors: globalExclusionSelectors,
+    preferJsonLdImage,
+    inStockPhrases: globalInStockPhrases,
+    outOfStockPhrases: globalOutOfStockPhrases,
+    preOrderPhrases: globalPreOrderPhrases,
+  };
+
+  const isDirty = Boolean(
+    savedData && JSON.stringify(currentData) !== JSON.stringify(savedData)
+  );
 
   const handleSaveSelectors = async () => {
     setIsSaving(true);
@@ -114,6 +176,7 @@ export default function GlobalSelectorsSection() {
 
       const updated = await AdminSystemService.updateSystemSettings(payload);
       queryClient.setQueryData(queryKeys.adminSystemSettings, updated);
+      setSavedData(currentData);
       showToast('Extraction rules saved', 'success');
     } catch {
       showToast('Failed to save extraction rules', 'error');
@@ -274,8 +337,22 @@ export default function GlobalSelectorsSection() {
 
 
       <div className="settings-actions">
-        <button className="btn btn-secondary" onClick={fetchSelectorData}>Cancel</button>
-        <button className="btn btn-primary" onClick={handleSaveSelectors} disabled={isSaving}>Save rules</button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => savedData && applySelectors(savedData)}
+          disabled={!isDirty || isSaving}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleSaveSelectors}
+          disabled={!isDirty || isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
       </div>
     </div>
   );

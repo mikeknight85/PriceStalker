@@ -12,6 +12,7 @@ import Icon from '../../../../components/Icon';
 
 export default function AISection() {
   const [aiSettings, setAiSettings] = useState<AISettings | null>(null);
+  const [savedSettings, setSavedSettings] = useState<AISettings | null>(null);
   const { execute: runFetchAIData, isLoading } = useAsyncAction(true);
   const { showToast } = useToast();
   const { execute: runSaveAISettings, isLoading: isSavingAI } = useAsyncAction();
@@ -24,11 +25,18 @@ export default function AISection() {
   const fetchAIData = () => runFetchAIData(async () => {
     const settingsRes = await AIService.getAI();
     setAiSettings(settingsRes);
+    setSavedSettings(settingsRes);
   }, { onErrorFallback: 'Failed to load AI settings' });
 
   useEffect(() => {
     fetchAIData();
   }, []);
+
+  const isDirty = Boolean(
+    savedSettings &&
+    aiSettings &&
+    JSON.stringify(savedSettings) !== JSON.stringify(aiSettings)
+  );
 
   const handleSaveAISettings = () => runSaveAISettings(async () => {
     if (!aiSettings) return;
@@ -43,6 +51,7 @@ export default function AISection() {
       }
     }
     await AIService.updateAI(aiSettings);
+    setSavedSettings(aiSettings);
   }, { onSuccessMessage: 'AI settings saved', onErrorFallback: 'Save failed' });
 
   if (isLoading) return <LoadingSpinner centered />;
@@ -59,14 +68,20 @@ export default function AISection() {
           aiSettings={aiSettings}
           setAiSettings={setAiSettings}
         />
-        <div className="settings-actions">
-           <button className="btn btn-primary btn-sm" onClick={handleSaveAISettings} disabled={isSavingAI}>Save AI Configuration</button>
-        </div>
       </CollapsibleCard>
 
       <CollapsibleCard title="AI Extraction Tester" leadingIcon={<Icon name="flask" />} id="ai_tester" isExpanded={expandedSections.ai_tester} onToggle={toggleSection}>
          <AIModelTester />
       </CollapsibleCard>
+
+      <div className="settings-actions">
+        <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setAiSettings(savedSettings)} disabled={!isDirty || isSavingAI}>
+          Cancel
+        </button>
+        <button type="button" className="btn btn-primary" onClick={handleSaveAISettings} disabled={!isDirty || isSavingAI}>
+          {isSavingAI ? 'Saving...' : 'Save'}
+        </button>
+      </div>
     </div>
   );
 }

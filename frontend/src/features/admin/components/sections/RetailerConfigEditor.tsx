@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { RetailerConfig, GlobalCurrency, TestRetailerConfigResult } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import { RetailerAdminService } from '../../services/RetailerAdminService';
@@ -131,6 +131,78 @@ export default function RetailerConfigEditor({
     setDraftConfig(prev => ({ ...prev, ...updates }));
   };
 
+  const isDirty = useMemo(() => {
+    if (!initialRetailer.id) {
+      return Boolean(
+        draftConfig.domain ||
+        draftConfig.name ||
+        draftConfig.currency_hint ||
+        draftPriceSelectors.length > 0
+      );
+    }
+    const currentPayload = {
+      ...draftConfig,
+      forceNameRemoval,
+      price_selectors: draftPriceSelectors,
+      retailer_name_selectors: draftRetailerNameSelectors,
+      deal_price_selectors: draftDealPriceSelectors,
+      member_price_selectors: draftMemberPriceSelectors,
+      original_price_selectors: draftOriginalPriceSelectors,
+      pre_order_price_selectors: draftPreOrderPriceSelectors,
+      name_selectors: draftTitleSelectors,
+      image_selectors: draftImageSelectors,
+      exclusion_selectors: draftExclusionSelectors,
+      stock_selectors: draftStockSelectors,
+      in_stock_phrases: draftInStockPhrases,
+      out_of_stock_phrases: draftOutOfStockPhrases,
+      pre_order_phrases: draftPreOrderPhrases,
+      custom_selectors: draftCustomSelectorsJson,
+      ai_price_selectors: draftAiPriceSelectors,
+      ai_image_selectors: draftAiImageSelectors,
+    };
+    const initialPayload = {
+      ...initialRetailer,
+      forceNameRemoval: false,
+      price_selectors: initialRetailer.price_selectors || [],
+      retailer_name_selectors: initialRetailer.retailer_name_selectors || [],
+      deal_price_selectors: initialRetailer.deal_price_selectors || [],
+      member_price_selectors: initialRetailer.member_price_selectors || [],
+      original_price_selectors: initialRetailer.original_price_selectors || [],
+      pre_order_price_selectors: initialRetailer.pre_order_price_selectors || [],
+      name_selectors: initialRetailer.name_selectors || [],
+      image_selectors: initialRetailer.image_selectors || [],
+      exclusion_selectors: initialRetailer.exclusion_selectors || [],
+      stock_selectors: initialRetailer.stock_selectors || [],
+      in_stock_phrases: initialRetailer.in_stock_phrases || [],
+      out_of_stock_phrases: initialRetailer.out_of_stock_phrases || [],
+      pre_order_phrases: initialRetailer.pre_order_phrases || [],
+      custom_selectors: initialRetailer.custom_selectors ? JSON.stringify(initialRetailer.custom_selectors, null, 2) : '',
+      ai_price_selectors: initialRetailer.ai_selectors?.price || [],
+      ai_image_selectors: initialRetailer.ai_selectors?.image || [],
+    };
+    return JSON.stringify(currentPayload) !== JSON.stringify(initialPayload);
+  }, [
+    initialRetailer,
+    draftConfig,
+    forceNameRemoval,
+    draftPriceSelectors,
+    draftRetailerNameSelectors,
+    draftDealPriceSelectors,
+    draftMemberPriceSelectors,
+    draftOriginalPriceSelectors,
+    draftPreOrderPriceSelectors,
+    draftTitleSelectors,
+    draftImageSelectors,
+    draftExclusionSelectors,
+    draftStockSelectors,
+    draftInStockPhrases,
+    draftOutOfStockPhrases,
+    draftPreOrderPhrases,
+    draftCustomSelectorsJson,
+    draftAiPriceSelectors,
+    draftAiImageSelectors,
+  ]);
+
   const handleSaveRetailer = () => runSaveRetailer(async () => {
     if (!draftConfig?.domain) {
       showToast('Domain is required', 'error');
@@ -243,8 +315,20 @@ export default function RetailerConfigEditor({
           >
             Re-run auto-map
           </button>
-          <button className="btn btn-secondary btn-sm" onClick={onCancel}>Discard</button>
-          <button className="btn btn-primary btn-sm" onClick={handleSaveRetailer} disabled={isSavingRetailer}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onCancel}
+            disabled={isSavingRetailer}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={handleSaveRetailer}
+            disabled={!isDirty || isSavingRetailer}
+          >
             {isSavingRetailer ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -488,7 +572,24 @@ export default function RetailerConfigEditor({
         </CollapsibleCard>
       </div>
 
-
+      <div className="settings-actions">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onCancel}
+          disabled={isSavingRetailer}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleSaveRetailer}
+          disabled={!isDirty || isSavingRetailer}
+        >
+          {isSavingRetailer ? 'Saving...' : 'Save'}
+        </button>
+      </div>
     </div>
   );
 }
