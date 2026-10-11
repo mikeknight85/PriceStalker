@@ -7,6 +7,7 @@ import {
   fetchBrowserHtml,
   resolveUserAgent
 } from '../transport';
+import type { RemoteScraperOptions } from './remote';
 
 export interface FallbackOptions {
   url: string;
@@ -44,7 +45,14 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
       // omit it entirely, so the fallback presented a different browser -- and
       // headless Chromium's own -- to a retailer that had just been shown the
       // configured one.
-      const remoteOptions: any = { productId, isDiscovery, userAgent: await resolveUserAgent(userAgent) };
+      const remoteOptions: RemoteScraperOptions = {
+        productId,
+        isDiscovery,
+        userAgent: await resolveUserAgent(userAgent),
+        challengePatterns: await settingsCache.getGenericChallengePhrases(),
+        delay: await settingsCache.getBrowserDelay(),
+        timeout: await settingsCache.getBrowserTimeout(),
+      };
       // Referrer policy: system default or none — never a fabricated random
       // one (issue #44).
       const defaultReferrer = await settingsCache.getDefaultReferrer();
@@ -55,7 +63,8 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
       extractionSteps.push(`Scraper | Fallback | Remote Success`);
       $ = load(html);
       finalChallengeReason = detectBotChallenge(html, $);
-      if (!finalChallengeReason) learnedFlags = { use_browser_scraper: true };
+      // Plain HTTP was blocked (triggering fallback), so this domain requires the browser scraper.
+      learnedFlags = { use_browser_scraper: true };
       
       return { html, $, challengeReason: finalChallengeReason, learnedFlags };
     } catch (e) {
@@ -72,7 +81,7 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
       if (html) {
         $ = load(html);
         finalChallengeReason = detectBotChallenge(html, $);
-        if (!finalChallengeReason) learnedFlags = { use_browser_scraper: true };
+        learnedFlags = { use_browser_scraper: true };
         return { html, $, challengeReason: finalChallengeReason, learnedFlags };
       }
     } catch (e) {

@@ -18,6 +18,24 @@ const DEFAULT_CONFIG = {
   genericInStockPhrases: ['in stock', 'available', 'ready to ship', 'auf lager', 'en stock'],
   genericOutOfStockPhrases: ['out of stock', 'sold out', 'unavailable', 'discontinued', 'nicht lieferbar'],
   genericPreOrderPhrases: ['pre-order', 'preorder', 'coming soon', 'vorbestellen'],
+  genericChallengePhrases: [
+    'are you a robot',
+    'just a moment',
+    'access denied',
+    'verify you are human',
+    'pardon our interruption',
+    'security check',
+    'attention required',
+    'access is temporarily restricted',
+    'unusual activity',
+    'captcha-delivery',
+    'datadome',
+    'access to this page has been denied',
+    'px-captcha',
+    'perimeterx',
+    'press & hold',
+    'press and hold',
+  ],
   genericAIPriceSelectors: [
     '[class*="price" i]',
     '[class*="Price" i]',
@@ -130,6 +148,7 @@ export class SystemSettingsCache {
   async getGenericInStockPhrases(): Promise<string[]> { return this.getArray('generic_in_stock_phrases', 'genericInStockPhrases'); }
   async getGenericOutOfStockPhrases(): Promise<string[]> { return this.getArray('generic_out_of_stock_phrases', 'genericOutOfStockPhrases'); }
   async getGenericPreOrderPhrases(): Promise<string[]> { return this.getArray('generic_pre_order_phrases', 'genericPreOrderPhrases'); }
+  async getGenericChallengePhrases(): Promise<string[]> { return this.getArray('generic_challenge_phrases', 'genericChallengePhrases'); }
   
   async getBrowserTimeout(): Promise<number> { return this.getInt('browser_timeout', DEFAULT_CONFIG.browserTimeout); }
   async getBrowserDelay(): Promise<number> { return this.getInt('browser_delay', DEFAULT_CONFIG.browserDelay); }

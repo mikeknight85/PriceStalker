@@ -19,13 +19,42 @@ const createAdblockerPlugin = AdblockerPlugin as unknown as (options: { blockTra
 
 // Initialize Puppeteer with plugins
 puppeteer.use(StealthPlugin());
-puppeteer.use(createAdblockerPlugin({ blockTrackers: true }));
+if (process.env.ENABLE_ADBLOCKER !== 'false') {
+  // blockTrackers: false ensures anti-bot verification scripts (Turnstile, Reese84, Datadome)
+  // are not blocked from reporting telemetry.
+  puppeteer.use(createAdblockerPlugin({ blockTrackers: false }));
+}
+
+export const DEFAULT_SCRAPER_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36';
+
+/**
+ * Reads a pool limit from the environment (issue #235).
+ *
+ * `Number(process.env.X) || fallback` accepts anything that is not 0 or NaN,
+ * so `MAX_BROWSERS=-1` would be taken at face value -- and a negative or
+ * fractional limit does not fail loudly, it quietly makes the pool unusable
+ * (`sessions.length >= -1` is true on an empty pool, so every scrape is
+ * rejected as "all browsers busy"). Anything that is not a positive integer is
+ * refused and logged, and the default stands.
+ */
+function poolLimit(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return fallback;
+
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    log(`Ignoring ${name}="${raw}": expected a positive integer, using ${fallback}`, 'WARN');
+    return fallback;
+  }
+  return value;
+}
 
 // Browser Pool Configuration
-export const MAX_BROWSERS = 3;
-export const MAX_PAGES_PER_BROWSER = 4;
-export const MAX_SCRAPES_PER_BROWSER = 50; // Recycle browser after this many scrapes
-export const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+export const MAX_BROWSERS = poolLimit('MAX_BROWSERS', 3);
+export const MAX_PAGES_PER_BROWSER = poolLimit('MAX_PAGES_PER_BROWSER', 4);
+export const MAX_SCRAPES_PER_BROWSER = poolLimit('MAX_SCRAPES_PER_BROWSER', 50); // Recycle browser after this many scrapes
+export const IDLE_TIMEOUT = poolLimit('IDLE_TIMEOUT_MS', 5 * 60 * 1000); // 5 minutes
 
 export const sessions: BrowserSession[] = [];
 
@@ -34,7 +63,7 @@ export const sessions: BrowserSession[] = [];
 // /tmp/puppeteer_dev_profile-* directories that are only removed on a clean
 // browser.close() — crashed browsers and container stops leaked them until
 // /tmp filled up (issue #52).
-export const PROFILE_BASE = path.join(os.tmpdir(), 'scraper-profiles');
+export const PROFILE_BASE = process.env.PROFILE_BASE_DIR || path.join(os.tmpdir(), 'scraper-profiles');
 
 // How long to wait for the Chromium process to actually exit before deleting
 // its profile. `browser.close()` resolves — and 'disconnected' fires — as soon
@@ -235,6 +264,7 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     '--disable-setuid-sandbox',
     '--disable-dev-shm-usage',
     '--disable-gpu',
+    '--disable-blink-features=AutomationControlled',
     '--window-size=1920,1080'
   ];
 
@@ -242,15 +272,14 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     args.push(`--proxy-server=${proxyUrl}`);
   }
 
-  if (userAgent) {
-    args.push(`--user-agent=${userAgent}`);
-  }
+  const effectiveUa = userAgent || DEFAULT_SCRAPER_USER_AGENT;
+  args.push(`--user-agent=${effectiveUa}`);
 
   log(`Launching new browser instance for ${id} (Proxy: ${proxyUrl || 'None'}, UA: ${userAgent ? 'Custom' : 'Default'})`, 'INFO');
   
   session.launchPromise = fs.mkdir(userDataDir, { recursive: true }).then(() => puppeteer.launch({
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-    headless: 'new',
+    headless: true,
     userDataDir,
     args
   })).then((browser: Browser) => {

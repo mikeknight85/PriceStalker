@@ -2,8 +2,9 @@
 
 > **Status: investigation, not a fix. No code was changed.**
 >
-> Everything below was measured on 2026-09-22 from a single Swiss residential
-> connection. Section 6 proposes code changes; none of them have been written,
+> Sections 1-7 were measured on 2026-09-22 from a single Swiss residential
+> connection; §8.1 adds the one Australian measurement, contributed later.
+> Section 6 proposes code changes; none of them have been written,
 > and each is a separate piece of work.
 >
 > **It overturns the working model the issue has been running on**, and three
@@ -595,11 +596,10 @@ help.
 Stated plainly, because the issue has already cost several rounds of confident
 conclusions:
 
-- **Whether this reproduces from Australia.** Everything here is one Swiss
-  residential IP. Target set `t_geo_country=CH` on every request. The original
-  reporter is in Australia and no measurement in this document is from there.
-  The question the maintainer asked twice on the issue — does the URL load in a
-  normal browser in Australia — is still unanswered and is still cheap.
+- ~~**Whether this reproduces from Australia.**~~ **Answered — see §8.1.**
+  Everything in sections 1–7 is one Swiss residential IP, and Target set
+  `t_geo_country=CH` on every request. A measurement from Australia has since
+  been contributed.
 - **Whether Kmart and Target are tuned differently, or share a score.** Kmart
   denied a cold product route; Target allowed three. This ran after the Target
   burst, so cross-customer reputation carry-over cannot be ruled out. A clean
@@ -636,6 +636,37 @@ conclusions:
   inside the backend container would close that gap.
 - **Anything about a proxy.** No proxy was used or available for any
   measurement in this document.
+
+### 8.1 Australia, answered (PR #245)
+
+Contributed by @stevene1919 from an Australian residential connection, as part
+of the browser-scraper work in #245. This is the measurement §8 was waiting
+on, and it is the first in this document not taken from the Swiss IP.
+
+| Retailer | URL | Network path | Transport | Result |
+|:---|:---|:---|:---|:---|
+| Target Australia | `/p/lego-pokemon-smart-play-charmander-and-geodude-s-cavern-clash-72157/73174165` | AU residential | **Direct HTTP** | **200**, price extracted (`$34.00 AUD`) via AI auto-map |
+
+**What it settles.** A cold Target Australia product route succeeds over plain
+`axios` from an Australian residential IP, with no browser and no challenge.
+The maintainer's question — does the URL load normally from Australia — is
+yes.
+
+**What it does not settle.** One request, one property, one day, one IP: it is
+the counterpart of the Swiss measurement, not a refutation of it. In
+particular it does not establish that geography is the variable. §1's finding
+stands — the denial follows a client score, and the Swiss IP had been probed
+in bursts before Target denied it. An AU IP that has not been probed is a
+rested client as well as an Australian one, and nothing here separates the two.
+
+What would separate them is a burst from the AU connection: three or four
+cold product routes at ~800 ms, the pattern §1 used. If AU denies on the
+fourth as well, the score model holds and geography is incidental; if it does
+not, geography is doing real work. Still cheap, still unmeasured.
+
+Kmart was not probed from Australia, so §8's second open question — whether
+Kmart and Target are tuned differently or share a score — is untouched by
+this.
 
 ---
 

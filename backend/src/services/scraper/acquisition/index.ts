@@ -33,17 +33,29 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
 
   const useBrowserScraper = domainConfig?.use_browser_scraper || false;
 
+  // Set when the retailer asks for the browser scraper but this install has no
+  // `remote_scraper_url`. The remote scraper is optional, so that is a
+  // configuration gap rather than a scrape failure: HTTP is still tried, which
+  // is what stops a once-flagged domain from being pinned to a path that
+  // cannot run. See `acquireRemoteHtml`.
+  let remoteScraperUnavailable = false;
+
   // --- Attempt 1: Remote/Browser (if configured) ---
   if (useBrowserScraper) {
     usedRemoteFallback = true;
+    learnedFlags = { use_browser_scraper: true };
     const remoteHtml = await acquireRemoteHtml(options);
-    if (remoteHtml) {
+    if (remoteHtml === null) {
+      remoteScraperUnavailable = true;
+      usedRemoteFallback = false;
+    } else if (remoteHtml) {
       html = remoteHtml;
     }
   }
 
-  // --- Attempt 2: Standard HTTP (if remote failed or not configured) ---
-  if (!html) {
+  // --- Attempt 2: Standard HTTP (if not configured for the browser, or the
+  // browser scraper this install was told to use does not exist) ---
+  if (!html && (!useBrowserScraper || remoteScraperUnavailable)) {
     try {
       html = await acquireStandardHtml({
         url,
@@ -91,6 +103,15 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
         usedRemoteFallback: true
       };
     }
+    // Deliberately no `learnedFlags = { use_browser_scraper: true }` here.
+    // Reaching this line means the browser fallback produced nothing -- most
+    // often because the remote scraper is not configured at all, in which case
+    // `fetchBrowserHtml` returns '' without ever opening a browser. A fallback
+    // that failed is not evidence that the browser is what this domain needs,
+    // and persisting the flag on that non-evidence pinned the domain to a path
+    // it could not take: HTTP was then skipped, Attempt 3 was gated off by the
+    // now-existing config, and nothing cleared the flag. A transient 403 has to
+    // stay self-healing on the next scrape.
   }
 
   return { html, $, challengeReason, usedRemoteFallback, learnedFlags };

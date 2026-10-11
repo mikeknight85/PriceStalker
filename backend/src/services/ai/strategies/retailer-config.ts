@@ -132,8 +132,13 @@ export async function generateRetailerConfig(
     if (data.jsonld_price_key) resultConfig.jsonld_price_key = data.jsonld_price_key;
     if (data.jsonld_image_key) resultConfig.jsonld_image_key = data.jsonld_image_key;
 
-    // Quality gate: require at least one valid price selector or a JSON-LD price key
-    const hasPriceSelector = resultConfig.price_selectors && resultConfig.price_selectors.length > 0;
+    // Quality gate: require at least one valid price selector (standard, deal, member, pre-order) or a JSON-LD price key
+    const hasPriceSelector = Boolean(
+      (resultConfig.price_selectors && resultConfig.price_selectors.length > 0) ||
+      (resultConfig.deal_price_selectors && resultConfig.deal_price_selectors.length > 0) ||
+      (resultConfig.member_price_selectors && resultConfig.member_price_selectors.length > 0) ||
+      (resultConfig.pre_order_price_selectors && resultConfig.pre_order_price_selectors.length > 0)
+    );
     const hasJsonLdPrice = !!resultConfig.jsonld_price_key;
     if (!hasPriceSelector && !hasJsonLdPrice) {
       logger.warn(`AI | Auto-Map | Rejected generated config for ${url} because no valid price selectors or JSON-LD price keys were found after validation.`, 'AI');

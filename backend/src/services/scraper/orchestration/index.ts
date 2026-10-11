@@ -91,7 +91,7 @@ export async function scrapeProductWithVoting(
 
     // Surface acquisition-learned flags on the result so the retailer config
     // is updated on save even when AI auto-mapping is disabled (issue #45).
-    if (acqResult.learnedFlags?.use_browser_scraper) {
+    if (acqResult.learnedFlags?.use_browser_scraper || acqResult.usedRemoteFallback || domainConfig?.use_browser_scraper) {
       result.learnedFlags = { use_browser_scraper: true };
     }
 
@@ -117,7 +117,17 @@ export async function scrapeProductWithVoting(
       challenge = null;
     }
 
-    await handleRetailerMaintenance(domainConfig, challenge, !!overrideConfig, extractionSteps, productId);
+    const maintainedConfig = await handleRetailerMaintenance(
+      domainConfig,
+      challenge,
+      !!overrideConfig,
+      extractionSteps,
+      productId,
+      { domain: session.lookupDomain, learnedFlags: acqResult.learnedFlags }
+    );
+    if (maintainedConfig) {
+      domainConfig = maintainedConfig;
+    }
 
     // --- Phase 4: Auto-Mapping ---
     const isShellConfig = domainConfig && 
@@ -259,6 +269,10 @@ export async function scrapeProductWithVoting(
       // refresh can count it separately and leave the product's status alone,
       // rather than the previous behaviour of silently returning 'unknown'.
       result.unavailableReason = classifyTransportError(error);
+      if (result.unavailableReason === 'remote_scraper_failure' || (error instanceof Error && error.message.includes('Browser Scraper'))) {
+        result.failureReason = 'browser_scraper_failed';
+        result.failureDetail = error instanceof Error ? error.message : String(error);
+      }
       logger.error(`Product | Scrape Failed | ${url} (${result.unavailableReason})`, 'Scraper', { product_id: productId, error, requestId });
     }
     result.extractionSteps = extractionSteps;

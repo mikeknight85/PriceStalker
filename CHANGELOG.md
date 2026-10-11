@@ -15,12 +15,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to toggle floating background particle animations (#237).
 - An option to disable ambient background particle animations to save resources
   and improve accessibility and automated testing stability (#237).
+- Configurable scraper pool limits via environment variables (`MAX_BROWSERS`,
+  `MAX_PAGES_PER_BROWSER`, `MAX_SCRAPES_PER_BROWSER`, `IDLE_TIMEOUT_MS`,
+  `ENABLE_ADBLOCKER`, `PROFILE_BASE_DIR`) to fine-tune memory footprint and
+  concurrency, settable from `.env`, `docker-compose.yaml` and the Swarm stack
+  and documented with their defaults in `docs/developer/ENVIRONMENT_VARIABLES.md`.
+  A limit that is not a positive integer is refused with a warning rather than
+  taken at face value (#235).
+- Admin UI and database setting (`generic_challenge_phrases`) for customizing
+  anti-bot challenge interstitial detection phrases without container rebuilds
+  (migration 021) (#234).
+- Added DataDome and PerimeterX / HUMAN signals to the browser scraper's
+  challenge-interstitial recognition (#234). The seeded phrase list gains
+  `access is temporarily restricted`, `unusual activity`, `access to this page
+  has been denied`, `press & hold` and `press and hold`, and is matched against
+  the document title plus a size-gated body rather than the whole DOM. The
+  challenge-only markers `px-captcha`, `geo.captcha-delivery` and `dd-captcha`
+  are matched at any page size and live in code; the bare vendor names
+  `datadome` and `perimeterx` are deliberately not matched, because those are
+  the vendors' own sensor scripts and ship on every protected page rather than
+  only on challenges.
+- Scraper options support for configurable DOM hydration delay (`options.delay`)
+  forwarded to Puppeteer for JavaScript-heavy and single-page application pages (#234).
+- Per-request `interstitialWaitMs` and `interstitialRetries` scraper options, so
+  the challenge auto-resolve loop can be tuned or switched off for a retailer
+  instead of costing a fixed wait on every scrape (#235).
 
 ### Fixed
 
 - Added solid surface styling, borders, padding, and elevation to the "Which product is this the same as?" modal (`LinkToItemModal`), resolving see-through background issues across light and dark themes (#233).
 - Stabilized Playwright route and layout acceptance tests against animation
   actionability timeouts, and added resilience test coverage for null user locales (#237).
+- Auto-create retailer config shell with `use_browser_scraper` enabled when an
+  unknown domain encounters bot blocks or requires fallback, ensuring the retailer
+  appears under Admin -> Retailers for proxy and selector configuration (#234).
+  Only ever when a `Browser Scraper URL` is configured, and only from a fallback
+  that actually produced a page: the browser scraper is optional, and recording
+  the flag on an install that has none would route the domain to a path that
+  cannot run while taking plain HTTP away from it permanently (#234).
+- Clarified product discovery failure message when the browser scraper was
+  already used during fallback rather than misleadingly prompting to enable it.
+- Trigger automatic browser fallback when standard HTTP encounters redirect
+  loops caused by anti-bot challenge queues such as Queue-it (#234).
+- Propagate `use_browser_scraper = true` flag to scrape requests whenever
+  configured on the retailer config or when remote transport is invoked (#234).
+- Expanded AI auto-mapping quality gate to accept deal, member, and pre-order
+  price selectors in addition to standard price selectors.
+- Scraper navigation default switched from `networkidle2` to `domcontentloaded`
+  to prevent timeouts on retailers streaming telemetry and ad beacons (#234).
+- Scraper interstitial auto-resolve recognition expanded to include Imperva's
+  "pardon our interruption" and modern security verification screens (#234).
+- Prevented flawed fallback to plain HTTP (Axios) when a retailer explicitly
+  has the Browser Scraper enabled, avoiding false-positive `BLOCKED` status flags
+  and misleading advice to enable the browser scraper (#234). A retailer flagged
+  for the browser scraper on an install with no `Browser Scraper URL` still falls
+  through to plain HTTP, because the service is optional and hard-failing would
+  leave such a domain permanently unscrapable (#234).
+- The `Browser Timeout` setting is now the budget for the whole browser scrape
+  rather than for `page.goto` alone (#234, #235). The scraper splits it across
+  navigation and the post-navigation phase (hydration delay, challenge
+  auto-resolve, screenshot) and stops when it is spent, and the backend sizes its
+  own request timeout to cover that budget plus the response. Previously the
+  whole number went to `page.goto` while the post-navigation phase ran outside
+  it, so a navigation that succeeded late in the window was aborted by the
+  backend before the scrape could return -- losing a scrape that had worked.
+  The scraper's own default, used when the backend sends no timeout, is 45s.
+- Stealth browser hardening: Added `--disable-blink-features=AutomationControlled`
+  flag, modern headless mode, and subreaper registration for zombie reaping (#67).
+- Full CDP emulation: Emulated `Network.setUserAgentOverride` with legacy
+  `navigator.platform` (`Win32`), `acceptLanguage`, and complete high-entropy
+  client hints (`fullVersionList`, `bitness`, `wow64`) preventing Linux host and
+  patch version leaks (#67).
+- Prevented anti-bot verification failure by ensuring adblocker does not suppress
+  challenge telemetry scripts, with support for `ENABLE_ADBLOCKER` toggling.
+- Updated default fallback User-Agent baseline to Chrome 154.
+
 ### Changed
 
 - Standardised save and cancel action bars across all user and admin settings

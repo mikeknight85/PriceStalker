@@ -300,6 +300,7 @@ export interface SystemSettings {
   generic_in_stock_phrases?: string;
   generic_out_of_stock_phrases?: string;
   generic_pre_order_phrases?: string;
+  generic_challenge_phrases?: string;
   prefer_jsonld_image?: boolean | string;
   /** Seconds. The instance-wide default check interval for new products (#239). */
   default_refresh_interval?: number | string;

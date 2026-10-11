@@ -127,8 +127,22 @@ services:
   # unused; the backend scrapes in-process without it.
   scraper:
     image: ghcr.io/mikeknight85/pricestalker-scraper:${PRICESTALKER_TAG:-stable}
+    # Browser pool sizing and profile location (issue #235). Without these the
+    # stack cannot tune the scraper at all -- production runs on Swarm, so a
+    # setting that only exists in docker-compose.yaml is a setting production
+    # does not have. Each limit must be a positive integer; anything else is
+    # refused with a warning and the default stands. Documented with their
+    # defaults in docs/developer/ENVIRONMENT_VARIABLES.md.
     environment:
       PORT: "5100"
+      MAX_BROWSERS: ${SCRAPER_MAX_BROWSERS:-3}
+      MAX_PAGES_PER_BROWSER: ${SCRAPER_MAX_PAGES:-4}
+      MAX_SCRAPES_PER_BROWSER: ${SCRAPER_MAX_SCRAPES:-50}
+      IDLE_TIMEOUT_MS: ${SCRAPER_IDLE_TIMEOUT_MS:-300000}
+      ENABLE_ADBLOCKER: ${SCRAPER_ENABLE_ADBLOCKER:-true}
+      # Kept under /tmp so it lands on the capped tmpfs mounted below rather
+      # than the node's overlay storage (issue #52).
+      PROFILE_BASE_DIR: ${SCRAPER_PROFILE_BASE_DIR:-/tmp/scraper-profiles}
     # Chromium re-parents its orphaned helper processes onto PID 1; without a
     # reaper they accumulate as <defunct> until the kernel PID table is
     # exhausted (issue #206). `docker stack deploy` does map this onto the

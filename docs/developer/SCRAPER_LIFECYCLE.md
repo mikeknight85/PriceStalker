@@ -40,10 +40,10 @@ Phase 6: runVerificationPhase → Optional AI cross-verification of selected pri
 
 **Files:** `backend/src/services/scraper/acquisition/`, `backend/src/services/scraper/transport/`
 
-1. **Configured browser attempt** — If `use_browser_scraper=true`, request the remote browser/scraper service first.
-2. **Standard Axios fetch** — If the browser attempt did not produce HTML, use configured headers, optional proxy, and the Axios retry policy.
+1. **Configured browser attempt** — If `use_browser_scraper=true`, request the remote browser/scraper service first. A retailer configured this way is **not** served over plain HTTP if the request fails: the browser scraper raising an error is a hard failure for that scrape, because quietly serving HTTP to a retailer flagged as needing a browser is how a challenge page gets mistaken for a product page with no price. The one exception is a missing `Browser Scraper URL` — the service is optional, so a retailer flagged for it on an install that has none falls through to step 2 rather than failing every scrape forever.
+2. **Standard Axios fetch** — Run when the retailer is *not* configured for the browser scraper (or is, but no `Browser Scraper URL` is set), using configured headers, optional proxy, and the Axios retry policy.
 3. **Challenge detection** — Detect known bot/challenge pages in returned HTML and selected HTTP errors.
-4. **Conditional browser fallback** — If standard HTTP encounters a challenge and there is no existing retailer configuration, use the configured remote scraper or local browser fallback.
+4. **Conditional browser fallback** — If standard HTTP encounters a challenge and there is no existing retailer configuration, use the configured remote scraper or local browser fallback. A fallback that **succeeds** teaches the domain `use_browser_scraper` and `orchestration/maintenance.ts` persists a retailer config; a fallback that produces nothing teaches nothing, so a transient 403 still self-heals on the next scrape. Neither is written on an install with no `Browser Scraper URL`, where there is no browser path to learn.
 5. **Page-unavailable detection** — HTTP 404/410, error/root redirects, soft-404 titles, no-index pages without product evidence, and known error selectors raise `PageNotAvailableError`.
 
 Generic acquisition errors are returned to the orchestration error path. They do not currently create a product-level exponential backoff counter; normal scheduling continues through `next_check_at` and `refresh_interval`.
