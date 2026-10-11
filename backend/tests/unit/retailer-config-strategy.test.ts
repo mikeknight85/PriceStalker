@@ -3,6 +3,8 @@ import { generateRetailerConfig } from '../../src/services/ai/strategies/retaile
 import { settingsCache } from '../../src/utils/cache';
 import { currencyCache } from '../../src/utils/i18n/currency/cache';
 import { getAIProvider } from '../../src/services/ai/client';
+import type { AISettings } from '../../src/models/types/system';
+import type { AIProvider } from '../../src/services/ai/providers/types';
 
 vi.mock('../../src/utils/cache', () => ({
   settingsCache: {
@@ -34,12 +36,12 @@ describe('generateRetailerConfig quality gate', () => {
     vi.mocked(settingsCache.getAISettings).mockResolvedValue({
       ai_auto_mapping_enabled: true,
       ai_provider: 'gemini',
-    } as any);
+    } as unknown as AISettings);
     vi.mocked(currencyCache.getGlobalCurrencies).mockResolvedValue([
       { iso: 'AUD' },
       { iso: 'USD' },
-    ] as any);
-    vi.mocked(getAIProvider).mockReturnValue(mockProvider as any);
+    ] as unknown as Awaited<ReturnType<typeof currencyCache.getGlobalCurrencies>>);
+    vi.mocked(getAIProvider).mockReturnValue(mockProvider as unknown as AIProvider);
   });
 
   it('accepts config with deal_price_selectors even if standard price_selectors are empty', async () => {

@@ -1,8 +1,26 @@
 import { logger } from '../../../utils/system/logger';
 import { retailerRepository, RetailerConfig } from '../../../models';
-import { configCache } from '../../../utils/cache';
+import { configCache, settingsCache } from '../../../utils/cache';
 import { flagBlockedRetailer, restoreRetailerStatus } from '../retailer-maintenance';
 import { ScrapedProductWithVoting } from '../../../types/scraper';
+
+/**
+ * Whether persisting `use_browser_scraper` can possibly help.
+ *
+ * The browser scraper is optional: with no `remote_scraper_url` there is no
+ * browser path at all (`fetchBrowserHtml` returns '' without opening one). So
+ * writing the flag on such an install does not route the domain anywhere -- it
+ * only takes the HTTP attempt away from it, permanently, because nothing ever
+ * clears the flag. Gate every write of it on the URL being set.
+ */
+async function browserScraperIsAvailable(): Promise<boolean> {
+  return Boolean(await settingsCache.getRemoteScraperUrl());
+}
+
+function autoNameFor(domain: string): string {
+  const baseName = domain.split('.')[0];
+  return baseName.charAt(0).toUpperCase() + baseName.slice(1);
+}
 
 export async function handleRetailerMaintenance(
   domainConfig: RetailerConfig | null,
@@ -10,42 +28,47 @@ export async function handleRetailerMaintenance(
   overrideConfig: boolean,
   extractionSteps: string[],
   productId?: number,
-  fallbackContext?: { domain: string; learnedFlags?: any }
+  fallbackContext?: { domain: string; learnedFlags?: { use_browser_scraper?: boolean } }
 ): Promise<RetailerConfig | null> {
+  const wantsBrowserScraper = Boolean(fallbackContext?.learnedFlags?.use_browser_scraper);
+
   if (challenge) {
     logger.info(`Scraper | Block | Persistent challenge: ${challenge}`, 'Scraper', { product_id: productId });
     extractionSteps.push(`Scraper | Block | Persistent: ${challenge}`);
     
     if (domainConfig && !overrideConfig) {
-      if (fallbackContext?.learnedFlags?.use_browser_scraper && !domainConfig.use_browser_scraper) {
+      if (wantsBrowserScraper && !domainConfig.use_browser_scraper && await browserScraperIsAvailable()) {
         domainConfig.use_browser_scraper = true;
       }
       await flagBlockedRetailer(domainConfig, challenge, extractionSteps);
       return domainConfig;
     } else if (!domainConfig && fallbackContext?.domain) {
       const domain = fallbackContext.domain;
-      const baseName = domain.split('.')[0];
-      const autoName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+      const useBrowserScraper = wantsBrowserScraper && await browserScraperIsAvailable();
       const newConfig: Partial<RetailerConfig> = {
         domain,
-        name: autoName,
+        name: autoNameFor(domain),
         status: 'BLOCKED',
-        use_browser_scraper: Boolean(fallbackContext.learnedFlags?.use_browser_scraper),
+        use_browser_scraper: useBrowserScraper,
         description: `Auto-flagged: ${challenge} detected during extraction`,
         active: true
       };
       const created = await retailerRepository.upsert(newConfig);
       configCache.invalidate(domain);
-      extractionSteps.push(`Retailer | Config | Auto-created as BLOCKED with Browser Scraper: ${Boolean(fallbackContext.learnedFlags?.use_browser_scraper)}`);
+      extractionSteps.push(`Retailer | Config | Auto-created as BLOCKED with Browser Scraper: ${useBrowserScraper}`);
       return created;
     }
-  } else if (!domainConfig && fallbackContext?.domain && fallbackContext.learnedFlags?.use_browser_scraper) {
+  } else if (!domainConfig && fallbackContext?.domain && wantsBrowserScraper) {
+    if (!await browserScraperIsAvailable()) {
+      // Nothing to learn: the fallback cannot have been a browser, and writing
+      // the flag would only cut the domain off from HTTP.
+      extractionSteps.push(`Retailer | Config | Browser Scraper not configured, no config auto-created`);
+      return domainConfig;
+    }
     const domain = fallbackContext.domain;
-    const baseName = domain.split('.')[0];
-    const autoName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
     const newConfig: Partial<RetailerConfig> = {
       domain,
-      name: autoName,
+      name: autoNameFor(domain),
       status: 'OK',
       use_browser_scraper: true,
       description: 'Auto-created: Browser scraper required (fallback triggered)',

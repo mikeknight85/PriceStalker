@@ -7,6 +7,7 @@ import {
   fetchBrowserHtml,
   resolveUserAgent
 } from '../transport';
+import type { RemoteScraperOptions } from './remote';
 
 export interface FallbackOptions {
   url: string;
@@ -44,7 +45,7 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
       // omit it entirely, so the fallback presented a different browser -- and
       // headless Chromium's own -- to a retailer that had just been shown the
       // configured one.
-      const remoteOptions: any = {
+      const remoteOptions: RemoteScraperOptions = {
         productId,
         isDiscovery,
         userAgent: await resolveUserAgent(userAgent),

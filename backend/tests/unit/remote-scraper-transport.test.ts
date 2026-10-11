@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import axios from 'axios';
 import { fetchRemoteHtml } from '../../src/services/scraper/transport/remote';
 import { logger } from '../../src/utils/system/logger';
@@ -45,8 +45,55 @@ describe('fetchRemoteHtml', () => {
         }),
       }),
       expect.objectContaining({
-        timeout: 70000,
+        // No options.timeout sent, so the 60s default plus 15s of overhead,
+        // floored at the 70s minimum.
+        timeout: 75000,
       })
+    );
+  });
+
+  // The production path always sends both: `acquisition/remote.ts` and
+  // `acquisition/fallback.ts` pass the `browser_timeout` and `browser_delay`
+  // settings. The previous assertion exercised neither, so it could not have
+  // caught the request timeout being too small to cover the scrape it was
+  // waiting for.
+  it('sizes the request timeout to cover the whole scrape budget the production path sends', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: { html: '<html>ok</html>' },
+      status: 200,
+    });
+
+    await fetchRemoteHtml('https://example.com/item', 'http://remotescraper:5100', {
+      userAgent: 'CustomUA/1.0',
+      timeout: 60000,
+      delay: 3000,
+    });
+
+    // 60s total scrape budget + 3s hydration delay + 15s of response overhead.
+    // The old `+ 10000` gave 73s, which aborted a `page.goto` that succeeded
+    // late in the window before the scraper could return its result.
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://remotescraper:5100/scrape',
+      expect.anything(),
+      expect.objectContaining({ timeout: 78000 })
+    );
+  });
+
+  it('never drops below the 70s floor for a small per-retailer timeout', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: { html: '<html>ok</html>' },
+      status: 200,
+    });
+
+    await fetchRemoteHtml('https://example.com/item', 'http://remotescraper:5100', {
+      timeout: 15000,
+      delay: 0,
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://remotescraper:5100/scrape',
+      expect.anything(),
+      expect.objectContaining({ timeout: 70000 })
     );
   });
 

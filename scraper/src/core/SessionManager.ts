@@ -28,11 +28,33 @@ if (process.env.ENABLE_ADBLOCKER !== 'false') {
 export const DEFAULT_SCRAPER_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36';
 
+/**
+ * Reads a pool limit from the environment (issue #235).
+ *
+ * `Number(process.env.X) || fallback` accepts anything that is not 0 or NaN,
+ * so `MAX_BROWSERS=-1` would be taken at face value -- and a negative or
+ * fractional limit does not fail loudly, it quietly makes the pool unusable
+ * (`sessions.length >= -1` is true on an empty pool, so every scrape is
+ * rejected as "all browsers busy"). Anything that is not a positive integer is
+ * refused and logged, and the default stands.
+ */
+function poolLimit(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return fallback;
+
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    log(`Ignoring ${name}="${raw}": expected a positive integer, using ${fallback}`, 'WARN');
+    return fallback;
+  }
+  return value;
+}
+
 // Browser Pool Configuration
-export const MAX_BROWSERS = Number(process.env.MAX_BROWSERS) || 3;
-export const MAX_PAGES_PER_BROWSER = Number(process.env.MAX_PAGES_PER_BROWSER) || 4;
-export const MAX_SCRAPES_PER_BROWSER = Number(process.env.MAX_SCRAPES_PER_BROWSER) || 50; // Recycle browser after this many scrapes
-export const IDLE_TIMEOUT = Number(process.env.IDLE_TIMEOUT_MS) || 5 * 60 * 1000; // 5 minutes
+export const MAX_BROWSERS = poolLimit('MAX_BROWSERS', 3);
+export const MAX_PAGES_PER_BROWSER = poolLimit('MAX_PAGES_PER_BROWSER', 4);
+export const MAX_SCRAPES_PER_BROWSER = poolLimit('MAX_SCRAPES_PER_BROWSER', 50); // Recycle browser after this many scrapes
+export const IDLE_TIMEOUT = poolLimit('IDLE_TIMEOUT_MS', 5 * 60 * 1000); // 5 minutes
 
 export const sessions: BrowserSession[] = [];
 

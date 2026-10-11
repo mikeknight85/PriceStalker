@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductDiscoveryService } from '../../src/services/domain/product/add/discovery';
 import { scrapeProductWithVoting } from '../../src/services/scraper';
 import { assertUrlIsSafe } from '../../src/utils/system/url-safety';
+import type { ScrapedProductWithVoting } from '../../src/types/scraper';
 
 vi.mock('../../src/services/scraper', () => ({
   scrapeProductWithVoting: vi.fn(),
@@ -36,7 +37,7 @@ describe('ProductDiscoveryService Scrape Failure Reporting', () => {
       needsReview: false,
       failureReason: 'browser_scraper_failed',
       failureDetail: 'timeout of 45000ms exceeded',
-    } as any);
+    } as unknown as ScrapedProductWithVoting);
 
     await expect(service.initiateProductDiscovery(1, 'https://example.com/product', null))
       .rejects.toThrow('The Browser Scraper failed to fetch the page (timeout of 45000ms exceeded). Check the Browser Scraper container and settings in Admin -> System.');
@@ -54,7 +55,7 @@ describe('ProductDiscoveryService Scrape Failure Reporting', () => {
       needsReview: false,
       failureReason: 'bot_challenge',
       failureDetail: 'Imperva/Incapsula Challenge',
-    } as any);
+    } as unknown as ScrapedProductWithVoting);
 
     await expect(service.initiateProductDiscovery(1, 'https://example.com/product', null))
       .rejects.toThrow('The retailer blocked the request (Imperva/Incapsula Challenge). Enable the Browser Scraper for this retailer under Admin -> Retailers, or configure a proxy, then try again.');

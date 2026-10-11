@@ -171,6 +171,34 @@ describe('what Chromium actually sends', () => {
       .toBe('"Chromium";v="152", "Not?A_Brand";v="24", "Opera";v="136"');
     expect(buildUserAgentMetadata(parseUserAgent(opera))?.fullVersion).toBe('136.0.0.0');
   });
+
+  it('carries the real build and patch digits, not a padded major version', () => {
+    // The case above cannot tell the two implementations apart: `OPR/136.0.0.0`
+    // and `${majorVersion}.0.0.0` are the same string, so it passed equally
+    // well when the full version was reconstructed from the major number. The
+    // version Opera GX 136 actually sent was "136.0.6008.67" -- the browser's
+    // own build, which only survives if it is parsed out of the UA.
+    const operaFull = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.6008.67 Safari/537.36 OPR/136.0.6008.67';
+    const identity = parseUserAgent(operaFull);
+
+    expect(identity.fullVersion).toBe('136.0.6008.67');
+    expect(identity.majorVersion).toBe('136');
+    expect(identity.chromiumFullVersion).toBe('152.0.6008.67');
+    expect(identity.chromiumVersion).toBe('152');
+
+    const metadata = buildUserAgentMetadata(identity);
+    expect(metadata?.fullVersion).toBe('136.0.6008.67');
+    expect(metadata?.fullVersion).not.toBe('136.0.0.0');
+
+    // Sec-CH-UA-Full-Version-List carries both: Opera's own number against
+    // "Opera", Chromium's against "Chromium".
+    expect(metadata?.fullVersionList).toEqual(
+      expect.arrayContaining([
+        { brand: 'Opera', version: '136.0.6008.67' },
+        { brand: 'Chromium', version: '152.0.6008.67' },
+      ])
+    );
+  });
 });
 
 describe('the header set', () => {

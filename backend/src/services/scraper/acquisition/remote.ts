@@ -14,7 +14,7 @@ import { RetailerConfig } from '../../../models';
  * misspelled into silence -- which is how the User-Agent went missing on this
  * path in the first place.
  */
-interface RemoteScraperOptions {
+export interface RemoteScraperOptions {
   productId?: number;
   isDiscovery: boolean;
   requestId?: string;
@@ -24,7 +24,17 @@ interface RemoteScraperOptions {
   referrer?: string;
   challengePatterns?: string[];
   delay?: number;
+  /**
+   * The *total* budget for the scrape, not just `page.goto`. The scraper
+   * service splits it across navigation and the post-navigation phase (human
+   * actions, hydration delay, challenge auto-resolve, screenshot), so this
+   * number is what `transport/remote.ts` sizes its own request timeout against.
+   */
   timeout?: number;
+  /** Per-attempt wait while a challenge interstitial auto-resolves (issue #235). */
+  interstitialWaitMs?: number;
+  /** How many auto-resolve attempts to make before returning the wall (issue #235). */
+  interstitialRetries?: number;
 }
 
 export interface RemoteAcquisitionOptions {
@@ -36,24 +46,32 @@ export interface RemoteAcquisitionOptions {
   requestId?: string;
 }
 
+/**
+ * Asks the browser-scraper service for the page.
+ *
+ * Returns `null` — and only `null` — when the remote scraper is **not
+ * configured on this install**. The remote scraper is optional (see
+ * `CLAUDE.md` and `docs/developer/SCRAPER_LIFECYCLE.md`), so a missing
+ * `remote_scraper_url` is a configuration gap, not a scrape failure: the
+ * caller degrades to plain HTTP rather than failing every scrape for the
+ * domain forever. A remote scraper that *is* configured and then fails throws,
+ * because silently serving HTTP to a retailer that was flagged as needing a
+ * browser is how a BLOCKED page gets mistaken for a product page.
+ */
 export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Promise<string | null> {
   const { url, domain, domainConfig, productId, extractionSteps, requestId } = options;
   
   const rsUrl = await settingsCache.getRemoteScraperUrl();
   if (!rsUrl) {
-    extractionSteps.push(`Scraper | Remote | URL not configured, falling back`);
-    logger.warn(`Scraper | Remote | Enabled for ${domain} but remote_scraper_url is not configured.`, 'Scraper');
-    if (domainConfig?.use_browser_scraper) {
-      throw new Error('Browser Scraper URL is not configured — set Remote Scraper URL under Admin -> System');
-    }
+    extractionSteps.push(`Scraper | Remote | URL not configured, falling back to HTTP`);
+    logger.warn(`Scraper | Remote | Enabled for ${domain} but remote_scraper_url is not configured. Falling back to HTTP.`, 'Scraper');
     return null;
   }
 
   try {
     const useProxy = domainConfig?.use_proxy || false;
-    const useBrowserScraper = domainConfig?.use_browser_scraper || false;
-    
-    logger.info(`Scraper | Remote | Requesting ${domain} (Browser: ${useBrowserScraper})`, 'Scraper');
+
+    logger.info(`Scraper | Remote | Requesting ${domain} (Browser: true)`, 'Scraper');
     extractionSteps.push(`Scraper | Remote | Requesting via ${rsUrl}`);
     
     const isDiscovery = !productId;
@@ -109,12 +127,13 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
     return html;
   } catch (e) {
     if (e instanceof PageNotAvailableError) throw e;
-    extractionSteps.push(`Scraper | Remote | Failed: ${(e as any).message}`);
-    if (domainConfig?.use_browser_scraper) {
-      logger.warn(`Scraper | Remote | Failed for ${domain} (Browser required): ${(e as any).message}`, 'Scraper');
-      throw e;
-    }
-    logger.warn(`Scraper | Remote | Failed for ${domain}, will fallback: ${(e as any).message}`, 'Scraper');
-    return null;
+    const message = e instanceof Error ? e.message : String(e);
+    extractionSteps.push(`Scraper | Remote | Failed: ${message}`);
+    // This function only ever runs for a retailer whose config says
+    // `use_browser_scraper`, so there is no HTTP path to fall back to: a
+    // configured-but-failing browser scraper is a hard failure, never a quiet
+    // downgrade. (`null` is reserved for "not configured at all", above.)
+    logger.warn(`Scraper | Remote | Failed for ${domain} (Browser required): ${message}`, 'Scraper');
+    throw e;
   }
 }

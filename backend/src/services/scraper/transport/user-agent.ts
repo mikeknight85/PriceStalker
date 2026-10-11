@@ -254,6 +254,12 @@ export function buildUserAgentMetadata(identity: UserAgentIdentity) {
   if (!brands) return undefined;
 
   const fullVersionList = orderedFullBrands(identity) || brands;
+  // The browser's *own* version, as Sec-CH-UA-Full-Version carries it -- not
+  // the Chromium version it is built on (issue #229). Opera GX 136 on Chromium
+  // 152 sends "136.0.6008.67" here; for Chrome and Edge the two agree, which
+  // is why taking it from the Chrome/ token looked correct for a release.
+  // Parsed from the UA now rather than padded from the major version, so the
+  // real build and patch digits survive instead of becoming ".0.0".
   const fullVersion = identity.fullVersion || `${identity.majorVersion}.0.0.0`;
 
   return {
