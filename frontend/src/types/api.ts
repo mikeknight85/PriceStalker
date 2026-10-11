@@ -363,6 +363,25 @@ export interface SystemApiToken {
   created_at: string;
   expires_at: string | null;
   last_used_at: string | null;
+  /**
+   * What the token is allowed to do. `['*']` is full access, which is what
+   * every token issued before scopes existed was backfilled with.
+   */
+  scopes: string[];
+  /**
+   * The token's public prefix, or null for a token issued before scopes
+   * existed. Null is how a legacy token is recognised: its prefix could not be
+   * recovered from the stored hash, so it is unscoped, has full access, and
+   * still needs the slow verification path. The UI flags those for
+   * regeneration.
+   */
+  token_prefix: string | null;
+}
+
+export interface TokenScopeOption {
+  scope: string;
+  description: string;
+  deprecated: boolean;
 }
 
 export interface CreateSystemApiTokenResponse {
