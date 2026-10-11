@@ -1,6 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../../types/api';
-import { SortOption, SortOrder, PauseFilter, SORT_OPTIONS, getWebsite } from '../pages/dashboard/utils';
+import {
+  SortOption,
+  SortOrder,
+  StockFilter,
+  TrackingFilter,
+  SORT_OPTIONS,
+  STOCK_FILTER_OPTIONS,
+  TRACKING_FILTER_OPTIONS,
+  getWebsite,
+  readStoredChoice,
+  writeStoredChoice,
+} from '../pages/dashboard/utils';
+import { matchesStockFilter, matchesTrackingFilter } from '../pages/dashboard/filters';
 
 interface UseProductFiltersProps {
   products: Product[];
@@ -8,50 +20,78 @@ interface UseProductFiltersProps {
   userTags: string[];
 }
 
+const SORT_VALUES = SORT_OPTIONS.map(option => option.value);
+const TRACKING_VALUES = TRACKING_FILTER_OPTIONS.map(option => option.value);
+const STOCK_VALUES = STOCK_FILTER_OPTIONS.map(option => option.value);
+
+/**
+ * The storage key for the tracking filter keeps its original `pause` name: the
+ * control was renamed, not replaced, and a returning user should not lose the
+ * choice they already made (issue #246).
+ */
+const TRACKING_STORAGE_KEY = 'dashboard_pause_filter';
+const STOCK_STORAGE_KEY = 'dashboard_stock_filter';
+
 export function useProductFilters({ products, userTags }: UseProductFiltersProps) {
   const [searchQuery, setSearchQuery] = useState(() => {
-    return localStorage.getItem('dashboard_search_query') || '';
+    try {
+      return localStorage.getItem('dashboard_search_query') || '';
+    } catch {
+      return '';
+    }
   });
-  const [pauseFilter, setPauseFilter] = useState<PauseFilter>(() => {
-    const saved = localStorage.getItem('dashboard_pause_filter');
-    return (saved as PauseFilter) || 'all';
-  });
-  const [sortBy, setSortBy] = useState<SortOption>(() => {
+  const [trackingFilter, setTrackingFilter] = useState<TrackingFilter>(() =>
+    readStoredChoice(TRACKING_STORAGE_KEY, TRACKING_VALUES, 'all'),
+  );
+  const [stockFilter, setStockFilter] = useState<StockFilter>(() =>
+    readStoredChoice(STOCK_STORAGE_KEY, STOCK_VALUES, 'all'),
+  );
+  const [sortBy, setSortBy] = useState<SortOption>(() =>
     // Validated rather than cast: 'category' was a sort option before #147 and
     // may still be sitting in a returning user's localStorage, which would
     // leave the select showing nothing.
-    const saved = localStorage.getItem('dashboard_sort_by');
-    return SORT_OPTIONS.some(option => option.value === saved) ? (saved as SortOption) : 'date_added';
-  });
-  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
-    const saved = localStorage.getItem('dashboard_sort_order');
-    return (saved as SortOrder) || 'desc';
-  });
+    readStoredChoice('dashboard_sort_by', SORT_VALUES, 'date_added'),
+  );
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() =>
+    readStoredChoice<SortOrder>('dashboard_sort_order', ['asc', 'desc'], 'desc'),
+  );
   const [activeTag, setActiveTag] = useState<string | null>(() => {
-    return localStorage.getItem('dashboard_active_tag');
+    try {
+      return localStorage.getItem('dashboard_active_tag');
+    } catch {
+      return null;
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('dashboard_sort_by', sortBy);
+    writeStoredChoice('dashboard_sort_by', sortBy);
   }, [sortBy]);
 
   useEffect(() => {
-    localStorage.setItem('dashboard_sort_order', sortOrder);
+    writeStoredChoice('dashboard_sort_order', sortOrder);
   }, [sortOrder]);
 
   useEffect(() => {
-    localStorage.setItem('dashboard_search_query', searchQuery);
+    writeStoredChoice('dashboard_search_query', searchQuery);
   }, [searchQuery]);
 
   useEffect(() => {
-    localStorage.setItem('dashboard_pause_filter', pauseFilter);
-  }, [pauseFilter]);
+    writeStoredChoice(TRACKING_STORAGE_KEY, trackingFilter);
+  }, [trackingFilter]);
 
   useEffect(() => {
-    if (activeTag === null) {
-      localStorage.removeItem('dashboard_active_tag');
-    } else {
-      localStorage.setItem('dashboard_active_tag', activeTag);
+    writeStoredChoice(STOCK_STORAGE_KEY, stockFilter);
+  }, [stockFilter]);
+
+  useEffect(() => {
+    try {
+      if (activeTag === null) {
+        localStorage.removeItem('dashboard_active_tag');
+      } else {
+        localStorage.setItem('dashboard_active_tag', activeTag);
+      }
+    } catch {
+      /* preference is optional */
     }
   }, [activeTag]);
 
@@ -73,11 +113,9 @@ export function useProductFilters({ products, userTags }: UseProductFiltersProps
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
 
-    if (pauseFilter === 'active') {
-      result = result.filter(p => (p.checking_paused as any) === false || (p.checking_paused as any) === 0 || p.checking_paused === undefined || p.checking_paused === null);
-    } else if (pauseFilter === 'paused') {
-      result = result.filter(p => (p.checking_paused as any) === true || (p.checking_paused as any) === 1);
-    }
+    // Search AND tag AND tracking AND stock, each independent of the others.
+    result = result.filter(p => matchesTrackingFilter(p, trackingFilter));
+    result = result.filter(p => matchesStockFilter(p, stockFilter));
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -90,7 +128,7 @@ export function useProductFilters({ products, userTags }: UseProductFiltersProps
     }
 
     if (activeTag) {
-      result = result.filter(p => 
+      result = result.filter(p =>
         p.category && p.category.split(',').map(c => c.trim()).includes(activeTag)
       );
     }
@@ -140,13 +178,15 @@ export function useProductFilters({ products, userTags }: UseProductFiltersProps
     });
 
     return result;
-  }, [products, pauseFilter, searchQuery, activeTag, sortBy, sortOrder]);
+  }, [products, trackingFilter, stockFilter, searchQuery, activeTag, sortBy, sortOrder]);
 
   return {
     searchQuery,
     setSearchQuery,
-    pauseFilter,
-    setPauseFilter,
+    trackingFilter,
+    setTrackingFilter,
+    stockFilter,
+    setStockFilter,
     sortBy,
     setSortBy,
     sortOrder,
