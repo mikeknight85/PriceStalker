@@ -215,6 +215,7 @@ test('renders every settings section at its canonical path', async ({ page }) =>
 
   for (const [path, heading] of [
     ['/settings/profile', 'User Profile'],
+    ['/settings/appearance', 'Theme'],
     ['/settings/regional', 'Regional Settings'],
     ['/settings/notifications', 'Notification Channels'],
     ['/settings/security', 'Security & Password'],
@@ -283,4 +284,52 @@ test('removes a deleted detail product from the dashboard cache', async ({ page 
   await page.getByRole('button', { name: 'Stop Tracking' }).last().click({ force: true });
   await expect(page).toHaveURL(/\/products$/);
   await expect(page.getByText('No tracked products yet')).toBeVisible();
+});
+
+test('renders currency and dates without throwing when user locale is null', async ({ page }) => {
+  const nullLocaleUser = { ...authenticatedUser, locale: null };
+  const pageErrors: Error[] = [];
+  page.on('pageerror', (err) => pageErrors.push(err));
+
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, nullLocaleUser);
+
+  await page.route('**/api/profile', async (route) => {
+    await route.fulfill({ json: { ...nullLocaleUser, categories: ['Games'] } });
+  });
+  await page.route('**/api/products/1', async (route) => {
+    await route.fulfill({ json: product });
+  });
+
+  await page.goto('/products');
+  await expect(page.getByText('Acceptance Product')).toBeVisible();
+  await expect(page.getByText('$25.00')).toBeVisible();
+
+  await page.goto('/products/1');
+  await expect(page.getByRole('heading', { name: 'Acceptance Product' })).toBeVisible();
+
+  await page.goto('/settings/profile');
+  await expect(page.getByRole('heading', { name: 'User Profile' })).toBeVisible();
+
+  expect(pageErrors).toHaveLength(0);
+});
+
+test('toggles background particle animations and persists preference', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  await page.goto('/settings/appearance');
+  await expect(page.getByRole('heading', { name: 'Background Animations' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Disabled' }).click();
+  await expect(page.locator('.particle-background')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('background-particles'))).toBe('disabled');
+
+  await page.getByRole('button', { name: 'Enabled' }).click();
+  await expect(page.locator('.particle-background')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('background-particles'))).toBe('enabled');
 });

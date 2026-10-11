@@ -3,6 +3,7 @@ import Layout from '../../../layouts/Layout';
 
 // Section Components
 import ProfileSection from './ProfileSection';
+import AppearanceSection from './AppearanceSection';
 import RegionalSection from './RegionalSection';
 import SecuritySection from './SecuritySection';
 import NotificationChannelsSection from './NotificationChannelsSection';
@@ -10,7 +11,7 @@ import SettingsPageHeader from '../../../components/SettingsPageHeader';
 import Icon from '../../../components/Icon';
 import ErrorBoundary from '../../../components/ErrorBoundary';
 
-export type SettingsSection = 'profile' | 'regional' | 'notifications' | 'security';
+export type SettingsSection = 'profile' | 'appearance' | 'regional' | 'notifications' | 'security';
 
 interface SettingsNavItem {
   value: SettingsSection;
@@ -20,6 +21,7 @@ interface SettingsNavItem {
 
 const NAV_ITEMS: SettingsNavItem[] = [
   { value: 'profile', label: 'Profile', icon: 'user' },
+  { value: 'appearance', label: 'Appearance', icon: 'sun' },
   { value: 'regional', label: 'Regional', icon: 'globe' },
   { value: 'notifications', label: 'Notifications', icon: 'bell' },
   { value: 'security', label: 'Security', icon: 'lock' },
@@ -72,6 +74,7 @@ export default function Settings({ activeSection }: { activeSection: SettingsSec
         <main className="settings-content-new">
           <ErrorBoundary section={`settings-${activeSection}`}>
             {activeSection === 'profile' && <ProfileSection />}
+            {activeSection === 'appearance' && <AppearanceSection />}
             {activeSection === 'regional' && <RegionalSection />}
             {activeSection === 'security' && <SecuritySection />}
             {activeSection === 'notifications' && <NotificationChannelsSection />}

@@ -35,7 +35,7 @@ const NARROW = { width: 600, height: 900 };
 const WIDE = { width: 1400, height: 900 };
 
 async function gotoProfile(page: import('@playwright/test').Page) {
-  await page.goto('/settings/profile');
+  await page.goto('/settings/appearance');
   await expect(page.getByRole('heading', { name: 'Layout' })).toBeVisible();
 }
 
