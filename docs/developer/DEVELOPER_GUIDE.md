@@ -31,6 +31,8 @@ PriceStalker V2 utilizes a monorepo workspace managed with pnpm, separating comp
 │                           #   or retailers behind CDN/bot protection (e.g. Cloudflare, Imperva).
 │                           #   Enabled per-retailer via the Admin UI. Requires `Browser Scraper URL`
 │                           #   to be configured in Admin > System.
+├── mcp/                    # Model Context Protocol (MCP) server & operator CLI (@pricestalker/mcp)
+│                           #   over stdio for Claude Desktop, Cursor, and AI assistant tools.
 ├── deploy/                 # Docker Swarm configuration stack templates
 ├── Makefile                # Unified project runner commands (make dev, make up, make verify)
 ├── .env.example            # Baseline environment configurations
