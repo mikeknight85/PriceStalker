@@ -36,6 +36,9 @@ This portal contains detailed guides for administrators managing retailers, cust
 * **[User Notifications Guide](user_notifications.md)**
   How to configure Telegram, Discord, Pushover, Email, Gotify, and Webhook notification channels and customized price alerts.
 
+* **[8. Model Context Protocol (MCP) Server](mcp.md)**
+  Connecting Claude Desktop, Cursor, or AI hosts over stdio with scoped tokens and live diagnostic tools.
+
 
 
 ---
