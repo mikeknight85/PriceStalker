@@ -256,4 +256,38 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
       }
     }
   );
+
+  // 10. debug_extract
+  server.tool(
+    'debug_extract',
+    'Run live debug extraction against a product URL to test selectors, discover candidate prices, and inspect scraper results (requires mcp:extract scope and debug page enabled in Admin)',
+    {
+      url: z.string().url().describe('The product URL to test and extract'),
+      mode: z.enum(['standard', 'bypass']).optional().describe('Extraction mode: "standard" uses full scraper with voting; "bypass" uses raw HTTP fetch'),
+      use_ai: z.boolean().optional().describe('Attempt AI extraction if standard rules fail'),
+      force_ai: z.boolean().optional().describe('Force AI visual extraction regardless of selector matches')
+    },
+    async ({ url, mode, use_ai, force_ai }) => {
+      try {
+        const result = await client.debugExtract({
+          url,
+          mode,
+          use_ai,
+          force_ai,
+          returnHtml: false
+        });
+        return {
+          content: [{
+            type: 'text',
+            text: formatScrubbedJson(result)
+          }]
+        };
+      } catch (error: any) {
+        return {
+          isError: true,
+          content: [{ type: 'text', text: `Debug extraction failed: ${scrubSensitiveData(error.message)}` }]
+        };
+      }
+    }
+  );
 }

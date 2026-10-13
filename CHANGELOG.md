@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Model Context Protocol (MCP) server workspace (`pricestalker-mcp`) providing 9 read-mostly diagnostic and operational tools, 3 context resources, and a `debug-retailer` prompt over `stdio`, authenticated with scoped system API tokens and egress output scrubbing (#163, ADR 001).
+- Model Context Protocol (MCP) server workspace (`pricestalker-mcp`) providing diagnostic and operational tools (including live URL debug extraction), 3 context resources, and a `debug-retailer` prompt over `stdio`, authenticated with scoped system API tokens and egress output scrubbing (#163, ADR 001).
 
 ### Fixed
 

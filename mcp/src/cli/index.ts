@@ -90,5 +90,37 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
       }
     });
 
+  // 5. Debug Extract URL
+  program
+    .command('extract <url>')
+    .description('Live debug extraction against a URL (requires mcp:extract scope and debug page enabled in Admin)')
+    .option('--bypass', 'Use raw HTTP bypass fetch instead of standard scraper')
+    .option('--ai', 'Enable AI extraction fallback')
+    .action(async (url, cmdOpts) => {
+      const opts = program.opts();
+      const client = clientFactory(opts);
+      try {
+        console.log(`Extracting from ${scrubSensitiveData(url)}...`);
+        const result = await client.debugExtract({
+          url,
+          mode: cmdOpts.bypass ? 'bypass' : 'standard',
+          use_ai: !!cmdOpts.ai
+        });
+        console.log('\nExtraction Result:');
+        console.log(`Title:       ${result.name ?? 'Not found'}`);
+        console.log(`Price:       ${typeof result.price === 'object' ? JSON.stringify(result.price) : (result.price ?? 'Not found')}`);
+        console.log(`Currency:    ${result.currency ?? 'Not found'}`);
+        console.log(`Stock:       ${result.stockStatus ?? 'Unknown'}`);
+        console.log(`Candidates:  ${result.priceCandidates?.length || 0} candidate(s)`);
+        if (result.priceCandidates && result.priceCandidates.length > 0) {
+          console.log('\nPrice Candidates:');
+          console.log(JSON.stringify(scrubSensitiveData(result.priceCandidates), null, 2));
+        }
+      } catch (err: any) {
+        console.error(`Extraction failed: ${scrubSensitiveData(err.message)}`);
+        process.exit(1);
+      }
+    });
+
   return program;
 }

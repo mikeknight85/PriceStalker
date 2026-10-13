@@ -7,7 +7,8 @@ import {
   StockHistoryResult,
   RetailerConfig,
   SystemLogsResponse,
-  SearXNGSearchResult
+  SearXNGSearchResult,
+  ExtractionResult
 } from './types.js';
 
 export class PriceStalkerApiClient {
@@ -127,6 +128,19 @@ export class PriceStalkerApiClient {
 
   async getVersion(): Promise<{ version: string }> {
     const response = await this.client.get<{ version: string }>('/api/system/version');
+    return response.data;
+  }
+
+  async debugExtract(options: {
+    url: string;
+    config?: any;
+    mode?: 'bypass' | 'standard';
+    returnHtml?: boolean;
+    use_ai?: boolean;
+    force_ai?: boolean;
+    productId?: number;
+  }): Promise<ExtractionResult> {
+    const response = await this.client.post<ExtractionResult>('/api/admin/debug/extract', options);
     return response.data;
   }
 }

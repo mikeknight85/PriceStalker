@@ -154,4 +154,22 @@ describe('PriceStalkerApiClient', () => {
     expect(health.status).toBe('healthy');
     expect(version.version).toBe('2.2.0');
   });
+
+  it('debugExtract posts to /api/admin/debug/extract with options', async () => {
+    const mockResult = { success: true, price: 49.99, name: 'Sample Item' };
+    mockAxiosInstance.post.mockResolvedValueOnce({ data: mockResult });
+
+    const res = await client.debugExtract({
+      url: 'https://store.example/item',
+      mode: 'standard',
+      use_ai: true
+    });
+
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/api/admin/debug/extract', {
+      url: 'https://store.example/item',
+      mode: 'standard',
+      use_ai: true
+    });
+    expect(res).toEqual(mockResult);
+  });
 });

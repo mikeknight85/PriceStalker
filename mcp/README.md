@@ -14,9 +14,10 @@ The MCP server authenticates via a **System API Token** configured with the appr
 
 - `mcp:read`: Required for all read-only diagnostic tools, items, logs, retailer configurations, and context resources.
 - `mcp:write`: Required if using `refresh_product_price` to force a price re-scrape.
+- `mcp:extract`: Required if using `debug_extract` to run live scraper extractions on URLs.
 - `admin:system`: Required if using `flush_system_caches` to invalidate in-memory settings and config caches.
 
-All tool results and resource outputs pass through boundary redaction (`scrubber.ts`) to redact API keys, credentials, and user email addresses before entering model context.
+All tool results and resource outputs pass through boundary redaction (`scrubber.ts`) to redact API keys, credentials, and user email addresses before entering model context. All target URLs are validated server-side by backend `assertUrlIsSafe` against loopback, private, and cloud metadata addresses.
 
 ---
 
@@ -31,6 +32,9 @@ pnpm --filter pricestalker-mcp start health
 
 # Search and list tracked items
 pnpm --filter pricestalker-mcp start items -q "headphones"
+
+# Live debug extraction on a URL (requires mcp:extract scope)
+pnpm --filter pricestalker-mcp start extract https://example.com/product/123
 
 # Flush system caches (requires admin:system scope)
 pnpm --filter pricestalker-mcp start flush
@@ -80,7 +84,7 @@ Configure your host with `PRICESTALKER_URL` and `PRICESTALKER_TOKEN`.
 
 ## Capabilities (v1 Scope)
 
-### Tools (9)
+### Tools (10)
 - `get_system_health`: Inspect database connection status and application version.
 - `query_system_logs`: Query and filter system logs with server-side limit capping and email/credential redaction.
 - `list_items`: List tracked items with their best current prices and store counts.
@@ -90,6 +94,7 @@ Configure your host with `PRICESTALKER_URL` and `PRICESTALKER_TOKEN`.
 - `get_retailer_config`: Fetch scraping selector rules and configuration flags for a retailer domain.
 - `refresh_product_price`: Trigger an immediate live price re-scrape for an existing product.
 - `flush_system_caches`: Invalidate all in-memory system, retailer, and regional caches.
+- `debug_extract`: Run live debug extraction against a product URL to test selectors, discover candidate prices, and inspect scraper results (requires `mcp:extract` scope and debug page enabled in Admin).
 
 ### Resources (3)
 - `pricestalker://retailers/{domain}`: Active selector configuration for a store domain.
