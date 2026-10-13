@@ -45,7 +45,12 @@ watch separately.
 * **By product** — one card per product, showing the best price across its
   stores, the gap between the cheapest and dearest, and each store underneath.
 
-Your choice is remembered.
+Your choice is remembered. Both views support sorting (by name, current price, price drop/increase, and status).
+
+**Filtering and results counter.** The dashboard provides dedicated filter controls that let you independently filter by:
+* **Tracking status**: All, Active, or Paused.
+* **Stock status**: All, In Stock, Out of Stock, Pre-Order, or Unavailable.
+A live results banner reports how many matching items or stores are currently displayed.
 
 **How the best price is chosen.** Prices are converted to your preferred
 currency before being compared. A store whose currency could not be resolved is
@@ -193,6 +198,21 @@ If an administrator enables AI extraction, auto-mapping, or verification,
 relevant page content may be sent to the configured AI provider. Check with
 your administrator if your deployment has specific privacy or data-retention
 requirements.
+
+## 11. User Preferences and Settings
+
+Each user account can personalize their PriceStalker experience under **Settings**:
+
+* **Appearance (`/settings/appearance`)**:
+  * **Background Animations**: Toggle the floating particle background effects on or off. Useful for lower-power devices, reduced CPU usage, or users preferring minimal visual motion.
+* **Product Tracking (`/settings/tracking`)**:
+  * **Default Check Interval**: Choose what interval newly added products start with (e.g. Every 12 Hours, Daily, etc.), or select "Follow instance default" to automatically use the administrator's configuration. Existing products retain their own configured schedules.
+* **Profile & Regional (`/settings/profile`)**:
+  * Manage your display name, password, preferred display currency, and locale formatting for numbers and dates.
+* **Notification Channels (`/settings/notifications`)**:
+  * Configure personal destinations for Telegram, Discord, Pushover, Ntfy, Gotify, Webhooks, or Email alerts.
+
+---
 
 ### Small glossary
 

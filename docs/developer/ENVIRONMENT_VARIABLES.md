@@ -37,6 +37,12 @@ Used to customize the database connection and volume persistence.
 | `IMAGE_TAG` | Image release tag. Use `stable` (or `latest`) for versioned releases, `beta` for the pre-release channel tracking `main`, or pin an immutable version tag (e.g. `2.1.0-beta.8`, note: published GHCR image tags omit the leading `v`). | `latest` |
 | `TZ` | System timezone. Affects log timestamps in both services and cron schedule targets. Database timestamps and API payloads remain UTC. An unrecognised zone falls back to UTC and is reported once at startup. | `UTC` |
 | `LOG_LEVEL` | Verbosity of the system logger: `debug`, `info`, `warn`, or `error`. See [LOGGING.md](LOGGING.md) for detailed configuration options. | `info` |
+| `DEBUG` | Shortcut boolean. When `true`, forces log levels to `DEBUG` and enables detailed HTTP request body logging. | `false` |
+| `CONSOLE_LOG_LEVEL` | Overrides the log level threshold specifically for console / stdout container output. | `LOG_LEVEL` |
+| `FILE_LOG_LEVEL` | Overrides the log level threshold specifically for disk logs (`logs/backend.log`). | `LOG_LEVEL` |
+| `DB_LOG_LEVEL` | Overrides the log level threshold specifically for the `system_logs` table (Admin -> System Event Log). | `LOG_LEVEL` |
+| `SLOW_QUERY_MS` | Threshold in milliseconds for database query tracing; queries taking longer are logged at `WARN` instead of `DEBUG`. | `500` |
+| `AI_TRACE_CHARS` | Maximum character length of AI prompts and raw responses to log at `DEBUG`. | `2000` |
 | `BACKEND_MEM_LIMIT` | Docker container memory constraint for the backend service. | `1g` |
 | `REDACT_API_KEYS` | When set to `true`, AI API credentials stored in settings are masked (`sk-...xxxx`) in the Admin panel and cannot be revealed via the UI. | `false` |
 | `ALLOW_INTERNAL_SCRAPING` | When set to `true`, any URL the application fetches may point at loopback, private, or link-local addresses. Leave it unset in production. Without it, admin tools (retailer config test, debug extract, retailer remap) refuse every internal address, and the product paths (add, rescan, scheduled refresh) refuse loopback and link-local — the cloud metadata endpoint `169.254.169.254` among them — while still allowing a shop on a private LAN such as `192.168.1.50`. Only the address check is waived: non-`http`/`https` schemes are always refused. | `false` |
@@ -62,6 +68,8 @@ These parameters enable and coordinate Single Sign-On integrations. Detailed set
 | `ADMIN_API_TOKEN` | A bootstrap/emergency API token that grants administrative access without requiring a standard user login. Leave unset in production. | *(Empty)* |
 | `SMTP_FALLBACK_HOST` | Hostname of the fallback SMTP email server. | *(Empty)* |
 | `SMTP_FALLBACK_PORT` | Port number of the fallback SMTP email server. | `587` |
+| `SMTP_FALLBACK_USER` | Username / account for authenticating with the fallback SMTP server. | *(Empty)* |
+| `SMTP_FALLBACK_PASS` | Password / app password for authenticating with the fallback SMTP server. | *(Empty)* |
 | `SMTP_FALLBACK_FROM` | The sender email address used for system fallback notifications. | *(Empty)* |
 | `ADMIN_ALERT_EMAIL` | The recipient email address where database-health alert logs are forwarded on failure. | *(Empty)* |
 

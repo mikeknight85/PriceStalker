@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.
+- Synchronized documentation across admin, developer, and user guides, corrected migration references, and regenerated product lifecycle diagrams.
+
 ## [2.2.0-beta.1] - 2026-10-11
 
 ### Added

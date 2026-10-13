@@ -1,7 +1,7 @@
 digraph PriceStalkerProductLifecycle {
     // Graph-level styling
     graph [
-        label="PriceStalker Scrape Engine & Product Monitoring Overview (v2.0.0-beta.1)",
+        label="PriceStalker Scrape Engine & Product Monitoring Overview (v2.2.0-beta.1)",
         labelloc="t",
         fontname="Segoe UI, Arial, sans-serif",
         fontsize=22,
@@ -77,14 +77,14 @@ digraph PriceStalkerProductLifecycle {
     Configured_Browser -> Remote_Browser [label="Yes"];
     Configured_Browser -> Axios_Fetch [label="No"];
     Remote_Browser -> DOM_Denoise [label="HTML returned"];
-    Remote_Browser -> Axios_Fetch [label="No HTML"];
+    Remote_Browser -> Axios_Fetch [label="No scraper URL configured"];
+    Remote_Browser -> Remote_Fail [label="Scraper error"];
     Axios_Fetch    -> Bot_Check;
     Bot_Check      -> Remote_Browser [label="Challenge + no retailer config"];
     Bot_Check      -> Soft404_Check  [label="No challenge"];
     Soft404_Check  -> Remote_Fail    [label="404/410 or soft 404"];
     Soft404_Check  -> DOM_Denoise    [label="HTML OK"];
     Remote_Browser -> Set_Stealth    [label="Challenge fallback succeeds"];
-    Remote_Browser -> Remote_Fail    [label="Fails"];
     Set_Stealth    -> DOM_Denoise;
 
     // ─────────────────────────────────────────────────────
@@ -155,8 +155,8 @@ digraph PriceStalkerProductLifecycle {
 
         Has_Config_P4 [label="Retailer Config Exists\n& Not Shell Config?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
         AI_Map_Enabled [label="ai_auto_mapping_enabled?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-        Clean_Html    [label="cleanHtml()\n(Prune to ≤50KB for Gemini context)", fillcolor="#7c3aed", fontcolor="#ffffff"];
-        Gemini_Gen    [label="Gemini: RETAILER_GENERATION_PROMPT\n(Generate CSS selectors from DOM)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        Clean_Html    [label="cleanHtml()\n(Prune to ≤50KB for AI context)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        AI_Gen        [label="AI Provider: RETAILER_GENERATION_PROMPT\n(Generate CSS selectors from DOM)", fillcolor="#7c3aed", fontcolor="#ffffff"];
         Save_Config   [label="Save to retailer_configs\n(price_selectors, name_selectors, etc.)", fillcolor="#7c3aed", fontcolor="#ffffff"];
         Re_Scrape     [label="Re-run Extraction with New Config", fillcolor="#4f46e5", fontcolor="#ffffff"];
     }
@@ -165,7 +165,7 @@ digraph PriceStalkerProductLifecycle {
     Has_Config_P4 -> AI_Map_Enabled [label="No"];
     AI_Map_Enabled -> Clean_Html   [label="Yes"];
     AI_Map_Enabled -> Run_Consensus [label="No → use generic"];
-    Clean_Html    -> Gemini_Gen -> Save_Config -> Re_Scrape;
+    Clean_Html    -> AI_Gen -> Save_Config -> Re_Scrape;
     Re_Scrape     -> Run_Consensus;
 
     // ─────────────────────────────────────────────────────
@@ -259,13 +259,13 @@ digraph PriceStalkerProductLifecycle {
         bgcolor="#13102a";
 
         AI_Verify_Check [label="ai_verification_enabled?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-        Gemini_Verify   [label="Gemini Cross-Check\n(Verify price against denoised HTML)", fillcolor="#7c3aed", fontcolor="#ffffff"];
+        AI_Verify       [label="AI Provider Cross-Check\n(Verify price against denoised HTML)", fillcolor="#7c3aed", fontcolor="#ffffff"];
         Verify_Pass     [label="Verification Passed?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
     }
 
-    AI_Verify_Check -> Gemini_Verify [label="Yes"];
+    AI_Verify_Check -> AI_Verify [label="Yes"];
     AI_Verify_Check -> Persist_Price [label="No — skip"];
-    Gemini_Verify   -> Verify_Pass;
+    AI_Verify       -> Verify_Pass;
     Verify_Pass     -> Persist_Price [label="Yes → ai_status=verified"];
     Verify_Pass     -> Set_Review    [label="No → ai_status=corrected"];
 

@@ -129,8 +129,9 @@ Stores generated alert records and delivery status.
 ### 7. `system_settings`
 Global instance configuration managed via Admin.
 * **Key Fields**:
- - `key` (primary key, e.g. `ai_provider`, `remote_scraper_url`, `generic_*` selectors).
+ - `key` (primary key, e.g. `ai_provider`, `remote_scraper_url`, `generic_*` selectors and `generic_challenge_phrases`).
  - `value`: Stored setting or JSON string.
+ - `generic_challenge_phrases`: JSON array of fallback string patterns used to identify anti-bot walls / challenges (issue #234, migration 021).
  - `default_refresh_interval`: Seconds between checks for newly added products,
    for every account that has not set its own (issue #239). Seeded with 43200 by
    migration 022, held to one hour at the low end and one week at the high end
@@ -145,11 +146,11 @@ API access tokens for machine authorization.
    is shown once at creation and never stored.
  - `token_prefix`: the token's first 11 characters (`ps_` + 8 hex), indexed, so
    verification finds one candidate row instead of bcrypt-comparing every row.
-   Null for tokens issued before migration 022 — the prefix cannot be recovered
+   Null for tokens issued before migration 023 — the prefix cannot be recovered
    from a bcrypt hash, so those rows are found by the legacy scan and are shown
    as deprecated in Admin.
  - `scopes` (`text[]`): what the token may do. Backfilled to `{'*'}` (full
-   access) for rows that predate migration 022. Enforced by
+   access) for rows that predate migration 023. Enforced by
    `middleware/scope.ts`.
  - `admin_id`: the user account the token acts as. Required in practice — a token
    with no linked user is refused at authentication.

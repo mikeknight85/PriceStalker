@@ -276,8 +276,8 @@ glance without reading every child file:
 
 ## 8. Related Developer Documentation
 
-* **[CLAUDE.md](../CLAUDE.md)**: Developer quick-start cheat sheet for building, linting, and formatting.
-* **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Workspace setup, package manager guidelines (`pnpm`), and development container workflows.
+* **[CLAUDE.md](../../CLAUDE.md)**: Developer quick-start cheat sheet for building, linting, and formatting.
+* **[CONTRIBUTING.md](../../CONTRIBUTING.md)**: Workspace setup, package manager guidelines (`pnpm`), and development container workflows.
 * **[Scraper Lifecycle](SCRAPER_LIFECYCLE.md)**: In-depth technical breakdown of the seven-stage scrape lifecycle.
 * **[Logging](LOGGING.md)**: Configuration reference and developer guide for the multi-target logging system.
 * **[Selectors](SELECTORS.md)**: Details on the unified selectors engine syntax, XPath, and regex.

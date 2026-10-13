@@ -9,11 +9,11 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 4393)">
 <title>PriceStalkerProductLifecycle</title>
 <polygon fill="#0f172a" stroke="transparent" points="-4,4 -4,-4393 3279,-4393 3279,4 -4,4"/>
-<text text-anchor="middle" x="1637.5" y="-4367.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#f8fafc">PriceStalker Scrape Engine &amp; Product Monitoring Overview (v2.0.0&#45;beta.1)</text>
+<text text-anchor="middle" x="1637.5" y="-4367.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#f8fafc">PriceStalker Scrape Engine &amp; Product Monitoring Overview (v2.2.0&#45;beta.1)</text>
 <g id="clust1" class="cluster">
 <title>cluster_init</title>
-<path fill="#1e3a5f" stroke="#1e3a5f" stroke-dasharray="5,2" d="M43,-1802C43,-1802 429,-1802 429,-1802 435,-1802 441,-1808 441,-1814 441,-1814 441,-2278 441,-2278 441,-2284 435,-2290 429,-2290 429,-2290 43,-2290 43,-2290 37,-2290 31,-2284 31,-2278 31,-2278 31,-1814 31,-1814 31,-1808 37,-1802 43,-1802"/>
-<text text-anchor="middle" x="236" y="-2268.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#60a5fa">PHASE 0 — SESSION INITIALISATION</text>
+<path fill="#1e3a5f" stroke="#1e3a5f" stroke-dasharray="5,2" d="M59,-1802C59,-1802 445,-1802 445,-1802 451,-1802 457,-1808 457,-1814 457,-1814 457,-2278 457,-2278 457,-2284 451,-2290 445,-2290 445,-2290 59,-2290 59,-2290 53,-2290 47,-2284 47,-2278 47,-2278 47,-1814 47,-1814 47,-1808 53,-1802 59,-1802"/>
+<text text-anchor="middle" x="252" y="-2268.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#60a5fa">PHASE 0 — SESSION INITIALISATION</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_acquisition</title>
@@ -57,8 +57,8 @@
 </g>
 <g id="clust10" class="cluster">
 <title>cluster_oos</title>
-<path fill="#7c2d12" stroke="#7c2d12" d="M2237,-2192C2237,-2192 2628,-2192 2628,-2192 2634,-2192 2640,-2198 2640,-2204 2640,-2204 2640,-2830 2640,-2830 2640,-2836 2634,-2842 2628,-2842 2628,-2842 2237,-2842 2237,-2842 2231,-2842 2225,-2836 2225,-2830 2225,-2830 2225,-2204 2225,-2204 2225,-2198 2231,-2192 2237,-2192"/>
-<text text-anchor="middle" x="2432.5" y="-2820.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#fca5a5">OOS Guardrails (if product out_of_stock)</text>
+<path fill="#7c2d12" stroke="#7c2d12" d="M2252,-2192C2252,-2192 2643,-2192 2643,-2192 2649,-2192 2655,-2198 2655,-2204 2655,-2204 2655,-2830 2655,-2830 2655,-2836 2649,-2842 2643,-2842 2643,-2842 2252,-2842 2252,-2842 2246,-2842 2240,-2836 2240,-2830 2240,-2830 2240,-2204 2240,-2204 2240,-2198 2246,-2192 2252,-2192"/>
+<text text-anchor="middle" x="2447.5" y="-2820.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#fca5a5">OOS Guardrails (if product out_of_stock)</text>
 </g>
 <g id="clust11" class="cluster">
 <title>cluster_verify</title>
@@ -67,13 +67,13 @@
 </g>
 <g id="clust12" class="cluster">
 <title>cluster_voting</title>
-<path fill="#701a75" stroke="#701a75" stroke-dasharray="5,2" d="M2178,-1667C2178,-1667 2553,-1667 2553,-1667 2559,-1667 2565,-1673 2565,-1679 2565,-1679 2565,-2134 2565,-2134 2565,-2140 2559,-2146 2553,-2146 2553,-2146 2178,-2146 2178,-2146 2172,-2146 2166,-2140 2166,-2134 2166,-2134 2166,-1679 2166,-1679 2166,-1673 2172,-1667 2178,-1667"/>
-<text text-anchor="middle" x="2365.5" y="-2124.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#f472b6">VOTING MODAL (needsReview = true)</text>
+<path fill="#701a75" stroke="#701a75" stroke-dasharray="5,2" d="M2193,-1667C2193,-1667 2568,-1667 2568,-1667 2574,-1667 2580,-1673 2580,-1679 2580,-1679 2580,-2134 2580,-2134 2580,-2140 2574,-2146 2568,-2146 2568,-2146 2193,-2146 2193,-2146 2187,-2146 2181,-2140 2181,-2134 2181,-2134 2181,-1679 2181,-1679 2181,-1673 2187,-1667 2193,-1667"/>
+<text text-anchor="middle" x="2380.5" y="-2124.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#f472b6">VOTING MODAL (needsReview = true)</text>
 </g>
 <g id="clust13" class="cluster">
 <title>cluster_persist</title>
-<path fill="#0f533a" stroke="#0f533a" stroke-dasharray="5,2" d="M2585,-1271C2585,-1271 3100,-1271 3100,-1271 3106,-1271 3112,-1277 3112,-1283 3112,-1283 3112,-2134 3112,-2134 3112,-2140 3106,-2146 3100,-2146 3100,-2146 2585,-2146 2585,-2146 2579,-2146 2573,-2140 2573,-2134 2573,-2134 2573,-1283 2573,-1283 2573,-1277 2579,-1271 2585,-1271"/>
-<text text-anchor="middle" x="2842.5" y="-2124.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#34d399">PERSISTENCE &amp; AUTO&#45;CONFIG LEARNING LOOP</text>
+<path fill="#0f533a" stroke="#0f533a" stroke-dasharray="5,2" d="M2600,-1271C2600,-1271 3115,-1271 3115,-1271 3121,-1271 3127,-1277 3127,-1283 3127,-1283 3127,-2134 3127,-2134 3127,-2140 3121,-2146 3115,-2146 3115,-2146 2600,-2146 2600,-2146 2594,-2146 2588,-2140 2588,-2134 2588,-2134 2588,-1283 2588,-1283 2588,-1277 2594,-1271 2600,-1271"/>
+<text text-anchor="middle" x="2857.5" y="-2124.4" font-family="Segoe UI, Arial, sans-serif" font-size="22.00" fill="#34d399">PERSISTENCE &amp; AUTO&#45;CONFIG LEARNING LOOP</text>
 </g>
 <g id="clust14" class="cluster">
 <title>cluster_scheduler</title>
@@ -83,75 +83,75 @@
 <!-- Start_Product -->
 <g id="node1" class="node">
 <title>Start_Product</title>
-<path fill="#2563eb" stroke="#334155" stroke-width="1.4" d="M328.5,-2250C328.5,-2250 143.5,-2250 143.5,-2250 137.5,-2250 131.5,-2244 131.5,-2238 131.5,-2238 131.5,-2212 131.5,-2212 131.5,-2206 137.5,-2200 143.5,-2200 143.5,-2200 328.5,-2200 328.5,-2200 334.5,-2200 340.5,-2206 340.5,-2212 340.5,-2212 340.5,-2238 340.5,-2238 340.5,-2244 334.5,-2250 328.5,-2250"/>
-<text text-anchor="middle" x="236" y="-2228" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">POST /api/products</text>
-<text text-anchor="middle" x="236" y="-2217" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Add Product URL)</text>
+<path fill="#2563eb" stroke="#334155" stroke-width="1.4" d="M309.5,-2250C309.5,-2250 124.5,-2250 124.5,-2250 118.5,-2250 112.5,-2244 112.5,-2238 112.5,-2238 112.5,-2212 112.5,-2212 112.5,-2206 118.5,-2200 124.5,-2200 124.5,-2200 309.5,-2200 309.5,-2200 315.5,-2200 321.5,-2206 321.5,-2212 321.5,-2212 321.5,-2238 321.5,-2238 321.5,-2244 315.5,-2250 309.5,-2250"/>
+<text text-anchor="middle" x="217" y="-2228" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">POST /api/products</text>
+<text text-anchor="middle" x="217" y="-2217" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Add Product URL)</text>
 </g>
 <!-- Url_Clean -->
 <g id="node2" class="node">
 <title>Url_Clean</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M328.5,-2106C328.5,-2106 143.5,-2106 143.5,-2106 137.5,-2106 131.5,-2100 131.5,-2094 131.5,-2094 131.5,-2068 131.5,-2068 131.5,-2062 137.5,-2056 143.5,-2056 143.5,-2056 328.5,-2056 328.5,-2056 334.5,-2056 340.5,-2062 340.5,-2068 340.5,-2068 340.5,-2094 340.5,-2094 340.5,-2100 334.5,-2106 328.5,-2106"/>
-<text text-anchor="middle" x="236" y="-2084" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">cleanUrl() / getUrlLookup()</text>
-<text text-anchor="middle" x="236" y="-2073" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Strip UTM, normalize trailing slash)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M309.5,-2106C309.5,-2106 124.5,-2106 124.5,-2106 118.5,-2106 112.5,-2100 112.5,-2094 112.5,-2094 112.5,-2068 112.5,-2068 112.5,-2062 118.5,-2056 124.5,-2056 124.5,-2056 309.5,-2056 309.5,-2056 315.5,-2056 321.5,-2062 321.5,-2068 321.5,-2068 321.5,-2094 321.5,-2094 321.5,-2100 315.5,-2106 309.5,-2106"/>
+<text text-anchor="middle" x="217" y="-2084" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">cleanUrl() / getUrlLookup()</text>
+<text text-anchor="middle" x="217" y="-2073" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Strip UTM, normalize trailing slash)</text>
 </g>
 <!-- Start_Product&#45;&gt;Url_Clean -->
 <g id="edge1" class="edge">
 <title>Start_Product&#45;&gt;Url_Clean</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M236,-2199.91C236,-2176.55 236,-2140.93 236,-2114.96"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="238.98,-2114.71 236,-2106.21 233.03,-2114.71 238.98,-2114.71"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M217,-2199.91C217,-2176.55 217,-2140.93 217,-2114.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="219.98,-2114.71 217,-2106.21 214.03,-2114.71 219.98,-2114.71"/>
 </g>
 <!-- Load_Config -->
 <g id="node3" class="node">
 <title>Load_Config</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M328.5,-1983C328.5,-1983 143.5,-1983 143.5,-1983 137.5,-1983 131.5,-1977 131.5,-1971 131.5,-1971 131.5,-1945 131.5,-1945 131.5,-1939 137.5,-1933 143.5,-1933 143.5,-1933 328.5,-1933 328.5,-1933 334.5,-1933 340.5,-1939 340.5,-1945 340.5,-1945 340.5,-1971 340.5,-1971 340.5,-1977 334.5,-1983 328.5,-1983"/>
-<text text-anchor="middle" x="236" y="-1961" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Load RetailerConfig + AI Settings</text>
-<text text-anchor="middle" x="236" y="-1950" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(configCache / settingsCache)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M309.5,-1983C309.5,-1983 124.5,-1983 124.5,-1983 118.5,-1983 112.5,-1977 112.5,-1971 112.5,-1971 112.5,-1945 112.5,-1945 112.5,-1939 118.5,-1933 124.5,-1933 124.5,-1933 309.5,-1933 309.5,-1933 315.5,-1933 321.5,-1939 321.5,-1945 321.5,-1945 321.5,-1971 321.5,-1971 321.5,-1977 315.5,-1983 309.5,-1983"/>
+<text text-anchor="middle" x="217" y="-1961" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Load RetailerConfig + AI Settings</text>
+<text text-anchor="middle" x="217" y="-1950" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(configCache / settingsCache)</text>
 </g>
 <!-- Url_Clean&#45;&gt;Load_Config -->
 <g id="edge2" class="edge">
 <title>Url_Clean&#45;&gt;Load_Config</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M236,-2055.8C236,-2037.42 236,-2011.94 236,-1991.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="238.98,-1991.65 236,-1983.15 233.03,-1991.65 238.98,-1991.65"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M217,-2055.8C217,-2037.42 217,-2011.94 217,-1991.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="219.98,-1991.65 217,-1983.15 214.03,-1991.65 219.98,-1991.65"/>
 </g>
 <!-- Currency_Init -->
 <g id="node4" class="node">
 <title>Currency_Init</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M340.5,-1860C340.5,-1860 131.5,-1860 131.5,-1860 125.5,-1860 119.5,-1854 119.5,-1848 119.5,-1848 119.5,-1822 119.5,-1822 119.5,-1816 125.5,-1810 131.5,-1810 131.5,-1810 340.5,-1810 340.5,-1810 346.5,-1810 352.5,-1816 352.5,-1822 352.5,-1822 352.5,-1848 352.5,-1848 352.5,-1854 346.5,-1860 340.5,-1860"/>
-<text text-anchor="middle" x="236" y="-1838" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Resolve Currency &amp; Locale Hints</text>
-<text text-anchor="middle" x="236" y="-1827" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(currencyHelper: Site Hint → URL → HTML lang)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M321.5,-1860C321.5,-1860 112.5,-1860 112.5,-1860 106.5,-1860 100.5,-1854 100.5,-1848 100.5,-1848 100.5,-1822 100.5,-1822 100.5,-1816 106.5,-1810 112.5,-1810 112.5,-1810 321.5,-1810 321.5,-1810 327.5,-1810 333.5,-1816 333.5,-1822 333.5,-1822 333.5,-1848 333.5,-1848 333.5,-1854 327.5,-1860 321.5,-1860"/>
+<text text-anchor="middle" x="217" y="-1838" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Resolve Currency &amp; Locale Hints</text>
+<text text-anchor="middle" x="217" y="-1827" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(currencyHelper: Site Hint → URL → HTML lang)</text>
 </g>
 <!-- Load_Config&#45;&gt;Currency_Init -->
 <g id="edge3" class="edge">
 <title>Load_Config&#45;&gt;Currency_Init</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M236,-1932.8C236,-1914.42 236,-1888.94 236,-1868.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="238.98,-1868.65 236,-1860.15 233.03,-1868.65 238.98,-1868.65"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M217,-1932.8C217,-1914.42 217,-1888.94 217,-1868.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="219.98,-1868.65 217,-1860.15 214.03,-1868.65 219.98,-1868.65"/>
 </g>
 <!-- Configured_Browser -->
 <g id="node5" class="node">
 <title>Configured_Browser</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M224.22,-1722.71C224.22,-1722.71 119.45,-1702.29 119.45,-1702.29 113.56,-1701.15 113.56,-1698.85 119.45,-1697.71 119.45,-1697.71 224.22,-1677.29 224.22,-1677.29 230.11,-1676.15 241.89,-1676.15 247.78,-1677.29 247.78,-1677.29 352.55,-1697.71 352.55,-1697.71 358.44,-1698.85 358.44,-1701.15 352.55,-1702.29 352.55,-1702.29 247.78,-1722.71 247.78,-1722.71 241.89,-1723.85 230.11,-1723.85 224.22,-1722.71"/>
-<text text-anchor="middle" x="236" y="-1703" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Configured Browser Attempt?</text>
-<text text-anchor="middle" x="236" y="-1692" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(use_browser_scraper)</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M205.22,-1722.71C205.22,-1722.71 100.45,-1702.29 100.45,-1702.29 94.56,-1701.15 94.56,-1698.85 100.45,-1697.71 100.45,-1697.71 205.22,-1677.29 205.22,-1677.29 211.11,-1676.15 222.89,-1676.15 228.78,-1677.29 228.78,-1677.29 333.55,-1697.71 333.55,-1697.71 339.44,-1698.85 339.44,-1701.15 333.55,-1702.29 333.55,-1702.29 228.78,-1722.71 228.78,-1722.71 222.89,-1723.85 211.11,-1723.85 205.22,-1722.71"/>
+<text text-anchor="middle" x="217" y="-1703" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Configured Browser Attempt?</text>
+<text text-anchor="middle" x="217" y="-1692" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(use_browser_scraper)</text>
 </g>
 <!-- Currency_Init&#45;&gt;Configured_Browser -->
 <g id="edge4" class="edge">
 <title>Currency_Init&#45;&gt;Configured_Browser</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M236,-1809.91C236,-1788.67 236,-1757.52 236,-1733.97"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="238.98,-1733.86 236,-1725.36 233.03,-1733.86 238.98,-1733.86"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M217,-1809.91C217,-1788.67 217,-1757.52 217,-1733.97"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="219.98,-1733.86 217,-1725.36 214.03,-1733.86 219.98,-1733.86"/>
 </g>
 <!-- Axios_Fetch -->
 <g id="node6" class="node">
 <title>Axios_Fetch</title>
-<path fill="#4f46e5" stroke="#334155" stroke-width="1.4" d="M396.5,-1593C396.5,-1593 211.5,-1593 211.5,-1593 205.5,-1593 199.5,-1587 199.5,-1581 199.5,-1581 199.5,-1555 199.5,-1555 199.5,-1549 205.5,-1543 211.5,-1543 211.5,-1543 396.5,-1543 396.5,-1543 402.5,-1543 408.5,-1549 408.5,-1555 408.5,-1555 408.5,-1581 408.5,-1581 408.5,-1587 402.5,-1593 396.5,-1593"/>
-<text text-anchor="middle" x="304" y="-1571" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Standard HTTP Fetch</text>
-<text text-anchor="middle" x="304" y="-1560" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(axios + optional proxy + retry)</text>
+<path fill="#4f46e5" stroke="#334155" stroke-width="1.4" d="M423.5,-1593C423.5,-1593 238.5,-1593 238.5,-1593 232.5,-1593 226.5,-1587 226.5,-1581 226.5,-1581 226.5,-1555 226.5,-1555 226.5,-1549 232.5,-1543 238.5,-1543 238.5,-1543 423.5,-1543 423.5,-1543 429.5,-1543 435.5,-1549 435.5,-1555 435.5,-1555 435.5,-1581 435.5,-1581 435.5,-1587 429.5,-1593 423.5,-1593"/>
+<text text-anchor="middle" x="331" y="-1571" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Standard HTTP Fetch</text>
+<text text-anchor="middle" x="331" y="-1560" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(axios + optional proxy + retry)</text>
 </g>
 <!-- Configured_Browser&#45;&gt;Axios_Fetch -->
 <g id="edge6" class="edge">
 <title>Configured_Browser&#45;&gt;Axios_Fetch</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M247.54,-1676.95C258.43,-1656.12 274.89,-1624.65 287.24,-1601.05"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="289.95,-1602.29 291.25,-1593.38 284.67,-1599.53 289.95,-1602.29"/>
-<text text-anchor="middle" x="279.5" y="-1631.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M235.06,-1678.4C253.66,-1657.2 282.84,-1623.92 304.14,-1599.63"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="306.55,-1601.39 309.92,-1593.04 302.08,-1597.47 306.55,-1601.39"/>
+<text text-anchor="middle" x="284.5" y="-1631.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No</text>
 </g>
 <!-- Remote_Browser -->
 <g id="node9" class="node">
@@ -163,22 +163,22 @@
 <!-- Configured_Browser&#45;&gt;Remote_Browser -->
 <g id="edge5" class="edge">
 <title>Configured_Browser&#45;&gt;Remote_Browser</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M223.71,-1677.29C206.16,-1646.28 176,-1593 176,-1593 176,-1593 141.66,-1413.19 127.25,-1337.73"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="130.11,-1336.85 125.59,-1329.06 124.27,-1337.97 130.11,-1336.85"/>
-<text text-anchor="middle" x="168" y="-1499.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M211.14,-1675.75C196.04,-1615.86 157,-1461 157,-1461 157,-1461 139.03,-1383.15 128.49,-1337.44"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="131.36,-1336.65 126.55,-1329.03 125.56,-1337.98 131.36,-1336.65"/>
+<text text-anchor="middle" x="177" y="-1499.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
 </g>
 <!-- Bot_Check -->
 <g id="node7" class="node">
 <title>Bot_Check</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M397.29,-1458.37C397.29,-1458.37 309.47,-1438.63 309.47,-1438.63 303.62,-1437.32 303.62,-1434.68 309.47,-1433.37 309.47,-1433.37 397.29,-1413.63 397.29,-1413.63 403.15,-1412.32 414.85,-1412.32 420.71,-1413.63 420.71,-1413.63 508.53,-1433.37 508.53,-1433.37 514.38,-1434.68 514.38,-1437.32 508.53,-1438.63 508.53,-1438.63 420.71,-1458.37 420.71,-1458.37 414.85,-1459.68 403.15,-1459.68 397.29,-1458.37"/>
-<text text-anchor="middle" x="409" y="-1439" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Bot Challenge Detected?</text>
-<text text-anchor="middle" x="409" y="-1428" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Cloudflare / Imperva)</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M425.29,-1458.37C425.29,-1458.37 337.47,-1438.63 337.47,-1438.63 331.62,-1437.32 331.62,-1434.68 337.47,-1433.37 337.47,-1433.37 425.29,-1413.63 425.29,-1413.63 431.15,-1412.32 442.85,-1412.32 448.71,-1413.63 448.71,-1413.63 536.53,-1433.37 536.53,-1433.37 542.38,-1434.68 542.38,-1437.32 536.53,-1438.63 536.53,-1438.63 448.71,-1458.37 448.71,-1458.37 442.85,-1459.68 431.15,-1459.68 425.29,-1458.37"/>
+<text text-anchor="middle" x="437" y="-1439" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Bot Challenge Detected?</text>
+<text text-anchor="middle" x="437" y="-1428" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Cloudflare / Imperva)</text>
 </g>
 <!-- Axios_Fetch&#45;&gt;Bot_Check -->
-<g id="edge9" class="edge">
+<g id="edge10" class="edge">
 <title>Axios_Fetch&#45;&gt;Bot_Check</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M323.5,-1542.85C341.46,-1520.63 368.06,-1487.68 386.82,-1464.46"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="389.34,-1466.08 392.37,-1457.59 384.71,-1462.34 389.34,-1466.08"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M350.69,-1542.85C368.81,-1520.63 395.67,-1487.68 414.61,-1464.46"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="417.14,-1466.06 420.21,-1457.59 412.53,-1462.3 417.14,-1466.06"/>
 </g>
 <!-- Soft404_Check -->
 <g id="node8" class="node">
@@ -188,31 +188,31 @@
 <text text-anchor="middle" x="437" y="-1296" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(redirect / no PDP wrapper / robots.txt)</text>
 </g>
 <!-- Bot_Check&#45;&gt;Soft404_Check -->
-<g id="edge11" class="edge">
+<g id="edge12" class="edge">
 <title>Bot_Check&#45;&gt;Soft404_Check</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M413.94,-1412.06C418.42,-1391.25 425.08,-1360.35 430.09,-1337.09"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="433.04,-1337.53 431.92,-1328.59 427.22,-1336.27 433.04,-1337.53"/>
-<text text-anchor="middle" x="451.5" y="-1367.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No challenge</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M437,-1410.85C437,-1390.24 437,-1360.41 437,-1337.66"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="439.98,-1337.52 437,-1329.02 434.03,-1337.52 439.98,-1337.52"/>
+<text text-anchor="middle" x="464.5" y="-1367.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No challenge</text>
 </g>
 <!-- Bot_Check&#45;&gt;Remote_Browser -->
-<g id="edge10" class="edge">
+<g id="edge11" class="edge">
 <title>Bot_Check&#45;&gt;Remote_Browser</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M373.4,-1418.93C325.75,-1397.42 240.52,-1358.95 182.4,-1332.72"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="183.36,-1329.88 174.39,-1329.1 180.91,-1335.31 183.36,-1329.88"/>
-<text text-anchor="middle" x="334.5" y="-1367.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Challenge + no retailer config</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M399.2,-1419.45C346.96,-1397.96 251.89,-1358.85 187.59,-1332.4"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="188.51,-1329.56 179.52,-1329.07 186.25,-1335.06 188.51,-1329.56"/>
+<text text-anchor="middle" x="349.5" y="-1367.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Challenge + no retailer config</text>
 </g>
 <!-- Remote_Fail -->
 <g id="node10" class="node">
 <title>Remote_Fail</title>
-<path fill="#dc2626" stroke="#334155" stroke-width="1.4" d="M511.5,-1185C511.5,-1185 326.5,-1185 326.5,-1185 320.5,-1185 314.5,-1179 314.5,-1173 314.5,-1173 314.5,-1147 314.5,-1147 314.5,-1141 320.5,-1135 326.5,-1135 326.5,-1135 511.5,-1135 511.5,-1135 517.5,-1135 523.5,-1141 523.5,-1147 523.5,-1147 523.5,-1173 523.5,-1173 523.5,-1179 517.5,-1185 511.5,-1185"/>
-<text text-anchor="middle" x="419" y="-1163" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Browser/HTTP Failure</text>
-<text text-anchor="middle" x="419" y="-1152" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Return unknown or not_available result)</text>
+<path fill="#dc2626" stroke="#334155" stroke-width="1.4" d="M512.5,-1185C512.5,-1185 327.5,-1185 327.5,-1185 321.5,-1185 315.5,-1179 315.5,-1173 315.5,-1173 315.5,-1147 315.5,-1147 315.5,-1141 321.5,-1135 327.5,-1135 327.5,-1135 512.5,-1135 512.5,-1135 518.5,-1135 524.5,-1141 524.5,-1147 524.5,-1147 524.5,-1173 524.5,-1173 524.5,-1179 518.5,-1185 512.5,-1185"/>
+<text text-anchor="middle" x="420" y="-1163" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Browser/HTTP Failure</text>
+<text text-anchor="middle" x="420" y="-1152" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Return unknown or not_available result)</text>
 </g>
 <!-- Soft404_Check&#45;&gt;Remote_Fail -->
-<g id="edge12" class="edge">
+<g id="edge13" class="edge">
 <title>Soft404_Check&#45;&gt;Remote_Fail</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M433.99,-1279.23C431.02,-1255.82 426.46,-1219.88 423.15,-1193.77"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="426.1,-1193.38 422.08,-1185.32 420.2,-1194.13 426.1,-1193.38"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M434.15,-1279.23C431.35,-1255.82 427.05,-1219.88 423.92,-1193.77"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="426.88,-1193.41 422.91,-1185.32 420.97,-1194.11 426.88,-1193.41"/>
 <text text-anchor="middle" x="469.5" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">404/410 or soft 404</text>
 </g>
 <!-- DOM_Denoise -->
@@ -223,39 +223,39 @@
 <text text-anchor="middle" x="730" y="-1152" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Strip script/style/nav/footer/header/aside)</text>
 </g>
 <!-- Soft404_Check&#45;&gt;DOM_Denoise -->
-<g id="edge13" class="edge">
+<g id="edge14" class="edge">
 <title>Soft404_Check&#45;&gt;DOM_Denoise</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M495.08,-1287.78C562.93,-1270.01 666,-1243 666,-1243 666,-1243 687.76,-1215.12 705.9,-1191.88"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="708.26,-1193.69 711.14,-1185.16 703.57,-1190.03 708.26,-1193.69"/>
-<text text-anchor="middle" x="693" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">HTML OK</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M494.87,-1287.7C562.12,-1269.93 664,-1243 664,-1243 664,-1243 686.44,-1215.12 705.15,-1191.88"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="707.54,-1193.65 710.55,-1185.16 702.91,-1189.92 707.54,-1193.65"/>
+<text text-anchor="middle" x="691" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">HTML OK</text>
 </g>
 <!-- Remote_Browser&#45;&gt;Axios_Fetch -->
 <g id="edge8" class="edge">
 <title>Remote_Browser&#45;&gt;Axios_Fetch</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M137.85,-1329.12C171.11,-1376.74 245.19,-1482.8 282.15,-1535.72"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="279.81,-1537.56 287.11,-1542.82 284.68,-1534.15 279.81,-1537.56"/>
-<text text-anchor="middle" x="248" y="-1433.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No HTML</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M131.63,-1329.03C150.99,-1372.79 190,-1461 190,-1461 190,-1461 250.23,-1506.28 291.96,-1537.65"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="290.42,-1540.22 299,-1542.95 294,-1535.46 290.42,-1540.22"/>
+<text text-anchor="middle" x="246" y="-1433.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No scraper URL configured</text>
 </g>
 <!-- Remote_Browser&#45;&gt;Remote_Fail -->
-<g id="edge15" class="edge">
+<g id="edge9" class="edge">
 <title>Remote_Browser&#45;&gt;Remote_Fail</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M178.34,-1278.94C218.12,-1262.25 264,-1243 264,-1243 264,-1243 320.84,-1212.93 365.68,-1189.21"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="367.21,-1191.76 373.33,-1185.16 364.43,-1186.5 367.21,-1191.76"/>
-<text text-anchor="middle" x="291" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Fails</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M176.33,-1278.94C214.73,-1262.25 259,-1243 259,-1243 259,-1243 318.29,-1212.8 364.91,-1189.06"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="366.34,-1191.67 372.57,-1185.16 363.64,-1186.37 366.34,-1191.67"/>
+<text text-anchor="middle" x="303.5" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Scraper error</text>
 </g>
 <!-- Set_Stealth -->
 <g id="node11" class="node">
 <title>Set_Stealth</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M245.5,-1185C245.5,-1185 60.5,-1185 60.5,-1185 54.5,-1185 48.5,-1179 48.5,-1173 48.5,-1173 48.5,-1147 48.5,-1147 48.5,-1141 54.5,-1135 60.5,-1135 60.5,-1135 245.5,-1135 245.5,-1135 251.5,-1135 257.5,-1141 257.5,-1147 257.5,-1147 257.5,-1173 257.5,-1173 257.5,-1179 251.5,-1185 245.5,-1185"/>
-<text text-anchor="middle" x="153" y="-1163" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Learn use_browser_scraper = true</text>
-<text text-anchor="middle" x="153" y="-1152" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Persisted with scrape result)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M231.5,-1185C231.5,-1185 46.5,-1185 46.5,-1185 40.5,-1185 34.5,-1179 34.5,-1173 34.5,-1173 34.5,-1147 34.5,-1147 34.5,-1141 40.5,-1135 46.5,-1135 46.5,-1135 231.5,-1135 231.5,-1135 237.5,-1135 243.5,-1141 243.5,-1147 243.5,-1147 243.5,-1173 243.5,-1173 243.5,-1179 237.5,-1185 231.5,-1185"/>
+<text text-anchor="middle" x="139" y="-1163" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Learn use_browser_scraper = true</text>
+<text text-anchor="middle" x="139" y="-1152" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Persisted with scrape result)</text>
 </g>
 <!-- Remote_Browser&#45;&gt;Set_Stealth -->
-<g id="edge14" class="edge">
+<g id="edge15" class="edge">
 <title>Remote_Browser&#45;&gt;Set_Stealth</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M126.43,-1278.91C131.72,-1255.45 139.79,-1219.62 145.65,-1193.62"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="148.58,-1194.15 147.55,-1185.21 142.77,-1192.84 148.58,-1194.15"/>
-<text text-anchor="middle" x="196" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Challenge fallback succeeds</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M124.05,-1278.91C127.01,-1255.55 131.53,-1219.93 134.82,-1193.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="137.81,-1194.01 135.93,-1185.21 131.91,-1193.26 137.81,-1194.01"/>
+<text text-anchor="middle" x="189" y="-1235.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Challenge fallback succeeds</text>
 </g>
 <!-- Remote_Browser&#45;&gt;DOM_Denoise -->
 <g id="edge7" class="edge">
@@ -267,7 +267,7 @@
 <!-- Set_Stealth&#45;&gt;DOM_Denoise -->
 <g id="edge16" class="edge">
 <title>Set_Stealth&#45;&gt;DOM_Denoise</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M199.28,-1185.22C247,-1211.22 314.5,-1248 314.5,-1248 314.5,-1248 596.5,-1248 596.5,-1248 596.5,-1248 645.54,-1215.67 684.17,-1190.21"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M189.58,-1185.22C241.73,-1211.22 315.5,-1248 315.5,-1248 315.5,-1248 596.5,-1248 596.5,-1248 596.5,-1248 645.54,-1215.67 684.17,-1190.21"/>
 <polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="686.28,-1192.38 691.74,-1185.22 683.01,-1187.41 686.28,-1192.38"/>
 </g>
 <!-- Meta_Extract -->
@@ -464,16 +464,16 @@
 <!-- Clean_Html -->
 <g id="node26" class="node">
 <title>Clean_Html</title>
-<path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2908.5,-3889C2908.5,-3889 2723.5,-3889 2723.5,-3889 2717.5,-3889 2711.5,-3883 2711.5,-3877 2711.5,-3877 2711.5,-3851 2711.5,-3851 2711.5,-3845 2717.5,-3839 2723.5,-3839 2723.5,-3839 2908.5,-3839 2908.5,-3839 2914.5,-3839 2920.5,-3845 2920.5,-3851 2920.5,-3851 2920.5,-3877 2920.5,-3877 2920.5,-3883 2914.5,-3889 2908.5,-3889"/>
-<text text-anchor="middle" x="2816" y="-3867" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">cleanHtml()</text>
-<text text-anchor="middle" x="2816" y="-3856" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Prune to ≤50KB for Gemini context)</text>
+<path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2910.5,-3889C2910.5,-3889 2725.5,-3889 2725.5,-3889 2719.5,-3889 2713.5,-3883 2713.5,-3877 2713.5,-3877 2713.5,-3851 2713.5,-3851 2713.5,-3845 2719.5,-3839 2725.5,-3839 2725.5,-3839 2910.5,-3839 2910.5,-3839 2916.5,-3839 2922.5,-3845 2922.5,-3851 2922.5,-3851 2922.5,-3877 2922.5,-3877 2922.5,-3883 2916.5,-3889 2910.5,-3889"/>
+<text text-anchor="middle" x="2818" y="-3867" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">cleanHtml()</text>
+<text text-anchor="middle" x="2818" y="-3856" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Prune to ≤50KB for AI context)</text>
 </g>
 <!-- AI_Map_Enabled&#45;&gt;Clean_Html -->
 <g id="edge32" class="edge">
 <title>AI_Map_Enabled&#45;&gt;Clean_Html</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2789.98,-3984.19C2795.09,-3960.8 2803.07,-3924.21 2808.85,-3897.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2811.81,-3898.12 2810.72,-3889.18 2806,-3896.85 2811.81,-3898.12"/>
-<text text-anchor="middle" x="2807" y="-3939.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2790.3,-3984.19C2795.74,-3960.8 2804.24,-3924.21 2810.39,-3897.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2813.35,-3898.14 2812.38,-3889.18 2807.56,-3896.79 2813.35,-3898.14"/>
+<text text-anchor="middle" x="2808" y="-3939.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
 </g>
 <!-- AI_Map_Enabled&#45;&gt;Run_Consensus -->
 <g id="edge33" class="edge">
@@ -482,49 +482,49 @@
 <polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2584.57,-3890.65 2575.71,-3889.07 2581.65,-3895.83 2584.57,-3890.65"/>
 <text text-anchor="middle" x="2711" y="-3939.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No → use generic</text>
 </g>
-<!-- Gemini_Gen -->
+<!-- AI_Gen -->
 <g id="node27" class="node">
-<title>Gemini_Gen</title>
-<path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2940.5,-3754C2940.5,-3754 2743.5,-3754 2743.5,-3754 2737.5,-3754 2731.5,-3748 2731.5,-3742 2731.5,-3742 2731.5,-3716 2731.5,-3716 2731.5,-3710 2737.5,-3704 2743.5,-3704 2743.5,-3704 2940.5,-3704 2940.5,-3704 2946.5,-3704 2952.5,-3710 2952.5,-3716 2952.5,-3716 2952.5,-3742 2952.5,-3742 2952.5,-3748 2946.5,-3754 2940.5,-3754"/>
-<text text-anchor="middle" x="2842" y="-3732" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Gemini: RETAILER_GENERATION_PROMPT</text>
-<text text-anchor="middle" x="2842" y="-3721" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Generate CSS selectors from DOM)</text>
+<title>AI_Gen</title>
+<path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2958.5,-3754C2958.5,-3754 2743.5,-3754 2743.5,-3754 2737.5,-3754 2731.5,-3748 2731.5,-3742 2731.5,-3742 2731.5,-3716 2731.5,-3716 2731.5,-3710 2737.5,-3704 2743.5,-3704 2743.5,-3704 2958.5,-3704 2958.5,-3704 2964.5,-3704 2970.5,-3710 2970.5,-3716 2970.5,-3716 2970.5,-3742 2970.5,-3742 2970.5,-3748 2964.5,-3754 2958.5,-3754"/>
+<text text-anchor="middle" x="2851" y="-3732" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">AI Provider: RETAILER_GENERATION_PROMPT</text>
+<text text-anchor="middle" x="2851" y="-3721" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Generate CSS selectors from DOM)</text>
 </g>
-<!-- Clean_Html&#45;&gt;Gemini_Gen -->
+<!-- Clean_Html&#45;&gt;AI_Gen -->
 <g id="edge34" class="edge">
-<title>Clean_Html&#45;&gt;Gemini_Gen</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2820.71,-3838.91C2824.86,-3817.67 2830.95,-3786.52 2835.55,-3762.97"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2838.53,-3763.27 2837.24,-3754.36 2832.69,-3762.13 2838.53,-3763.27"/>
+<title>Clean_Html&#45;&gt;AI_Gen</title>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2823.98,-3838.91C2829.27,-3817.58 2837.04,-3786.25 2842.9,-3762.66"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2845.8,-3763.32 2844.96,-3754.36 2840.02,-3761.89 2845.8,-3763.32"/>
 </g>
 <!-- Save_Config -->
 <g id="node28" class="node">
 <title>Save_Config</title>
-<path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2931.5,-3622C2931.5,-3622 2746.5,-3622 2746.5,-3622 2740.5,-3622 2734.5,-3616 2734.5,-3610 2734.5,-3610 2734.5,-3584 2734.5,-3584 2734.5,-3578 2740.5,-3572 2746.5,-3572 2746.5,-3572 2931.5,-3572 2931.5,-3572 2937.5,-3572 2943.5,-3578 2943.5,-3584 2943.5,-3584 2943.5,-3610 2943.5,-3610 2943.5,-3616 2937.5,-3622 2931.5,-3622"/>
-<text text-anchor="middle" x="2839" y="-3600" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Save to retailer_configs</text>
-<text text-anchor="middle" x="2839" y="-3589" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(price_selectors, name_selectors, etc.)</text>
+<path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2935.5,-3622C2935.5,-3622 2750.5,-3622 2750.5,-3622 2744.5,-3622 2738.5,-3616 2738.5,-3610 2738.5,-3610 2738.5,-3584 2738.5,-3584 2738.5,-3578 2744.5,-3572 2750.5,-3572 2750.5,-3572 2935.5,-3572 2935.5,-3572 2941.5,-3572 2947.5,-3578 2947.5,-3584 2947.5,-3584 2947.5,-3610 2947.5,-3610 2947.5,-3616 2941.5,-3622 2935.5,-3622"/>
+<text text-anchor="middle" x="2843" y="-3600" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Save to retailer_configs</text>
+<text text-anchor="middle" x="2843" y="-3589" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(price_selectors, name_selectors, etc.)</text>
 </g>
-<!-- Gemini_Gen&#45;&gt;Save_Config -->
+<!-- AI_Gen&#45;&gt;Save_Config -->
 <g id="edge35" class="edge">
-<title>Gemini_Gen&#45;&gt;Save_Config</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2841.44,-3703.85C2840.97,-3683.24 2840.28,-3653.41 2839.75,-3630.66"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2842.72,-3630.45 2839.55,-3622.02 2836.78,-3630.58 2842.72,-3630.45"/>
+<title>AI_Gen&#45;&gt;Save_Config</title>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2849.51,-3703.85C2848.25,-3683.24 2846.41,-3653.41 2845.01,-3630.66"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2847.97,-3630.32 2844.48,-3622.02 2842.03,-3630.68 2847.97,-3630.32"/>
 </g>
 <!-- Re_Scrape -->
 <g id="node29" class="node">
 <title>Re_Scrape</title>
-<path fill="#4f46e5" stroke="#334155" stroke-width="1.4" d="M2904.5,-3490C2904.5,-3490 2719.5,-3490 2719.5,-3490 2713.5,-3490 2707.5,-3484 2707.5,-3478 2707.5,-3478 2707.5,-3452 2707.5,-3452 2707.5,-3446 2713.5,-3440 2719.5,-3440 2719.5,-3440 2904.5,-3440 2904.5,-3440 2910.5,-3440 2916.5,-3446 2916.5,-3452 2916.5,-3452 2916.5,-3478 2916.5,-3478 2916.5,-3484 2910.5,-3490 2904.5,-3490"/>
-<text text-anchor="middle" x="2812" y="-3462.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Re&#45;run Extraction with New Config</text>
+<path fill="#4f46e5" stroke="#334155" stroke-width="1.4" d="M2906.5,-3490C2906.5,-3490 2721.5,-3490 2721.5,-3490 2715.5,-3490 2709.5,-3484 2709.5,-3478 2709.5,-3478 2709.5,-3452 2709.5,-3452 2709.5,-3446 2715.5,-3440 2721.5,-3440 2721.5,-3440 2906.5,-3440 2906.5,-3440 2912.5,-3440 2918.5,-3446 2918.5,-3452 2918.5,-3452 2918.5,-3478 2918.5,-3478 2918.5,-3484 2912.5,-3490 2906.5,-3490"/>
+<text text-anchor="middle" x="2814" y="-3462.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Re&#45;run Extraction with New Config</text>
 </g>
 <!-- Save_Config&#45;&gt;Re_Scrape -->
 <g id="edge36" class="edge">
 <title>Save_Config&#45;&gt;Re_Scrape</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2833.98,-3571.85C2829.68,-3551.15 2823.45,-3521.14 2818.72,-3498.36"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2821.63,-3497.74 2816.99,-3490.02 2815.8,-3498.95 2821.63,-3497.74"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2837.61,-3571.85C2832.99,-3551.15 2826.3,-3521.14 2821.22,-3498.36"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2824.11,-3497.67 2819.36,-3490.02 2818.3,-3498.96 2824.11,-3497.67"/>
 </g>
 <!-- Re_Scrape&#45;&gt;Run_Consensus -->
 <g id="edge37" class="edge">
 <title>Re_Scrape&#45;&gt;Run_Consensus</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2789.08,-3490.05C2759.28,-3521.33 2711,-3572 2711,-3572 2711,-3572 2598.51,-3755.9 2552.38,-3831.32"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2549.77,-3829.89 2547.87,-3838.69 2554.84,-3832.99 2549.77,-3829.89"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2791.54,-3490.05C2762.33,-3521.33 2715,-3572 2715,-3572 2715,-3572 2599.98,-3755.9 2552.82,-3831.32"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2550.19,-3829.91 2548.2,-3838.69 2555.23,-3833.06 2550.19,-3829.91"/>
 </g>
 <!-- Deal_Check -->
 <g id="node31" class="node">
@@ -554,14 +554,14 @@
 <!-- Has_Consensus -->
 <g id="node37" class="node">
 <title>Has_Consensus</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2503.33,-2943.21C2503.33,-2943.21 2422.17,-2923.79 2422.17,-2923.79 2416.34,-2922.4 2416.34,-2919.6 2422.17,-2918.21 2422.17,-2918.21 2503.33,-2898.79 2503.33,-2898.79 2509.16,-2897.4 2520.84,-2897.4 2526.67,-2898.79 2526.67,-2898.79 2607.83,-2918.21 2607.83,-2918.21 2613.66,-2919.6 2613.66,-2922.4 2607.83,-2923.79 2607.83,-2923.79 2526.67,-2943.21 2526.67,-2943.21 2520.84,-2944.6 2509.16,-2944.6 2503.33,-2943.21"/>
-<text text-anchor="middle" x="2515" y="-2918.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Consensus Reached?</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2518.33,-2943.21C2518.33,-2943.21 2437.17,-2923.79 2437.17,-2923.79 2431.34,-2922.4 2431.34,-2919.6 2437.17,-2918.21 2437.17,-2918.21 2518.33,-2898.79 2518.33,-2898.79 2524.16,-2897.4 2535.84,-2897.4 2541.67,-2898.79 2541.67,-2898.79 2622.83,-2918.21 2622.83,-2918.21 2628.66,-2919.6 2628.66,-2922.4 2622.83,-2923.79 2622.83,-2923.79 2541.67,-2943.21 2541.67,-2943.21 2535.84,-2944.6 2524.16,-2944.6 2518.33,-2943.21"/>
+<text text-anchor="middle" x="2530" y="-2918.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Consensus Reached?</text>
 </g>
 <!-- Deal_Check&#45;&gt;Has_Consensus -->
 <g id="edge39" class="edge">
 <title>Deal_Check&#45;&gt;Has_Consensus</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2462.81,-3709.05C2497.9,-3678.56 2563,-3622 2563,-3622 2563,-3622 2588,-3598 2588,-3598 2588,-3598 2588,-3598 2588,-3398 2588,-3398 2616,-3272 2616,-3272 2616,-3272 2616,-3262 2616,-3262 2616,-3262 2613,-3011 2613,-3011 2613,-3011 2585,-2982 2585,-2982 2585,-2982 2563.12,-2963.25 2543.83,-2946.71"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2545.54,-2944.26 2537.15,-2940.98 2541.67,-2948.77 2545.54,-2944.26"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2462.81,-3709.05C2497.9,-3678.56 2563,-3622 2563,-3622 2563,-3622 2588,-3598 2588,-3598 2588,-3598 2588,-3598 2588,-3398 2588,-3398 2616,-3272 2616,-3272 2616,-3272 2616,-3262 2616,-3262 2616,-3262 2613,-3011 2613,-3011 2613,-3011 2590,-2982 2590,-2982 2590,-2982 2572.19,-2964.19 2555.97,-2947.97"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2557.76,-2945.55 2549.65,-2941.65 2553.55,-2949.76 2557.76,-2945.55"/>
 <text text-anchor="middle" x="2643" y="-3330.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes → deal wins</text>
 </g>
 <!-- Pre_Check -->
@@ -580,8 +580,8 @@
 <!-- Member_Check&#45;&gt;Has_Consensus -->
 <g id="edge41" class="edge">
 <title>Member_Check&#45;&gt;Has_Consensus</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2442,-3573.52C2451.69,-3542.4 2468,-3490 2468,-3490 2468,-3490 2525,-3262 2525,-3262 2525,-3262 2601,-3254 2601,-3254 2601,-3254 2601,-3011 2601,-3011 2601,-3011 2565.67,-2974.43 2540.29,-2948.18"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2542.13,-2945.8 2534.09,-2941.75 2537.85,-2949.93 2542.13,-2945.8"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2442,-3573.52C2451.69,-3542.4 2468,-3490 2468,-3490 2468,-3490 2525,-3262 2525,-3262 2525,-3262 2601,-3254 2601,-3254 2601,-3254 2601,-3011 2601,-3011 2601,-3011 2572.4,-2975.15 2551.5,-2948.95"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2553.74,-2946.98 2546.11,-2942.2 2549.09,-2950.7 2553.74,-2946.98"/>
 <text text-anchor="middle" x="2567" y="-3264.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes → member wins</text>
 </g>
 <!-- Orig_Check -->
@@ -600,32 +600,32 @@
 <!-- Pre_Check&#45;&gt;Has_Consensus -->
 <g id="edge43" class="edge">
 <title>Pre_Check&#45;&gt;Has_Consensus</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2303.02,-3448.83C2219.39,-3414.54 2023,-3334 2023,-3334 2023,-3334 2023,-3334 2023,-3043 2023,-3043 2096,-3011 2096,-3011 2096,-3011 2336.37,-2959.94 2452.99,-2935.17"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2453.81,-2938.04 2461.51,-2933.36 2452.58,-2932.22 2453.81,-2938.04"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2303.02,-3448.83C2219.39,-3414.54 2023,-3334 2023,-3334 2023,-3334 2023,-3334 2023,-3043 2023,-3043 2096,-3011 2096,-3011 2096,-3011 2347.36,-2959.45 2467.49,-2934.82"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2468.18,-2937.71 2475.91,-2933.09 2466.99,-2931.89 2468.18,-2937.71"/>
 <text text-anchor="middle" x="2067" y="-3180.3" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes → pre&#45;order wins</text>
 </g>
 <!-- Weighted_Arb -->
 <g id="node35" class="node">
 <title>Weighted_Arb</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2492.5,-3214C2492.5,-3214 2307.5,-3214 2307.5,-3214 2301.5,-3214 2295.5,-3208 2295.5,-3202 2295.5,-3202 2295.5,-3163 2295.5,-3163 2295.5,-3157 2301.5,-3151 2307.5,-3151 2307.5,-3151 2492.5,-3151 2492.5,-3151 2498.5,-3151 2504.5,-3157 2504.5,-3163 2504.5,-3163 2504.5,-3202 2504.5,-3202 2504.5,-3208 2498.5,-3214 2492.5,-3214"/>
-<text text-anchor="middle" x="2400" y="-3202" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Group by (method + selector)</text>
-<text text-anchor="middle" x="2400" y="-3191" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Accumulate weight × count</text>
-<text text-anchor="middle" x="2400" y="-3180" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">expert&#45;*=5.0 &#160;json&#45;ld=2.0</text>
-<text text-anchor="middle" x="2400" y="-3169" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">custom&#45;regex=1.6 &#160;custom&#45;css=1.5</text>
-<text text-anchor="middle" x="2400" y="-3158" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">generic&#45;css=0.2</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2463.5,-3214C2463.5,-3214 2278.5,-3214 2278.5,-3214 2272.5,-3214 2266.5,-3208 2266.5,-3202 2266.5,-3202 2266.5,-3163 2266.5,-3163 2266.5,-3157 2272.5,-3151 2278.5,-3151 2278.5,-3151 2463.5,-3151 2463.5,-3151 2469.5,-3151 2475.5,-3157 2475.5,-3163 2475.5,-3163 2475.5,-3202 2475.5,-3202 2475.5,-3208 2469.5,-3214 2463.5,-3214"/>
+<text text-anchor="middle" x="2371" y="-3202" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Group by (method + selector)</text>
+<text text-anchor="middle" x="2371" y="-3191" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Accumulate weight × count</text>
+<text text-anchor="middle" x="2371" y="-3180" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">expert&#45;*=5.0 &#160;json&#45;ld=2.0</text>
+<text text-anchor="middle" x="2371" y="-3169" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">custom&#45;regex=1.6 &#160;custom&#45;css=1.5</text>
+<text text-anchor="middle" x="2371" y="-3158" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">generic&#45;css=0.2</text>
 </g>
 <!-- Orig_Check&#45;&gt;Weighted_Arb -->
 <g id="edge46" class="edge">
 <title>Orig_Check&#45;&gt;Weighted_Arb</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2341.35,-3308.3C2342.51,-3287.99 2344,-3262 2344,-3262 2344,-3262 2358.78,-3241.29 2373.15,-3221.14"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2375.67,-3222.72 2378.19,-3214.07 2370.83,-3219.27 2375.67,-3222.72"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2341.35,-3308.3C2342.51,-3287.99 2344,-3262 2344,-3262 2344,-3262 2350.88,-3242.01 2357.69,-3222.2"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2360.53,-3223.08 2360.48,-3214.07 2354.91,-3221.15 2360.53,-3223.08"/>
 <text text-anchor="middle" x="2392.5" y="-3264.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No → weighted fallback</text>
 </g>
 <!-- Orig_Check&#45;&gt;Has_Consensus -->
 <g id="edge45" class="edge">
 <title>Orig_Check&#45;&gt;Has_Consensus</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2304.81,-3316.4C2253.45,-3293.64 2164,-3254 2164,-3254 2164,-3254 2122,-3151 2122,-3151 2122,-3151 2076,-3115 2076,-3115 2076,-3115 2076,-3105 2076,-3105 2076,-3105 2157,-3011 2157,-3011 2157,-3011 2356.04,-2961.52 2457.3,-2936.35"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2458.07,-2939.22 2465.6,-2934.28 2456.63,-2933.45 2458.07,-2939.22"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2304.81,-3316.4C2253.45,-3293.64 2164,-3254 2164,-3254 2164,-3254 2122,-3151 2122,-3151 2122,-3151 2076,-3115 2076,-3115 2076,-3115 2076,-3105 2076,-3105 2076,-3105 2157,-3011 2157,-3011 2157,-3011 2366.39,-2961.04 2471.4,-2935.98"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2472.12,-2938.87 2479.7,-2934 2470.74,-2933.08 2472.12,-2938.87"/>
 <text text-anchor="middle" x="2116.5" y="-3107.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes → original wins</text>
 </g>
 <!-- Tie_Break -->
@@ -638,174 +638,174 @@
 <!-- Weighted_Arb&#45;&gt;Tie_Break -->
 <g id="edge47" class="edge">
 <title>Weighted_Arb&#45;&gt;Tie_Break</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2407.22,-3150.83C2412.23,-3129.54 2418,-3105 2418,-3105 2418,-3105 2422.71,-3091.55 2427.67,-3077.38"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2430.58,-3078.06 2430.58,-3069.06 2424.96,-3076.1 2430.58,-3078.06"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2378.62,-3150.83C2383.9,-3129.54 2390,-3105 2390,-3105 2390,-3105 2401.82,-3090.52 2413.85,-3075.79"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2416.28,-3077.52 2419.35,-3069.06 2411.67,-3073.76 2416.28,-3077.52"/>
 </g>
 <!-- Tie_Break&#45;&gt;Has_Consensus -->
 <g id="edge48" class="edge">
 <title>Tie_Break&#45;&gt;Has_Consensus</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2454.2,-3018.8C2466.62,-2999.03 2484.2,-2971.03 2497.27,-2950.23"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2499.86,-2951.7 2501.86,-2942.92 2494.82,-2948.54 2499.86,-2951.7"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2457.2,-3018.8C2472.23,-2998.82 2493.57,-2970.44 2509.26,-2949.57"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2511.83,-2951.11 2514.56,-2942.53 2507.07,-2947.54 2511.83,-2951.11"/>
 </g>
 <!-- OOS_Check -->
 <g id="node38" class="node">
 <title>OOS_Check</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2503.33,-2799.21C2503.33,-2799.21 2422.17,-2779.79 2422.17,-2779.79 2416.34,-2778.4 2416.34,-2775.6 2422.17,-2774.21 2422.17,-2774.21 2503.33,-2754.79 2503.33,-2754.79 2509.16,-2753.4 2520.84,-2753.4 2526.67,-2754.79 2526.67,-2754.79 2607.83,-2774.21 2607.83,-2774.21 2613.66,-2775.6 2613.66,-2778.4 2607.83,-2779.79 2607.83,-2779.79 2526.67,-2799.21 2526.67,-2799.21 2520.84,-2800.6 2509.16,-2800.6 2503.33,-2799.21"/>
-<text text-anchor="middle" x="2515" y="-2774.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Stock = out_of_stock?</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2518.33,-2799.21C2518.33,-2799.21 2437.17,-2779.79 2437.17,-2779.79 2431.34,-2778.4 2431.34,-2775.6 2437.17,-2774.21 2437.17,-2774.21 2518.33,-2754.79 2518.33,-2754.79 2524.16,-2753.4 2535.84,-2753.4 2541.67,-2754.79 2541.67,-2754.79 2622.83,-2774.21 2622.83,-2774.21 2628.66,-2775.6 2628.66,-2778.4 2622.83,-2779.79 2622.83,-2779.79 2541.67,-2799.21 2541.67,-2799.21 2535.84,-2800.6 2524.16,-2800.6 2518.33,-2799.21"/>
+<text text-anchor="middle" x="2530" y="-2774.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Stock = out_of_stock?</text>
 </g>
 <!-- Has_Consensus&#45;&gt;OOS_Check -->
 <g id="edge49" class="edge">
 <title>Has_Consensus&#45;&gt;OOS_Check</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2515,-2895.91C2515,-2872.55 2515,-2836.93 2515,-2810.96"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2517.98,-2810.71 2515,-2802.21 2512.03,-2810.71 2517.98,-2810.71"/>
-<text text-anchor="middle" x="2523" y="-2852.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2530,-2895.91C2530,-2872.55 2530,-2836.93 2530,-2810.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2532.98,-2810.71 2530,-2802.21 2527.03,-2810.71 2532.98,-2810.71"/>
+<text text-anchor="middle" x="2538" y="-2852.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
 </g>
 <!-- Set_Review -->
 <g id="node43" class="node">
 <title>Set_Review</title>
-<path fill="#db2777" stroke="#334155" stroke-width="1.4" d="M2544.5,-2106C2544.5,-2106 2359.5,-2106 2359.5,-2106 2353.5,-2106 2347.5,-2100 2347.5,-2094 2347.5,-2094 2347.5,-2068 2347.5,-2068 2347.5,-2062 2353.5,-2056 2359.5,-2056 2359.5,-2056 2544.5,-2056 2544.5,-2056 2550.5,-2056 2556.5,-2062 2556.5,-2068 2556.5,-2068 2556.5,-2094 2556.5,-2094 2556.5,-2100 2550.5,-2106 2544.5,-2106"/>
-<text text-anchor="middle" x="2452" y="-2084" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">needsReview = true</text>
-<text text-anchor="middle" x="2452" y="-2073" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(DB: needs_price_review = true)</text>
+<path fill="#db2777" stroke="#334155" stroke-width="1.4" d="M2559.5,-2106C2559.5,-2106 2374.5,-2106 2374.5,-2106 2368.5,-2106 2362.5,-2100 2362.5,-2094 2362.5,-2094 2362.5,-2068 2362.5,-2068 2362.5,-2062 2368.5,-2056 2374.5,-2056 2374.5,-2056 2559.5,-2056 2559.5,-2056 2565.5,-2056 2571.5,-2062 2571.5,-2068 2571.5,-2068 2571.5,-2094 2571.5,-2094 2571.5,-2100 2565.5,-2106 2559.5,-2106"/>
+<text text-anchor="middle" x="2467" y="-2084" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">needsReview = true</text>
+<text text-anchor="middle" x="2467" y="-2073" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(DB: needs_price_review = true)</text>
 </g>
 <!-- Has_Consensus&#45;&gt;Set_Review -->
 <g id="edge50" class="edge">
 <title>Has_Consensus&#45;&gt;Set_Review</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2563.01,-2907.4C2695.41,-2872.65 3056,-2778 3056,-2778 3056,-2778 3056,-2778 3056,-2224 3056,-2224 3006,-2184 3006,-2184 3006,-2184 2898,-2154 2898,-2154 2898,-2154 2562,-2146 2562,-2146 2562,-2146 2530.12,-2127.45 2500.68,-2110.32"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2502.12,-2107.72 2493.27,-2106.01 2499.12,-2112.86 2502.12,-2107.72"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2577.14,-2907.27C2706.25,-2872.42 3056,-2778 3056,-2778 3056,-2778 3056,-2778 3056,-2224 3056,-2224 3006,-2184 3006,-2184 3006,-2184 2897,-2154 2897,-2154 2897,-2154 2577,-2146 2577,-2146 2577,-2146 2545.12,-2127.45 2515.68,-2110.32"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2517.12,-2107.72 2508.27,-2106.01 2514.12,-2112.86 2517.12,-2107.72"/>
 <text text-anchor="middle" x="3101.5" y="-2498.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No (tie/no candidates)</text>
 </g>
 <!-- Solo_JSONLD -->
 <g id="node39" class="node">
 <title>Solo_JSONLD</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2490.22,-2667.73C2490.22,-2667.73 2383.87,-2647.27 2383.87,-2647.27 2377.98,-2646.13 2377.98,-2643.87 2383.87,-2642.73 2383.87,-2642.73 2490.22,-2622.27 2490.22,-2622.27 2496.11,-2621.13 2507.89,-2621.13 2513.78,-2622.27 2513.78,-2622.27 2620.13,-2642.73 2620.13,-2642.73 2626.02,-2643.87 2626.02,-2646.13 2620.13,-2647.27 2620.13,-2647.27 2513.78,-2667.73 2513.78,-2667.73 2507.89,-2668.87 2496.11,-2668.87 2490.22,-2667.73"/>
-<text text-anchor="middle" x="2502" y="-2642.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Single JSON&#45;LD, no corroboration?</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2505.22,-2667.73C2505.22,-2667.73 2398.87,-2647.27 2398.87,-2647.27 2392.98,-2646.13 2392.98,-2643.87 2398.87,-2642.73 2398.87,-2642.73 2505.22,-2622.27 2505.22,-2622.27 2511.11,-2621.13 2522.89,-2621.13 2528.78,-2622.27 2528.78,-2622.27 2635.13,-2642.73 2635.13,-2642.73 2641.02,-2643.87 2641.02,-2646.13 2635.13,-2647.27 2635.13,-2647.27 2528.78,-2667.73 2528.78,-2667.73 2522.89,-2668.87 2511.11,-2668.87 2505.22,-2667.73"/>
+<text text-anchor="middle" x="2517" y="-2642.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Single JSON&#45;LD, no corroboration?</text>
 </g>
 <!-- OOS_Check&#45;&gt;Solo_JSONLD -->
 <g id="edge51" class="edge">
 <title>OOS_Check&#45;&gt;Solo_JSONLD</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2512.65,-2752.46C2510.58,-2731.79 2507.55,-2701.52 2505.25,-2678.53"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2508.19,-2677.97 2504.38,-2669.81 2502.27,-2678.56 2508.19,-2677.97"/>
-<text text-anchor="middle" x="2529.5" y="-2708.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes (OOS)</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2527.65,-2752.46C2525.58,-2731.79 2522.55,-2701.52 2520.25,-2678.53"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2523.19,-2677.97 2519.38,-2669.81 2517.27,-2678.56 2523.19,-2677.97"/>
+<text text-anchor="middle" x="2544.5" y="-2708.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes (OOS)</text>
 </g>
 <!-- AI_Verify_Check -->
 <g id="node44" class="node">
 <title>AI_Verify_Check</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2788.33,-2523.21C2788.33,-2523.21 2707.17,-2503.79 2707.17,-2503.79 2701.34,-2502.4 2701.34,-2499.6 2707.17,-2498.21 2707.17,-2498.21 2788.33,-2478.79 2788.33,-2478.79 2794.16,-2477.4 2805.84,-2477.4 2811.67,-2478.79 2811.67,-2478.79 2892.83,-2498.21 2892.83,-2498.21 2898.66,-2499.6 2898.66,-2502.4 2892.83,-2503.79 2892.83,-2503.79 2811.67,-2523.21 2811.67,-2523.21 2805.84,-2524.6 2794.16,-2524.6 2788.33,-2523.21"/>
-<text text-anchor="middle" x="2800" y="-2498.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">ai_verification_enabled?</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2797.33,-2523.21C2797.33,-2523.21 2716.17,-2503.79 2716.17,-2503.79 2710.34,-2502.4 2710.34,-2499.6 2716.17,-2498.21 2716.17,-2498.21 2797.33,-2478.79 2797.33,-2478.79 2803.16,-2477.4 2814.84,-2477.4 2820.67,-2478.79 2820.67,-2478.79 2901.83,-2498.21 2901.83,-2498.21 2907.66,-2499.6 2907.66,-2502.4 2901.83,-2503.79 2901.83,-2503.79 2820.67,-2523.21 2820.67,-2523.21 2814.84,-2524.6 2803.16,-2524.6 2797.33,-2523.21"/>
+<text text-anchor="middle" x="2809" y="-2498.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">ai_verification_enabled?</text>
 </g>
 <!-- OOS_Check&#45;&gt;AI_Verify_Check -->
 <g id="edge52" class="edge">
 <title>OOS_Check&#45;&gt;AI_Verify_Check</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2539.39,-2757.54C2579.5,-2727.17 2655,-2670 2655,-2670 2655,-2670 2736.2,-2575.91 2777.07,-2528.56"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2779.5,-2530.31 2782.8,-2521.93 2774.99,-2526.42 2779.5,-2530.31"/>
-<text text-anchor="middle" x="2723.5" y="-2642.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No (in_stock)</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2554.39,-2757.54C2594.5,-2727.17 2670,-2670 2670,-2670 2670,-2670 2747.46,-2576.38 2786.73,-2528.92"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2789.11,-2530.71 2792.23,-2522.26 2784.52,-2526.92 2789.11,-2530.71"/>
+<text text-anchor="middle" x="2737.5" y="-2642.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No (in_stock)</text>
 </g>
 <!-- Low_Conf -->
 <g id="node40" class="node">
 <title>Low_Conf</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2428.25,-2523.56C2428.25,-2523.56 2331.18,-2503.44 2331.18,-2503.44 2325.31,-2502.22 2325.31,-2499.78 2331.18,-2498.56 2331.18,-2498.56 2428.25,-2478.44 2428.25,-2478.44 2434.12,-2477.22 2445.88,-2477.22 2451.75,-2478.44 2451.75,-2478.44 2548.82,-2498.56 2548.82,-2498.56 2554.69,-2499.78 2554.69,-2502.22 2548.82,-2503.44 2548.82,-2503.44 2451.75,-2523.56 2451.75,-2523.56 2445.88,-2524.78 2434.12,-2524.78 2428.25,-2523.56"/>
-<text text-anchor="middle" x="2440" y="-2498.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Score &lt; 0.85 &amp; generic method?</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2443.25,-2523.56C2443.25,-2523.56 2346.18,-2503.44 2346.18,-2503.44 2340.31,-2502.22 2340.31,-2499.78 2346.18,-2498.56 2346.18,-2498.56 2443.25,-2478.44 2443.25,-2478.44 2449.12,-2477.22 2460.88,-2477.22 2466.75,-2478.44 2466.75,-2478.44 2563.82,-2498.56 2563.82,-2498.56 2569.69,-2499.78 2569.69,-2502.22 2563.82,-2503.44 2563.82,-2503.44 2466.75,-2523.56 2466.75,-2523.56 2460.88,-2524.78 2449.12,-2524.78 2443.25,-2523.56"/>
+<text text-anchor="middle" x="2455" y="-2498.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Score &lt; 0.85 &amp; generic method?</text>
 </g>
 <!-- Solo_JSONLD&#45;&gt;Low_Conf -->
 <g id="edge54" class="edge">
 <title>Solo_JSONLD&#45;&gt;Low_Conf</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2492.31,-2621.81C2481.76,-2597.64 2464.81,-2558.83 2453.08,-2531.96"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2455.75,-2530.63 2449.62,-2524.03 2450.29,-2533.01 2455.75,-2530.63"/>
-<text text-anchor="middle" x="2480.5" y="-2576.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2507.31,-2621.81C2496.76,-2597.64 2479.81,-2558.83 2468.08,-2531.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2470.75,-2530.63 2464.62,-2524.03 2465.29,-2533.01 2470.75,-2530.63"/>
+<text text-anchor="middle" x="2495.5" y="-2576.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No</text>
 </g>
 <!-- Nullify_Price -->
 <g id="node42" class="node">
 <title>Nullify_Price</title>
-<path fill="#dc2626" stroke="#334155" stroke-width="1.4" d="M2544.5,-2250C2544.5,-2250 2359.5,-2250 2359.5,-2250 2353.5,-2250 2347.5,-2244 2347.5,-2238 2347.5,-2238 2347.5,-2212 2347.5,-2212 2347.5,-2206 2353.5,-2200 2359.5,-2200 2359.5,-2200 2544.5,-2200 2544.5,-2200 2550.5,-2200 2556.5,-2206 2556.5,-2212 2556.5,-2212 2556.5,-2238 2556.5,-2238 2556.5,-2244 2550.5,-2250 2544.5,-2250"/>
-<text text-anchor="middle" x="2452" y="-2228" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Nullify price → null</text>
-<text text-anchor="middle" x="2452" y="-2217" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">needsReview = true</text>
+<path fill="#dc2626" stroke="#334155" stroke-width="1.4" d="M2559.5,-2250C2559.5,-2250 2374.5,-2250 2374.5,-2250 2368.5,-2250 2362.5,-2244 2362.5,-2238 2362.5,-2238 2362.5,-2212 2362.5,-2212 2362.5,-2206 2368.5,-2200 2374.5,-2200 2374.5,-2200 2559.5,-2200 2559.5,-2200 2565.5,-2200 2571.5,-2206 2571.5,-2212 2571.5,-2212 2571.5,-2238 2571.5,-2238 2571.5,-2244 2565.5,-2250 2559.5,-2250"/>
+<text text-anchor="middle" x="2467" y="-2228" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Nullify price → null</text>
+<text text-anchor="middle" x="2467" y="-2217" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">needsReview = true</text>
 </g>
 <!-- Solo_JSONLD&#45;&gt;Nullify_Price -->
 <g id="edge53" class="edge">
 <title>Solo_JSONLD&#45;&gt;Nullify_Price</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2523.12,-2623.91C2547.41,-2600.8 2584,-2566 2584,-2566 2584,-2566 2584,-2344 2584,-2344 2584,-2344 2524.71,-2291 2485.6,-2256.04"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2487.35,-2253.61 2479.03,-2250.16 2483.39,-2258.05 2487.35,-2253.61"/>
-<text text-anchor="middle" x="2592" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2538.12,-2623.91C2562.41,-2600.8 2599,-2566 2599,-2566 2599,-2566 2599,-2344 2599,-2344 2599,-2344 2539.71,-2291 2500.6,-2256.04"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2502.35,-2253.61 2494.03,-2250.16 2498.39,-2258.05 2502.35,-2253.61"/>
+<text text-anchor="middle" x="2607" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
 </g>
 <!-- Anchor_Drift -->
 <g id="node41" class="node">
 <title>Anchor_Drift</title>
-<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2440.31,-2391.31C2440.31,-2391.31 2355.09,-2371.69 2355.09,-2371.69 2349.24,-2370.35 2349.24,-2367.65 2355.09,-2366.31 2355.09,-2366.31 2440.31,-2346.69 2440.31,-2346.69 2446.15,-2345.35 2457.85,-2345.35 2463.69,-2346.69 2463.69,-2346.69 2548.91,-2366.31 2548.91,-2366.31 2554.76,-2367.65 2554.76,-2370.35 2548.91,-2371.69 2548.91,-2371.69 2463.69,-2391.31 2463.69,-2391.31 2457.85,-2392.65 2446.15,-2392.65 2440.31,-2391.31"/>
-<text text-anchor="middle" x="2452" y="-2366.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Price &lt; 50% of anchorPrice?</text>
+<path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2455.31,-2391.31C2455.31,-2391.31 2370.09,-2371.69 2370.09,-2371.69 2364.24,-2370.35 2364.24,-2367.65 2370.09,-2366.31 2370.09,-2366.31 2455.31,-2346.69 2455.31,-2346.69 2461.15,-2345.35 2472.85,-2345.35 2478.69,-2346.69 2478.69,-2346.69 2563.91,-2366.31 2563.91,-2366.31 2569.76,-2367.65 2569.76,-2370.35 2563.91,-2371.69 2563.91,-2371.69 2478.69,-2391.31 2478.69,-2391.31 2472.85,-2392.65 2461.15,-2392.65 2455.31,-2391.31"/>
+<text text-anchor="middle" x="2467" y="-2366.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Price &lt; 50% of anchorPrice?</text>
 </g>
 <!-- Low_Conf&#45;&gt;Anchor_Drift -->
 <g id="edge56" class="edge">
 <title>Low_Conf&#45;&gt;Anchor_Drift</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2442.2,-2476.16C2444.11,-2455.45 2446.9,-2425.27 2449.01,-2402.38"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2451.99,-2402.43 2449.81,-2393.69 2446.07,-2401.88 2451.99,-2402.43"/>
-<text text-anchor="middle" x="2452.5" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2457.2,-2476.16C2459.11,-2455.45 2461.9,-2425.27 2464.01,-2402.38"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2466.99,-2402.43 2464.81,-2393.69 2461.07,-2401.88 2466.99,-2402.43"/>
+<text text-anchor="middle" x="2467.5" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No</text>
 </g>
 <!-- Low_Conf&#45;&gt;Nullify_Price -->
 <g id="edge55" class="edge">
 <title>Low_Conf&#45;&gt;Nullify_Price</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2415.37,-2480.8C2376.18,-2450.26 2304,-2394 2304,-2394 2304,-2394 2304,-2344 2304,-2344 2304,-2344 2371.03,-2290.56 2414.87,-2255.6"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2416.9,-2257.79 2421.69,-2250.16 2413.19,-2253.14 2416.9,-2257.79"/>
-<text text-anchor="middle" x="2312" y="-2366.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2430.37,-2480.8C2391.18,-2450.26 2319,-2394 2319,-2394 2319,-2394 2319,-2344 2319,-2344 2319,-2344 2386.03,-2290.56 2429.87,-2255.6"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2431.9,-2257.79 2436.69,-2250.16 2428.19,-2253.14 2431.9,-2257.79"/>
+<text text-anchor="middle" x="2327" y="-2366.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
 </g>
 <!-- Anchor_Drift&#45;&gt;Nullify_Price -->
 <g id="edge57" class="edge">
 <title>Anchor_Drift&#45;&gt;Nullify_Price</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2452,-2343.91C2452,-2320.55 2452,-2284.93 2452,-2258.96"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2454.98,-2258.71 2452,-2250.21 2449.03,-2258.71 2454.98,-2258.71"/>
-<text text-anchor="middle" x="2484.5" y="-2300.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes (&gt;50% drift)</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2467,-2343.91C2467,-2320.55 2467,-2284.93 2467,-2258.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2469.98,-2258.71 2467,-2250.21 2464.03,-2258.71 2469.98,-2258.71"/>
+<text text-anchor="middle" x="2499.5" y="-2300.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes (&gt;50% drift)</text>
 </g>
 <!-- Anchor_Drift&#45;&gt;AI_Verify_Check -->
 <g id="edge58" class="edge">
 <title>Anchor_Drift&#45;&gt;AI_Verify_Check</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2494.12,-2384.52C2545.62,-2402.28 2626,-2430 2626,-2430 2626,-2430 2702.65,-2460.84 2754.2,-2481.58"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2753.25,-2484.4 2762.24,-2484.81 2755.47,-2478.88 2753.25,-2484.4"/>
-<text text-anchor="middle" x="2682.5" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No (within range)</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2509.12,-2384.52C2560.62,-2402.28 2641,-2430 2641,-2430 2641,-2430 2714.29,-2460.54 2764.06,-2481.27"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2763.14,-2484.12 2772.13,-2484.64 2765.43,-2478.62 2763.14,-2484.12"/>
+<text text-anchor="middle" x="2696.5" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No (within range)</text>
 </g>
 <!-- Nullify_Price&#45;&gt;Set_Review -->
 <g id="edge59" class="edge">
 <title>Nullify_Price&#45;&gt;Set_Review</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2452,-2199.91C2452,-2176.55 2452,-2140.93 2452,-2114.96"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2454.98,-2114.71 2452,-2106.21 2449.03,-2114.71 2454.98,-2114.71"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2467,-2199.91C2467,-2176.55 2467,-2140.93 2467,-2114.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2469.98,-2114.71 2467,-2106.21 2464.03,-2114.71 2469.98,-2114.71"/>
 </g>
 <!-- Inject_Cands -->
 <g id="node48" class="node">
 <title>Inject_Cands</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2534.5,-1983C2534.5,-1983 2349.5,-1983 2349.5,-1983 2343.5,-1983 2337.5,-1977 2337.5,-1971 2337.5,-1971 2337.5,-1945 2337.5,-1945 2337.5,-1939 2343.5,-1933 2349.5,-1933 2349.5,-1933 2534.5,-1933 2534.5,-1933 2540.5,-1933 2546.5,-1939 2546.5,-1945 2546.5,-1945 2546.5,-1971 2546.5,-1971 2546.5,-1977 2540.5,-1983 2534.5,-1983"/>
-<text text-anchor="middle" x="2442" y="-1961" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Inject member&#45;price &amp; original&#45;price</text>
-<text text-anchor="middle" x="2442" y="-1950" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">as typed PriceCandidate entries</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2532.5,-1983C2532.5,-1983 2347.5,-1983 2347.5,-1983 2341.5,-1983 2335.5,-1977 2335.5,-1971 2335.5,-1971 2335.5,-1945 2335.5,-1945 2335.5,-1939 2341.5,-1933 2347.5,-1933 2347.5,-1933 2532.5,-1933 2532.5,-1933 2538.5,-1933 2544.5,-1939 2544.5,-1945 2544.5,-1945 2544.5,-1971 2544.5,-1971 2544.5,-1977 2538.5,-1983 2532.5,-1983"/>
+<text text-anchor="middle" x="2440" y="-1961" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Inject member&#45;price &amp; original&#45;price</text>
+<text text-anchor="middle" x="2440" y="-1950" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">as typed PriceCandidate entries</text>
 </g>
 <!-- Set_Review&#45;&gt;Inject_Cands -->
 <g id="edge65" class="edge">
 <title>Set_Review&#45;&gt;Inject_Cands</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2450,-2055.8C2448.48,-2037.42 2446.38,-2011.94 2444.71,-1991.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2447.66,-1991.38 2444,-1983.15 2441.73,-1991.87 2447.66,-1991.38"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2461.6,-2055.8C2457.48,-2037.34 2451.76,-2011.71 2447.24,-1991.47"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2450.14,-1990.8 2445.39,-1983.15 2444.34,-1992.1 2450.14,-1990.8"/>
 </g>
-<!-- Gemini_Verify -->
+<!-- AI_Verify -->
 <g id="node45" class="node">
-<title>Gemini_Verify</title>
+<title>AI_Verify</title>
 <path fill="#7c3aed" stroke="#334155" stroke-width="1.4" d="M2877.5,-2394C2877.5,-2394 2692.5,-2394 2692.5,-2394 2686.5,-2394 2680.5,-2388 2680.5,-2382 2680.5,-2382 2680.5,-2356 2680.5,-2356 2680.5,-2350 2686.5,-2344 2692.5,-2344 2692.5,-2344 2877.5,-2344 2877.5,-2344 2883.5,-2344 2889.5,-2350 2889.5,-2356 2889.5,-2356 2889.5,-2382 2889.5,-2382 2889.5,-2388 2883.5,-2394 2877.5,-2394"/>
-<text text-anchor="middle" x="2785" y="-2372" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Gemini Cross&#45;Check</text>
+<text text-anchor="middle" x="2785" y="-2372" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">AI Provider Cross&#45;Check</text>
 <text text-anchor="middle" x="2785" y="-2361" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Verify price against denoised HTML)</text>
 </g>
-<!-- AI_Verify_Check&#45;&gt;Gemini_Verify -->
+<!-- AI_Verify_Check&#45;&gt;AI_Verify -->
 <g id="edge60" class="edge">
-<title>AI_Verify_Check&#45;&gt;Gemini_Verify</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2797.28,-2476.46C2794.91,-2455.92 2791.45,-2425.9 2788.8,-2402.97"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2791.73,-2402.35 2787.8,-2394.25 2785.82,-2403.03 2791.73,-2402.35"/>
-<text text-anchor="middle" x="2800" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
+<title>AI_Verify_Check&#45;&gt;AI_Verify</title>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2804.71,-2476.76C2800.91,-2456.17 2795.32,-2425.87 2791.06,-2402.81"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2793.97,-2402.18 2789.5,-2394.36 2788.12,-2403.26 2793.97,-2402.18"/>
+<text text-anchor="middle" x="2805" y="-2432.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes</text>
 </g>
 <!-- Persist_Price -->
 <g id="node47" class="node">
 <title>Persist_Price</title>
-<path fill="#059669" stroke="#334155" stroke-width="1.4" d="M2881.5,-2106C2881.5,-2106 2696.5,-2106 2696.5,-2106 2690.5,-2106 2684.5,-2100 2684.5,-2094 2684.5,-2094 2684.5,-2068 2684.5,-2068 2684.5,-2062 2690.5,-2056 2696.5,-2056 2696.5,-2056 2881.5,-2056 2881.5,-2056 2887.5,-2056 2893.5,-2062 2893.5,-2068 2893.5,-2068 2893.5,-2094 2893.5,-2094 2893.5,-2100 2887.5,-2106 2881.5,-2106"/>
-<text text-anchor="middle" x="2789" y="-2084" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">saveScrapeResult()</text>
-<text text-anchor="middle" x="2789" y="-2073" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(metadata, price/stock history, product row)</text>
+<path fill="#059669" stroke="#334155" stroke-width="1.4" d="M2879.5,-2106C2879.5,-2106 2694.5,-2106 2694.5,-2106 2688.5,-2106 2682.5,-2100 2682.5,-2094 2682.5,-2094 2682.5,-2068 2682.5,-2068 2682.5,-2062 2688.5,-2056 2694.5,-2056 2694.5,-2056 2879.5,-2056 2879.5,-2056 2885.5,-2056 2891.5,-2062 2891.5,-2068 2891.5,-2068 2891.5,-2094 2891.5,-2094 2891.5,-2100 2885.5,-2106 2879.5,-2106"/>
+<text text-anchor="middle" x="2787" y="-2084" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">saveScrapeResult()</text>
+<text text-anchor="middle" x="2787" y="-2073" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(metadata, price/stock history, product row)</text>
 </g>
 <!-- AI_Verify_Check&#45;&gt;Persist_Price -->
 <g id="edge61" class="edge">
 <title>AI_Verify_Check&#45;&gt;Persist_Price</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2820.46,-2480.8C2853.03,-2450.26 2913,-2394 2913,-2394 2913,-2394 2913,-2184 2913,-2184 2913,-2184 2898,-2154 2898,-2154 2898,-2154 2863.09,-2130.94 2832.78,-2110.92"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2834.33,-2108.38 2825.6,-2106.18 2831.05,-2113.34 2834.33,-2108.38"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2828.08,-2480.56C2858.1,-2449.96 2913,-2394 2913,-2394 2913,-2394 2913,-2184 2913,-2184 2913,-2184 2897,-2154 2897,-2154 2897,-2154 2861.77,-2130.94 2831.18,-2110.92"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2832.68,-2108.34 2823.93,-2106.18 2829.42,-2113.32 2832.68,-2108.34"/>
 <text text-anchor="middle" x="2934.5" y="-2300.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No — skip</text>
 </g>
 <!-- Verify_Pass -->
@@ -814,158 +814,158 @@
 <path fill="#d97706" stroke="#334155" stroke-width="1.4" d="M2773.33,-2247.21C2773.33,-2247.21 2692.17,-2227.79 2692.17,-2227.79 2686.34,-2226.4 2686.34,-2223.6 2692.17,-2222.21 2692.17,-2222.21 2773.33,-2202.79 2773.33,-2202.79 2779.16,-2201.4 2790.84,-2201.4 2796.67,-2202.79 2796.67,-2202.79 2877.83,-2222.21 2877.83,-2222.21 2883.66,-2223.6 2883.66,-2226.4 2877.83,-2227.79 2877.83,-2227.79 2796.67,-2247.21 2796.67,-2247.21 2790.84,-2248.6 2779.16,-2248.6 2773.33,-2247.21"/>
 <text text-anchor="middle" x="2785" y="-2222.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Verification Passed?</text>
 </g>
-<!-- Gemini_Verify&#45;&gt;Verify_Pass -->
+<!-- AI_Verify&#45;&gt;Verify_Pass -->
 <g id="edge62" class="edge">
-<title>Gemini_Verify&#45;&gt;Verify_Pass</title>
+<title>AI_Verify&#45;&gt;Verify_Pass</title>
 <path fill="none" stroke="#475569" stroke-width="1.1" d="M2785,-2343.91C2785,-2320.55 2785,-2284.93 2785,-2258.96"/>
 <polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2787.98,-2258.71 2785,-2250.21 2782.03,-2258.71 2787.98,-2258.71"/>
 </g>
 <!-- Verify_Pass&#45;&gt;Set_Review -->
 <g id="edge64" class="edge">
 <title>Verify_Pass&#45;&gt;Set_Review</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2744.1,-2209.69C2679.72,-2187.18 2562,-2146 2562,-2146 2562,-2146 2530.12,-2127.45 2500.68,-2110.32"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2502.12,-2107.72 2493.27,-2106.01 2499.12,-2112.86 2502.12,-2107.72"/>
-<text text-anchor="middle" x="2663" y="-2156.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No → ai_status=corrected</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2745.88,-2209.33C2685.62,-2186.73 2577,-2146 2577,-2146 2577,-2146 2545.12,-2127.45 2515.68,-2110.32"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2517.12,-2107.72 2508.27,-2106.01 2514.12,-2112.86 2517.12,-2107.72"/>
+<text text-anchor="middle" x="2674" y="-2156.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">No → ai_status=corrected</text>
 </g>
 <!-- Verify_Pass&#45;&gt;Persist_Price -->
 <g id="edge63" class="edge">
 <title>Verify_Pass&#45;&gt;Persist_Price</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2785.68,-2199.91C2786.34,-2176.55 2787.34,-2140.93 2788.07,-2114.96"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2791.05,-2114.79 2788.32,-2106.21 2785.1,-2114.62 2791.05,-2114.79"/>
-<text text-anchor="middle" x="2836.5" y="-2156.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes → ai_status=verified</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2785.34,-2199.91C2785.67,-2176.55 2786.17,-2140.93 2786.54,-2114.96"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2789.51,-2114.75 2786.66,-2106.21 2783.56,-2114.66 2789.51,-2114.75"/>
+<text text-anchor="middle" x="2835.5" y="-2156.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Yes → ai_status=verified</text>
 </g>
 <!-- Auto_Config -->
 <g id="node51" class="node">
 <title>Auto_Config</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2899,-1983C2899,-1983 2701,-1983 2701,-1983 2695,-1983 2689,-1977 2689,-1971 2689,-1971 2689,-1945 2689,-1945 2689,-1939 2695,-1933 2701,-1933 2701,-1933 2899,-1933 2899,-1933 2905,-1933 2911,-1939 2911,-1945 2911,-1945 2911,-1971 2911,-1971 2911,-1977 2905,-1983 2899,-1983"/>
-<text text-anchor="middle" x="2800" y="-1961" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">runAutoRetailerConfig()</text>
-<text text-anchor="middle" x="2800" y="-1950" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(resolveWinningSelector → unshift to priority 0)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2897,-1983C2897,-1983 2699,-1983 2699,-1983 2693,-1983 2687,-1977 2687,-1971 2687,-1971 2687,-1945 2687,-1945 2687,-1939 2693,-1933 2699,-1933 2699,-1933 2897,-1933 2897,-1933 2903,-1933 2909,-1939 2909,-1945 2909,-1945 2909,-1971 2909,-1971 2909,-1977 2903,-1983 2897,-1983"/>
+<text text-anchor="middle" x="2798" y="-1961" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">runAutoRetailerConfig()</text>
+<text text-anchor="middle" x="2798" y="-1950" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(resolveWinningSelector → unshift to priority 0)</text>
 </g>
 <!-- Persist_Price&#45;&gt;Auto_Config -->
 <g id="edge69" class="edge">
 <title>Persist_Price&#45;&gt;Auto_Config</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2791.2,-2055.8C2792.87,-2037.42 2795.19,-2011.94 2797.02,-1991.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2800,-1991.89 2797.8,-1983.15 2794.07,-1991.35 2800,-1991.89"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2789.2,-2055.8C2790.87,-2037.42 2793.19,-2011.94 2795.02,-1991.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2798,-1991.89 2795.8,-1983.15 2792.07,-1991.35 2798,-1991.89"/>
 </g>
 <!-- Voting_Modal -->
 <g id="node49" class="node">
 <title>Voting_Modal</title>
-<path fill="#db2777" stroke="#334155" stroke-width="1.4" d="M2534.5,-1860C2534.5,-1860 2349.5,-1860 2349.5,-1860 2343.5,-1860 2337.5,-1854 2337.5,-1848 2337.5,-1848 2337.5,-1822 2337.5,-1822 2337.5,-1816 2343.5,-1810 2349.5,-1810 2349.5,-1810 2534.5,-1810 2534.5,-1810 2540.5,-1810 2546.5,-1816 2546.5,-1822 2546.5,-1822 2546.5,-1848 2546.5,-1848 2546.5,-1854 2540.5,-1860 2534.5,-1860"/>
-<text text-anchor="middle" x="2442" y="-1838" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Frontend PriceSelectionModal</text>
-<text text-anchor="middle" x="2442" y="-1827" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Tab UI: candidates by tier + confidence)</text>
+<path fill="#db2777" stroke="#334155" stroke-width="1.4" d="M2532.5,-1860C2532.5,-1860 2347.5,-1860 2347.5,-1860 2341.5,-1860 2335.5,-1854 2335.5,-1848 2335.5,-1848 2335.5,-1822 2335.5,-1822 2335.5,-1816 2341.5,-1810 2347.5,-1810 2347.5,-1810 2532.5,-1810 2532.5,-1810 2538.5,-1810 2544.5,-1816 2544.5,-1822 2544.5,-1822 2544.5,-1848 2544.5,-1848 2544.5,-1854 2538.5,-1860 2532.5,-1860"/>
+<text text-anchor="middle" x="2440" y="-1838" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Frontend PriceSelectionModal</text>
+<text text-anchor="middle" x="2440" y="-1827" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(Tab UI: candidates by tier + confidence)</text>
 </g>
 <!-- Inject_Cands&#45;&gt;Voting_Modal -->
 <g id="edge66" class="edge">
 <title>Inject_Cands&#45;&gt;Voting_Modal</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2442,-1932.8C2442,-1914.42 2442,-1888.94 2442,-1868.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2444.98,-1868.65 2442,-1860.15 2439.03,-1868.65 2444.98,-1868.65"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2440,-1932.8C2440,-1914.42 2440,-1888.94 2440,-1868.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2442.98,-1868.65 2440,-1860.15 2437.03,-1868.65 2442.98,-1868.65"/>
 </g>
 <!-- User_Vote -->
 <g id="node50" class="node">
 <title>User_Vote</title>
-<path fill="#db2777" stroke="#334155" stroke-width="1.4" d="M2542.5,-1725C2542.5,-1725 2357.5,-1725 2357.5,-1725 2351.5,-1725 2345.5,-1719 2345.5,-1713 2345.5,-1713 2345.5,-1687 2345.5,-1687 2345.5,-1681 2351.5,-1675 2357.5,-1675 2357.5,-1675 2542.5,-1675 2542.5,-1675 2548.5,-1675 2554.5,-1681 2554.5,-1687 2554.5,-1687 2554.5,-1713 2554.5,-1713 2554.5,-1719 2548.5,-1725 2542.5,-1725"/>
-<text text-anchor="middle" x="2450" y="-1708.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">User Selects Candidate</text>
-<text text-anchor="middle" x="2450" y="-1697.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(POST /products/:id/confirm)</text>
-<text text-anchor="middle" x="2450" y="-1686.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">selectedPrice + selectedMethod + selector</text>
+<path fill="#db2777" stroke="#334155" stroke-width="1.4" d="M2537.5,-1725C2537.5,-1725 2352.5,-1725 2352.5,-1725 2346.5,-1725 2340.5,-1719 2340.5,-1713 2340.5,-1713 2340.5,-1687 2340.5,-1687 2340.5,-1681 2346.5,-1675 2352.5,-1675 2352.5,-1675 2537.5,-1675 2537.5,-1675 2543.5,-1675 2549.5,-1681 2549.5,-1687 2549.5,-1687 2549.5,-1713 2549.5,-1713 2549.5,-1719 2543.5,-1725 2537.5,-1725"/>
+<text text-anchor="middle" x="2445" y="-1708.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">User Selects Candidate</text>
+<text text-anchor="middle" x="2445" y="-1697.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(POST /products/:id/confirm)</text>
+<text text-anchor="middle" x="2445" y="-1686.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">selectedPrice + selectedMethod + selector</text>
 </g>
 <!-- Voting_Modal&#45;&gt;User_Vote -->
 <g id="edge67" class="edge">
 <title>Voting_Modal&#45;&gt;User_Vote</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2443.45,-1809.91C2444.73,-1788.67 2446.6,-1757.52 2448.02,-1733.97"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2450.99,-1734.02 2448.54,-1725.36 2445.05,-1733.66 2450.99,-1734.02"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2440.91,-1809.91C2441.7,-1788.67 2442.88,-1757.52 2443.76,-1733.97"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2446.74,-1733.96 2444.08,-1725.36 2440.79,-1733.74 2446.74,-1733.96"/>
 </g>
 <!-- User_Vote&#45;&gt;Persist_Price -->
 <g id="edge68" class="edge">
 <title>User_Vote&#45;&gt;Persist_Price</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2478.74,-1725.19C2514.24,-1755.07 2570,-1802 2570,-1802 2570,-1802 2666,-1983 2666,-1983 2666,-1983 2715.08,-2021.71 2751.24,-2050.22"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2749.76,-2052.85 2758.28,-2055.77 2753.45,-2048.17 2749.76,-2052.85"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2474.46,-1725.19C2510.85,-1755.07 2568,-1802 2568,-1802 2568,-1802 2664,-1983 2664,-1983 2664,-1983 2713.08,-2021.71 2749.24,-2050.22"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2747.76,-2052.85 2756.28,-2055.77 2751.45,-2048.17 2747.76,-2052.85"/>
 </g>
 <!-- Stale_Track -->
 <g id="node52" class="node">
 <title>Stale_Track</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2889.5,-1860C2889.5,-1860 2704.5,-1860 2704.5,-1860 2698.5,-1860 2692.5,-1854 2692.5,-1848 2692.5,-1848 2692.5,-1822 2692.5,-1822 2692.5,-1816 2698.5,-1810 2704.5,-1810 2704.5,-1810 2889.5,-1810 2889.5,-1810 2895.5,-1810 2901.5,-1816 2901.5,-1822 2901.5,-1822 2901.5,-1848 2901.5,-1848 2901.5,-1854 2895.5,-1860 2889.5,-1860"/>
-<text text-anchor="middle" x="2797" y="-1843.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Update selector_metadata</text>
-<text text-anchor="middle" x="2797" y="-1832.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(match_count++ &#160;consecutive_failures++</text>
-<text text-anchor="middle" x="2797" y="-1821.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">last_matched_at = now())</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2887.5,-1860C2887.5,-1860 2702.5,-1860 2702.5,-1860 2696.5,-1860 2690.5,-1854 2690.5,-1848 2690.5,-1848 2690.5,-1822 2690.5,-1822 2690.5,-1816 2696.5,-1810 2702.5,-1810 2702.5,-1810 2887.5,-1810 2887.5,-1810 2893.5,-1810 2899.5,-1816 2899.5,-1822 2899.5,-1822 2899.5,-1848 2899.5,-1848 2899.5,-1854 2893.5,-1860 2887.5,-1860"/>
+<text text-anchor="middle" x="2795" y="-1843.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Update selector_metadata</text>
+<text text-anchor="middle" x="2795" y="-1832.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(match_count++ &#160;consecutive_failures++</text>
+<text text-anchor="middle" x="2795" y="-1821.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">last_matched_at = now())</text>
 </g>
 <!-- Auto_Config&#45;&gt;Stale_Track -->
 <g id="edge70" class="edge">
 <title>Auto_Config&#45;&gt;Stale_Track</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2799.4,-1932.8C2798.94,-1914.42 2798.31,-1888.94 2797.81,-1868.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2800.78,-1868.58 2797.6,-1860.15 2794.84,-1868.72 2800.78,-1868.58"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2797.4,-1932.8C2796.94,-1914.42 2796.31,-1888.94 2795.81,-1868.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2798.78,-1868.58 2795.6,-1860.15 2792.84,-1868.72 2798.78,-1868.58"/>
 </g>
 <!-- Score_Evict -->
 <g id="node53" class="node">
 <title>Score_Evict</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2861,-1725C2861,-1725 2657,-1725 2657,-1725 2651,-1725 2645,-1719 2645,-1713 2645,-1713 2645,-1687 2645,-1687 2645,-1681 2651,-1675 2657,-1675 2657,-1675 2861,-1675 2861,-1675 2867,-1675 2873,-1681 2873,-1687 2873,-1687 2873,-1713 2873,-1713 2873,-1719 2867,-1725 2861,-1725"/>
-<text text-anchor="middle" x="2759" y="-1703" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Score&#45;Based Eviction</text>
-<text text-anchor="middle" x="2759" y="-1692" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(cap at 10; evict score=match_count−failures×2)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2822,-1725C2822,-1725 2618,-1725 2618,-1725 2612,-1725 2606,-1719 2606,-1713 2606,-1713 2606,-1687 2606,-1687 2606,-1681 2612,-1675 2618,-1675 2618,-1675 2822,-1675 2822,-1675 2828,-1675 2834,-1681 2834,-1687 2834,-1687 2834,-1713 2834,-1713 2834,-1719 2828,-1725 2822,-1725"/>
+<text text-anchor="middle" x="2720" y="-1703" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">Score&#45;Based Eviction</text>
+<text text-anchor="middle" x="2720" y="-1692" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(cap at 10; evict score=match_count−failures×2)</text>
 </g>
 <!-- Stale_Track&#45;&gt;Score_Evict -->
 <g id="edge71" class="edge">
 <title>Stale_Track&#45;&gt;Score_Evict</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2790.12,-1809.91C2784.02,-1788.58 2775.07,-1757.25 2768.33,-1733.66"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2771.15,-1732.71 2765.96,-1725.36 2765.43,-1734.35 2771.15,-1732.71"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2781.42,-1809.91C2769.28,-1788.39 2751.41,-1756.7 2738.07,-1733.04"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2740.5,-1731.3 2733.73,-1725.36 2735.32,-1734.22 2740.5,-1731.3"/>
 </g>
 <!-- Clean_Generic -->
 <g id="node54" class="node">
 <title>Clean_Generic</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2814.5,-1593C2814.5,-1593 2619.5,-1593 2619.5,-1593 2613.5,-1593 2607.5,-1587 2607.5,-1581 2607.5,-1581 2607.5,-1555 2607.5,-1555 2607.5,-1549 2613.5,-1543 2619.5,-1543 2619.5,-1543 2814.5,-1543 2814.5,-1543 2820.5,-1543 2826.5,-1549 2826.5,-1555 2826.5,-1555 2826.5,-1581 2826.5,-1581 2826.5,-1587 2820.5,-1593 2814.5,-1593"/>
-<text text-anchor="middle" x="2717" y="-1571" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">cleanSelectorArray()</text>
-<text text-anchor="middle" x="2717" y="-1560" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Remove generic selectors from custom array)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2810.5,-1593C2810.5,-1593 2615.5,-1593 2615.5,-1593 2609.5,-1593 2603.5,-1587 2603.5,-1581 2603.5,-1581 2603.5,-1555 2603.5,-1555 2603.5,-1549 2609.5,-1543 2615.5,-1543 2615.5,-1543 2810.5,-1543 2810.5,-1543 2816.5,-1543 2822.5,-1549 2822.5,-1555 2822.5,-1555 2822.5,-1581 2822.5,-1581 2822.5,-1587 2816.5,-1593 2810.5,-1593"/>
+<text text-anchor="middle" x="2713" y="-1571" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">cleanSelectorArray()</text>
+<text text-anchor="middle" x="2713" y="-1560" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Remove generic selectors from custom array)</text>
 </g>
 <!-- Score_Evict&#45;&gt;Clean_Generic -->
 <g id="edge72" class="edge">
 <title>Score_Evict&#45;&gt;Clean_Generic</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2751.2,-1674.85C2744.51,-1654.15 2734.82,-1624.14 2727.46,-1601.36"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2730.2,-1600.19 2724.76,-1593.02 2724.54,-1602.02 2730.2,-1600.19"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2718.7,-1674.85C2717.59,-1654.24 2715.98,-1624.41 2714.76,-1601.66"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2717.72,-1601.35 2714.29,-1593.02 2711.78,-1601.67 2717.72,-1601.35"/>
 </g>
 <!-- Cache_Bust -->
 <g id="node55" class="node">
 <title>Cache_Bust</title>
-<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2793.5,-1461C2793.5,-1461 2608.5,-1461 2608.5,-1461 2602.5,-1461 2596.5,-1455 2596.5,-1449 2596.5,-1449 2596.5,-1423 2596.5,-1423 2596.5,-1417 2602.5,-1411 2608.5,-1411 2608.5,-1411 2793.5,-1411 2793.5,-1411 2799.5,-1411 2805.5,-1417 2805.5,-1423 2805.5,-1423 2805.5,-1449 2805.5,-1449 2805.5,-1455 2799.5,-1461 2793.5,-1461"/>
-<text text-anchor="middle" x="2701" y="-1439" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">configCache.invalidate(domain)</text>
-<text text-anchor="middle" x="2701" y="-1428" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Post&#45;commit cache refresh)</text>
+<path fill="#1e293b" stroke="#334155" stroke-width="1.4" d="M2799.5,-1461C2799.5,-1461 2614.5,-1461 2614.5,-1461 2608.5,-1461 2602.5,-1455 2602.5,-1449 2602.5,-1449 2602.5,-1423 2602.5,-1423 2602.5,-1417 2608.5,-1411 2614.5,-1411 2614.5,-1411 2799.5,-1411 2799.5,-1411 2805.5,-1411 2811.5,-1417 2811.5,-1423 2811.5,-1423 2811.5,-1449 2811.5,-1449 2811.5,-1455 2805.5,-1461 2799.5,-1461"/>
+<text text-anchor="middle" x="2707" y="-1439" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">configCache.invalidate(domain)</text>
+<text text-anchor="middle" x="2707" y="-1428" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#cbd5e1">(Post&#45;commit cache refresh)</text>
 </g>
 <!-- Clean_Generic&#45;&gt;Cache_Bust -->
 <g id="edge73" class="edge">
 <title>Clean_Generic&#45;&gt;Cache_Bust</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2714.03,-1542.85C2711.49,-1522.24 2707.82,-1492.41 2705.02,-1469.66"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2707.95,-1469.09 2703.96,-1461.02 2702.04,-1469.82 2707.95,-1469.09"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2711.89,-1542.85C2710.93,-1522.24 2709.56,-1492.41 2708.51,-1469.66"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2711.47,-1469.37 2708.11,-1461.02 2705.53,-1469.65 2711.47,-1469.37"/>
 </g>
 <!-- Active_Track -->
 <g id="node56" class="node">
 <title>Active_Track</title>
-<path fill="#059669" stroke="#334155" stroke-width="1.4" d="M2778.5,-1329C2778.5,-1329 2593.5,-1329 2593.5,-1329 2587.5,-1329 2581.5,-1323 2581.5,-1317 2581.5,-1317 2581.5,-1291 2581.5,-1291 2581.5,-1285 2587.5,-1279 2593.5,-1279 2593.5,-1279 2778.5,-1279 2778.5,-1279 2784.5,-1279 2790.5,-1285 2790.5,-1291 2790.5,-1291 2790.5,-1317 2790.5,-1317 2790.5,-1323 2784.5,-1329 2778.5,-1329"/>
-<text text-anchor="middle" x="2686" y="-1307" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Persisted Result</text>
-<text text-anchor="middle" x="2686" y="-1296" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(next check scheduled; review may remain)</text>
+<path fill="#059669" stroke="#334155" stroke-width="1.4" d="M2793.5,-1329C2793.5,-1329 2608.5,-1329 2608.5,-1329 2602.5,-1329 2596.5,-1323 2596.5,-1317 2596.5,-1317 2596.5,-1291 2596.5,-1291 2596.5,-1285 2602.5,-1279 2608.5,-1279 2608.5,-1279 2793.5,-1279 2793.5,-1279 2799.5,-1279 2805.5,-1285 2805.5,-1291 2805.5,-1291 2805.5,-1317 2805.5,-1317 2805.5,-1323 2799.5,-1329 2793.5,-1329"/>
+<text text-anchor="middle" x="2701" y="-1307" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Persisted Result</text>
+<text text-anchor="middle" x="2701" y="-1296" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(next check scheduled; review may remain)</text>
 </g>
 <!-- Cache_Bust&#45;&gt;Active_Track -->
 <g id="edge74" class="edge">
 <title>Cache_Bust&#45;&gt;Active_Track</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2698.21,-1410.85C2695.84,-1390.24 2692.39,-1360.41 2689.77,-1337.66"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2692.7,-1337.12 2688.77,-1329.02 2686.79,-1337.8 2692.7,-1337.12"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2705.89,-1410.85C2704.93,-1390.24 2703.56,-1360.41 2702.51,-1337.66"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2705.47,-1337.37 2702.11,-1329.02 2699.53,-1337.65 2705.47,-1337.37"/>
 </g>
 <!-- Scheduler -->
 <g id="node57" class="node">
 <title>Scheduler</title>
-<path fill="#059669" stroke="#334155" stroke-width="1.4" d="M1264.5,-1725C1264.5,-1725 1079.5,-1725 1079.5,-1725 1073.5,-1725 1067.5,-1719 1067.5,-1713 1067.5,-1713 1067.5,-1687 1067.5,-1687 1067.5,-1681 1073.5,-1675 1079.5,-1675 1079.5,-1675 1264.5,-1675 1264.5,-1675 1270.5,-1675 1276.5,-1681 1276.5,-1687 1276.5,-1687 1276.5,-1713 1276.5,-1713 1276.5,-1719 1270.5,-1725 1264.5,-1725"/>
-<text text-anchor="middle" x="1172" y="-1708.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Scheduler</text>
-<text text-anchor="middle" x="1172" y="-1697.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Due by next_check_at</text>
-<text text-anchor="middle" x="1172" y="-1686.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(max 3 concurrent; jitter)</text>
+<path fill="#059669" stroke="#334155" stroke-width="1.4" d="M1326.5,-1725C1326.5,-1725 1141.5,-1725 1141.5,-1725 1135.5,-1725 1129.5,-1719 1129.5,-1713 1129.5,-1713 1129.5,-1687 1129.5,-1687 1129.5,-1681 1135.5,-1675 1141.5,-1675 1141.5,-1675 1326.5,-1675 1326.5,-1675 1332.5,-1675 1338.5,-1681 1338.5,-1687 1338.5,-1687 1338.5,-1713 1338.5,-1713 1338.5,-1719 1332.5,-1725 1326.5,-1725"/>
+<text text-anchor="middle" x="1234" y="-1708.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Scheduler</text>
+<text text-anchor="middle" x="1234" y="-1697.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">Due by next_check_at</text>
+<text text-anchor="middle" x="1234" y="-1686.5" font-family="Segoe UI, Arial, sans-serif" font-size="10.00" fill="#ffffff">(max 3 concurrent; jitter)</text>
 </g>
 <!-- Active_Track&#45;&gt;Scheduler -->
 <g id="edge75" class="edge">
 <title>Active_Track&#45;&gt;Scheduler</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M2593.34,-1329.11C2325.37,-1398.85 1550.98,-1600.38 1272.91,-1672.74"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="1271.91,-1669.93 1264.43,-1674.95 1273.4,-1675.68 1271.91,-1669.93"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M2611.22,-1329.11C2351.57,-1398.85 1601.21,-1600.38 1331.78,-1672.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="1331,-1669.87 1323.56,-1674.95 1332.54,-1675.61 1331,-1669.87"/>
 </g>
 <!-- Scheduler&#45;&gt;Axios_Fetch -->
 <g id="edge76" class="edge">
 <title>Scheduler&#45;&gt;Axios_Fetch</title>
-<path fill="none" stroke="#10b981" stroke-width="1.6" d="M1067.3,-1683.32C903.12,-1658.73 586.44,-1611.3 417.18,-1585.95"/>
-<polygon fill="#10b981" stroke="#10b981" stroke-width="1.6" points="417.58,-1583 408.73,-1584.69 416.7,-1588.89 417.58,-1583"/>
-<text text-anchor="middle" x="781.5" y="-1631.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Refresh</text>
+<path fill="none" stroke="#10b981" stroke-width="1.6" d="M1129.09,-1683.9C958.08,-1659.28 620.64,-1610.7 444.33,-1585.32"/>
+<polygon fill="#10b981" stroke="#10b981" stroke-width="1.6" points="444.64,-1582.35 435.8,-1584.09 443.79,-1588.24 444.64,-1582.35"/>
+<text text-anchor="middle" x="826.5" y="-1631.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Refresh</text>
 </g>
 <!-- Compare_State -->
 <g id="node58" class="node">
@@ -977,9 +977,9 @@
 <!-- Scheduler&#45;&gt;Compare_State -->
 <g id="edge77" class="edge">
 <title>Scheduler&#45;&gt;Compare_State</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M1201.16,-1674.85C1229.12,-1651.7 1271.12,-1616.92 1299.27,-1593.62"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="1301.46,-1595.67 1306.11,-1587.95 1297.66,-1591.08 1301.46,-1595.67"/>
-<text text-anchor="middle" x="1284" y="-1631.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Refresh result</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M1251.65,-1674.85C1267.79,-1652.76 1291.67,-1620.08 1308.62,-1596.88"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="1311.03,-1598.63 1313.65,-1590.01 1306.23,-1595.12 1311.03,-1598.63"/>
+<text text-anchor="middle" x="1313" y="-1631.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Refresh result</text>
 </g>
 <!-- Notify_Events -->
 <g id="node59" class="node">
@@ -1026,8 +1026,8 @@
 <!-- Page_Gone&#45;&gt;Active_Track -->
 <g id="edge81" class="edge">
 <title>Page_Gone&#45;&gt;Active_Track</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M1513.26,-1423.28C1619.16,-1403.36 1823,-1365 1823,-1365 1823,-1365 2338.88,-1329.13 2572.93,-1312.86"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2573.2,-1315.82 2581.47,-1312.27 2572.79,-1309.89 2573.2,-1315.82"/>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M1513.26,-1423.28C1619.16,-1403.36 1823,-1365 1823,-1365 1823,-1365 2350.47,-1328.95 2587.74,-1312.74"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="2588.12,-1315.7 2596.4,-1312.15 2587.72,-1309.76 2588.12,-1315.7"/>
 <text text-anchor="middle" x="1894" y="-1367.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Below threshold; retain prior status</text>
 </g>
 <!-- Pause_Product -->
@@ -1073,9 +1073,9 @@
 <!-- Backoff&#45;&gt;Scheduler -->
 <g id="edge85" class="edge">
 <title>Backoff&#45;&gt;Scheduler</title>
-<path fill="none" stroke="#475569" stroke-width="1.1" d="M1116.12,-1329.05C1088.98,-1360.33 1045,-1411 1045,-1411 1045,-1411 1045,-1461 1045,-1461 1045,-1461 1120.57,-1602.62 1155.12,-1667.37"/>
-<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="1152.5,-1668.77 1159.12,-1674.87 1157.75,-1665.97 1152.5,-1668.77"/>
-<text text-anchor="middle" x="1100" y="-1499.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Next due check</text>
+<path fill="none" stroke="#475569" stroke-width="1.1" d="M1116.12,-1329.05C1088.98,-1360.33 1045,-1411 1045,-1411 1045,-1411 1045,-1461 1045,-1461 1045,-1461 1158.38,-1603.77 1209.5,-1668.15"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.1" points="1207.22,-1670.06 1214.84,-1674.87 1211.88,-1666.36 1207.22,-1670.06"/>
+<text text-anchor="middle" x="1112" y="-1499.8" font-family="Segoe UI, Arial, sans-serif" font-size="9.00" fill="#94a3b8">Next due check</text>
 </g>
 </g>
 </svg>

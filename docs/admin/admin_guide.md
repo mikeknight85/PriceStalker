@@ -9,7 +9,7 @@ This guide describes how to navigate and manage the administrative features of t
 The System Administration screen is organized into eight specialized tabs:
 
 ### 1. System
-Configure network proxy routing, remote Puppeteer scraper links, browser timeouts/referrers, product discovery via SearXNG, and master toggles for registrations or debug pages.
+Configure network proxy routing, remote Puppeteer scraper links, instance-wide default product check intervals, browser timeouts/referrers, product discovery via SearXNG, security controls (registrations, password reset, scheduler/update circuit breakers), and system cache flushing.
 * *For details, see [system.md](system.md).*
 
 ### 2. Extraction Rules
@@ -20,12 +20,14 @@ Rule priority: **retailer rules -> these default rules -> built-in fallbacks.**
 
 The screen is grouped by the job each rule does:
 
-* **Product information**: product title, retailer identity, product image.
-  Retailer identity is the shop, not the manufacturer.
+* **Product information**: product title, retailer identity, product image, and
+  the default **Prefer JSON-LD Images** toggle. Retailer identity is the shop, not the manufacturer.
 * **Pricing**: current, sale/deal, member, pre-order, and original/RRP. Only the
   current price becomes the tracked price; the rest are recorded alongside it.
 * **Availability**: stock evidence selectors, then the status phrases read inside
   them. Detection order is member only -> pre-order -> out of stock -> in stock.
+* **Challenge mitigation**: generic challenge phrases matched against page titles
+  and small DOM bodies to identify bot interstitials (Cloudflare, DataDome, etc.).
 * **False-positive prevention**: exclusion selectors, removed from the page
   before extraction runs.
 
@@ -64,7 +66,7 @@ Administrate the user accounts and metadata:
 * Set default regional preferences (currency, timezone, and locale).
 
 ### 5. API Tokens
-Generate and manage database-backed access tokens used by external integrations (like Discord bots or scripting webhooks) to safely query endpoints. Tokens are prefixed with `ps_`.
+Generate and manage database-backed access tokens used by external integrations (like Discord bots, MCP servers, or scripting webhooks) to safely query endpoints. Tokens carry granular scopes (`mcp:read`, `mcp:write`, `mcp:extract`, `admin:read`, `admin:write`, `admin:system`), support optional expiry, and are prefixed with `ps_`.
 * *For terminal command scripts and authentication syntax, see [tokens.md](tokens.md).*
 
 ### 6. Authentication

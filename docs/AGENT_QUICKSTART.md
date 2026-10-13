@@ -14,7 +14,7 @@ This file provides a 60-second orientation and architectural rules for AI coding
 | **Developer Workflows** | [docs/developer/DEVELOPER_GUIDE.md](developer/DEVELOPER_GUIDE.md) |
 | **Scraper Lifecycle** | [docs/developer/SCRAPER_LIFECYCLE.md](developer/SCRAPER_LIFECYCLE.md) |
 | **Database Schema Details** | [docs/developer/DATABASE.md](developer/DATABASE.md) |
-| **Unified Selectors Guide** | [docs/beta/selectors.md](beta/selectors.md) |
+| **Unified Selectors Guide** | [docs/admin/selectors.md](admin/selectors.md) |
 
 ---
 

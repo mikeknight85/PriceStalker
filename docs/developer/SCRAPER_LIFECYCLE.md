@@ -356,5 +356,5 @@ The event payload, delivery-provider behaviour, and frontend presentation are do
 
 - [SELECTORS.md](SELECTORS.md) — Selector format reference (CSS, Scrapy `::attr`, regex `~pattern~`, modifiers)
 - [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) — Developer setup, Vitest suites, and local execution workflows
-- [PROCESSES.md](PROCESSES.md) — Deployment, backup, and operational runbooks
-- the upstream audit register (not yet imported) — Full backend audit with issue register and fix status
+- [DATABASE.md](DATABASE.md) — Database schema, migration mechanics, and backup procedures
+- [Upstream Scraping Audit](../audit/upstream_scraping_consensus_audit.md) — Consensus audit register and known scraper behavior

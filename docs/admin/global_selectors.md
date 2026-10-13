@@ -189,3 +189,39 @@ Rule priority: **Retailer rules → Extraction Rules (Default rules) → Built-i
   "img[data-testid*=\"image\" i]"
 ]
 ```
+
+---
+
+## 3. Global Phrase Lists & Extraction Options
+
+Configured in the same view to detect product stock states and anti-bot challenge walls when a retailer config has no specific phrase rules.
+
+### `generic_challenge_phrases`
+Patterns matched against the page title and compact DOM bodies during browser scraping to detect bot walls / interstitial challenges (e.g. Cloudflare, DataDome, PerimeterX):
+* `"are you a robot"`
+* `"just a moment"`
+* `"access denied"`
+* `"verify you are human"`
+* `"pardon our interruption"`
+* `"security check"`
+* `"attention required"`
+* `"access is temporarily restricted"`
+* `"unusual activity"`
+* `"access to this page has been denied"`
+* `"press & hold"`
+* `"press and hold"`
+
+### `generic_in_stock_phrases`
+Phrases indicating that a product is purchasable:
+* `"in stock"`, `"instock"`, `"add to cart"`, `"add to basket"`, `"add to bag"`, `"buy now"`, `"available now"`, `"add to trolley"`, `"clearance"`, `"on sale"`, `"special offer"`, `"limited stock"`, `"available"`, `"ready to ship"`, `"dispatched within"`, `"dispatched from"`
+
+### `generic_out_of_stock_phrases`
+Phrases indicating stock unavailability:
+* `"out of stock"`, `"sold out"`, `"currently unavailable"`, `"not available"`, `"backorder"`, `"back-order"`, `"notify me when available"`, `"coming soon"`
+
+### `generic_pre_order_phrases`
+Phrases indicating pre-release or pre-order availability:
+* `"pre-order"`, `"preorder"`, `"available starting"`, `"expected to ship"`, `"release date"`, `"pre-ordering"`
+
+### `prefer_jsonld_image`
+Boolean toggle (`prefer_jsonld_image`). When enabled, PriceStalker prioritizes JSON-LD structured search schema image URLs over custom image selectors across all retailers without a site-specific override.

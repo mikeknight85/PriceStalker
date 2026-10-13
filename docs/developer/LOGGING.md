@@ -122,7 +122,7 @@ Administrators can search, filter, and review logs under **Admin -> System Event
 
 ---
 
-## 6. SQL Query Tracing
+## 8. SQL Query Tracing
 
 Every statement issued through the connection pool is traced under the
 `Database` context, including statements on a client checked out for a
@@ -153,7 +153,7 @@ query failures are persisted, so they show up in **Admin -> System Event Log**.
 
 ---
 
-## 7. AI Request Tracing
+## 9. AI Request Tracing
 
 At `DEBUG`, every AI provider records the prompt it sent and the raw text it got
 back, under the `AI` context:
@@ -171,7 +171,9 @@ Both are capped at `AI_TRACE_CHARS` (default 2000). Uncapped, a single scrape
 would put a page of HTML into the console, the log file, and -- if
 `DB_LOG_LEVEL=debug` -- a `system_logs` row.
 
-## 8. Extraction Progress
+---
+
+## 10. Extraction Progress
 
 The price cascade writes each step to the log as it runs, as well as into the
 scrape trace attached to the result. The trace alone only becomes visible once a

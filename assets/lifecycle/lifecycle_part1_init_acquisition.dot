@@ -20,7 +20,8 @@ digraph LifecyclePart1 {
   Browser -> Remote [label="yes"]
   Browser -> HTTP [label="no"]
   Remote -> HTML [label="HTML"]
-  Remote -> HTTP [label="failed"]
+  Remote -> HTTP [label="no scraper URL"]
+  Remote -> Fail [label="scraper failed"]
   HTTP -> Challenge
   Challenge -> Fallback [label="yes"]
   Challenge -> Gone [label="no"]

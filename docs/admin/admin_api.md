@@ -42,12 +42,15 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET`/`PUT` | `/settings/notifications` | Get / update user notification configurations |
-| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify}` | Send a test notification alert |
+| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify,email,webhook}` | Send a test notification alert |
 | `POST` | `/settings/notifications/test-gotify` | Test Gotify connection before saving settings |
+| `GET` | `/settings/product-defaults` | Get effective default check interval for the user & instance |
+| `GET` | `/settings/discovery/status` | Check if SearXNG product search is enabled |
+| `GET` | `/settings/currencies` | List global reference currencies |
 | `GET`/`PUT` | `/settings/ai` | Get / update user AI settings |
 | `POST` | `/settings/ai/test` | Test AI extraction on a target URL |
 | `POST` | `/settings/ai/test-{ollama,gemini,groq,openai,mistral,anthropic}` | Test connection to a specific AI provider |
-| `GET`/`PUT` | `/profile` | Get / update user profile |
+| `GET`/`PUT` | `/profile` | Get / update user profile (currency, locale, default_refresh_interval) |
 | `PUT` | `/profile/password` | Change user password |
 </details>
 

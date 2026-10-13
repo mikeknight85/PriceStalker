@@ -14,7 +14,13 @@ The **System** tab in the Admin Panel provides the core configurations for netwo
 
 ---
 
-## 2. Product Discovery (SearXNG)
+## 2. Product Tracking
+Configures default scheduled check behavior for tracked products across the instance:
+* **Default Check Interval (`default_refresh_interval`)**: Sets the baseline interval (from 1 hour to 1 week; default: 12 hours) assigned to newly added products for any user account that has not set their own preference under **Settings → Tracking**. Products already being tracked retain their existing individual intervals.
+
+---
+
+## 3. Product Discovery (SearXNG)
 PriceStalker integrates with SearXNG to search for products across search engine providers:
 * **SearXNG API URL (`searxng_url`)**: Connection URL to your SearXNG instance. You can click the **Test** button next to it to verify connection health.
 * **Enable Product Search (`searxng_enabled`)**: Switch toggle. If enabled, users can find products by search query directly in the *Add Product* modal instead of pasting URLs.
@@ -23,26 +29,26 @@ PriceStalker integrates with SearXNG to search for products across search engine
 
 ---
 
-## 3. Browser Configuration
+## 4. Browser Configuration
 Adjusts how the remote Puppeteer browser behaves when resolving anti-bot protections:
 * **Default User-Agent (`default_user_agent`)**: The User-Agent string sent during standard HTTP calls.
 * **Default Referrer (`default_referrer`)**: The referrer headers set on requests (default: `https://www.google.com/`).
 * **Browser Timeout (`browser_timeout`)**: Time in milliseconds (e.g. `60000`) before a browser scrape attempt aborts.
 * **Browser Delay (`browser_delay`)**: Time in milliseconds (e.g. `3000`) to wait after page load before taking the DOM screenshot and extracting the HTML (helps wait for lazy-loaded content).
 
----
-
-## 4. JSON-LD & Structured Data
-* **Prefer JSON-LD for Images (`prefer_jsonld_image`)**: Switch toggle. If enabled, PriceStalker prioritizes structural search schema images over custom selectors, resulting in cleaner, standardized images.
+*(Note: The **Prefer JSON-LD for Images** toggle lives under **Extraction Rules**, beside the global image selectors).*
 
 ---
 
 ## 5. Security & Access
 * **Allow User Registration (`registration_enabled`)**: Toggles whether users can register a new account on the login page.
-* **Enable Public Debug Page (`debug_page_enabled`)**: Toggle to enable or disable the public diagnostic console page (`/debug`).
+* **Allow Password Reset via Email (`password_reset_enabled`)**: Toggles whether users can request password-reset links via SMTP. Requires fallback SMTP to be configured.
+* **Enable Admin Debug Page (`debug_page_enabled`)**: Toggle to enable or disable the diagnostic console page (`/debug`).
+* **Disable Global Scheduler (`scheduler_disabled`)**: Circuit-breaker toggle. When enabled, pauses all automated background price checks instance-wide while still permitting manual scrapes.
+* **Disable Auto Retailer Updates (`retailer_updates_disabled`)**: Prevents background heuristics and AI auto-mapping from persisting automatic modifications to retailer rules.
 
 ---
 
-## 6. Database Maintenance
-PriceStalker stores all configurations, historical prices, and credentials in a PostgreSQL database.
-* To perform manual backups, review migrations, or look up schema layouts, see the database guide: [DATABASE.md](../developer/DATABASE.md).
+## 6. Maintenance
+* **Refresh Database Cache**: Forces the backend to immediately invalidate its 30-minute `SettingsCache` and reload all system settings, selectors, and retailer configs from PostgreSQL without restarting the server.
+* **Database Maintenance**: PriceStalker stores all configurations, historical prices, and credentials in PostgreSQL. To perform manual backups, review migrations, or look up schema layouts, see the database guide: [DATABASE.md](../developer/DATABASE.md).
