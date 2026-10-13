@@ -26,7 +26,7 @@ export class PriceStalkerApiClient {
       }
     });
 
-    // Intercept 403 forbidden responses to provide clear token scope guidance
+    // Intercept error responses to provide clear messages and token scope guidance
     this.client.interceptors.response.use(
       response => response,
       error => {
@@ -38,6 +38,15 @@ export class PriceStalkerApiClient {
             : `Forbidden: Access denied (${data?.error || 'insufficient token privileges'}).`;
           const enhancedError = new Error(message);
           (enhancedError as any).status = 403;
+          (enhancedError as any).response = error.response;
+          return Promise.reject(enhancedError);
+        }
+        if (error.response?.data?.error) {
+          const message = typeof error.response.data.error === 'string'
+            ? error.response.data.error
+            : JSON.stringify(error.response.data.error);
+          const enhancedError = new Error(message);
+          (enhancedError as any).status = error.response.status;
           (enhancedError as any).response = error.response;
           return Promise.reject(enhancedError);
         }
