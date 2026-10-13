@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Model Context Protocol (MCP) server workspace (`pricestalker-mcp`) providing 9 read-mostly diagnostic and operational tools, 3 context resources, and a `debug-retailer` prompt over `stdio`, authenticated with scoped system API tokens and egress output scrubbing (#163, ADR 001).
+
 ### Fixed
 
 - Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.

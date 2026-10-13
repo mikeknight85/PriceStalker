@@ -1,5 +1,6 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { PriceStalkerApiClient } from '../client/api.js';
+import { formatScrubbedJson, scrubSensitiveData } from '../utils/scrubber.js';
 
 export function registerResources(server: McpServer, client: PriceStalkerApiClient) {
   // 1. pricestalker://retailers/{domain}
@@ -12,7 +13,7 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
         return {
           contents: [{
             uri: uri.href,
-            text: JSON.stringify(config || { error: `Retailer ${domain} not found.` }, null, 2),
+            text: formatScrubbedJson(config || { error: `Retailer ${domain} not found.` }),
             mimeType: 'application/json'
           }]
         };
@@ -20,7 +21,7 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
         return {
           contents: [{
             uri: uri.href,
-            text: JSON.stringify({ error: error.message }, null, 2),
+            text: formatScrubbedJson({ error: scrubSensitiveData(error.message) }),
             mimeType: 'application/json'
           }]
         };
@@ -38,7 +39,7 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
         return {
           contents: [{
             uri: uri.href,
-            text: JSON.stringify(logs, null, 2),
+            text: formatScrubbedJson(logs),
             mimeType: 'application/json'
           }]
         };
@@ -46,7 +47,7 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
         return {
           contents: [{
             uri: uri.href,
-            text: JSON.stringify({ error: error.message }, null, 2),
+            text: formatScrubbedJson({ error: scrubSensitiveData(error.message) }),
             mimeType: 'application/json'
           }]
         };
@@ -54,44 +55,7 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
     }
   );
 
-  // 3. pricestalker://deals/active
-  server.resource(
-    'active-deals',
-    'pricestalker://deals/active',
-    async (uri) => {
-      try {
-        const items = await client.getItems();
-        const deals = items
-          .filter(i => i.target_price !== null && (i.best_price ?? Infinity) <= (i.target_price ?? 0))
-          .map(i => ({
-            id: i.id,
-            name: i.name,
-            best_price: i.best_price,
-            target_price: i.target_price,
-            currency: i.currency,
-            store_count: i.stores?.length || 0
-          }));
-
-        return {
-          contents: [{
-            uri: uri.href,
-            text: JSON.stringify({ count: deals.length, deals }, null, 2),
-            mimeType: 'application/json'
-          }]
-        };
-      } catch (error: any) {
-        return {
-          contents: [{
-            uri: uri.href,
-            text: JSON.stringify({ error: error.message }, null, 2),
-            mimeType: 'application/json'
-          }]
-        };
-      }
-    }
-  );
-
-  // 4. pricestalker://system/health
+  // 3. pricestalker://system/health
   server.resource(
     'system-health',
     'pricestalker://system/health',
@@ -105,7 +69,11 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
         return {
           contents: [{
             uri: uri.href,
-            text: JSON.stringify({ version: version.version, database: db }, null, 2),
+            text: formatScrubbedJson({
+              status: 'running',
+              version: version.version,
+              database: db
+            }),
             mimeType: 'application/json'
           }]
         };
@@ -113,7 +81,7 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
         return {
           contents: [{
             uri: uri.href,
-            text: JSON.stringify({ error: error.message }, null, 2),
+            text: formatScrubbedJson({ error: scrubSensitiveData(error.message) }),
             mimeType: 'application/json'
           }]
         };

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { createMcpServer } from '../src/server.js';
 import { PriceStalkerApiClient } from '../src/client/api.js';
 
@@ -7,8 +7,8 @@ describe('MCP Server Registration', () => {
 
   beforeEach(() => {
     client = new PriceStalkerApiClient({
-      baseUrl: 'http://localhost:3000',
-      apiToken: 'pst_mock'
+      baseUrl: 'http://localhost:3001',
+      apiToken: 'ps_mock_token'
     });
   });
 

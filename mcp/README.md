@@ -1,8 +1,22 @@
-# PriceStalker MCP Server & CLI (`@pricestalker/mcp`)
+# PriceStalker MCP Server & CLI (`pricestalker-mcp`)
 
-Model Context Protocol (MCP) server and interactive command-line interface for [PriceStalker](https://github.com/mikeknight85/PriceStalker).
+Model Context Protocol (MCP) server and developer/admin tooling interface for [PriceStalker](https://github.com/mikeknight85/PriceStalker).
 
-Connect PriceStalker to AI assistants (**Claude Desktop**, **Cursor**, **Goose**, **Cline**, **Home Assistant**) or use it directly from your terminal.
+Connects PriceStalker to AI assistant hosts (**Claude Desktop**, **Cursor**, **Goose**, **Cline**, **Home Assistant**) over `stdio`, enabling operators to debug scraper configurations, inspect system health, search error logs, and inspect price trends directly within model context.
+
+Architecture and design constraints are documented in [ADR 001](docs/developer/adr/001-mcp-server.md).
+
+---
+
+## Authentication & Token Scopes
+
+The MCP server authenticates via a **System API Token** configured with the appropriate scopes in the PriceStalker Admin Panel (**Admin -> API Tokens**):
+
+- `mcp:read`: Required for all read-only diagnostic tools, items, logs, retailer configurations, and context resources.
+- `mcp:write`: Required if using `refresh_product_price` to force a price re-scrape.
+- `admin:system`: Required if using `flush_system_caches` to invalidate in-memory settings and config caches.
+
+All tool results and resource outputs pass through boundary redaction (`scrubber.ts`) to redact API keys, credentials, and user email addresses before entering model context.
 
 ---
 
@@ -12,28 +26,21 @@ Connect PriceStalker to AI assistants (**Claude Desktop**, **Cursor**, **Goose**
 # Build the workspace
 pnpm --filter pricestalker-mcp run build
 
-# Search tracked items
-pnpm --filter pricestalker-mcp start items -q "headphones"
-
-# Check active deals and price drops
-pnpm --filter pricestalker-mcp start deals --below-target
-
-# Non-persisted dry-run extraction from a URL
-pnpm --filter pricestalker-mcp start extract https://example.com/product/123
-
-# Inspect all candidate prices and selectors across a live page
-pnpm --filter pricestalker-mcp start inspect https://example.com/product/123
-
-# Check system & database health
+# Check system and database health
 pnpm --filter pricestalker-mcp start health
 
-# Flush system and retailer caches
+# Search and list tracked items
+pnpm --filter pricestalker-mcp start items -q "headphones"
+
+# Flush system caches (requires admin:system scope)
 pnpm --filter pricestalker-mcp start flush
 ```
 
 ---
 
 ## AI Assistant Configuration (MCP Server)
+
+Configure your host with `PRICESTALKER_URL` and `PRICESTALKER_TOKEN`.
 
 ### 1. Claude Desktop (`claude_desktop_config.json`)
 
@@ -44,8 +51,8 @@ pnpm --filter pricestalker-mcp start flush
       "command": "node",
       "args": ["/path/to/pricestalker/mcp/dist/index.js", "mcp"],
       "env": {
-        "PRICESTALKER_URL": "http://localhost:3000",
-        "PRICESTALKER_TOKEN": "pst_your_api_token_here"
+        "PRICESTALKER_URL": "http://localhost:3001",
+        "PRICESTALKER_TOKEN": "ps_your_token_here"
       }
     }
   }
@@ -61,8 +68,8 @@ pnpm --filter pricestalker-mcp start flush
       "command": "node",
       "args": ["/path/to/pricestalker/mcp/dist/index.js", "mcp"],
       "env": {
-        "PRICESTALKER_URL": "http://localhost:3000",
-        "PRICESTALKER_TOKEN": "pst_your_api_token_here"
+        "PRICESTALKER_URL": "http://localhost:3001",
+        "PRICESTALKER_TOKEN": "ps_your_token_here"
       }
     }
   }
@@ -71,49 +78,23 @@ pnpm --filter pricestalker-mcp start flush
 
 ---
 
-## Available MCP Capabilities
+## Capabilities (v1 Scope)
 
-### Tools
-* **Shopping & Price Intelligence:**
-  * `search_items` (Search tracked items with best current prices and store listings)
-  * `search_web_for_products` (SearXNG web-wide product discovery)
-  * `get_item` (Retrieve full item details and stores)
-  * `compare_stores` (Cross-compare prices, stock, and retailers for an item)
-  * `list_deals_and_drops` (List items with price reductions or below target)
-  * `get_price_history` (Historical time-series, ATL, and averages)
-  * `analyze_price_trend` ("Buy Now vs. Wait" purchase recommendation)
-  * `optimize_shopping_basket` (Multi-item single-store vs split-order cost optimizer)
-  * `batch_import_urls` (Extract and track URLs from freeform text / wishlists)
-* **Product & Tracking Management:**
-  * `track_product` (Add new URL with target price & alert rules)
-  * `meta_extract_url` (Extract title, price, currency, image, and stock without saving)
-  * `update_item_alerts` (Adjust target price and back-in-stock notifications)
-  * `delete_item` (Stop tracking and delete item)
-  * `bulk_toggle_tracking` (Bulk pause or resume scheduled scraping)
-  * `rescan_product` & `confirm_product_selection` (Re-scan and confirm price selections)
-  * `refresh_product_price` (Force an immediate live re-scrape)
-* **Developer & Scraper Workbench:**
-  * `inspect_url_prices` (Discover all candidate prices across DOM, JSON-LD, and meta tags)
-  * `generate_retailer_selectors` (Derive full `RetailerConfig` proposal)
-  * `test_retailer_config` (Dry-run custom selectors against a live page)
-  * `save_retailer_config` (Persist retailer rules and invalidate caches)
-  * `remap_retailer` (Trigger live AI consensus auto-mapping)
-  * `benchmark_retailer` (Test selectors across 2–5 URLs to prevent regressions)
-  * `debug_extract` (Deep debug with plain HTTP bypass and forced AI modes)
-* **System Diagnostics & Operations:**
-  * `test_notification_channel` (Live test Telegram, Discord, Pushover, Ntfy, Gotify, Email, Webhook)
-  * `test_ai_provider` (Test Gemini, Vertex, Anthropic, DeepSeek, Groq, Mistral, OpenAI, Ollama)
-  * `flush_system_caches` (Bust retailer config & regional mapping caches)
-  * `query_system_logs` (Search and filter system logs)
-  * `get_system_health` (Database connectivity and version status)
+### Tools (9)
+- `get_system_health`: Inspect database connection status and application version.
+- `query_system_logs`: Query and filter system logs with server-side limit capping and email/credential redaction.
+- `list_items`: List tracked items with their best current prices and store counts.
+- `get_item`: Retrieve details for a specific tracked product or store listing.
+- `search_items`: Perform a name-based product search via SearXNG.
+- `get_price_history`: Retrieve recorded price and stock history time series for a product.
+- `get_retailer_config`: Fetch scraping selector rules and configuration flags for a retailer domain.
+- `refresh_product_price`: Trigger an immediate live price re-scrape for an existing product.
+- `flush_system_caches`: Invalidate all in-memory system, retailer, and regional caches.
 
-### Resources
-* `pricestalker://retailers/{domain}`
-* `pricestalker://scrapes/recent-errors`
-* `pricestalker://deals/active`
-* `pricestalker://system/health`
+### Resources (3)
+- `pricestalker://retailers/{domain}`: Active selector configuration for a store domain.
+- `pricestalker://scrapes/recent-errors`: Last 20 scrape errors and failure logs.
+- `pricestalker://system/health`: Live system and database health status.
 
-### Prompts
-* `debug-retailer` (Interactive guided workflow to fix broken selectors)
-* `deal-advisor` (Purchase recommendation analysis across catalog)
-* `batch-ingest` (Interactive multi-URL preview and tracking)
+### Prompts (1)
+- `debug-retailer`: Guided interactive workflow to diagnose store scraping failures and hand the operator a configuration diff to apply in the Admin UI.
