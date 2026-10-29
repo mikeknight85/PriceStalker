@@ -302,6 +302,9 @@ export interface SystemSettings {
   generic_pre_order_phrases?: string;
   generic_challenge_phrases?: string;
   prefer_jsonld_image?: boolean | string;
+  telemetry_enabled?: boolean | string;
+  telemetry_instance_id?: string;
+  telemetry_last_ping_at?: string;
   /** Seconds. The instance-wide default check interval for new products (#239). */
   default_refresh_interval?: number | string;
   jsonld_name_key?: string;
@@ -490,4 +493,20 @@ export interface AIExtractionTestResult {
   image?: string | null;
   in_stock?: boolean | null;
   [key: string]: unknown;
+}
+
+export interface TelemetryStatusResponse {
+  enabled: boolean;
+  envDisabled: boolean;
+  instanceId: string;
+  lastPingAt: string | null;
+  preview: {
+    instance_id: string;
+    version: string;
+    build_commit?: string | null;
+    os: { platform: string; arch: string; node_version: string };
+    runtime: { is_docker: boolean; uptime_hours: number };
+    features: Record<string, boolean>;
+    usage: { items_bucket: string; stores_bucket: string; users_bucket: string };
+  };
 }

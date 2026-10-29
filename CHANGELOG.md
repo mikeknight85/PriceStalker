@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database (`ps-telemetry.enuff.com`). Transmits minimal technical health metrics (version, OS, architecture, coarse item/store/user bucket) once daily. Strictly zero personal data, store names, or URLs are collected. Can be disabled via `DISABLE_TELEMETRY=true`, `DO_NOT_TRACK=1`, or the Admin System Settings toggle with full payload preview.
+
 ### Fixed
 
 - Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.

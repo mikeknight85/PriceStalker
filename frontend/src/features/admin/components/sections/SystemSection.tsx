@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminSystemService } from '../../services/AdminSystemService';
-import { SystemSettings } from '../../../../types/api';
+import { SystemSettings, TelemetryStatusResponse } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
 import { apiErrorMessage } from '../../../../api/error';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
@@ -16,6 +16,9 @@ export default function SystemSection() {
   const { showToast } = useToast();
   const [savedSettings, setSavedSettings] = useState<SystemSettings | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
+  const [telemetryStatus, setTelemetryStatus] = useState<TelemetryStatusResponse | null>(null);
+  const [showPayloadPreview, setShowPayloadPreview] = useState(false);
+  const [isSendingTestPing, setIsSendingTestPing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingAdmin, setIsSavingAdmin] = useState(false);
   const [isTestingSearXNG, setIsTestingSearXNG] = useState(false);
@@ -26,6 +29,7 @@ export default function SystemSection() {
     sys_discovery: false,
     sys_browser: false,
     sys_security: false,
+    sys_telemetry: false,
     sys_maintenance: false
   });
 
@@ -36,9 +40,13 @@ export default function SystemSection() {
   const fetchSystemData = async () => {
     setIsLoading(true);
     try {
-      const res = await queryClient.fetchQuery(adminSystemSettingsQuery());
+      const [res, tel] = await Promise.all([
+        queryClient.fetchQuery(adminSystemSettingsQuery()),
+        AdminSystemService.getTelemetryStatus().catch(() => null)
+      ]);
       setSavedSettings(res);
       setSystemSettings(res);
+      setTelemetryStatus(tel);
     } catch {
       showToast('Failed to load system settings', 'error');
     } finally {
@@ -209,6 +217,86 @@ export default function SystemSection() {
             onToggle={() => setSystemSettings(s => s ? { ...s, retailer_updates_disabled: !(s.retailer_updates_disabled === true || s.retailer_updates_disabled === 'true') } : null)}
           />
         </div>
+      </CollapsibleCard>
+
+      <CollapsibleCard title="Anonymous Telemetry" leadingIcon={<Icon name="radio" />} id="sys_telemetry" isExpanded={expandedSections.sys_telemetry} onToggle={toggleSection}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Share Anonymous Usage Statistics</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              Sends a daily heartbeat with minimal technical metrics (app version, OS/architecture, coarse usage bucket).
+            </div>
+          </div>
+          <ToggleSwitch
+            disabled={telemetryStatus?.envDisabled}
+            active={!telemetryStatus?.envDisabled && (systemSettings?.telemetry_enabled === undefined || systemSettings?.telemetry_enabled === true || systemSettings?.telemetry_enabled === 'true')}
+            onToggle={() => setSystemSettings(s => s ? { ...s, telemetry_enabled: !(s.telemetry_enabled === undefined || s.telemetry_enabled === true || s.telemetry_enabled === 'true') } : null)}
+          />
+        </div>
+
+        {telemetryStatus?.envDisabled && (
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '0.5rem 0.75rem', background: 'var(--surface-sunken)', borderRadius: '0.375rem', marginBottom: '1rem' }}>
+            Telemetry is explicitly disabled via the <code>DISABLE_TELEMETRY</code> or <code>DO_NOT_TRACK</code> environment variable.
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={async () => {
+              try {
+                const tel = await AdminSystemService.getTelemetryStatus();
+                setTelemetryStatus(tel);
+                setShowPayloadPreview(prev => !prev);
+              } catch {
+                showToast('Failed to load telemetry preview', 'error');
+              }
+            }}
+          >
+            {showPayloadPreview ? 'Hide Payload Preview' : 'View Payload Preview'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled={isSendingTestPing || telemetryStatus?.envDisabled}
+            onClick={async () => {
+              setIsSendingTestPing(true);
+              try {
+                const res = await AdminSystemService.sendTelemetryPing();
+                if (res.success) {
+                  showToast('Telemetry test ping sent successfully', 'success');
+                  const tel = await AdminSystemService.getTelemetryStatus();
+                  setTelemetryStatus(tel);
+                } else {
+                  showToast(res.error || 'Test ping failed', 'error');
+                }
+              } catch {
+                showToast('Failed to send test ping', 'error');
+              } finally {
+                setIsSendingTestPing(false);
+              }
+            }}
+          >
+            {isSendingTestPing ? 'Sending...' : 'Send Test Ping'}
+          </button>
+        </div>
+
+        {showPayloadPreview && telemetryStatus?.preview && (
+          <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--surface-sunken)', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>TRANSMITTED PAYLOAD PREVIEW</span>
+              {telemetryStatus.lastPingAt && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Last ping: {telemetryStatus.lastPingAt}
+                </span>
+              )}
+            </div>
+            <pre style={{ margin: 0, fontSize: '0.75rem', fontFamily: 'monospace', maxHeight: '200px', overflowY: 'auto' }}>
+              {JSON.stringify(telemetryStatus.preview, null, 2)}
+            </pre>
+          </div>
+        )}
       </CollapsibleCard>
 
       <CollapsibleCard title="Maintenance" leadingIcon={<Icon name="wrench" />} id="sys_maintenance" isExpanded={expandedSections.sys_maintenance} onToggle={toggleSection}>
