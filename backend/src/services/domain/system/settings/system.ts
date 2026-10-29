@@ -47,6 +47,9 @@ export class SystemSettingsService {
       'prefer_jsonld_image',
       'searxng_url',
       'searxng_enabled',
+      'telemetry_enabled',
+      'telemetry_instance_id',
+      'telemetry_last_ping_at',
       DEFAULT_REFRESH_INTERVAL_SETTING_KEY
     ];
 
