@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { NotificationPayload } from './types';
+import { isAppriseConfigured } from './providers/apprise';
 import { NotificationSettings } from './orchestrator';
 import { 
   sendTelegramNotification, 
@@ -46,7 +47,7 @@ export async function sendTestNotification(
       if (!settings.gotify_url || !settings.gotify_app_token) return false;
       return sendGotifyNotification(settings.gotify_url, settings.gotify_app_token, payload, settings.gotify_message_template);
     case 'apprise':
-      if (!settings.apprise_url || !(settings.apprise_config_key || settings.apprise_urls)) return false;
+      if (!isAppriseConfigured(settings)) return false;
       return sendAppriseNotification(settings.apprise_url, payload, settings.apprise_config_key, settings.apprise_urls, settings.apprise_tag, settings.apprise_message_template);
     case 'webhook':
       if (!settings.webhook_url) return false;

@@ -38,11 +38,11 @@ You can configure and test your notification channels under **User Settings → 
 In **Settings → Notifications → Apprise**:
 * **Server URL**: The apprise-api base URL, e.g. `http://apprise:8000`.
 * **Config Key**: Optional. Names a configuration stored on the apprise-api server; alerts are posted to `/notify/<key>`. Leave empty for stateless mode.
-* **Apprise URLs**: Stateless mode only, used when there is no config key. One or more Apprise service URLs such as `ntfys://topic`, separated by commas or spaces. These usually embed credentials, so the field is masked like the other secret URLs.
-* **Tag**: Optional. Routes the alert to the services carrying this tag within a stored configuration.
+* **Apprise URLs**: Stateless mode only, used when there is no config key. One or more Apprise service URLs such as `ntfys://topic`, separated by commas, spaces or new lines. These usually embed credentials, so the field is masked like the other secret URLs.
+* **Tag**: Optional. Routes the alert to the services carrying this tag within a stored configuration. It is only sent together with a config key; in stateless mode it is ignored, because apprise-api would match no services and deliver nothing.
 * **Message Template**: Optional. Leave blank for the same event-aware wording the ntfy and Telegram channels use, with the product link appended. The request is JSON-encoded for you, so no escaping is needed.
 
-The channel is active once it has a server URL and either a config key or Apprise URLs. Click **Send Test Notification** after saving to verify.
+The channel is active once it has a server URL and either a config key or Apprise URLs (fields containing only spaces do not count). Click **Send Test Notification** after saving to verify.
 
 Each alert is sent with a title naming the event and an Apprise `type` that lets the receiving service style it:
 
