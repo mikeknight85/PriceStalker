@@ -22,6 +22,8 @@ import { TelegramProvider } from '../../src/services/notifications/providers/tel
 import { PushoverProvider } from '../../src/services/notifications/providers/pushover';
 import { NtfyProvider } from '../../src/services/notifications/providers/ntfy';
 import { GotifyProvider } from '../../src/services/notifications/providers/gotify';
+import { AppriseProvider, appriseTypeFor } from '../../src/services/notifications/providers/apprise';
+import { PROVIDER_REGISTRY } from '../../src/services/notifications/registry';
 import { WebhookProvider } from '../../src/services/notifications/providers/webhook';
 import { EmailProvider } from '../../src/services/notifications/providers/email';
 
@@ -51,6 +53,7 @@ const PROVIDERS: { name: string; send: (p: NotificationPayload, tpl?: string | n
   { name: 'pushover', send: (p, t) => new PushoverProvider('user', 'app', t).send(p) },
   { name: 'ntfy', send: (p, t) => new NtfyProvider('topic', null, null, null, t).send(p) },
   { name: 'gotify', send: (p, t) => new GotifyProvider('https://gotify.example', 'tok', t).send(p) },
+  { name: 'apprise', send: (p, t) => new AppriseProvider('https://apprise.example', 'homelab', null, null, t).send(p) },
   { name: 'webhook', send: (p, t) => new WebhookProvider('https://hook.example', null, t).send(p) },
 ];
 
@@ -202,6 +205,69 @@ describe('the webhook payload is machine-readable', () => {
     // A wrong value is worse than an absent one for something being parsed.
     await new WebhookProvider('https://hook.example').send({ ...base, newPrice: 49.99 });
     expect((post.mock.calls[0][1] as any).currency).toBeNull();
+  });
+});
+
+describe('the Apprise provider (issue #270)', () => {
+  const server = 'https://apprise.example';
+
+  it('posts to a stored configuration when a config key is set', async () => {
+    await new AppriseProvider(`${server}/`, 'home lab', 'ntfys://ignored').send(base);
+    const [url, body] = post.mock.calls[0];
+    expect(url).toBe(`${server}/notify/home%20lab`);
+    expect(body).not.toHaveProperty('urls');
+  });
+
+  it('posts statelessly with the urls when there is no config key', async () => {
+    await new AppriseProvider(server, '  ', 'ntfys://topic').send(base);
+    const [url, body] = post.mock.calls[0];
+    expect(url).toBe(`${server}/notify`);
+    expect(body).toMatchObject({ urls: 'ntfys://topic' });
+  });
+
+  it('sends the tag only when one is set', async () => {
+    await new AppriseProvider(server, 'k', null, 'deals').send(base);
+    await new AppriseProvider(server, 'k', null, '  ').send(base);
+    expect(post.mock.calls[0][1]).toMatchObject({ tag: 'deals' });
+    expect(post.mock.calls[1][1]).not.toHaveProperty('tag');
+  });
+
+  it('maps every event to an Apprise type, with not_available as a warning', () => {
+    const mapped = Object.fromEntries(NOTIFICATION_EVENT_TYPES.map(type => [type, appriseTypeFor(type)]));
+    expect(mapped).toEqual({
+      price_drop: 'success', target_price: 'success', back_in_stock: 'success',
+      product_restored: 'info', price_announced: 'info', not_available: 'warning',
+    });
+  });
+
+  it('carries the event title, body and type, with the product URL in the body', async () => {
+    await new AppriseProvider(server, 'k').send({ ...base, type: 'not_available', reason: 'Timed out' });
+    const body = post.mock.calls[0][1] as any;
+    expect(body.title).toBe('Product Unavailable');
+    expect(body.type).toBe('warning');
+    expect(body.body).toContain('Timed out');
+    expect(body.body).toContain(base.productUrl);
+  });
+
+  it('keeps a product name with quotes intact, since the request is JSON-encoded', async () => {
+    await new AppriseProvider(server, 'k', null, null, '{{product_name}}')
+      .send({ ...base, productName: 'Monitor 27" 4K' });
+    expect((post.mock.calls[0][1] as any).body).toBe('Monitor 27" 4K');
+  });
+
+  it('is only active with a server and somewhere to send to', () => {
+    const init = PROVIDER_REGISTRY.apprise;
+    const settings = { apprise_url: server, apprise_config_key: 'k', apprise_enabled: true } as any;
+    expect(init(settings)).not.toBeNull();
+    expect(init({ ...settings, apprise_config_key: null, apprise_urls: 'ntfys://t' })).not.toBeNull();
+    expect(init({ ...settings, apprise_config_key: null })).toBeNull();
+    expect(init({ ...settings, apprise_url: null })).toBeNull();
+    expect(init({ ...settings, apprise_enabled: false })).toBeNull();
+  });
+
+  it('reports failure rather than throwing when apprise-api rejects the request', async () => {
+    post.mockRejectedValueOnce(new Error('424'));
+    expect(await new AppriseProvider(server, 'k').send(base)).toBe(false);
   });
 });
 

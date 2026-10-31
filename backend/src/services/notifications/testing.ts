@@ -6,8 +6,9 @@ import {
   sendDiscordNotification, 
   sendPushoverNotification, 
   sendNtfyNotification, 
-  sendGotifyNotification, 
-  sendWebhookNotification, 
+  sendGotifyNotification,
+  sendAppriseNotification,
+  sendWebhookNotification,
   sendEmailNotification 
 } from './legacy';
 
@@ -15,7 +16,7 @@ import {
  * Send a test notification to a specific channel.
  */
 export async function sendTestNotification(
-  channel: 'telegram' | 'discord' | 'pushover' | 'ntfy' | 'gotify' | 'webhook' | 'email',
+  channel: 'telegram' | 'discord' | 'pushover' | 'ntfy' | 'gotify' | 'apprise' | 'webhook' | 'email',
   settings: NotificationSettings
 ): Promise<boolean> {
   const payload: NotificationPayload = {
@@ -44,6 +45,9 @@ export async function sendTestNotification(
     case 'gotify':
       if (!settings.gotify_url || !settings.gotify_app_token) return false;
       return sendGotifyNotification(settings.gotify_url, settings.gotify_app_token, payload, settings.gotify_message_template);
+    case 'apprise':
+      if (!settings.apprise_url || !(settings.apprise_config_key || settings.apprise_urls)) return false;
+      return sendAppriseNotification(settings.apprise_url, payload, settings.apprise_config_key, settings.apprise_urls, settings.apprise_tag, settings.apprise_message_template);
     case 'webhook':
       if (!settings.webhook_url) return false;
       return sendWebhookNotification(settings.webhook_url, payload, settings.webhook_headers, settings.webhook_payload_template);

@@ -210,7 +210,7 @@ Each user account can personalize their PriceStalker experience under **Settings
 * **Profile & Regional (`/settings/profile`)**:
   * Manage your display name, password, preferred display currency, and locale formatting for numbers and dates.
 * **Notification Channels (`/settings/notifications`)**:
-  * Configure personal destinations for Telegram, Discord, Pushover, Ntfy, Gotify, Webhooks, or Email alerts.
+  * Configure personal destinations for Telegram, Discord, Pushover, Ntfy, Gotify, Apprise, Webhooks, or Email alerts.
 
 ---
 

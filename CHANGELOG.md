@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Native Apprise notification channel. Settings -> Notifications -> Apprise sends alerts through an apprise-api server, either to a stored configuration (config key) or statelessly to a list of Apprise URLs, with an optional tag and message template. Events are sent with an Apprise `type` (`success`, `info` or `warning`), so receiving services can style them. Adds migration 024 (#270).
+
 ### Fixed
 
 - Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.

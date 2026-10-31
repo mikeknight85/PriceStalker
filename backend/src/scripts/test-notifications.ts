@@ -6,7 +6,7 @@ async function main() {
   const channelArg = process.argv[2];
   const userIdArg = process.argv[3];
 
-  const validChannels = ['telegram', 'discord', 'pushover', 'ntfy', 'gotify', 'webhook', 'email'];
+  const validChannels = ['telegram', 'discord', 'pushover', 'ntfy', 'gotify', 'apprise', 'webhook', 'email'];
   
   if (!channelArg || !validChannels.includes(channelArg.toLowerCase())) {
     console.error(`Error: Please specify a valid notification channel.`);

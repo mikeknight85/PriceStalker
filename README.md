@@ -96,7 +96,7 @@ Full history in [CHANGELOG.md](CHANGELOG.md).
 - Display formatter centralised — notifications, charts, tables all speak the same currency
 
 ### Notifications
-Telegram · Discord · Pushover · ntfy.sh (self-hosted supported) · Gotify · **Email/SMTP (2.0)** · **Custom Webhook** (any HTTP endpoint — Apprise, Home Assistant, n8n, Zapier, your own backend) · per-channel toggles · **customisable message templates per channel (2.0)** · test buttons for every provider.
+Telegram · Discord · Pushover · ntfy.sh (self-hosted supported) · Gotify · **Apprise** · **Email/SMTP (2.0)** · **Custom Webhook** (any HTTP endpoint — Apprise, Home Assistant, n8n, Zapier, your own backend) · per-channel toggles · **customisable message templates per channel (2.0)** · test buttons for every provider.
 
 - **Price drop alerts** — set a CHF/USD/EUR threshold
 - **Target price alerts** — get notified when a specific price is reached
