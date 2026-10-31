@@ -23,7 +23,9 @@ import { useExpandedSections } from '../../../hooks';
  * event-aware are listed under the field.
  */
 const EMAIL_SUBJECT_PLACEHOLDER = 'Leave empty for wording that matches each event';
-const EMAIL_BODY_PLACEHOLDER = 'Leave empty for wording that matches each event, or write your own:\n\n{{product_name}}\n{{type}}: {{price}}\n{{product_url}}';
+const WEBHOOK_HEADERS_PLACEHOLDER = '{"Authorization": "Bearer ..."}';
+const WEBHOOK_TEMPLATE_PLACEHOLDER = '{"title": "{{product_name}}", "body": "{{type}}: {{price}}", "url": "{{product_url}}"}';
+const EMAIL_BODY_PLACEHOLDER ='Leave empty for wording that matches each event, or write your own:\n\n{{product_name}}\n{{type}}: {{price}}\n{{product_url}}';
 
 interface ChannelSettings {
   telegram_bot_token: string;
@@ -51,7 +53,24 @@ interface ChannelSettings {
   email_subject_template: string;
   email_body_template: string;
   webhook_url: string;
+  webhook_headers: string;
+  webhook_payload_template: string;
   webhook_enabled: boolean;
+}
+
+/**
+ * Why a webhook field would not parse as JSON, or null when it would (or is
+ * empty). `{{variable}}` tokens are swapped for a valid value first: they are
+ * filled in on the server, and a quoted one is escaped there.
+ */
+function jsonProblem(text: string): string | null {
+  if (!text.trim()) return null;
+  try {
+    JSON.parse(text.replace(/\{\{\s*\w+\s*\}\}/g, '0'));
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : 'Not valid JSON';
+  }
 }
 
 const channelFields: Record<string, (keyof ChannelSettings)[]> = {
@@ -61,7 +80,7 @@ const channelFields: Record<string, (keyof ChannelSettings)[]> = {
   ntfy: ['ntfy_server_url', 'ntfy_topic', 'ntfy_password', 'ntfy_enabled', 'ntfy_message_template'],
   gotify: ['gotify_url', 'gotify_app_token', 'gotify_enabled', 'gotify_message_template'],
   email: ['email_enabled', 'email_to', 'email_subject_template', 'email_body_template'],
-  webhook: ['webhook_url', 'webhook_enabled'],
+  webhook: ['webhook_url', 'webhook_headers', 'webhook_payload_template', 'webhook_enabled'],
 };
 
 export default function NotificationChannelsSection() {
@@ -78,7 +97,7 @@ export default function NotificationChannelsSection() {
     ntfy_server_url: '', ntfy_topic: '', ntfy_password: '', ntfy_enabled: false, ntfy_message_template: '',
     gotify_url: '', gotify_app_token: '', gotify_enabled: false, gotify_message_template: '',
     email_enabled: false, email_to: '', email_subject_template: '', email_body_template: '',
-    webhook_url: '', webhook_enabled: false
+    webhook_url: '', webhook_headers: '', webhook_payload_template: '', webhook_enabled: false
   });
 
   const { expandedSections, toggleSection } = useExpandedSections({
@@ -128,6 +147,8 @@ export default function NotificationChannelsSection() {
         email_subject_template: s.email_subject_template || '',
         email_body_template: s.email_body_template || '',
         webhook_url: s.webhook_url || '',
+        webhook_headers: s.webhook_headers || '',
+        webhook_payload_template: s.webhook_payload_template || '',
         webhook_enabled: !!s.webhook_enabled
       };
       setDraftSettings(initial);
@@ -189,6 +210,9 @@ export default function NotificationChannelsSection() {
   );
 
   if (isLoading) return <LoadingSpinner centered />;
+
+  const headersProblem = jsonProblem(draftSettings.webhook_headers);
+  const templateProblem = jsonProblem(draftSettings.webhook_payload_template);
 
   return (
     <div className="settings-card">
@@ -371,7 +395,19 @@ export default function NotificationChannelsSection() {
             <label htmlFor="webhook-endpoint-url">Endpoint URL (POST)</label>
             <PasswordInput secret id="webhook-endpoint-url" name="webhook-endpoint-url" value={draftSettings.webhook_url} onChange={e => handleUpdateField('webhook_url', e.target.value)} placeholder="https://api.example.com/alerts" autoComplete="new-password" />
           </form>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Sends a standard JSON payload with product details.</span>
+          <div className="form-group">
+            <label htmlFor="webhook-headers">Headers (JSON)</label>
+            <textarea id="webhook-headers" className="form-control" style={{ height: '60px', fontSize: '0.8rem', fontFamily: 'monospace' }} value={draftSettings.webhook_headers} onChange={e => handleUpdateField('webhook_headers', e.target.value)} placeholder={WEBHOOK_HEADERS_PLACEHOLDER} />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Optional. <code>Content-Type: application/json</code> is sent by default.</span>
+            {headersProblem && <span role="alert" style={{ display: 'block', fontSize: '0.7rem', color: 'var(--danger)' }}>Not valid JSON, so these headers will be ignored: {headersProblem}</span>}
+          </div>
+          <div className="form-group">
+            <label htmlFor="webhook-payload-template">Payload Template (JSON)</label>
+            <textarea id="webhook-payload-template" className="form-control" style={{ height: '120px', fontSize: '0.8rem', fontFamily: 'monospace' }} value={draftSettings.webhook_payload_template} onChange={e => handleUpdateField('webhook_payload_template', e.target.value)} placeholder={WEBHOOK_TEMPLATE_PLACEHOLDER} />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Leave empty to send the standard JSON payload with product details. Values are escaped for you, so write <code>{'"{{product_name}}"'}</code> with the quotes.</span>
+            {templateProblem && <span role="alert" style={{ display: 'block', fontSize: '0.7rem', color: 'var(--danger)' }}>Not valid JSON, so nothing will be sent: {templateProblem}</span>}
+            {renderTemplateHelp()}
+          </div>
         </NotificationChannelCard>
       </div>
 

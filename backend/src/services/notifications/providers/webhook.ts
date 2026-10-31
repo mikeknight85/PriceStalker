@@ -21,14 +21,16 @@ export class WebhookProvider implements NotificationProvider {
         }
       }
 
-      let body: any;
+      let body: unknown;
       if (this.payloadTemplate) {
         try {
-          const interpolated = interpolateTemplate(this.payloadTemplate, payload);
-          body = JSON.parse(interpolated);
+          body = JSON.parse(interpolateTemplate(this.payloadTemplate, payload, { json: true }));
         } catch (e) {
-          logger.warn('Notify | Webhook | Failed to parse payload as JSON, sending as string', 'Notifications', e);
-          body = interpolateTemplate(this.payloadTemplate, payload);
+          // Values are escaped, so reaching here means the template itself is
+          // not valid JSON. Posting the raw string as application/json used to
+          // hand the receiver a body it could only reject.
+          logger.error('Notify | Webhook | Payload template is not valid JSON, not sending', 'Notifications', e);
+          return false;
         }
       } else {
         // The default payload carried `event: back_in_stock` with nothing else

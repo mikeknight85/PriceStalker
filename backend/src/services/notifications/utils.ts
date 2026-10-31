@@ -34,10 +34,24 @@ function formatStockStatus(status?: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+export interface InterpolateOptions {
+  /**
+   * The template is JSON. Each value is escaped as the inside of a JSON string
+   * before it is substituted, so a product named `Monitor 27" 4K` cannot close
+   * the string early (issue #268). Templates are written as `"{{product_name}}"`,
+   * so the quotes belong to the template and only the contents are escaped.
+   */
+  json?: boolean;
+}
+
 /**
  * Simple template engine to replace {{variable}} with real data.
  */
-export function interpolateTemplate(template: string, payload: NotificationPayload): string {
+export function interpolateTemplate(
+  template: string,
+  payload: NotificationPayload,
+  options: InterpolateOptions = {}
+): string {
   const currencySymbol = getCurrencySymbol(payload.currency);
   
   const variables: Record<string, string> = {
@@ -70,11 +84,15 @@ export function interpolateTemplate(template: string, payload: NotificationPaylo
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
     const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-    result = result.replace(regex, value);
+    const text = options.json ? JSON.stringify(value).slice(1, -1) : value;
+    // A function, not the string: as a replacement string, `$&`, `$1` and `$$`
+    // in a product name are expanded instead of inserted.
+    result = result.replace(regex, () => text);
   }
-  
-  result = result.replace(/\\n/g, '\n');
-  return result;
+
+  // In a JSON template `\n` is already a valid escape. Turning it into a real
+  // newline inside a string is what makes the document unparseable.
+  return options.json ? result : result.replace(/\\n/g, '\n');
 }
 
 /**

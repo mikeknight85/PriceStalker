@@ -43,7 +43,9 @@ You can configure and test your notification channels under **User Settings → 
 For integrations with Home Assistant, Apprise, n8n, Zapier, or custom APIs, select **Custom Webhook** in Settings → Notifications:
 * **URL**: The endpoint of the receiver.
 * **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default.
-* **Body Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
+* **Payload Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
+  * Write the template as JSON and keep the quotes around text variables: `{"title": "{{product_name}}"}`. Each value is escaped for you, so a product named `Monitor 27" 4K` arrives intact. Numeric variables such as `{{current_price}}` can be left unquoted.
+  * If the template is not valid JSON, nothing is sent and the failure is logged. The settings page flags this as you type.
 
 The request is always a `POST`. (v1 had a configurable method; v2 does not.)
 

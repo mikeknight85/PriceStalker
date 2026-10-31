@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Webhook payload templates are now valid JSON for any product name. Values containing `"`, `\` or a newline used to break the JSON, and the broken body was sent anyway; each value is now escaped, and a template that still is not valid JSON is logged and not sent. Template variables containing `$&`, `$1` or `$$` are also inserted as written on every channel instead of being expanded (#268).
+- Restored the Headers and Payload Template fields on the Generic Webhook card in Settings -> Notifications. They were missing after the v2 import, so the template could only be set through the API (#268).
 - Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.
 - Synchronized documentation across admin, developer, and user guides, corrected migration references, and regenerated product lifecycle diagrams.
 
