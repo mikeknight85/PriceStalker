@@ -3,6 +3,19 @@ import { NotificationProvider, NotificationPayload } from '../types';
 import { logger } from '../../../utils/system/logger';
 import { interpolateTemplate } from '../utils';
 
+/**
+ * The user's headers, which must be a JSON object of names to values. An array
+ * or a bare string used to be accepted and spread into the headers as garbage
+ * (`{"0": ..., "1": ...}`).
+ */
+function parseHeaders(headersStr: string): Record<string, string> {
+  const parsed: unknown = JSON.parse(headersStr);
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Headers must be a JSON object');
+  }
+  return Object.fromEntries(Object.entries(parsed).map(([name, value]) => [name, String(value)]));
+}
+
 export class WebhookProvider implements NotificationProvider {
   constructor(
     private webhookUrl: string,
@@ -14,15 +27,35 @@ export class WebhookProvider implements NotificationProvider {
     try {
       let headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (this.headersStr) {
+        let custom: Record<string, string>;
         try {
-          headers = { ...headers, ...JSON.parse(this.headersStr) };
+          custom = parseHeaders(this.headersStr);
         } catch (e) {
-          logger.error('Notify | Webhook | Failed to parse headers JSON', 'Notifications', e);
+          // Sending anyway meant the request went out without the user's
+          // Authorization header and the receiver answered 401, with nothing
+          // pointing back at the headers field.
+          logger.error('Notify | Webhook | Headers are not a valid JSON object, not sending', 'Notifications', e);
+          return false;
         }
+        // Header names are case-insensitive, so a user's `content-type` has to
+        // replace ours rather than sit beside it.
+        const overridden = new Set(Object.keys(custom).map(name => name.toLowerCase()));
+        headers = {
+          ...Object.fromEntries(Object.entries(headers).filter(([name]) => !overridden.has(name.toLowerCase()))),
+          ...custom,
+        };
       }
 
+      // The Content-Type decides how a payload template is read. JSON (the
+      // default) is parsed and sent as an object; anything else is plain text
+      // the user chose to send, so it is sent as written.
+      const contentType = Object.entries(headers).find(([name]) => name.toLowerCase() === 'content-type')?.[1];
+      const sendsJson = !contentType || /json/i.test(contentType);
+
       let body: unknown;
-      if (this.payloadTemplate) {
+      if (this.payloadTemplate && !sendsJson) {
+        body = interpolateTemplate(this.payloadTemplate, payload);
+      } else if (this.payloadTemplate) {
         try {
           body = JSON.parse(interpolateTemplate(this.payloadTemplate, payload, { json: true }));
         } catch (e) {

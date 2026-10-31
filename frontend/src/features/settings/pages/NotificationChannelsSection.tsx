@@ -8,6 +8,7 @@ import { queryClient } from '../../../api/queryClient';
 import { notificationSettingsQuery, queryKeys } from '../../../api/queries';
 import { NotificationSettings } from '../../../types/api';
 import { useExpandedSections } from '../../../hooks';
+import { webhookHeadersProblem, webhookSendsPlainText, webhookTemplateProblem } from '../webhookJson';
 
 /*
  * Shown as placeholder text, not prefilled into the fields (issue #92).
@@ -23,9 +24,9 @@ import { useExpandedSections } from '../../../hooks';
  * event-aware are listed under the field.
  */
 const EMAIL_SUBJECT_PLACEHOLDER = 'Leave empty for wording that matches each event';
+const EMAIL_BODY_PLACEHOLDER = 'Leave empty for wording that matches each event, or write your own:\n\n{{product_name}}\n{{type}}: {{price}}\n{{product_url}}';
 const WEBHOOK_HEADERS_PLACEHOLDER = '{"Authorization": "Bearer ..."}';
 const WEBHOOK_TEMPLATE_PLACEHOLDER = '{"title": "{{product_name}}", "body": "{{type}}: {{price}}", "url": "{{product_url}}"}';
-const EMAIL_BODY_PLACEHOLDER ='Leave empty for wording that matches each event, or write your own:\n\n{{product_name}}\n{{type}}: {{price}}\n{{product_url}}';
 
 interface ChannelSettings {
   telegram_bot_token: string;
@@ -56,21 +57,6 @@ interface ChannelSettings {
   webhook_headers: string;
   webhook_payload_template: string;
   webhook_enabled: boolean;
-}
-
-/**
- * Why a webhook field would not parse as JSON, or null when it would (or is
- * empty). `{{variable}}` tokens are swapped for a valid value first: they are
- * filled in on the server, and a quoted one is escaped there.
- */
-function jsonProblem(text: string): string | null {
-  if (!text.trim()) return null;
-  try {
-    JSON.parse(text.replace(/\{\{\s*\w+\s*\}\}/g, '0'));
-    return null;
-  } catch (e) {
-    return e instanceof Error ? e.message : 'Not valid JSON';
-  }
 }
 
 const channelFields: Record<string, (keyof ChannelSettings)[]> = {
@@ -211,8 +197,12 @@ export default function NotificationChannelsSection() {
 
   if (isLoading) return <LoadingSpinner centered />;
 
-  const headersProblem = jsonProblem(draftSettings.webhook_headers);
-  const templateProblem = jsonProblem(draftSettings.webhook_payload_template);
+  const webhookPlainText = webhookSendsPlainText(draftSettings.webhook_headers);
+  const headersProblem = webhookHeadersProblem(draftSettings.webhook_headers);
+  const templateProblem = webhookTemplateProblem(draftSettings.webhook_payload_template, webhookPlainText);
+  // The backend sends nothing for headers or a template it cannot read, so
+  // saving one would silently turn the webhook off.
+  const hasWebhookProblem = headersProblem !== null || templateProblem !== null;
 
   return (
     <div className="settings-card">
@@ -399,21 +389,22 @@ export default function NotificationChannelsSection() {
             <label htmlFor="webhook-headers">Headers (JSON)</label>
             <textarea id="webhook-headers" className="form-control" style={{ height: '60px', fontSize: '0.8rem', fontFamily: 'monospace' }} value={draftSettings.webhook_headers} onChange={e => handleUpdateField('webhook_headers', e.target.value)} placeholder={WEBHOOK_HEADERS_PLACEHOLDER} />
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Optional. <code>Content-Type: application/json</code> is sent by default.</span>
-            {headersProblem && <span role="alert" style={{ display: 'block', fontSize: '0.7rem', color: 'var(--danger)' }}>Not valid JSON, so these headers will be ignored: {headersProblem}</span>}
+            {headersProblem && <span role="alert" style={{ display: 'block', fontSize: '0.7rem', color: 'var(--danger)' }}>Fix before saving: {headersProblem}</span>}
           </div>
           <div className="form-group">
-            <label htmlFor="webhook-payload-template">Payload Template (JSON)</label>
+            <label htmlFor="webhook-payload-template">Payload Template ({webhookPlainText ? 'plain text' : 'JSON'})</label>
             <textarea id="webhook-payload-template" className="form-control" style={{ height: '120px', fontSize: '0.8rem', fontFamily: 'monospace' }} value={draftSettings.webhook_payload_template} onChange={e => handleUpdateField('webhook_payload_template', e.target.value)} placeholder={WEBHOOK_TEMPLATE_PLACEHOLDER} />
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Leave empty to send the standard JSON payload with product details. Values are escaped for you, so write <code>{'"{{product_name}}"'}</code> with the quotes.</span>
-            {templateProblem && <span role="alert" style={{ display: 'block', fontSize: '0.7rem', color: 'var(--danger)' }}>Not valid JSON, so nothing will be sent: {templateProblem}</span>}
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Leave empty to send the standard JSON payload with product details. Values are escaped for you, so keep every variable inside quotes: <code>{'"{{product_name}}"'}</code>. To send plain text instead, set a non-JSON <code>Content-Type</code> header (e.g. <code>{'{"Content-Type": "text/plain"}'}</code>) and write the template as text.</span>
+            {templateProblem && <span role="alert" style={{ display: 'block', fontSize: '0.7rem', color: 'var(--danger)' }}>Fix before saving: {templateProblem}</span>}
             {renderTemplateHelp()}
           </div>
         </NotificationChannelCard>
       </div>
 
       <div className="settings-actions">
+        {hasWebhookProblem && <span role="alert" style={{ fontSize: '0.75rem', color: 'var(--danger)', marginRight: 'auto' }}>Fix the Generic Webhook fields to save.</span>}
         <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setDraftSettings(savedSettings)} disabled={!isDirty || isSaving}>Cancel</button>
-        <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!isDirty || isSaving}>
+        <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!isDirty || isSaving || hasWebhookProblem}>
           {isSaving ? 'Saving...' : 'Save'}
         </button>
       </div>

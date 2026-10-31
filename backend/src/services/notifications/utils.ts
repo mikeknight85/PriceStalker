@@ -81,18 +81,22 @@ export function interpolateTemplate(
     'store': payload.storeName || '',
   };
 
-  let result = template;
-  for (const [key, value] of Object.entries(variables)) {
-    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-    const text = options.json ? JSON.stringify(value).slice(1, -1) : value;
-    // A function, not the string: as a replacement string, `$&`, `$1` and `$$`
-    // in a product name are expanded instead of inserted.
-    result = result.replace(regex, () => text);
-  }
+  // One pass over the template, not one pass per variable. Substituting
+  // variable by variable ran each later pattern over text an earlier value had
+  // already put there, so a product named `Foo {{reason}}` had the reason
+  // spliced into its name: scraped retailer text could pull other variables
+  // into the message. The replacement is also a function, because as a string
+  // `$&`, `$1` and `$$` in a product name would be expanded instead of inserted.
+  // In a JSON template `\n` is already a valid escape; turning it into a real
+  // newline inside a string is what makes the document unparseable. In plain
+  // text it is rewritten in the template, before values go in, so a value that
+  // happens to contain a backslash and an `n` is left as it is.
+  const source = options.json ? template : template.replace(/\\n/g, '\n');
 
-  // In a JSON template `\n` is already a valid escape. Turning it into a real
-  // newline inside a string is what makes the document unparseable.
-  return options.json ? result : result.replace(/\\n/g, '\n');
+  return source.replace(/\{\{\s*(\w+)\s*\}\}/g, (token, key: string) => {
+    if (!Object.hasOwn(variables, key)) return token;
+    return options.json ? JSON.stringify(variables[key]).slice(1, -1) : variables[key];
+  });
 }
 
 /**
