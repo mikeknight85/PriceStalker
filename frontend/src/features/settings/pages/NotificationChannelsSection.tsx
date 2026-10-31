@@ -46,6 +46,12 @@ interface ChannelSettings {
   gotify_app_token: string;
   gotify_enabled: boolean;
   gotify_message_template: string;
+  apprise_url: string;
+  apprise_config_key: string;
+  apprise_urls: string;
+  apprise_tag: string;
+  apprise_enabled: boolean;
+  apprise_message_template: string;
   email_enabled: boolean;
   email_to: string;
   email_subject_template: string;
@@ -60,6 +66,7 @@ const channelFields: Record<string, (keyof ChannelSettings)[]> = {
   pushover: ['pushover_user_key', 'pushover_app_token', 'pushover_enabled', 'pushover_message_template'],
   ntfy: ['ntfy_server_url', 'ntfy_topic', 'ntfy_password', 'ntfy_enabled', 'ntfy_message_template'],
   gotify: ['gotify_url', 'gotify_app_token', 'gotify_enabled', 'gotify_message_template'],
+  apprise: ['apprise_url', 'apprise_config_key', 'apprise_urls', 'apprise_tag', 'apprise_enabled', 'apprise_message_template'],
   email: ['email_enabled', 'email_to', 'email_subject_template', 'email_body_template'],
   webhook: ['webhook_url', 'webhook_enabled'],
 };
@@ -77,12 +84,13 @@ export default function NotificationChannelsSection() {
     pushover_user_key: '', pushover_app_token: '', pushover_enabled: false, pushover_message_template: '',
     ntfy_server_url: '', ntfy_topic: '', ntfy_password: '', ntfy_enabled: false, ntfy_message_template: '',
     gotify_url: '', gotify_app_token: '', gotify_enabled: false, gotify_message_template: '',
+    apprise_url: '', apprise_config_key: '', apprise_urls: '', apprise_tag: '', apprise_enabled: false, apprise_message_template: '',
     email_enabled: false, email_to: '', email_subject_template: '', email_body_template: '',
     webhook_url: '', webhook_enabled: false
   });
 
   const { expandedSections, toggleSection } = useExpandedSections({
-    telegram: false, discord: false, pushover: false, ntfy: false, gotify: false, email: false, webhook: false
+    telegram: false, discord: false, pushover: false, ntfy: false, gotify: false, apprise: false, email: false, webhook: false
   });
 
   const isChannelDirty = (id: string): boolean => {
@@ -123,6 +131,12 @@ export default function NotificationChannelsSection() {
         gotify_app_token: s.gotify_app_token || '',
         gotify_enabled: !!s.gotify_enabled,
         gotify_message_template: s.gotify_message_template || '',
+        apprise_url: s.apprise_url || '',
+        apprise_config_key: s.apprise_config_key || '',
+        apprise_urls: s.apprise_urls || '',
+        apprise_tag: s.apprise_tag || '',
+        apprise_enabled: !!s.apprise_enabled,
+        apprise_message_template: s.apprise_message_template || '',
         email_enabled: !!s.email_enabled,
         email_to: s.email_to || '',
         email_subject_template: s.email_subject_template || '',
@@ -166,6 +180,7 @@ export default function NotificationChannelsSection() {
       else if (type === 'pushover') await ProfileService.testPushover();
       else if (type === 'ntfy') await ProfileService.testNtfy();
       else if (type === 'gotify') await ProfileService.testGotify();
+      else if (type === 'apprise') await ProfileService.testApprise();
       else if (type === 'webhook') await ProfileService.testWebhook();
       else if (type === 'email') await ProfileService.testEmail();
       showToast('Test notification sent!', 'success');
@@ -329,8 +344,49 @@ export default function NotificationChannelsSection() {
           </div>
         </NotificationChannelCard>
 
-        <NotificationChannelCard 
-          title="Email Alerts" 
+        <NotificationChannelCard
+          title="Apprise"
+          id="apprise"
+          enabled={draftSettings.apprise_enabled}
+          onToggle={() => handleUpdateField('apprise_enabled', !draftSettings.apprise_enabled)}
+          onTest={() => handleTest('apprise')}
+          isTesting={isTesting === 'apprise'}
+          isExpanded={expandedSections.apprise}
+          onToggleSection={toggleSection}
+          isDirty={isChannelDirty('apprise')}
+        >
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            Sends through an <a href="https://github.com/caronc/apprise-api" target="_blank" rel="noopener noreferrer">apprise-api</a> server,
+            which reaches any service Apprise supports. Set a config key to use a stored configuration, or leave it empty and list Apprise URLs.
+          </p>
+          <div className="form-group">
+            <label htmlFor="apprise-url">Server URL</label>
+            <input id="apprise-url" type="text" className="form-control" value={draftSettings.apprise_url} onChange={e => handleUpdateField('apprise_url', e.target.value)} placeholder="http://apprise:8000" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="apprise-config-key">Config Key</label>
+            <input id="apprise-config-key" type="text" className="form-control" value={draftSettings.apprise_config_key} onChange={e => handleUpdateField('apprise_config_key', e.target.value)} placeholder="e.g. homelab" />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Posts to <code>/notify/&lt;key&gt;</code>. Leave empty for stateless mode.</span>
+          </div>
+          <form onSubmit={(e) => e.preventDefault()} className="form-group">
+            <label htmlFor="apprise-urls">Apprise URLs</label>
+            <PasswordInput secret id="apprise-urls" name="apprise-urls" value={draftSettings.apprise_urls} onChange={e => handleUpdateField('apprise_urls', e.target.value)} placeholder="ntfys://topic, tgram://bot/chat" autoComplete="new-password" />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Stateless mode only: used when there is no config key. Separate several with commas or spaces.</span>
+          </form>
+          <div className="form-group">
+            <label htmlFor="apprise-tag">Tag</label>
+            <input id="apprise-tag" type="text" className="form-control" value={draftSettings.apprise_tag} onChange={e => handleUpdateField('apprise_tag', e.target.value)} placeholder="Optional, e.g. deals" />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Routes the alert to the services carrying this tag within a stored config. Ignored in stateless mode.</span>
+          </div>
+          <div className="form-group">
+            <label>Message Template</label>
+            <textarea className="form-control" style={{ height: '80px', fontSize: '0.8rem' }} value={draftSettings.apprise_message_template} onChange={e => handleUpdateField('apprise_message_template', e.target.value)} placeholder="Optional custom template..." />
+            {renderTemplateHelp()}
+          </div>
+        </NotificationChannelCard>
+
+        <NotificationChannelCard
+          title="Email Alerts"
           id="email" 
           enabled={draftSettings.email_enabled}
           onToggle={() => handleUpdateField('email_enabled', !draftSettings.email_enabled)}
