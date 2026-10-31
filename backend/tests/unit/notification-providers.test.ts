@@ -22,7 +22,7 @@ import { TelegramProvider } from '../../src/services/notifications/providers/tel
 import { PushoverProvider } from '../../src/services/notifications/providers/pushover';
 import { NtfyProvider } from '../../src/services/notifications/providers/ntfy';
 import { GotifyProvider } from '../../src/services/notifications/providers/gotify';
-import { AppriseProvider, appriseTypeFor } from '../../src/services/notifications/providers/apprise';
+import { AppriseProvider, appriseTypeFor, isAppriseConfigured, normaliseAppriseUrls } from '../../src/services/notifications/providers/apprise';
 import { PROVIDER_REGISTRY } from '../../src/services/notifications/registry';
 import { WebhookProvider } from '../../src/services/notifications/providers/webhook';
 import { EmailProvider } from '../../src/services/notifications/providers/email';
@@ -225,6 +225,28 @@ describe('the Apprise provider (issue #270)', () => {
     expect(body).toMatchObject({ urls: 'ntfys://topic' });
   });
 
+  it('does not send a tag with stateless urls, which apprise-api answers with 424', async () => {
+    // A tag filters the services in a stored configuration; sent with ad-hoc
+    // urls it matches none of them and nothing is delivered. Switching to
+    // stateless mode and leaving the old tag behind must not break alerts.
+    await new AppriseProvider(server, null, 'ntfys://topic', 'deals').send(base);
+    const [url, body] = post.mock.calls[0];
+    expect(url).toBe(`${server}/notify`);
+    expect(body).toMatchObject({ urls: 'ntfys://topic' });
+    expect(body).not.toHaveProperty('tag');
+  });
+
+  it('tidies the url list into the comma-separated form apprise-api parses cleanly', async () => {
+    expect(normaliseAppriseUrls('a://1, b://2,')).toBe('a://1,b://2');
+    expect(normaliseAppriseUrls('a://1\nb://2\n')).toBe('a://1,b://2');
+    expect(normaliseAppriseUrls(' a://1 ,, b://2  c://3 ')).toBe('a://1,b://2,c://3');
+    expect(normaliseAppriseUrls('  ')).toBe('');
+    expect(normaliseAppriseUrls(null)).toBe('');
+
+    await new AppriseProvider(server, null, 'a://1, b://2,').send(base);
+    expect(post.mock.calls[0][1]).toMatchObject({ urls: 'a://1,b://2' });
+  });
+
   it('sends the tag only when one is set', async () => {
     await new AppriseProvider(server, 'k', null, 'deals').send(base);
     await new AppriseProvider(server, 'k', null, '  ').send(base);
@@ -263,6 +285,27 @@ describe('the Apprise provider (issue #270)', () => {
     expect(init({ ...settings, apprise_config_key: null })).toBeNull();
     expect(init({ ...settings, apprise_url: null })).toBeNull();
     expect(init({ ...settings, apprise_enabled: false })).toBeNull();
+  });
+
+  it('refuses a test send with nothing to send to, without calling the server', async () => {
+    const { sendTestNotification } = await import('../../src/services/notifications/testing');
+    const blank = { apprise_url: server, apprise_config_key: '  ', apprise_urls: '' } as any;
+    expect(await sendTestNotification('apprise', blank)).toBe(false);
+    expect(post).not.toHaveBeenCalled();
+    expect(await sendTestNotification('apprise', { ...blank, apprise_config_key: 'k' })).toBe(true);
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not treat whitespace-only fields as configured', () => {
+    // The provider trims these, so a field of spaces sent an empty request on
+    // every alert while the channel showed as active.
+    const init = PROVIDER_REGISTRY.apprise;
+    const settings = { apprise_url: server, apprise_config_key: '  ', apprise_urls: ' , \n', apprise_enabled: true } as any;
+    expect(isAppriseConfigured(settings)).toBe(false);
+    expect(init(settings)).toBeNull();
+    expect(init({ ...settings, apprise_url: '   ', apprise_config_key: 'k' })).toBeNull();
+    expect(isAppriseConfigured({ apprise_url: server, apprise_config_key: ' k ' })).toBe(true);
+    expect(isAppriseConfigured({ apprise_url: server, apprise_urls: 'ntfys://t' })).toBe(true);
   });
 
   it('reports failure rather than throwing when apprise-api rejects the request', async () => {

@@ -32,6 +32,38 @@ export function appriseTypeFor(type: NotificationPayload['type']): AppriseType {
   }
 }
 
+interface AppriseTargets {
+  apprise_url?: string | null;
+  apprise_config_key?: string | null;
+  apprise_urls?: string | null;
+}
+
+/**
+ * Whether there is a server to call and something for it to send to: a stored
+ * configuration, or URLs for stateless mode.
+ *
+ * Values are trimmed, as the provider trims them. A field holding only spaces
+ * used to count as configured here and then send an empty request, which
+ * apprise-api rejects on every alert while the channel showed as active.
+ */
+export function isAppriseConfigured<T extends AppriseTargets>(settings: T): settings is T & { apprise_url: string } {
+  return Boolean(
+    settings.apprise_url?.trim() &&
+    (settings.apprise_config_key?.trim() || normaliseAppriseUrls(settings.apprise_urls))
+  );
+}
+
+/**
+ * The URL list as apprise-api wants it: comma-separated, with no empty entries.
+ *
+ * Apprise splits on commas and whitespace, so a list pasted one per line
+ * already works. A trailing comma does not: it stayed on the end of the last
+ * URL and mangled its path (`.../b%2C`).
+ */
+export function normaliseAppriseUrls(raw?: string | null): string {
+  return (raw ?? '').split(/[\s,]+/).filter(Boolean).join(',');
+}
+
 export class AppriseProvider implements NotificationProvider {
   constructor(
     private serverUrl: string,
@@ -52,16 +84,18 @@ export class AppriseProvider implements NotificationProvider {
         : `${eventBody(payload)}\n\n${payload.productUrl}`;
 
       const tag = this.tag?.trim();
-      const urls = this.urls?.trim();
+      const urls = normaliseAppriseUrls(this.urls);
 
       await axios.post(endpoint, {
         title: describeEvent(payload).title,
         body,
         type: appriseTypeFor(payload.type),
-        // Stateless mode names its own targets; a stored configuration already
-        // knows them, and sending `urls` to it would be ignored at best.
-        ...(!key && urls ? { urls } : {}),
-        ...(tag ? { tag } : {}),
+        // A stored configuration already knows its targets, so `urls` would be
+        // ignored at best. And the other way round: a tag filters the services
+        // in a stored configuration, and sent with ad-hoc `urls` it matches
+        // none of them, so apprise-api answers 424 and delivers nothing. A tag
+        // left over after switching to stateless mode must not break delivery.
+        ...(key ? (tag ? { tag } : {}) : (urls ? { urls } : {})),
       }, { timeout: 10000 });
     });
   }

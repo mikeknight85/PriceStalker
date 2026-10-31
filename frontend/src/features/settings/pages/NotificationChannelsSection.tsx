@@ -376,7 +376,7 @@ export default function NotificationChannelsSection() {
           <div className="form-group">
             <label htmlFor="apprise-tag">Tag</label>
             <input id="apprise-tag" type="text" className="form-control" value={draftSettings.apprise_tag} onChange={e => handleUpdateField('apprise_tag', e.target.value)} placeholder="Optional, e.g. deals" />
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Routes the alert to the services carrying this tag within a config.</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Routes the alert to the services carrying this tag within a stored config. Ignored in stateless mode.</span>
           </div>
           <div className="form-group">
             <label>Message Template</label>
