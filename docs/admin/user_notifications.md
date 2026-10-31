@@ -42,8 +42,12 @@ You can configure and test your notification channels under **User Settings → 
 ### Custom Webhook
 For integrations with Home Assistant, Apprise, n8n, Zapier, or custom APIs, select **Custom Webhook** in Settings → Notifications:
 * **URL**: The endpoint of the receiver.
-* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default.
-* **Body Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
+* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default; a `Content-Type` of your own replaces it. If the headers are not a JSON object, nothing is sent and the failure is logged, rather than sending without them.
+* **Payload Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
+  * Write the template as JSON and keep **every** variable inside quotes: `{"title": "{{product_name}}"}`. Each value is escaped for you, so a product named `Monitor 27" 4K` arrives intact. Do not leave a variable bare, even a numeric one such as `{{current_price}}`: it reads `unavailable` when there is no price, which is not valid JSON.
+  * A variable's value is inserted as text and never expanded again, so a product name that contains `{{reason}}` stays as written.
+  * If the template is not valid JSON, nothing is sent and the failure is logged. The settings page flags this as you type and will not save it.
+  * **Plain text**: to send something other than JSON, set a `Content-Type` header that does not mention JSON, e.g. `{"Content-Type": "text/plain"}`. The template is then sent as written, with no escaping and no requirement to be JSON.
 
 The request is always a `POST`. (v1 had a configurable method; v2 does not.)
 

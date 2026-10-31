@@ -205,6 +205,116 @@ describe('the webhook payload is machine-readable', () => {
   });
 });
 
+describe('the webhook payload template (issue #268)', () => {
+  const template = '{"title": "{{product_name}}", "body": "Now {{price}}"}';
+
+  it('sends valid JSON for a name containing quotes, backslashes and newlines', async () => {
+    const productName = 'Monitor 27" 4K \\ Pro\nLine two';
+    const ok = await new WebhookProvider('https://hook.example', null, template)
+      .send({ ...base, productName, newPrice: 19.99, currency: 'USD' });
+    expect(ok).toBe(true);
+    expect(post.mock.calls[0][1]).toEqual({ title: productName, body: 'Now $19.99' });
+  });
+
+  it('inserts $ patterns as text rather than expanding them', async () => {
+    await new WebhookProvider('https://hook.example', null, template)
+      .send({ ...base, productName: 'Deal $& $1 $$' });
+    expect(post.mock.calls[0][1]).toMatchObject({ title: 'Deal $& $1 $$' });
+  });
+
+  it('keeps a \\n the template wrote inside a JSON string', async () => {
+    await new WebhookProvider('https://hook.example', null, '{"text": "{{product_name}}\\n{{product_url}}"}')
+      .send(base);
+    expect(post.mock.calls[0][1]).toMatchObject({ text: `${base.productName}\n${base.productUrl}` });
+  });
+
+  it('does not send anything when the template itself is not JSON', async () => {
+    const ok = await new WebhookProvider('https://hook.example', null, '{"title": {{product_name}}')
+      .send(base);
+    expect(ok).toBe(false);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('leaves plain-text providers unescaped, with their \\n rewrite', async () => {
+    await new NtfyProvider('topic', null, null, null, '{{product_name}}\\n{{product_url}}')
+      .send({ ...base, productName: 'Monitor 27" $& 4K' });
+    expect(post.mock.calls[0][1]).toBe(`Monitor 27" $& 4K\n${base.productUrl}`);
+  });
+
+  it('does not expand a variable named inside another variable’s value', async () => {
+    // Substituting one variable at a time ran later patterns over text an
+    // earlier value had inserted, so scraped retailer text could pull the
+    // reason (or any other variable) into a product name.
+    const productName = 'Foo {{price}} / {{reason}}';
+    const withReason = { ...base, productName, newPrice: 19.99, currency: 'USD', reason: 'SECRET-REASON' };
+    await new WebhookProvider('https://hook.example', null, template).send(withReason);
+    expect(post.mock.calls[0][1]).toMatchObject({ title: productName });
+    await new NtfyProvider('topic', null, null, null, '{{product_name}}').send(withReason);
+    expect(post.mock.calls[1][1]).toBe(productName);
+  });
+
+  it('leaves a backslash-n inside a value alone in plain text', async () => {
+    // The \\n rewrite used to run over the finished message, turning a value
+    // such as C:\new into C: plus a line break.
+    await new NtfyProvider('topic', null, null, null, '{{product_name}}\\n{{product_url}}')
+      .send({ ...base, productName: 'C:\\new' });
+    expect(post.mock.calls[0][1]).toBe(`C:\\new\n${base.productUrl}`);
+  });
+
+  describe('headers', () => {
+    const send = (headers: string) => new WebhookProvider('https://hook.example', headers).send(base);
+
+    it('sends the user’s headers alongside the JSON content type', async () => {
+      await send('{"Authorization": "Bearer abc"}');
+      expect(post.mock.calls[0][2]?.headers).toEqual({ 'Content-Type': 'application/json', Authorization: 'Bearer abc' });
+    });
+
+    it('lets a differently-cased content-type replace the default rather than sit beside it', async () => {
+      await send('{"content-type": "application/vnd.api+json"}');
+      expect(post.mock.calls[0][2]?.headers).toEqual({ 'content-type': 'application/vnd.api+json' });
+    });
+
+    it('does not send when the headers are not valid JSON', async () => {
+      // Sending anyway dropped the user's Authorization header and the
+      // receiver answered 401 with nothing pointing back at the field.
+      expect(await send('{"Authorization": Bearer abc')).toBe(false);
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it.each(['[1, 2]', '"x"', 'null', '42'])('does not send when the headers are %s rather than an object', async (headers) => {
+      expect(await send(headers)).toBe(false);
+      expect(post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('plain-text bodies', () => {
+    const plain = '{"Content-Type": "text/plain"}';
+
+    it('sends the template as written when the Content-Type is not JSON', async () => {
+      // JSON escaping would turn the quote in the name into \\" in a text body.
+      const ok = await new WebhookProvider('https://hook.example', plain, 'Now {{product_name}}\\n{{price}}')
+        .send({ ...base, productName: 'Monitor 27" 4K', newPrice: 19.99, currency: 'USD' });
+      expect(ok).toBe(true);
+      expect(post.mock.calls[0][1]).toBe('Now Monitor 27" 4K\n$19.99');
+      expect(post.mock.calls[0][2]?.headers).toEqual({ 'Content-Type': 'text/plain' });
+    });
+
+    it('does not require the text to be JSON', async () => {
+      expect(await new WebhookProvider('https://hook.example', plain, '{"title": {{product_name}}').send(base)).toBe(true);
+      expect(post).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(['application/json; charset=utf-8', 'application/vnd.api+json', 'APPLICATION/JSON'])(
+      'still reads the template as JSON for %s',
+      async (contentType) => {
+        await new WebhookProvider('https://hook.example', JSON.stringify({ 'Content-Type': contentType }), template)
+          .send({ ...base, productName: 'Monitor 27" 4K' });
+        expect(post.mock.calls[0][1]).toMatchObject({ title: 'Monitor 27" 4K' });
+      }
+    );
+  });
+});
+
 describe('formatMoney', () => {
   it('uses a symbol where one is recognised', () => {
     expect(formatMoney(19.9, 'EUR')).toBe('€19.90');
