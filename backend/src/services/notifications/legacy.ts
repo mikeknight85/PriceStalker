@@ -5,6 +5,7 @@ import { TelegramProvider } from './providers/telegram';
 import { PushoverProvider } from './providers/pushover';
 import { NtfyProvider } from './providers/ntfy';
 import { GotifyProvider } from './providers/gotify';
+import { AppriseProvider } from './providers/apprise';
 import { WebhookProvider } from './providers/webhook';
 
 /**
@@ -51,6 +52,14 @@ export async function sendGotifyNotification(
   serverUrl: string, appToken: string, payload: NotificationPayload, template?: string | null
 ): Promise<boolean> {
   const provider = new GotifyProvider(serverUrl, appToken, template);
+  return provider.send(payload);
+}
+
+export async function sendAppriseNotification(
+  serverUrl: string, payload: NotificationPayload, configKey?: string | null,
+  urls?: string | null, tag?: string | null, template?: string | null
+): Promise<boolean> {
+  const provider = new AppriseProvider(serverUrl, configKey, urls, tag, template);
   return provider.send(payload);
 }
 

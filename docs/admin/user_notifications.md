@@ -32,6 +32,26 @@ You can configure and test your notification channels under **User Settings → 
 2. Create an application in Gotify to retrieve an App Token.
 3. Enter your Gotify server URL and the App Token in Settings → Notifications; click **Test Connection** to verify before saving.
 
+### Apprise
+[Apprise](https://github.com/caronc/apprise) reaches over 100 services through one integration. PriceStalker talks to an [apprise-api](https://github.com/caronc/apprise-api) server, so deploy that first (for example the `caronc/apprise` container).
+
+In **Settings → Notifications → Apprise**:
+* **Server URL**: The apprise-api base URL, e.g. `http://apprise:8000`.
+* **Config Key**: Optional. Names a configuration stored on the apprise-api server; alerts are posted to `/notify/<key>`. Leave empty for stateless mode.
+* **Apprise URLs**: Stateless mode only, used when there is no config key. One or more Apprise service URLs such as `ntfys://topic`, separated by commas or spaces. These usually embed credentials, so the field is masked like the other secret URLs.
+* **Tag**: Optional. Routes the alert to the services carrying this tag within a stored configuration.
+* **Message Template**: Optional. Leave blank for the same event-aware wording the ntfy and Telegram channels use, with the product link appended. The request is JSON-encoded for you, so no escaping is needed.
+
+The channel is active once it has a server URL and either a config key or Apprise URLs. Click **Send Test Notification** after saving to verify.
+
+Each alert is sent with a title naming the event and an Apprise `type` that lets the receiving service style it:
+
+| Event | Apprise `type` |
+|---|---|
+| `price_drop`, `target_price`, `back_in_stock` | `success` |
+| `product_restored`, `price_announced` | `info` |
+| `not_available` | `warning` |
+
 ### Email (SMTP)
 1. In **Settings → Notifications**, enable **Email Notifications**.
 2. Enter your **SMTP Server Host** (e.g. `smtp.example.com`), **Port** (e.g. `587` or `465`), and SMTP username/password if authentication is required.

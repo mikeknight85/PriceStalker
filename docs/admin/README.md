@@ -34,7 +34,7 @@ This portal contains detailed guides for administrators managing retailers, cust
   A complete list and reference of the secure HTTP API endpoints used to manage PriceStalker.
 
 * **[User Notifications Guide](user_notifications.md)**
-  How to configure Telegram, Discord, Pushover, Email, Gotify, and Webhook notification channels and customized price alerts.
+  How to configure Telegram, Discord, Pushover, Email, Gotify, Apprise, and Webhook notification channels and customized price alerts.
 
 
 
