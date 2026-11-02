@@ -5,45 +5,8 @@ import { errorMessage } from '../types.js';
 import { parseUserAgent, buildUserAgentMetadata, legacyPlatformFor } from '../utils/userAgent.js';
 import { DEFAULT_SCRAPER_USER_AGENT } from '../core/SessionManager.js';
 import { buildChallengePattern, looksLikeChallenge } from '../utils/challenge.js';
-
-/** Total scrape budget when the backend sends no `timeout`. */
-const DEFAULT_TOTAL_BUDGET_MS = 45000;
-
-/**
- * Share of the total budget `page.goto` may consume.
- *
- * `options.timeout` used to go straight to `page.goto`, leaving everything
- * after navigation -- human-like actions, the hydration delay, the challenge
- * auto-resolve loop, the screenshot -- outside any deadline at all. The
- * backend sized its own request timeout as `timeout + delay + 10s`, which
- * covered the delay once and nothing else, so a navigation that *succeeded*
- * late in the window was then aborted by the backend before the scrape could
- * return: losing a scrape that worked, which is the exact failure this work set
- * out to prevent.
- *
- * Splitting the budget here rather than widening the backend's slack keeps one
- * number meaningful end to end: `timeout` is what the whole scrape may take, so
- * the backend can size its request timeout against it and be right.
- *
- * 60/40 leaves 24s of the 60s default for the post-navigation phase, which
- * covers a 3s hydration delay plus two 8s auto-resolve rounds with their
- * synthetic input and still has room for the screenshot.
- */
-const NAVIGATION_BUDGET_SHARE = 0.6;
-
-/** Navigation never gets less than this, however small the total budget. */
-const MIN_NAVIGATION_BUDGET_MS = 10000;
-
-const DEFAULT_INTERSTITIAL_WAIT_MS = 8000;
-const DEFAULT_INTERSTITIAL_RETRIES = 2;
-
-/** A positive finite integer, or the fallback. Rejects 0, negatives and NaN. */
-const positiveIntOr = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
-
-/** A non-negative finite integer, or the fallback. 0 is a meaningful value. */
-const nonNegativeIntOr = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+import { allocateScrapeBudget, createBudgetClock, CHALLENGE_POLL_INTERVAL_MS } from '../utils/budget.js';
+import { waitForChallengeToClear } from '../utils/challengeWait.js';
 
 export class ScraperService {
   /**
@@ -138,17 +101,18 @@ export class ScraperService {
 
       if (abortSignal?.aborted) return null;
 
-      // `options.timeout` is the budget for the *whole* scrape, split between
-      // navigation and everything after it. See NAVIGATION_BUDGET_SHARE.
-      const totalBudgetMs = positiveIntOr(options.timeout, DEFAULT_TOTAL_BUDGET_MS);
-      const navigationBudgetMs = Math.max(
-        MIN_NAVIGATION_BUDGET_MS,
-        Math.round(totalBudgetMs * NAVIGATION_BUDGET_SHARE)
-      );
-      const deadline = Date.now() + totalBudgetMs;
-      const remainingMs = () => deadline - Date.now();
+      // `options.timeout` is the budget for the *whole* scrape, divided between
+      // navigation, the phases after it and the challenge auto-resolve loop's
+      // reserved slice. See `utils/budget.ts` for why the loop gets a reserve.
+      const budget = allocateScrapeBudget(options);
+      const { totalBudgetMs, navigationBudgetMs, challengeReserveMs } = budget;
+      const { remainingMs, preChallengeRemainingMs } = createBudgetClock(budget);
 
-      log(`Navigating to ${url}... (nav ${navigationBudgetMs}ms of ${totalBudgetMs}ms total)`, 'DEBUG', context);
+      log(
+        `Navigating to ${url}... (nav ${navigationBudgetMs}ms, challenge reserve ${challengeReserveMs}ms, of ${totalBudgetMs}ms total)`,
+        'DEBUG',
+        context
+      );
       await page.goto(url, {
         waitUntil: options.waitUntil || 'domcontentloaded',
         timeout: navigationBudgetMs,
@@ -162,16 +126,19 @@ export class ScraperService {
       if (options.waitForSelector) {
         if (abortSignal?.aborted) return null;
         log(`Waiting for selector: ${options.waitForSelector}`, 'DEBUG', context);
-        // Clamped to what is left of the budget, and never to 0 -- Puppeteer
-        // reads a 0 timeout as "wait forever".
-        const selectorTimeout = Math.max(1, Math.min(10000, remainingMs()));
+        // Clamped to what is left of the budget *minus the challenge reserve*,
+        // and never to 0 -- Puppeteer reads a 0 timeout as "wait forever".
+        // Clamping against `remainingMs()` here is what let a slow navigation
+        // plus a selector wait plus the hydration delay truncate the
+        // auto-resolve loop (issue #256).
+        const selectorTimeout = Math.max(1, Math.min(10000, preChallengeRemainingMs()));
         await page.waitForSelector(options.waitForSelector, { timeout: selectorTimeout });
         await performHumanLikeActions(page, context);
       }
 
       if (options.delay) {
         if (abortSignal?.aborted) return null;
-        const delayMs = Math.max(0, Math.min(options.delay, remainingMs()));
+        const delayMs = Math.max(0, Math.min(options.delay, preChallengeRemainingMs()));
         if (delayMs > 0) {
           log(`Applying delay: ${delayMs}ms (requested ${options.delay}ms)`, 'DEBUG', context);
           await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -183,33 +150,75 @@ export class ScraperService {
 
       // Some challenge interstitials ("Are you a robot?", "Just a moment...",
       // "Pardon our interruption") auto-resolve once their JS fingerprinting
-      // finishes. Give them a couple of chances before returning the wall page.
+      // finishes. Give them a few chances before returning the wall page.
       //
       // Recognition is scoped to the title and a size-gated body, and the
       // vendor sensor scripts are deliberately not matched -- see
       // `utils/challenge.ts` for why a false positive here is expensive even
       // though it fails nothing. The wait and the number of attempts are
       // per-request knobs (issue #235) so a retailer that does pay this cost
-      // can be tuned down instead of carrying a hardcoded 21s tax.
+      // can be tuned down instead of carrying a hardcoded tax.
+      //
+      // Each attempt *polls* rather than sleeping blind, returning the moment
+      // the challenge goes away, and the result records whether it ever did --
+      // the route logs that rather than calling every payload a success
+      // (issues #256, #255).
       const challengePattern = buildChallengePattern(options.challengePatterns);
-      const interstitialRetries = nonNegativeIntOr(options.interstitialRetries, DEFAULT_INTERSTITIAL_RETRIES);
-      const interstitialWaitMs = positiveIntOr(options.interstitialWaitMs, DEFAULT_INTERSTITIAL_WAIT_MS);
+      const { interstitialRetries, interstitialWaitMs } = budget;
+      const probe = {
+        title: () => page?.title() ?? Promise.resolve(''),
+        content: () => page?.content() ?? Promise.resolve(html),
+      };
 
-      for (let attempt = 1; attempt <= interstitialRetries; attempt++) {
-        const title = await page.title().catch(() => '');
-        if (!looksLikeChallenge(title, html, challengePattern)) break;
+      const initialTitle = await page.title().catch(() => '');
+      const challengeDetected = looksLikeChallenge(initialTitle, html, challengePattern);
+      let challengeUnresolved = challengeDetected;
 
+      for (let attempt = 1; challengeUnresolved && attempt <= interstitialRetries; attempt++) {
         const waitMs = Math.min(interstitialWaitMs, remainingMs());
-        if (waitMs <= 0) {
+        if (waitMs < CHALLENGE_POLL_INTERVAL_MS) {
           log(`Challenge interstitial detected but the scrape budget is spent; returning the page as-is`, 'WARN', context);
           break;
         }
 
-        log(`Challenge interstitial detected, waiting ${waitMs}ms for auto-resolve (${attempt}/${interstitialRetries})...`, 'INFO', context);
-        await new Promise(resolve => setTimeout(resolve, waitMs));
-        if (abortSignal?.aborted) return null;
+        log(`Challenge interstitial detected, waiting up to ${waitMs}ms for auto-resolve (${attempt}/${interstitialRetries})...`, 'INFO', context);
+        const outcome = await waitForChallengeToClear(probe, {
+          budgetMs: waitMs,
+          pattern: challengePattern,
+          isAborted: () => abortSignal?.aborted === true,
+        });
+        if (outcome.html !== null) html = outcome.html;
+        if (outcome.aborted) return null;
+
+        if (outcome.cleared) {
+          challengeUnresolved = false;
+          log(`Challenge interstitial cleared after ${outcome.waitedMs}ms (attempt ${attempt}/${interstitialRetries})`, 'INFO', context);
+          break;
+        }
+
+        // A round of synthetic input between waits: the behavioural vendors
+        // score the absence of input, so an idle page can sit on the wall
+        // indefinitely. Skipped when there is no budget left to use it in.
+        if (remainingMs() <= CHALLENGE_POLL_INTERVAL_MS) break;
         await performHumanLikeActions(page, context);
-        html = await page.content();
+        if (abortSignal?.aborted) return null;
+        const retryTitle = await page.title().catch(() => '');
+        // A read across the navigation a resolving challenge performs rejects;
+        // that is not a reason to fail a scrape that has HTML already.
+        const refreshed = await page.content().catch(() => null);
+        if (refreshed !== null) html = refreshed;
+        if (!looksLikeChallenge(retryTitle, html, challengePattern)) {
+          challengeUnresolved = false;
+          log(`Challenge interstitial cleared after synthetic input (attempt ${attempt}/${interstitialRetries})`, 'INFO', context);
+        }
+      }
+
+      if (challengeUnresolved) {
+        const why =
+          interstitialRetries === 0
+            ? 'auto-resolve is disabled for this request'
+            : `unresolved after ${interstitialRetries} attempt(s)`;
+        log(`Challenge interstitial ${why}; returning the wall page (${html.length} bytes)`, 'WARN', context);
       }
 
       let screenshotBase64 = null;
@@ -218,8 +227,8 @@ export class ScraperService {
         log(`Capturing screenshot for ${url}`, 'DEBUG', context);
         screenshotBase64 = await page.screenshot({ encoding: 'base64', fullPage: false });
       }
-      
-      return { html, screenshotBase64 };
+
+      return { html, screenshotBase64, challengeDetected, challengeUnresolved };
 
     } catch (error) {
       if (!abortSignal?.aborted) {

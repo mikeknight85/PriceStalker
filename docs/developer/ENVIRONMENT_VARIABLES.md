@@ -109,7 +109,14 @@ auto-resolve knobs (`interstitialWaitMs`, `interstitialRetries`) arrive per
 request over the scraper's HTTP API, not from the environment. The backend
 sources the first three from the `browser_timeout` and `browser_delay` system
 settings under **Admin -> System**; `browser_timeout` is the budget for the
-*whole* scrape, which the scraper splits across navigation and the
-post-navigation phase. The challenge phrase list is the
-`generic_challenge_phrases` system setting, editable under
+*whole* scrape, which the scraper divides across navigation, the
+post-navigation phase and a reserved slice for the challenge auto-resolve loop
+(`scraper/src/utils/budget.ts`). All three remote call paths send it, so the
+scraper's own 45s fallback is not reachable in a normal install. The challenge
+phrase list is the `generic_challenge_phrases` system setting, editable under
 **Admin -> Extraction Rules**.
+
+Defaults for the auto-resolve loop are three attempts of up to 8s each. Each
+attempt polls the page and returns the moment the challenge clears, so the
+budget is only spent in full on a wall that never resolves -- which the scraper
+then logs as `Unresolved challenge wall returned`, not as a success.

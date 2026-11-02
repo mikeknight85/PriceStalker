@@ -21,7 +21,17 @@ export async function fetchBrowserHtml(
 
   try {
     logger.info(`Browser Scraper | Offloading | ${url}${productId ? ` [PROD-${productId}]` : ''}`, 'Scraper');
-    const options: any = {};
+    // Send the scrape budget the same way `acquisition/remote.ts` and
+    // `acquisition/fallback.ts` do. Issue #256 argued the scraper was falling
+    // back to its undersized 45s default; on those two paths it never was, but
+    // this one did omit `timeout`, which left the scraper budgeting 45s while
+    // `fetchRemoteHtml` sized its request timeout against 60s. Sending it
+    // keeps the two ends of the arithmetic reading the same number.
+    const options: any = {
+      timeout: await settingsCache.getBrowserTimeout(),
+      delay: await settingsCache.getBrowserDelay(),
+      challengePatterns: await settingsCache.getGenericChallengePhrases(),
+    };
     if (userAgent) options.userAgent = userAgent;
     if (productId) options.productId = productId;
     if (proxyServer) {
