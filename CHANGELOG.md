@@ -7,16 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0-beta.2] - 2026-11-02
+
 ### Added
 
 - Native Apprise notification channel. Settings -> Notifications -> Apprise sends alerts through an apprise-api server, either to a stored configuration (config key) or statelessly to a list of Apprise URLs, with an optional tag and message template. Events are sent with an Apprise `type` (`success`, `info` or `warning`), so receiving services can style them. Adds migration 024 (#270).
 
 ### Fixed
 
+- Notification channel credentials are no longer returned by the API.
+  `GET /settings/notifications` used to answer with every channel's bot token,
+  webhook URL, app token, password and header document in plaintext, so they
+  appeared in the response body, browser devtools, HAR exports and anywhere the
+  response was logged or proxied. Each is now returned as `null` with a
+  `has_<field>` flag beside it, the way the auth-config endpoint answers
+  `has_client_secret`. In Settings -> Notifications a configured credential shows
+  as **(set)** with an empty field: leave it empty to keep the stored value, type
+  a new one to replace it, or use **Clear** to remove it. Saving can no longer
+  overwrite a credential with the blank the form was handed. The Apprise config
+  key is covered too, because apprise-api has no authentication of its own and
+  that key also reads the stored configuration back. The test buttons use the
+  saved credentials and are unaffected (#272).
+- The Generic Webhook's Payload Template is no longer reported as broken JSON
+  when the webhook sends plain text. Its headers are a credential and are not
+  returned to the browser, so the page could not tell which format to check the
+  template against -- and because Settings -> Notifications has one Save for
+  every channel, this also blocked saving unrelated channels (#272).
+- The Generic Webhook no longer writes its endpoint URL to the log, and a
+  malformed headers or payload template is reported by name rather than by
+  quoting the text, which could include part of an `Authorization` header or a
+  scraped product name (#272).
+- Browser scraper: a session wedged by an aborted scrape or a CDP protocol error
+  is now retired instead of returned to the warm pool, where the next request
+  for the same proxy and User-Agent inherited it and failed with
+  `Network.enable timed out` until the idle timer expired (#254).
+- Browser scraper: the anti-bot challenge auto-resolve loop now has a reserved
+  slice of the scrape budget that the hydration delay and selector wait cannot
+  spend, polls the page instead of sleeping blind so it returns the moment a
+  challenge clears, and makes three attempts by default instead of two (#256).
+- Browser scraper: a scrape that returns an unresolved challenge wall is logged
+  as such instead of as a success, and the result carries the flag so the backend
+  sees the same thing (#255).
 - Webhook payload templates are now valid JSON for any product name. Values containing `"`, `\` or a newline used to break the JSON, and the broken body was sent anyway; each value is now escaped, and a template that still is not valid JSON is logged and not sent. Template variables containing `$&`, `$1` or `$$` are also inserted as written on every channel instead of being expanded. A variable's value is also never expanded again, so a product name containing `{{reason}}` stays as written. The webhook's headers must be a JSON object, and are no longer dropped silently when they are not. To send plain text, set a non-JSON `Content-Type` header (#268).
 - Restored the Headers and Payload Template fields on the Generic Webhook card in Settings -> Notifications. They were missing after the v2 import, so the template could only be set through the API. The settings page checks both as you type and will not save JSON the backend cannot send (#268).
 - Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.
 - Synchronized documentation across admin, developer, and user guides, corrected migration references, and regenerated product lifecycle diagrams.
+
+### Changed
+
+- Browser scraper: the proxy URL is no longer written to the log with its inline
+  credentials.
 
 ## [2.2.0-beta.1] - 2026-10-11
 
