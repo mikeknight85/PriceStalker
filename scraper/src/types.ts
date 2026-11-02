@@ -50,11 +50,39 @@ export interface BrowserSession {
   userAgent: string | null;
   lastActivity: number;
   userDataDir: string | null;
+  /**
+   * Set when this session must never serve another request (issue #254).
+   *
+   * A scrape that was aborted mid-flight, or that failed with a CDP protocol
+   * error, can leave the browser wedged while `browser.connected` still
+   * reports true. The flag takes the session out of the pool immediately; the
+   * browser itself is closed as soon as its last in-flight page is done, so a
+   * concurrent scrape on the same browser is not pulled out from under.
+   */
+  tainted: boolean;
+  /** Why the session was tainted, for the log line that closes it. */
+  taintReason: string | null;
 }
 
 export interface ScrapeResult {
   html: string;
   screenshotBase64: string | null;
+  /**
+   * A challenge interstitial was recognised after navigation (issue #255).
+   *
+   * False does not mean the page is clean in the backend's sense: this is the
+   * scraper's cheap "is another auto-resolve round worth paying for" test, not
+   * `transport/detection.ts`, which is what decides whether a retailer is
+   * BLOCKED.
+   */
+  challengeDetected: boolean;
+  /**
+   * The HTML in this result still looks like a challenge interstitial, so the
+   * auto-resolve attempts were exhausted and what is being returned is the
+   * wall page rather than the product page (issue #255). Implies
+   * `challengeDetected`.
+   */
+  challengeUnresolved: boolean;
 }
 
 export type ScraperPage = Page;

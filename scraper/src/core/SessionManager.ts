@@ -8,6 +8,8 @@ import { log } from '../utils/logger.js';
 import type { Browser } from 'puppeteer';
 import type { BrowserSession, ScrapeOptions } from '../types.js';
 import { errorMessage } from '../types.js';
+import { isProcessGone, isSessionResponsive, type ProbeProcess } from './health.js';
+import { findReusableSession } from './pool.js';
 
 interface PuppeteerExtra {
   use(plugin: unknown): void;
@@ -187,6 +189,94 @@ export async function cleanupStaleProfiles() {
 }
 
 /**
+ * Takes a session out of service immediately (issue #254).
+ *
+ * The browser is not closed here: another page may still be in flight on it,
+ * and a scrape that is still running must not have its browser pulled out
+ * from under it. The flag is what keeps the session out of
+ * `getBrowserSession`, and whichever of the request `finally` block or the
+ * watchdog sees `activePages === 0` first closes it.
+ */
+export function markSessionTainted(session: BrowserSession, reason: string): void {
+  if (session.tainted) return;
+  session.tainted = true;
+  session.taintReason = reason;
+  log(`Session ${session.id} marked unusable: ${reason}`, 'WARN');
+}
+
+// `browser.close()` sends `Browser.close` over the DevTools connection and
+// waits for the answer -- and on the wedged browsers of issue #254 there is no
+// answer, so it blocks for Puppeteer's full 180s `protocolTimeout` before
+// falling back to killing the process. closeSession() is awaited from the
+// request path, so it is capped here and the process killed directly instead.
+const BROWSER_CLOSE_TIMEOUT_MS = 10_000;
+
+/** The part of `ChildProcess` the kill path needs. */
+interface KillableProcess extends ProbeProcess {
+  pid?: number;
+  kill?(signal: NodeJS.Signals): boolean;
+}
+
+/**
+ * SIGKILLs a browser process that will not close. Never throws: the process
+ * may already be gone, or may never have had a pid.
+ */
+function killBrowserProcess(proc: KillableProcess | null, label: string): void {
+  if (!proc || isProcessGone(proc)) return;
+
+  // Chromium is spawned detached, so its helpers share a process group; the
+  // negative pid takes the whole tree rather than orphaning the children onto
+  // PID 1 for tini to reap one at a time.
+  if (typeof proc.pid === 'number') {
+    try {
+      process.kill(-proc.pid, 'SIGKILL');
+      return;
+    } catch {
+      // No process group (or already reaped) -- fall through to the process.
+    }
+  }
+  try {
+    proc.kill?.('SIGKILL');
+  } catch (error) {
+    log(`Could not kill browser process for ${label}: ${errorMessage(error)}`, 'DEBUG');
+  }
+}
+
+/**
+ * Closes the browser, giving up on a graceful close after
+ * BROWSER_CLOSE_TIMEOUT_MS and killing the process instead.
+ */
+async function closeBrowserBounded(session: BrowserSession): Promise<void> {
+  const browser = session.browser;
+  if (!browser || !browser.connected) return;
+
+  let timer: NodeJS.Timeout | undefined;
+  const expired = new Promise<'timeout'>(resolve => {
+    timer = setTimeout(() => resolve('timeout'), BROWSER_CLOSE_TIMEOUT_MS);
+    timer.unref();
+  });
+
+  try {
+    // The close promise is kept handled so that a kill below cannot turn it
+    // into an unhandled rejection once it finally settles.
+    const closed = browser.close().then(
+      () => 'closed' as const,
+      (error: unknown) => {
+        log(`Browser close for ${session.id} rejected: ${errorMessage(error)}`, 'DEBUG');
+        return 'closed' as const;
+      }
+    );
+    const outcome = await Promise.race([closed, expired]);
+    if (outcome === 'timeout') {
+      log(`Browser ${session.id} did not close within ${BROWSER_CLOSE_TIMEOUT_MS}ms; killing the process`, 'WARN');
+      killBrowserProcess(browser.process(), session.id);
+    }
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/**
  * Forcefully closes a browser session and removes it from the pool
  */
 export async function closeSession(session: BrowserSession) {
@@ -200,12 +290,15 @@ export async function closeSession(session: BrowserSession) {
 
   try {
     log(`Closing browser session ${session.id} (Total Scrapes: ${session.totalScrapes})`, 'INFO');
-    if (session.browser && session.browser.connected) {
-      await session.browser.close();
-    }
+    await closeBrowserBounded(session);
   } catch (error) {
     log(`Error closing browser ${session.id}: ${errorMessage(error)}`, 'ERROR');
   }
+  // Unchanged, and load-bearing: removeProfileDir waits for the Chromium
+  // process to really exit before deleting its profile, retries the
+  // ENOTEMPTY/EBUSY failures a dying renderer produces, and is memoised per
+  // session so this call and the 'disconnected' handler share one removal
+  // (issue #208). A killed browser reaches it the same way a closed one does.
   await removeProfileDir(session);
 }
 
@@ -216,26 +309,60 @@ export async function shutdownAllSessions() {
   await Promise.all([...sessions].map(session => closeSession(session)));
 }
 
+export const WATCHDOG_INTERVAL_MS = 60 * 1000;
+export const STUCK_SESSION_TIMEOUT_MS = 10 * 60 * 1000;
+
 /**
- * Watchdog to clean up hung or disconnected browsers
+ * One watchdog pass. Exported so it can be driven directly in tests.
+ *
+ * The liveness probe is the point of this (issue #254): a wedged browser
+ * reports `connected === true` forever, so the `!connected` check above it
+ * never fires and the session used to sit in the pool until its idle timer
+ * expired, failing every request routed to it in the meantime. Only idle
+ * sessions are probed -- a session with pages in flight is covered by the
+ * stuck-session timeout below, and probing one that is mid-render would risk
+ * discarding a browser that is merely busy.
+ */
+export async function sweepSessions(now: number = Date.now()): Promise<void> {
+  for (const session of [...sessions]) {
+    if (session.browser && !session.browser.connected) {
+      log(`Removing dead session ${session.id}`, 'WARN');
+      await closeSession(session);
+      continue;
+    }
+
+    if (session.activePages > 0 && (now - session.lastActivity) > STUCK_SESSION_TIMEOUT_MS) {
+      log(`Forcefully killing stuck session ${session.id} (${session.activePages} pages hung)`, 'ERROR');
+      await closeSession(session);
+      continue;
+    }
+
+    if (session.activePages > 0) continue;
+
+    if (session.tainted) {
+      log(`Reaping session ${session.id}: ${session.taintReason || 'marked unusable'}`, 'WARN');
+      await closeSession(session);
+      continue;
+    }
+
+    if (session.browser && !(await isSessionResponsive(session))) {
+      markSessionTainted(session, 'CDP liveness probe failed');
+      await closeSession(session);
+    }
+  }
+}
+
+/**
+ * Watchdog to clean up hung, disconnected or wedged browsers
  */
 export function startWatchdog() {
-  setInterval(() => {
-    const now = Date.now();
-    for (const session of [...sessions]) {
-      if (session.browser && !session.browser.connected) {
-        log(`Removing dead session ${session.id}`, 'WARN');
-        closeSession(session);
-        continue;
-      }
-
-      const stuckTimeout = 10 * 60 * 1000;
-      if (session.activePages > 0 && (now - session.lastActivity) > stuckTimeout) {
-        log(`Forcefully killing stuck session ${session.id} (${session.activePages} pages hung)`, 'ERROR');
-        closeSession(session);
-      }
-    }
-  }, 5 * 60 * 1000);
+  const timer = setInterval(() => {
+    void sweepSessions().catch((error: unknown) => {
+      log(`Watchdog sweep failed: ${errorMessage(error)}`, 'WARN');
+    });
+  }, WATCHDOG_INTERVAL_MS);
+  timer.unref();
+  return timer;
 }
 
 /**
@@ -256,7 +383,9 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
     proxyUrl,
     userAgent,
     lastActivity: Date.now(),
-    userDataDir
+    userDataDir,
+    tainted: false,
+    taintReason: null
   };
 
   const args = [
@@ -308,6 +437,29 @@ export async function createNewSession(proxyUrl: string | null = null, userAgent
 }
 
 /**
+ * Hands a pooled session to a request: cancels its idle timer, counts the page
+ * and waits for a launch that is still in flight. Returns null when that
+ * launch failed, exactly as the inline version it replaced did.
+ */
+async function claimSession(session: BrowserSession): Promise<BrowserSession | null> {
+  if (session.idleTimer) {
+    clearTimeout(session.idleTimer);
+    session.idleTimer = null;
+  }
+  session.activePages++;
+
+  if (session.launchPromise) {
+    try {
+      await session.launchPromise;
+    } catch {
+      session.activePages--;
+      return null;
+    }
+  }
+  return session;
+}
+
+/**
  * Finds or creates an available browser session.
  */
 export async function getBrowserSession(options: ScrapeOptions = {}): Promise<BrowserSession | null> {
@@ -320,59 +472,44 @@ export async function getBrowserSession(options: ScrapeOptions = {}): Promise<Br
 
   // 1. Direct Targeting by Session ID (Debug/Control)
   if (targetId) {
-    const target = sessions.find(s => s.id === targetId && (!s.browser || s.browser.connected));
-    if (target) {
-      if (target.idleTimer) {
-        clearTimeout(target.idleTimer);
-        target.idleTimer = null;
-      }
-      target.activePages++;
-      if (target.launchPromise) {
-        try {
-          await target.launchPromise;
-        } catch (e) {
-          target.activePages--;
-          return null;
-        }
-      }
-      return target;
+    const target = sessions.find(s => s.id === targetId && !s.tainted && (!s.browser || s.browser.connected));
+    if (target && (!target.browser || (await isSessionResponsive(target)))) {
+      return claimSession(target);
     }
-    log(`Targeted session ${targetId} not found or disconnected`, 'WARN');
+    if (target) {
+      markSessionTainted(target, 'CDP liveness probe failed');
+      if (target.activePages === 0) await closeSession(target);
+    }
+    log(`Targeted session ${targetId} not found, disconnected or unresponsive`, 'WARN');
   }
 
   // 2. Find existing matching session (Group by Proxy + UA)
+  //
+  // Every candidate answers a CDP round trip before it is handed over: a
+  // browser wedged by an aborted scrape keeps `connected === true` and used to
+  // be reused until its idle timer expired, failing every `browser.newPage()`
+  // with `Network.enable timed out` (issue #254).
   if (!forceNew) {
-    let session = sessions.find(s => 
-      s.proxyUrl === reqProxy && 
-      s.userAgent === reqUA &&
-      s.activePages < MAX_PAGES_PER_BROWSER &&
-      s.totalScrapes < MAX_SCRAPES_PER_BROWSER &&
-      (!s.browser || s.browser.connected)
-    );
+    const session = await findReusableSession({
+      pool: sessions,
+      match: { proxyUrl: reqProxy, userAgent: reqUA },
+      limits: { maxPagesPerBrowser: MAX_PAGES_PER_BROWSER, maxScrapesPerBrowser: MAX_SCRAPES_PER_BROWSER },
+      probe: candidate => isSessionResponsive(candidate),
+      discard: async candidate => {
+        markSessionTainted(candidate, 'CDP liveness probe failed');
+        if (candidate.activePages === 0) await closeSession(candidate);
+      },
+    });
 
-    if (session) {
-      if (session.idleTimer) {
-        clearTimeout(session.idleTimer);
-        session.idleTimer = null;
-      }
-      session.activePages++;
-      
-      if (session.launchPromise) {
-        try {
-          await session.launchPromise;
-        } catch (e) {
-          session.activePages--;
-          return null;
-        }
-      }
-      return session;
-    }
+    if (session) return claimSession(session);
   }
 
   // 3. Handle Pool Capacity & Recycling
   if (sessions.length >= MAX_BROWSERS) {
-    // Look for an idle session to recycle
-    const idleSession = sessions.find(s => s.activePages === 0);
+    // Look for an idle session to recycle, preferring one already marked
+    // unusable over a healthy one (issue #254).
+    const idleSession =
+      sessions.find(s => s.activePages === 0 && s.tainted) ?? sessions.find(s => s.activePages === 0);
     if (idleSession) {
       log(`Recycling idle session ${idleSession.id} to accommodate new request (ForceNew: ${forceNew})`, 'INFO');
       await closeSession(idleSession);
