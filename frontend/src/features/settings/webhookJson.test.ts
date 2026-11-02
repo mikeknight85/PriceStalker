@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { webhookHeadersProblem, webhookSendsPlainText, webhookTemplateProblem } from './webhookJson';
+import {
+  webhookHeadersProblem,
+  webhookSendsPlainText,
+  webhookTemplateFormat,
+  webhookTemplateProblem,
+} from './webhookJson';
 
 describe('webhookHeadersProblem', () => {
   it('accepts empty headers and a JSON object', () => {
@@ -63,5 +68,60 @@ describe('webhookTemplateProblem', () => {
 
   it('does not judge a plain-text template', () => {
     expect(webhookTemplateProblem('Now {{product_name}} at {{price}}', true)).toBeNull();
+  });
+});
+
+describe('webhookTemplateFormat (issue #272 regression)', () => {
+  /*
+   * The headers are a credential and are not returned by the API, so on a
+   * freshly loaded page the Headers field is empty even for a configured
+   * webhook. Reading the format off that empty draft said "JSON", a working
+   * text/plain template was reported as broken, and the section's single Save
+   * then refused every channel. The stored answer has to come from the server.
+   */
+
+  it('follows the draft whenever the user has typed headers', () => {
+    expect(webhookTemplateFormat('{"Content-Type": "text/plain"}', false)).toBe('plain-text');
+    expect(webhookTemplateFormat('{"Content-Type": "application/json"}', true)).toBe('json');
+    // Still the draft's answer even when the server has not sent a hint.
+    expect(webhookTemplateFormat('{"Content-Type": "text/plain"}', undefined)).toBe('plain-text');
+  });
+
+  it('falls back to the stored hint when the draft is empty', () => {
+    expect(webhookTemplateFormat('', true)).toBe('plain-text');
+    expect(webhookTemplateFormat('   ', true)).toBe('plain-text');
+    expect(webhookTemplateFormat('', false)).toBe('json');
+  });
+
+  it('is unknown when no hint arrived, rather than guessing JSON', () => {
+    // A stale backend, a misconfigured proxy, or the e2e suite's `{}`.
+    expect(webhookTemplateFormat('', undefined)).toBe('unknown');
+  });
+
+  it('does not report a stored plain-text template as broken after a page load', () => {
+    const template = 'Now {{price}} at {{store}}: {{product_url}}';
+    // The field the user sees on load: headers empty, template returned in full.
+    expect(webhookTemplateProblem(template, webhookTemplateFormat('', true))).toBeNull();
+    // And not when the hint is missing either.
+    expect(webhookTemplateProblem(template, webhookTemplateFormat('', undefined))).toBeNull();
+    // A JSON webhook is still checked, which is the point of the feature.
+    expect(webhookTemplateProblem(template, webhookTemplateFormat('', false))).not.toBeNull();
+  });
+
+  it('still takes a plain boolean, as the pre-hint callers passed', () => {
+    expect(webhookTemplateProblem('not json', true)).toBeNull();
+    expect(webhookTemplateProblem('not json', false)).not.toBeNull();
+  });
+
+  it('agrees with webhookSendsPlainText on a draft it can read', () => {
+    for (const headers of [
+      '{"Content-Type": "text/plain"}',
+      '{"content-type": "application/x-www-form-urlencoded"}',
+      '{"Content-Type": "application/vnd.api+json"}',
+      '{"Authorization": "Bearer abc"}',
+    ]) {
+      const expected = webhookSendsPlainText(headers) ? 'plain-text' : 'json';
+      expect(webhookTemplateFormat(headers, undefined)).toBe(expected);
+    }
   });
 });

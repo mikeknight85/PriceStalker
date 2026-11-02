@@ -224,6 +224,36 @@ export interface NotificationSettings {
   email_to: string | null;
   email_subject_template: string | null;
   email_body_template: string | null;
+
+  /*
+   * Channel credentials are write-only (issue #272). The fields above are
+   * returned as null whatever is stored; these flags say whether a credential
+   * is there, the same way the auth-config endpoint answers
+   * `has_client_secret`.
+   *
+   * To change one, PUT the new value. To keep it, omit the field or send `''`.
+   * To remove it, send `null`. See `features/settings/notificationSecrets.ts`.
+   */
+  has_telegram_bot_token: boolean;
+  has_discord_webhook_url: boolean;
+  has_pushover_user_key: boolean;
+  has_pushover_app_token: boolean;
+  has_ntfy_password: boolean;
+  has_gotify_app_token: boolean;
+  has_apprise_config_key: boolean;
+  has_apprise_urls: boolean;
+  has_webhook_url: boolean;
+  has_webhook_headers: boolean;
+
+  /*
+   * Derived from the withheld `webhook_headers`: whether they set a non-JSON
+   * Content-Type, so the payload template is plain text rather than JSON.
+   *
+   * The media type is not a credential and the settings page needs it to check
+   * a template before saving (#268). Computed with the same rule the provider
+   * sends by, so the two cannot disagree.
+   */
+  webhook_sends_plain_text: boolean;
 }
 
 export interface RetailerConfig {

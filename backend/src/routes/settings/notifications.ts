@@ -1,11 +1,25 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
+import { NotificationSettings } from '../../models/types';
 import { userService } from '../../services/domain/user';
+import {
+  pickNotificationUpdates,
+  toNotificationSettingsView,
+} from '../../services/domain/user/notification-credentials';
 import { logger } from '../../utils/system/logger';
 
 const router = Router();
 
-const NOTIFICATION_FIELDS = [
+/**
+ * The fields this endpoint exposes.
+ *
+ * Credential-bearing fields are listed here as well, but they are write-only:
+ * `toNotificationSettingsView` replaces each one with `has_<field>` on the way
+ * out, and `resolveCredentialUpdates` keeps an untouched one from being
+ * overwritten on the way in. See `services/domain/user/notification-credentials.ts`
+ * for the contract and why it is shaped this way (issue #272).
+ */
+export const NOTIFICATION_FIELDS: readonly (keyof NotificationSettings)[] = [
   'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled', 'telegram_message_template',
   'discord_webhook_url', 'discord_enabled', 'discord_message_template',
   'pushover_user_key', 'pushover_app_token', 'pushover_enabled', 'pushover_message_template',
@@ -26,10 +40,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const response: any = {};
-    NOTIFICATION_FIELDS.forEach(field => {
-      response[field] = (settings as any)[field] ?? null;
-    });
+    const response = toNotificationSettingsView(settings, NOTIFICATION_FIELDS);
 
     // Overrides for defaults
     if (response.telegram_enabled === null) response.telegram_enabled = true;
@@ -50,31 +61,16 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.put('/', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
-    const updates: any = {};
-    
-    NOTIFICATION_FIELDS.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    });
+    const updates = pickNotificationUpdates(req.body, NOTIFICATION_FIELDS);
 
-    const oldSettings = await userService.getNotificationSettings(userId);
-    const settings = await userService.updateNotificationSettings(userId, updates);
-
-    if (!settings) {
+    if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No settings to update' });
     }
 
-    // Log what changed
-    const changes: string[] = [];
-    if (oldSettings) {
-      Object.keys(updates).forEach(key => {
-        const newVal = updates[key];
-        const oldVal = (oldSettings as any)[key];
-        if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-          changes.push(key);
-        }
-      });
+    const { settings, changes } = await userService.updateNotificationSettings(userId, updates);
+
+    if (!settings) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
     if (changes.length > 0) {
@@ -84,7 +80,7 @@ router.put('/', async (req: AuthRequest, res: Response) => {
     }
 
     res.json({
-      ...settings,
+      ...toNotificationSettingsView(settings, NOTIFICATION_FIELDS),
       message: 'Notification settings updated successfully',
     });
   } catch (error: any) {

@@ -2,19 +2,7 @@ import axios from 'axios';
 import { NotificationProvider, NotificationPayload } from '../types';
 import { logger } from '../../../utils/system/logger';
 import { interpolateTemplate } from '../utils';
-
-/**
- * The user's headers, which must be a JSON object of names to values. An array
- * or a bare string used to be accepted and spread into the headers as garbage
- * (`{"0": ..., "1": ...}`).
- */
-function parseHeaders(headersStr: string): Record<string, string> {
-  const parsed: unknown = JSON.parse(headersStr);
-  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Headers must be a JSON object');
-  }
-  return Object.fromEntries(Object.entries(parsed).map(([name, value]) => [name, String(value)]));
-}
+import { resolveWebhookHeaders } from '../webhook-headers';
 
 export class WebhookProvider implements NotificationProvider {
   constructor(
@@ -25,35 +13,29 @@ export class WebhookProvider implements NotificationProvider {
 
   async send(payload: NotificationPayload): Promise<boolean> {
     try {
-      let headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (this.headersStr) {
-        let custom: Record<string, string>;
-        try {
-          custom = parseHeaders(this.headersStr);
-        } catch (e) {
-          // Sending anyway meant the request went out without the user's
-          // Authorization header and the receiver answered 401, with nothing
-          // pointing back at the headers field.
-          logger.error('Notify | Webhook | Headers are not a valid JSON object, not sending', 'Notifications', e);
-          return false;
-        }
-        // Header names are case-insensitive, so a user's `content-type` has to
-        // replace ours rather than sit beside it.
-        const overridden = new Set(Object.keys(custom).map(name => name.toLowerCase()));
-        headers = {
-          ...Object.fromEntries(Object.entries(headers).filter(([name]) => !overridden.has(name.toLowerCase()))),
-          ...custom,
-        };
-      }
-
       // The Content-Type decides how a payload template is read. JSON (the
       // default) is parsed and sent as an object; anything else is plain text
-      // the user chose to send, so it is sent as written.
-      const contentType = Object.entries(headers).find(([name]) => name.toLowerCase() === 'content-type')?.[1];
-      // Only the media type counts: a parameter such as `profile="json"` on a
-      // text/plain header must not switch JSON parsing on.
-      const mediaType = (contentType ?? '').split(';')[0].trim().toLowerCase();
-      const sendsJson = !mediaType || mediaType.includes('json');
+      // the user chose to send, so it is sent as written. The same rule answers
+      // the settings endpoint, which is why it lives in `webhook-headers.ts`.
+      let headers: Record<string, string>;
+      let sendsJson: boolean;
+      try {
+        ({ headers, sendsJson } = resolveWebhookHeaders(this.headersStr));
+      } catch (e) {
+        // Sending anyway meant the request went out without the user's
+        // Authorization header and the receiver answered 401, with nothing
+        // pointing back at the headers field.
+        //
+        // The reason is named rather than reported: a JSON.parse message quotes
+        // a window of the input, so a malformed `Authorization` header would
+        // put part of the credential into the log. `scrubber.ts` redacts URL
+        // credentials from an Error, not arbitrary secret text (issue #272).
+        logger.error(
+          `Notify | Webhook | Headers are not a valid JSON object, not sending (${e instanceof Error ? e.name : 'parse error'})`,
+          'Notifications'
+        );
+        return false;
+      }
 
       let body: unknown;
       if (this.payloadTemplate && !sendsJson) {
@@ -65,7 +47,12 @@ export class WebhookProvider implements NotificationProvider {
           // Values are escaped, so reaching here means the template itself is
           // not valid JSON. Posting the raw string as application/json used to
           // hand the receiver a body it could only reject.
-          logger.error('Notify | Webhook | Payload template is not valid JSON, not sending', 'Notifications', e);
+          // Named, not reported, for the same reason as the headers above: the
+          // parser quotes the input, and a template carries interpolated values.
+          logger.error(
+            `Notify | Webhook | Payload template is not valid JSON, not sending (${e instanceof Error ? e.name : 'parse error'})`,
+            'Notifications'
+          );
           return false;
         }
       } else {
@@ -92,7 +79,9 @@ export class WebhookProvider implements NotificationProvider {
       }
 
       await axios.post(this.webhookUrl, body, { headers, timeout: 10000 });
-      logger.info(`Notify | Webhook | Sent to ${this.webhookUrl}`, 'Notifications');
+      // The URL is itself the credential -- it commonly carries a token in its
+      // path or query -- so it is not logged (issue #272).
+      logger.info('Notify | Webhook | Sent', 'Notifications');
       return true;
     } catch (error) {
       logger.error(`Notify | Webhook | Failed: ${error}`, 'Notifications', error);
