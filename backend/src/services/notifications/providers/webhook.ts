@@ -50,7 +50,10 @@ export class WebhookProvider implements NotificationProvider {
       // default) is parsed and sent as an object; anything else is plain text
       // the user chose to send, so it is sent as written.
       const contentType = Object.entries(headers).find(([name]) => name.toLowerCase() === 'content-type')?.[1];
-      const sendsJson = !contentType || /json/i.test(contentType);
+      // Only the media type counts: a parameter such as `profile="json"` on a
+      // text/plain header must not switch JSON parsing on.
+      const mediaType = (contentType ?? '').split(';')[0].trim().toLowerCase();
+      const sendsJson = !mediaType || mediaType.includes('json');
 
       let body: unknown;
       if (this.payloadTemplate && !sendsJson) {

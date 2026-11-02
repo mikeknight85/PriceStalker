@@ -27,14 +27,16 @@ export function webhookHeadersProblem(text: string): string | null {
 /**
  * Whether the user's headers set a non-JSON Content-Type, which makes the
  * template plain text. The backend decides the same way: JSON is the default,
- * and only a Content-Type that does not mention JSON switches it off.
+ * and only a Content-Type whose media type does not mention JSON switches it off.
  */
 export function webhookSendsPlainText(headersText: string): boolean {
   if (webhookHeadersProblem(headersText) !== null || !headersText.trim()) return false;
   const headers = JSON.parse(headersText) as Record<string, unknown>;
   const name = Object.keys(headers).find(key => key.toLowerCase() === 'content-type');
   const contentType = name === undefined ? '' : String(headers[name]);
-  return contentType !== '' && !/json/i.test(contentType);
+  // Only the media type counts, not its parameters (`text/plain; profile="json"`).
+  const mediaType = contentType.split(';')[0].trim().toLowerCase();
+  return mediaType !== '' && !mediaType.includes('json');
 }
 
 /**

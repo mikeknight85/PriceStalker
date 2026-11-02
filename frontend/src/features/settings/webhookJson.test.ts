@@ -23,11 +23,16 @@ describe('webhookSendsPlainText', () => {
     expect(webhookSendsPlainText('{"Authorization": "x"}')).toBe(false);
     expect(webhookSendsPlainText('{"Content-Type": "application/json; charset=utf-8"}')).toBe(false);
     expect(webhookSendsPlainText('{"content-type": "application/vnd.api+json"}')).toBe(false);
+    expect(webhookSendsPlainText('{"Content-Type": "application/problem+json"}')).toBe(false);
   });
 
   it('is true for a content type that is not JSON, whatever its case', () => {
     expect(webhookSendsPlainText('{"Content-Type": "text/plain"}')).toBe(true);
     expect(webhookSendsPlainText('{"CONTENT-TYPE": "application/x-www-form-urlencoded"}')).toBe(true);
+  });
+
+  it('ignores "json" in a parameter of a non-JSON content type', () => {
+    expect(webhookSendsPlainText('{"Content-Type": "text/plain; profile=\\"json\\""}')).toBe(true);
   });
 
   it('is false when the headers cannot be read, so the headers error shows instead', () => {

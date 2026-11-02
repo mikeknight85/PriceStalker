@@ -304,7 +304,13 @@ describe('the webhook payload template (issue #268)', () => {
       expect(post).toHaveBeenCalledTimes(1);
     });
 
-    it.each(['application/json; charset=utf-8', 'application/vnd.api+json', 'APPLICATION/JSON'])(
+    it('ignores "json" in a parameter of a plain-text Content-Type', async () => {
+      const headers = JSON.stringify({ 'Content-Type': 'text/plain; profile="json"' });
+      expect(await new WebhookProvider('https://hook.example', headers, 'price changed').send(base)).toBe(true);
+      expect(post.mock.calls[0][1]).toBe('price changed');
+    });
+
+    it.each(['application/json; charset=utf-8', 'application/vnd.api+json', 'application/problem+json', 'APPLICATION/JSON'])(
       'still reads the template as JSON for %s',
       async (contentType) => {
         await new WebhookProvider('https://hook.example', JSON.stringify({ 'Content-Type': contentType }), template)
