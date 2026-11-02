@@ -130,6 +130,8 @@ export function getChannelIcon(channel: string): IconName {
       return 'megaphone';
     case 'gotify':
       return 'bell';
+    case 'apprise':
+      return 'radio';
     case 'email':
       return 'mail';
     default:

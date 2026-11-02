@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Native Apprise notification channel. Settings -> Notifications -> Apprise sends alerts through an apprise-api server, either to a stored configuration (config key) or statelessly to a list of Apprise URLs, with an optional tag and message template. Events are sent with an Apprise `type` (`success`, `info` or `warning`), so receiving services can style them. Adds migration 024 (#270).
+
 ### Fixed
 
 - Webhook payload templates are now valid JSON for any product name. Values containing `"`, `\` or a newline used to break the JSON, and the broken body was sent anyway; each value is now escaped, and a template that still is not valid JSON is logged and not sent. Template variables containing `$&`, `$1` or `$$` are also inserted as written on every channel instead of being expanded. A variable's value is also never expanded again, so a product name containing `{{reason}}` stays as written. The webhook's headers must be a JSON object, and are no longer dropped silently when they are not. To send plain text, set a non-JSON `Content-Type` header (#268).

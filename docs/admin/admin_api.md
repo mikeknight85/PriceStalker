@@ -42,7 +42,7 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET`/`PUT` | `/settings/notifications` | Get / update user notification configurations |
-| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify,email,webhook}` | Send a test notification alert |
+| `POST` | `/settings/notifications/test/{telegram,discord,pushover,ntfy,gotify,apprise,email,webhook}` | Send a test notification alert |
 | `POST` | `/settings/notifications/test-gotify` | Test Gotify connection before saving settings |
 | `GET` | `/settings/product-defaults` | Get effective default check interval for the user & instance |
 | `GET` | `/settings/discovery/status` | Check if SearXNG product search is enabled |

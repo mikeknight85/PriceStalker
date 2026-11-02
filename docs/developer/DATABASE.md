@@ -39,7 +39,7 @@ Stores user profile information, authentication hashes, locale/currency settings
    adds, used to pre-fill the Add Product form (issue #239, migration 022).
    Null means follow `system_settings.default_refresh_interval`. Only ever read
    when a product is being created -- it never changes an existing listing.
- - **Notification Integrations**: Stores activation state, webhook tokens, and customizable templates for `telegram`, `discord`, `pushover`, `ntfy`, `gotify`, `webhook`, and `email`.
+ - **Notification Integrations**: Stores activation state, webhook tokens, and customizable templates for `telegram`, `discord`, `pushover`, `ntfy`, `gotify`, `apprise`, `webhook`, and `email`.
  - *(Note: AI provider settings and API keys are stored instance-wide in `system_settings`, not in `users`)*.
 
 ### 2. `products`

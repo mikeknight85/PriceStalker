@@ -11,6 +11,7 @@ const NOTIFICATION_FIELDS = [
   'pushover_user_key', 'pushover_app_token', 'pushover_enabled', 'pushover_message_template',
   'ntfy_topic', 'ntfy_server_url', 'ntfy_username', 'ntfy_password', 'ntfy_enabled', 'ntfy_message_template',
   'gotify_url', 'gotify_app_token', 'gotify_enabled', 'gotify_message_template',
+  'apprise_url', 'apprise_config_key', 'apprise_urls', 'apprise_tag', 'apprise_enabled', 'apprise_message_template',
   'webhook_url', 'webhook_headers', 'webhook_payload_template', 'webhook_enabled',
   'email_enabled', 'smtp_host', 'smtp_port', 'email_from', 'email_to', 'email_subject_template', 'email_body_template'
 ];

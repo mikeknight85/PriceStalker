@@ -36,6 +36,7 @@ router.post('/discord', (req, res) => handleTest(req, res, 'discord'));
 router.post('/pushover', (req, res) => handleTest(req, res, 'pushover'));
 router.post('/ntfy', (req, res) => handleTest(req, res, 'ntfy', 'ntfy_topic'));
 router.post('/gotify', (req, res) => handleTest(req, res, 'gotify'));
+router.post('/apprise', (req, res) => handleTest(req, res, 'apprise'));
 router.post('/email', (req, res) => handleTest(req, res, 'email', 'email_to'));
 router.post('/webhook', (req, res) => handleTest(req, res, 'webhook', 'webhook_url'));
 

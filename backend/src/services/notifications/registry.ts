@@ -5,6 +5,7 @@ import { TelegramProvider } from './providers/telegram';
 import { PushoverProvider } from './providers/pushover';
 import { NtfyProvider } from './providers/ntfy';
 import { GotifyProvider } from './providers/gotify';
+import { AppriseProvider, isAppriseConfigured } from './providers/apprise';
 import { WebhookProvider } from './providers/webhook';
 import { NotificationSettings } from './orchestrator';
 
@@ -36,6 +37,10 @@ export const PROVIDER_REGISTRY: Record<string, ProviderInitializer> = {
   gotify: (s) => {
     if (!s.gotify_url || !s.gotify_app_token || s.gotify_enabled === false) return null;
     return new GotifyProvider(s.gotify_url, s.gotify_app_token, s.gotify_message_template);
+  },
+  apprise: (s) => {
+    if (!isAppriseConfigured(s) || s.apprise_enabled === false) return null;
+    return new AppriseProvider(s.apprise_url,s.apprise_config_key, s.apprise_urls, s.apprise_tag, s.apprise_message_template);
   },
   webhook: (s) => {
     if (!s.webhook_url || s.webhook_enabled === false) return null;
