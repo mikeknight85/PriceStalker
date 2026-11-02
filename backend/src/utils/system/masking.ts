@@ -1,5 +1,10 @@
 /**
- * What a masked credential looks like -- in one place (issues #196, #198).
+ * What a masked credential looks like -- in one place (issues #196, #198, #272).
+ *
+ * This lives under `utils/system` rather than beside one of its callers: the AI
+ * settings mask provider API keys with it, and the per-user notification
+ * settings use it to refuse a placeholder on the way to the database (#272).
+ * A helper owned by one domain is how the duplicates described below appeared.
  *
  * With `REDACT_API_KEYS=true`, `getAISettings` hands the admin UI a masked form
  * of every stored provider key, and the UI hands that same masked form back

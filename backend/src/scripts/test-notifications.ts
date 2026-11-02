@@ -1,6 +1,10 @@
 import { userService } from '../services/domain/user';
+import { isNotificationCredentialField } from '../services/domain/user/notification-credentials';
 import { sendTestNotification } from '../services/notifications/testing';
 import { pool } from '../models';
+
+/** The channels `sendTestNotification` accepts, kept in step with it. */
+type TestChannel = Parameters<typeof sendTestNotification>[0];
 
 async function main() {
   const channelArg = process.argv[2];
@@ -15,7 +19,8 @@ async function main() {
     process.exit(1);
   }
 
-  const channel = channelArg.toLowerCase() as any;
+  // Checked against `validChannels` just above, so this names one of them.
+  const channel = channelArg.toLowerCase() as TestChannel;
   const userId = userIdArg ? parseInt(userIdArg, 10) : 1;
 
   console.log(`Sending Test Notification to channel: '${channel}' for User ID: ${userId}`);
@@ -30,21 +35,24 @@ async function main() {
     }
 
     console.log('Loaded Settings fields for verification:');
-    const fieldsToPrint: Record<string, any> = {};
-    Object.keys(settings).forEach(key => {
-      const val = (settings as any)[key];
+    const fieldsToPrint: Record<string, unknown> = {};
+    const keys = Object.keys(settings) as (keyof typeof settings)[];
+    keys.forEach(key => {
+      const val = settings[key];
       if (key.includes(channel) || key.startsWith('email') || key.startsWith('smtp') || key.startsWith('webhook')) {
-        if (key.includes('token') || key.includes('password') || key.includes('key')) {
-          fieldsToPrint[key] = val ? '********' : null;
-        } else {
-          fieldsToPrint[key] = val;
-        }
+        // Which fields are credentials is the catalogue's answer, not a guess
+        // at the name: the old `token`/`password`/`key` test printed every
+        // webhook URL in full, and would have missed the next channel's secret
+        // (issue #272).
+        fieldsToPrint[key] = isNotificationCredentialField(key)
+          ? (val ? '[set]' : null)
+          : val;
       }
     });
     console.log(JSON.stringify(fieldsToPrint, null, 2));
     console.log('Sending...');
 
-    const success = await sendTestNotification(channel, settings as any);
+    const success = await sendTestNotification(channel, settings);
 
     console.log('\n====================================');
     if (success) {

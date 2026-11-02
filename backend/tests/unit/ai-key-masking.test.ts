@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import { isMaskedSecret, maskSecret } from '../../src/services/ai/masking';
+import { isMaskedSecret, maskSecret } from '../../src/utils/system/masking';
 import { AISettingsService } from '../../src/services/domain/system/settings/ai';
 import { systemSettingsRepository } from '../../src/models';
 import type { AISettings } from '../../src/models/types';

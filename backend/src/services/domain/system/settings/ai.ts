@@ -2,7 +2,7 @@ import { systemSettingsRepository } from '../../../../models';
 import { AISettings, DiscoveredModel } from '../../../../models/types';
 import { logger } from '../../../../utils/system/logger';
 import { settingsCache } from '../../../../utils/cache';
-import { isMaskedSecret, maskSecret } from '../../../ai/masking';
+import { isMaskedSecret, maskSecret } from '../../../../utils/system/masking';
 
 /**
  * The slice of an OpenAI-style `GET /models` body that model discovery reads.

@@ -7,6 +7,13 @@ PriceStalker supports a wide range of notification channels and customizable ale
 ## 1. Notification Channels Setup
 You can configure and test your notification channels under **User Settings → Notifications**:
 
+> **Credentials are write-only.** Once a bot token, webhook URL, app token,
+> password, Apprise config key or set of webhook headers is saved, PriceStalker
+> does not send it back to your browser. The field shows as **(set)** and stays
+> empty: leave it empty to keep what is stored, type a new value to replace it,
+> or use **Clear** to remove it. The **Send Test Notification** buttons use the
+> saved credentials, so they keep working without you re-entering anything.
+
 ### Telegram
 1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram.
 2. Get your Chat ID from [@userinfobot](https://t.me/userinfobot).
@@ -37,8 +44,8 @@ You can configure and test your notification channels under **User Settings → 
 
 In **Settings → Notifications → Apprise**:
 * **Server URL**: The apprise-api base URL, e.g. `http://apprise:8000`.
-* **Config Key**: Optional. Names a configuration stored on the apprise-api server; alerts are posted to `/notify/<key>`. Leave empty for stateless mode.
-* **Apprise URLs**: Stateless mode only, used when there is no config key. One or more Apprise service URLs such as `ntfys://topic`, separated by commas, spaces or new lines. These usually embed credentials, so the field is masked like the other secret URLs.
+* **Config Key**: Optional. Names a configuration stored on the apprise-api server; alerts are posted to `/notify/<key>`. Leave empty for stateless mode. apprise-api has no authentication of its own, and this key also reads the stored configuration back (`/get/<key>`, `/json/urls/<key>`) with every token in it, so it is treated as a credential and is write-only.
+* **Apprise URLs**: Stateless mode only, used when there is no config key. One or more Apprise service URLs such as `ntfys://topic`, separated by commas, spaces or new lines. These usually embed credentials, so the field is write-only like the other secrets.
 * **Tag**: Optional. Routes the alert to the services carrying this tag within a stored configuration. It is only sent together with a config key; in stateless mode it is ignored, because apprise-api would match no services and deliver nothing.
 * **Message Template**: Optional. Leave blank for the same event-aware wording the ntfy and Telegram channels use, with the product link appended. The request is JSON-encoded for you, so no escaping is needed.
 
@@ -62,7 +69,7 @@ Each alert is sent with a title naming the event and an Apprise `type` that lets
 ### Custom Webhook
 For integrations with Home Assistant, Apprise, n8n, Zapier, or custom APIs, select **Custom Webhook** in Settings → Notifications:
 * **URL**: The endpoint of the receiver.
-* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default; a `Content-Type` of your own replaces it. If the headers are not a JSON object, nothing is sent and the failure is logged, rather than sending without them.
+* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default; a `Content-Type` of your own replaces it. If the headers are not a JSON object, nothing is sent and the failure is logged, rather than sending without them. They usually carry an `Authorization` value, so the whole document is a credential and is write-only: it shows as **(set)** and empty, typing replaces it wholesale, and **Clear** removes it. The page still knows whether your stored headers make the payload template plain text or JSON, because the server tells it — the media type is not a secret.
 * **Payload Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
   * Write the template as JSON and keep **every** variable inside quotes: `{"title": "{{product_name}}"}`. Each value is escaped for you, so a product named `Monitor 27" 4K` arrives intact. Do not leave a variable bare, even a numeric one such as `{{current_price}}`: it reads `unavailable` when there is no price, which is not valid JSON.
   * A variable's value is inserted as text and never expanded again, so a product name that contains `{{reason}}` stays as written.

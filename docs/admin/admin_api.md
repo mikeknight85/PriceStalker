@@ -54,6 +54,38 @@ All PriceStalker endpoints are grouped by resource type. The Base URL is `/api`.
 | `PUT` | `/profile/password` | Change user password |
 </details>
 
+**Notification channel credentials are write-only.** `GET /settings/notifications`
+never returns `telegram_bot_token`, `discord_webhook_url`, `pushover_user_key`,
+`pushover_app_token`, `ntfy_password`, `gotify_app_token`, `apprise_config_key`,
+`apprise_urls`, `webhook_url` or `webhook_headers`. Each is returned as `null`
+with a `has_<field>: true` beside it when one is stored, the same way
+`/admin/auth` answers `has_client_secret`.
+
+`apprise_config_key` counts as a credential because apprise-api has no
+authentication of its own: the key is the whole of `POST /notify/<key>` and also
+of `GET /get/<key>` and `GET /json/urls/<key>`, which read the stored
+configuration back with every token embedded in it. `apprise_url`, `gotify_url`
+and `ntfy_server_url` are plain server addresses and are returned.
+
+On `PUT`, each of those fields takes one of three forms:
+
+| Value | Meaning |
+|---|---|
+| omitted, or `""` | Leave the stored credential alone |
+| a string | Replace the stored credential |
+| `null` | Remove the stored credential |
+
+An empty string means "unchanged" rather than "clear" because a client is never
+given the value to send back. Clearing is the explicit `null`. The test
+endpoints read the stored credentials server-side and are unaffected;
+`/settings/notifications/test/gotify/connection` falls back to the stored app
+token when the request sends none, but only for the stored server URL.
+
+The response also carries one derived field, `webhook_sends_plain_text`: whether
+the stored `webhook_headers` set a non-JSON `Content-Type`, so the payload
+template is plain text rather than JSON. The media type is not a credential, and
+without it a client cannot tell which shape to check a template against.
+
 ---
 
 ## Administrative Management (Admin Only)

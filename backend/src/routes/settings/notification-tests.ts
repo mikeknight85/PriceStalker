@@ -1,24 +1,46 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
+import { NotificationSettings } from '../../models/types';
 import { userService } from '../../services/domain/user';
+import { isNotificationCredentialField } from '../../services/domain/user/notification-credentials';
+import { isMaskedSecret } from '../../utils/system/masking';
 import { logger } from '../../utils/system/logger';
 
 const router = Router();
 
+/** The channels `sendTestNotification` accepts, kept in step with it. */
+type TestChannel = Parameters<
+  typeof import('../../services/notifications/index')['sendTestNotification']
+>[0];
+
 /**
  * Generic test handler for notification channels.
+ *
+ * Every channel's credentials are read from storage here, never from the
+ * request, so these endpoints keep working now that the API no longer hands the
+ * client its own secrets (issue #272).
  */
-async function handleTest(req: AuthRequest, res: Response, channel: string, targetField?: string) {
+async function handleTest(
+  req: AuthRequest,
+  res: Response,
+  channel: TestChannel,
+  targetField?: keyof NotificationSettings
+) {
   try {
     const userId = req.userId!;
     const settings = await userService.getNotificationSettings(userId);
     if (!settings) return res.status(404).json({ error: 'User not found' });
 
     const { sendTestNotification } = await import('../../services/notifications/index');
-    const success = await sendTestNotification(channel as any, settings as any);
+    const success = await sendTestNotification(channel, settings);
 
     if (success) {
-      const target = targetField ? (settings as any)[targetField] : '';
+      // `webhook_url` is itself the credential, so it is named rather than
+      // logged. A chat id or a topic is not, and saying where a test went is
+      // the whole point of the line.
+      const target = targetField && !isNotificationCredentialField(targetField)
+        ? settings[targetField]
+        : '';
       logger.info(`Notify | ${channel} Test | Sent${target ? ` to ${target}` : ''}`, 'Settings');
       res.json({ message: 'Test notification sent successfully' });
     } else {
@@ -43,13 +65,31 @@ router.post('/webhook', (req, res) => handleTest(req, res, 'webhook', 'webhook_u
 // Specialized Test for Gotify connection (before saving)
 router.post('/gotify/connection', async (req: AuthRequest, res: Response) => {
   try {
-    const { url, app_token } = req.body;
-    if (!url || !app_token) {
+    const url: unknown = req.body?.url;
+    let appToken: unknown = req.body?.app_token;
+
+    // The client is never given the stored token, so a connection test for an
+    // already-configured server arrives with the field empty -- or with a
+    // placeholder, if some client still holds one. Either way the stored token
+    // is the one to test, exactly as the AI connection tests resolve theirs
+    // (issues #196, #198, #272). A token the user typed still wins.
+    //
+    // Only for the server that token belongs to, though. This endpoint posts to
+    // whatever URL the body names, and the stored token can no longer be read
+    // back through the API: substituting it for any other address would turn
+    // the test button into a way to have it delivered somewhere of the
+    // caller's choosing. Same reasoning as `refreshProviderModels`.
+    if (!appToken || typeof appToken !== 'string' || isMaskedSecret(appToken)) {
+      const settings = await userService.getNotificationSettings(req.userId!);
+      appToken = url === settings?.gotify_url ? settings?.gotify_app_token ?? '' : '';
+    }
+
+    if (!url || typeof url !== 'string' || typeof appToken !== 'string' || !appToken) {
       return res.status(400).json({ error: 'Server URL and app token are required' });
     }
 
     const { testGotifyConnection } = await import('../../services/notifications/index');
-    const result = await testGotifyConnection(url, app_token);
+    const result = await testGotifyConnection(url, appToken);
 
     if (result.success) {
       res.json({ success: true, message: 'Successfully connected to Gotify server' });

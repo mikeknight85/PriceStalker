@@ -1,11 +1,12 @@
 import pool from '../../../../config/database';
 import { NotificationSettings } from '../../../../models/types';
+import { assertNoMaskedCredentials } from '../notification-credentials';
 
 /**
  * Fields for notification settings.
  * Mapping of key to its type for dynamic query generation.
  */
-const NOTIFICATION_FIELDS = [
+const NOTIFICATION_FIELDS: readonly (keyof NotificationSettings)[] = [
   'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled', 'telegram_message_template',
   'discord_webhook_url', 'discord_enabled', 'discord_message_template',
   'pushover_user_key', 'pushover_app_token', 'pushover_enabled', 'pushover_message_template',
@@ -41,13 +42,19 @@ export const userSettingsRepository = {
     id: number,
     settings: Partial<NotificationSettings>
   ): Promise<NotificationSettings | null> => {
+    // The last gate before the columns themselves: a masked placeholder is not
+    // a credential, and storing one would break the channel while looking as
+    // though it were configured (issue #272). Every route into this function
+    // resolves placeholders first; this throws if one ever stops doing so.
+    assertNoMaskedCredentials(settings);
+
     const fields: string[] = [];
     const values: (string | boolean | number | null)[] = [];
     let paramIndex = 1;
 
     // Dynamically build the UPDATE fields
     for (const key of NOTIFICATION_FIELDS) {
-      const value = (settings as any)[key];
+      const value = settings[key];
       if (value !== undefined) {
         fields.push(`${key} = $${paramIndex++}`);
         values.push(value);
