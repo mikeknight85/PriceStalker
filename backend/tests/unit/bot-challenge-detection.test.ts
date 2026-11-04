@@ -46,12 +46,27 @@ describe('each vendor, however it cases its markers', () => {
   it.each([
     ['Akamai reference', page('Error', 'Reference #18.abc123'), 'Akamai Access Denied'],
     ['Akamai edgesuite', page('Error', 'errors.EDGESUITE.net'), 'Akamai Access Denied'],
-    ['Cloudflare title', page('Just a moment...'), 'Cloudflare Challenge'],
-    ['Cloudflare body', page('x', '<script src="/cdn-cgi/challenge-platform/h/b/x"></script>'), 'Cloudflare Challenge'],
-    ['DataDome', page('x', '<script src="https://geo.captcha-delivery.com/c.js"></script>'), 'DataDome Challenge'],
-    ['Incapsula', page('x', 'Incapsula incident ID: 1234'), 'Imperva/Incapsula Challenge'],
+    ['Cloudflare title (Just a moment)', page('Just a moment...'), 'Cloudflare Challenge'],
+    ['Cloudflare title (Attention Required)', page('Attention Required! | Cloudflare'), 'Cloudflare Challenge'],
+    ['Cloudflare body (challenge-platform)', page('x', '<script src="/cdn-cgi/challenge-platform/h/b/x"></script>'), 'Cloudflare Challenge'],
+    ['Cloudflare body (cf-browser-verification)', page('x', '<div class="cf-browser-verification"></div>'), 'Cloudflare Challenge'],
+    ['Cloudflare body (cloudflare-static)', page('x', '<link href="/cdn-cgi/styles/cloudflare-static/main.css">'), 'Cloudflare Challenge'],
+    ['DataDome (geo.captcha)', page('x', '<script src="https://geo.captcha-delivery.com/c.js"></script>'), 'DataDome Challenge'],
+    ['DataDome (dd-captcha)', page('x', '<div id="dd-captcha"></div>'), 'DataDome Challenge'],
+    ['Incapsula (incident ID)', page('x', 'Incapsula incident ID: 1234'), 'Imperva/Incapsula Challenge'],
+    ['Incapsula (_Incapsula_Resource)', page('x', '<iframe src="/_Incapsula_Resource?SWJIYLWA=719d"></iframe>'), 'Imperva/Incapsula Challenge'],
     ['PerimeterX denied title', page('Access to this page has been denied'), 'PerimeterX Challenge'],
-    ['robot interstitial', page('Are you a robot?'), 'Robot Check Interstitial'],
+    ['PerimeterX (px-captcha)', page('x', '<div id="px-captcha"></div>'), 'PerimeterX Challenge'],
+    ['PerimeterX (block.perimeterx.net)', page('x', '<script src="https://block.perimeterx.net/px.js"></script>'), 'PerimeterX Challenge'],
+    ['robot interstitial (Are you a robot?)', page('Are you a robot?'), 'Robot Check Interstitial'],
+    ['robot interstitial (Robot Check)', page('Robot Check'), 'Robot Check Interstitial'],
+    ['robot interstitial (Verify you are human)', page('Verify you are human'), 'Robot Check Interstitial'],
+    ['robot interstitial (Bot Verification)', page('Bot Verification'), 'Robot Check Interstitial'],
+    ['generic title (Are you human)', page('Are you human?'), 'Generic Bot Challenge'],
+    ['generic title (Security Check)', page('Security Check'), 'Generic Bot Challenge'],
+    ['generic body (prove you are human)', page('x', '<p>Please prove you are human to continue.</p>'), 'Generic Bot Challenge'],
+    ['generic body (unusual traffic)', page('x', '<p>We detected unusual traffic from your network.</p>'), 'Generic Bot Challenge'],
+    ['generic body (automated access)', page('x', '<p>Automated access to this site is restricted.</p>'), 'Generic Bot Challenge'],
   ])('%s', (_label, html, expected) => {
     expect(detect(html)).toBe(expected);
   });
@@ -75,6 +90,18 @@ describe('the size guard, which is what stops false positives', () => {
   it('does flag a small page that says captcha', () => {
     expect(detect(page('Verification', '<p>Please complete the captcha.</p>')))
       .toBe('Generic Bot Challenge');
+  });
+
+  it('enforces the exact 15,000-byte boundary on generic body and Akamai sensor pixel checks', () => {
+    const prefix = '<html><head><title>Product</title></head><body><p>unusual traffic</p>';
+    const suffix = '</body></html>';
+    const at14999 = `${prefix}${'x'.repeat(14999 - prefix.length - suffix.length)}${suffix}`;
+    const at15000 = `${prefix}${'x'.repeat(15000 - prefix.length - suffix.length)}${suffix}`;
+
+    expect(at14999.length).toBe(14999);
+    expect(at15000.length).toBe(15000);
+    expect(detect(at14999)).toBe('Generic Bot Challenge');
+    expect(detect(at15000)).toBeNull();
   });
 
   it('still reads the title on a large page, which the guard used to cover', () => {

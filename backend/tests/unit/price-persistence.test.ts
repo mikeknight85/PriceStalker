@@ -13,12 +13,16 @@ const priceHistory = {
 const product = {
   updateAnchorPrice: vi.fn().mockResolvedValue(undefined),
   updateExtractionMethod: vi.fn().mockResolvedValue(undefined),
+  updateStockStatus: vi.fn().mockResolvedValue(undefined),
+};
+const stockHistory = {
+  recordChange: vi.fn().mockResolvedValue(undefined),
 };
 
 vi.mock('../../src/models', () => ({
   priceHistoryRepository: priceHistory,
   productRepository: product,
-  stockHistoryRepository: { recordChange: vi.fn() },
+  stockHistoryRepository: stockHistory,
 }));
 
 const warn = vi.fn();
@@ -155,6 +159,38 @@ describe('Price history persistence rules', () => {
       priceHistory.getLatest.mockResolvedValue({ price: 10, currency: 'USD' });
       await record({ price: price(10) }, 'manual-confirm');
       expect(priceHistory.create).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('stock status preservation on blocked scrapes (commit e82b05b)', () => {
+    async function updateStock(currentStatus: string | null, scrapedStatus: string) {
+      const { ProductPersistenceService } = await import(
+        '../../src/services/domain/product/ProductPersistenceService'
+      );
+      const service = new ProductPersistenceService();
+      return (service as never as { updateStockState: Function }).updateStockState(
+        CLIENT,
+        42,
+        { id: 42, stock_status: currentStatus },
+        { stockStatus: scrapedStatus, aiStatus: null }
+      );
+    }
+
+    it.each(['in_stock', 'out_of_stock', 'pre_order', 'member_only'])(
+      'does not overwrite a known %s status when a blocked scrape returns unknown',
+      async (knownStatus) => {
+        const transition = await updateStock(knownStatus, 'unknown');
+        expect(transition).toBeNull();
+        expect(product.updateStockStatus).not.toHaveBeenCalled();
+        expect(stockHistory.recordChange).not.toHaveBeenCalled();
+      }
+    );
+
+    it('still records a genuine stock transition when the scrape determines a real status', async () => {
+      const transition = await updateStock('out_of_stock', 'in_stock');
+      expect(transition).toEqual({ from: 'out_of_stock', to: 'in_stock' });
+      expect(product.updateStockStatus).toHaveBeenCalledWith(42, 'in_stock', null, CLIENT);
+      expect(stockHistory.recordChange).toHaveBeenCalledWith(42, 'in_stock', CLIENT);
     });
   });
 });
