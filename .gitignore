@@ -66,5 +66,7 @@ tmp/
 # Agent worktrees and local agent state (Claude Code and similar tools)
 .claude/worktrees/
 
-# Private Telemetry Cloudflare Worker & Infrastructure
-telemetry/
+# Cloudflare Worker / Telemetry
+.wrangler/
+.dev.vars
+telemetry-collector/node_modules/

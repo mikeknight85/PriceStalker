@@ -1,7 +1,7 @@
 import { MigrationContext } from '../config/migrate';
 
 /**
- * Migration 024: Telemetry Settings
+ * Migration 025: Telemetry Settings
  *
  * Adds system_settings keys for anonymous instance telemetry:
  * - telemetry_enabled: whether anonymous telemetry reporting is enabled (default: 'true')
