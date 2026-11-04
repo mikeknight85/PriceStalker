@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database (`ps-telemetry.enuff.com`). Transmits minimal technical health metrics (version, OS, architecture, coarse item/store/user bucket) once daily. Strictly zero personal data, store names, or URLs are collected. Can be disabled via `DISABLE_TELEMETRY=true`, `DO_NOT_TRACK=1`, or the Admin System Settings toggle with full payload preview. Adds migration 025 and open-source collector worker and D1 schema in `telemetry-collector/`.
+
 ## [2.2.0-beta.2] - 2026-11-02
 
 ### Added

@@ -1,0 +1,10 @@
+# Telemetry Collector Local Development Variables
+# Copy to .dev.vars for local testing with `wrangler dev`.
+# DO NOT commit .dev.vars to version control.
+#
+# In production, set secrets via Wrangler CLI or Cloudflare Dashboard:
+#   npx wrangler secret put GATEWAY_SECRET
+
+# Optional: Shared secret when routed through an edge reverse-proxy / gateway.
+# If unset, direct requests to /v1/ping are permitted.
+GATEWAY_SECRET=
