@@ -6,7 +6,9 @@ import { apiErrorMessage } from '../../../../api/error';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import CollapsibleCard from '../../../../components/CollapsibleCard';
 import ToggleSwitch from '../../../../components/ToggleSwitch';
+import ConfirmationModal from '../../../../components/ConfirmationModal';
 import Icon from '../../../../components/Icon';
+import { GROUPED_PRESET_USER_AGENTS, diagnoseRetailerUserAgent } from '../constants';
 import { queryClient } from '../../../../api/queryClient';
 import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 import { useExpandedSections } from '../../../../hooks';
@@ -19,6 +21,8 @@ export default function SystemSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingAdmin, setIsSavingAdmin] = useState(false);
   const [isTestingSearXNG, setIsTestingSearXNG] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const { expandedSections, toggleSection } = useExpandedSections({
     sys_network: false,
@@ -87,6 +91,22 @@ export default function SystemSection() {
       queryClient.setQueryData(queryKeys.adminSystemSettings, res);
       showToast('Admin settings saved', 'success');
     } catch { showToast('Save failed', 'error'); } finally { setIsSavingAdmin(false); }
+  };
+
+  const handleResetSystemDefaults = async () => {
+    setIsResetting(true);
+    try {
+      const res = await AdminSystemService.resetSystemSettings('all');
+      showToast(`Reset ${res.reset_count} system settings to defaults`, 'success');
+      setShowResetModal(false);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, res.settings);
+      setSavedSettings(res.settings);
+      setSystemSettings(res.settings);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to reset system settings', 'error');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   if (isLoading) return <LoadingSpinner centered />;
@@ -165,7 +185,48 @@ export default function SystemSection() {
       </CollapsibleCard>
 
       <CollapsibleCard title="Browser Configuration" leadingIcon={<Icon name="monitor" />} id="sys_browser" isExpanded={expandedSections.sys_browser} onToggle={toggleSection}>
-        <div className="form-group"><label>Default User-Agent</label><input type="text" className="form-control" value={systemSettings?.default_user_agent || ''} onChange={e => setSystemSettings(s => s ? { ...s, default_user_agent: e.target.value } : null)} /></div>
+        <div className="form-group">
+          <label>Default User-Agent</label>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <select
+              className="form-control"
+              value=""
+              onChange={e => {
+                if (e.target.value) {
+                  setSystemSettings(s => s ? { ...s, default_user_agent: e.target.value } : null);
+                }
+              }}
+            >
+              <option value="">-- Choose User-Agent Preset --</option>
+              {GROUPED_PRESET_USER_AGENTS.map(grp => (
+                <optgroup key={grp.group} label={grp.group}>
+                  {grp.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+          <input
+            type="text"
+            className="form-control"
+            value={systemSettings?.default_user_agent || ''}
+            onChange={e => setSystemSettings(s => s ? { ...s, default_user_agent: e.target.value } : null)}
+          />
+          {(() => {
+            const diag = diagnoseRetailerUserAgent(systemSettings?.default_user_agent, false);
+            if (diag.message) {
+              return (
+                <div style={{ fontSize: '0.75rem', color: 'var(--warning-color, #f59e0b)', marginTop: '0.25rem' }}>
+                  {diag.message}
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </div>
         <div className="form-group"><label>Default Referrer</label><input type="text" className="form-control" value={systemSettings?.default_referrer || ''} onChange={e => setSystemSettings(s => s ? { ...s, default_referrer: e.target.value } : null)} placeholder="https://www.google.com/" /></div>
         <div className="form-grid">
           <div className="form-group"><label>Browser Timeout (ms)</label><input type="number" className="form-control" value={systemSettings?.browser_timeout || 60000} onChange={e => setSystemSettings(s => s ? { ...s, browser_timeout: parseInt(e.target.value) || 0 } : null)} /></div>
@@ -235,12 +296,32 @@ export default function SystemSection() {
       </CollapsibleCard>
 
       <div className="settings-actions">
-        <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setSystemSettings(savedSettings)} disabled={!isDirty || isSavingAdmin}>Cancel</button>
-        <button type="submit" className="btn btn-primary" disabled={!isDirty || isSavingAdmin}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setShowResetModal(true)}
+          disabled={isSavingAdmin || isResetting}
+          style={{ marginRight: 'auto' }}
+        >
+          Reset to Defaults
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setSystemSettings(savedSettings)} disabled={!isDirty || isSavingAdmin || isResetting}>Cancel</button>
+        <button type="submit" className="btn btn-primary" disabled={!isDirty || isSavingAdmin || isResetting}>
           {isSavingAdmin ? 'Saving...' : 'Save'}
         </button>
       </div>
       </form>
+
+      <ConfirmationModal
+        isOpen={showResetModal}
+        title="Reset System Settings to Defaults"
+        message="This will restore core system settings, default user-agent, referrers, timeouts, and extraction rules to canonical defaults. Any custom configurations will be overwritten. Proceed?"
+        confirmText={isResetting ? 'Resetting...' : 'Reset to Defaults'}
+        onConfirm={handleResetSystemDefaults}
+        onClose={() => setShowResetModal(false)}
+        isDanger={true}
+        isLoading={isResetting}
+      />
     </div>
   );
 }

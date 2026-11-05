@@ -18,4 +18,11 @@ router.put('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json(settings);
 }, 'Admin | Update Settings', 'Admin', 'Failed to update system settings'));
 
+// Reset system settings to canonical defaults (issue #264)
+router.post('/reset', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const scope = req.body?.scope || 'all';
+  const settings = await systemService.resetToDefaults(scope, req.userId!);
+  res.json(settings);
+}, 'Admin | Reset Settings', 'Admin', 'Failed to reset system settings'));
+
 export default router;

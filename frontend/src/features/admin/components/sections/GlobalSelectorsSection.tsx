@@ -4,6 +4,7 @@ import { useToast } from '../../../../context/ToastContext';
 import LoadingSpinner from '../../../../components/LoadingSpinner';
 import CollapsibleCard from '../../../../components/CollapsibleCard';
 import ToggleSwitch from '../../../../components/ToggleSwitch';
+import ConfirmationModal from '../../../../components/ConfirmationModal';
 import {
   UnifiedSelectorManager,
   SettingsCacheNotice,
@@ -42,6 +43,8 @@ export default function GlobalSelectorsSection() {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const [savedData, setSavedData] = useState<SavedSelectors | null>(null);
 
   // Global Selector states
@@ -189,6 +192,40 @@ export default function GlobalSelectorsSection() {
       showToast('Failed to save extraction rules', 'error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleResetDefaults = async () => {
+    setIsResetting(true);
+    try {
+      const res = await AdminSystemService.resetSystemSettings('selectors');
+      showToast(`Reset ${res.reset_count} global selector settings to canonical defaults`, 'success');
+      setShowResetModal(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminSystemSettings });
+      const settings = res.settings;
+      const newData: SavedSelectors = {
+        priceSelectors: parseList(settings.generic_price_selectors),
+        dealPriceSelectors: parseList(settings.generic_deal_price_selectors),
+        memberPriceSelectors: parseList(settings.generic_member_price_selectors),
+        originalPriceSelectors: parseList(settings.generic_original_price_selectors),
+        preOrderPriceSelectors: parseList(settings.generic_pre_order_price_selectors),
+        nameSelectors: parseList(settings.generic_name_selectors),
+        retailerNameSelectors: parseList(settings.generic_retailer_name_selectors),
+        imageSelectors: parseList(settings.generic_image_selectors),
+        stockSelectors: parseList(settings.generic_stock_selectors),
+        exclusionSelectors: parseList(settings.generic_exclusion_selectors),
+        preferJsonLdImage: settings.prefer_jsonld_image === true || settings.prefer_jsonld_image === 'true',
+        inStockPhrases: parseList(settings.generic_in_stock_phrases),
+        outOfStockPhrases: parseList(settings.generic_out_of_stock_phrases),
+        preOrderPhrases: parseList(settings.generic_pre_order_phrases),
+        challengePhrases: parseList(settings.generic_challenge_phrases),
+      };
+      setSavedData(newData);
+      applySelectors(newData);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to reset settings', 'error');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -352,8 +389,17 @@ export default function GlobalSelectorsSection() {
         <button
           type="button"
           className="btn btn-secondary"
+          onClick={() => setShowResetModal(true)}
+          disabled={isSaving || isResetting}
+          style={{ marginRight: 'auto' }}
+        >
+          Reset to Defaults
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
           onClick={() => savedData && applySelectors(savedData)}
-          disabled={!isDirty || isSaving}
+          disabled={!isDirty || isSaving || isResetting}
         >
           Cancel
         </button>
@@ -361,11 +407,22 @@ export default function GlobalSelectorsSection() {
           type="button"
           className="btn btn-primary"
           onClick={handleSaveSelectors}
-          disabled={!isDirty || isSaving}
+          disabled={!isDirty || isSaving || isResetting}
         >
           {isSaving ? 'Saving...' : 'Save'}
         </button>
       </div>
+
+      <ConfirmationModal
+        isOpen={showResetModal}
+        title="Reset Global Selectors to Defaults"
+        message="This will restore all global selectors and phrases to canonical tuned defaults. Any custom selectors you have configured here will be overwritten. Proceed?"
+        confirmText={isResetting ? 'Resetting...' : 'Reset to Defaults'}
+        onConfirm={handleResetDefaults}
+        onClose={() => setShowResetModal(false)}
+        isDanger={true}
+        isLoading={isResetting}
+      />
     </div>
   );
 }

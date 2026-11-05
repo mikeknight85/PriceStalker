@@ -5,6 +5,7 @@ import RetailerConfigEditor from './RetailerConfigEditor';
 import Icon from '../../../../components/Icon';
 import { queryClient } from '../../../../api/queryClient';
 import { adminRetailersQuery } from '../../../../api/queries';
+import { diagnoseRetailerUserAgent } from '../constants';
 
 interface RetailersSectionProps {
   globalCurrencies: GlobalCurrency[];
@@ -104,19 +105,32 @@ export default function RetailersSection({ globalCurrencies, initialSearch }: Re
         />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
-          {retailers.filter(r => r.domain.toLowerCase().includes(retailerSearch.toLowerCase())).map(r => (
-            <div key={r.id} className="settings-card" style={{ padding: '1.25rem', cursor: 'pointer', borderLeft: `4px solid ${r.active === false ? 'var(--danger)' : 'var(--primary)'}`, marginBottom: 0 }} onClick={() => handleEditRetailer(r)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ fontWeight: 700, fontSize: '1rem' }}>{r.name || r.domain}</div>
-                {r.active === false && <span style={{ fontSize: '0.6rem', color: 'var(--danger)', fontWeight: 800 }}>INACTIVE</span>}
+          {retailers.filter(r => r.domain.toLowerCase().includes(retailerSearch.toLowerCase())).map(r => {
+            const diag = diagnoseRetailerUserAgent(r.user_agent, r.use_browser_scraper);
+            return (
+              <div key={r.id} className="settings-card" style={{ padding: '1.25rem', cursor: 'pointer', borderLeft: `4px solid ${r.active === false ? 'var(--danger)' : 'var(--primary)'}`, marginBottom: 0 }} onClick={() => handleEditRetailer(r)}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name || r.domain}</div>
+                  <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                    {diag.message && (
+                      <span title={diag.message} style={{ color: 'var(--warning-color, #f59e0b)', display: 'inline-flex' }}>
+                        <Icon name="alertTriangle" size="14px" />
+                      </span>
+                    )}
+                    {r.re_auto_map && (
+                      <span style={{ fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 800, background: 'rgba(59, 130, 246, 0.1)', padding: '0.1rem 0.3rem', borderRadius: '0.25rem' }}>RE-MAP</span>
+                    )}
+                    {r.active === false && <span style={{ fontSize: '0.6rem', color: 'var(--danger)', fontWeight: 800 }}>INACTIVE</span>}
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>{r.domain}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.7rem' }}>
+                  <div style={{ opacity: r.use_browser_scraper ? 1 : 0.3 }}><Icon name="globe" /> Browser Scraper</div>
+                  <div style={{ opacity: r.use_proxy ? 1 : 0.3 }}><Icon name="shield" /> Proxy</div>
+                </div>
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>{r.domain}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.7rem' }}>
-                <div style={{ opacity: r.use_browser_scraper ? 1 : 0.3 }}><Icon name="globe" /> Browser Scraper</div>
-                <div style={{ opacity: r.use_proxy ? 1 : 0.3 }}><Icon name="shield" /> Proxy</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

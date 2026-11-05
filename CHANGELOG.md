@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- User-Agent presets matrix across Windows, macOS, Linux, Android, iOS, and iPadOS updated to Chrome 154, Edge 154, Safari 18.4, and Firefox 140, including an explicit "Use System Default (Inherit)" option in retailer configuration and admin debug controls (#262).
+- User-Agent diagnostic warnings on retailer configs: flags engine mismatches when Chromium Browser Scraper is paired with Safari/Firefox User-Agents, or when an outdated Chromium version (< v140) is configured.
+- Reset to System Defaults endpoint (`POST /api/admin/settings/system/reset`) and admin UI buttons on Global Selectors and System Settings, supporting `all`, `selectors`, `phrases`, and `network` scopes (#264).
+- Retailer `re_auto_map` toggle ("Re-map on next scrape") allowing users and admins to schedule auto-retailer rediscovery on the next scheduled scrape without manual URL testing (#265).
+- Heuristic non-AI auto-mapping fallback (`handleHeuristicAutoMapping`) for re-mapping runs when AI auto-mapping is disabled or produces no valid selectors (#265).
+- Scrapy `@attribute` syntax support outside brackets in CSS selector parsing and normalization (e.g. `meta[name="..."]@content`, `img@src`).
+- Auto-append `::attr(content)` for `<meta>` elements in selector normalization and AI auto-mapping to prevent empty text extractions (#262, #263).
+- Migration `026_repair_selectors_user_agent_and_remap.ts` to add `re_auto_map` to `retailer_configs`, update `default_user_agent` to canonical Chrome 154, repair Scrapy `@attr` and bare `<meta>` tags, strip corrupted image URLs (`/c_fill`, placeholder SVGs, trailing slashes), and backfill missing `items.image_url`.
+
+### Fixed
+
+- AI auto-mapping validator rejecting Scrapy `::attr(...)` syntax due to Cheerio `css-select` pseudo-element syntax limitations (#262, #279).
+- AI auto-mapping and generic extraction picking up dialog/modal elements and cross-sell prices (`h2.explore-modal-title`, `.cross-sell-cell .product-price`, `.toc-menu-toggle`) as product titles and prices (#279).
+- Retailer configuration user-agent blank string overrides normalized to NULL to correctly inherit the system default User-Agent without losing custom user settings.
+- Canonical items `items.image_url` left blank or corrupted when product listings have valid image assets (#263).
+
+
 ## [2.2.0-beta.2] - 2026-11-02
 
 ### Added

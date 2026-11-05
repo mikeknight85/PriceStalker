@@ -15,18 +15,25 @@ Return a JSON object exactly matching this interface:
   "price_regex": string[],
   "jsonld_name_key": string | null,
   "jsonld_price_key": string | null,
-  "jsonld_image_key": string | null
+  "jsonld_image_key": string | null,
+  "prefer_jsonld_image": boolean | null
 }
 
 Important Guidelines:
 - "retailer_name": The human-readable name of the store/website. For regional domains/subdomains of a global brand, identify the regional site name if present in metadata or page titles (e.g., including the country/region name).
 - "currency": The 3-letter currency code (e.g., "USD", "AUD", "EUR") detected on the page, or null if ambiguous.
+- "prefer_jsonld_image": Set to true if structured JSON-LD contains a clean canonical image and DOM images are dynamic, hashed, or wrapped in complex carousels/thumbnails.
 - Prefer specific, robust CSS selectors over generic tag names (e.g. prefer specific classes over generic "h1" or "span").
+- **ATTRIBUTE SYNTAX**:
+  * When extracting values from attributes (such as \`<meta ... content="...">\`, \`data-price="..."\`, or \`src="..."\`), always use \`::attr(attributeName)\`. For example:
+    - \`meta[property="og:title"]::attr(content)\`
+    - \`meta[property="og:image"]::attr(content)\`
+    - \`span[data-price]::attr(data-price)\`
 - **STABILITY PRIORITY**:
   1. Prioritize stable semantic attributes like \`[data-automation="..."]\`, \`[data-testid="..."]\`, \`[data-test="..."]\`, \`[data-identifier-id="..."]\`, \`[itemprop="..."]\`, etc., over class names when they are present on the element.
   2. If using class names, use standard, human-written classes (e.g., \`.product-title\`, \`#price-value\`, \`.pdp-price\`).
   3. **NEVER** use dynamically generated, hashed, or CSS-in-JS class names (e.g. \`.css-ip5c5v\`, \`.css-11o4j7i\`, or class names with random alphanumeric hashes). These change every time the website redeploys and will break.
-  4. **AVOID SKELETONS/PLACEHOLDERS**: Many modern websites render empty "skeleton" or placeholder elements while loading (e.g., elements with classes containing "skeleton" or attributes like \`data-identifier-id="price-1"\` / \`price-2\` / \`contact-card\`). **NEVER** select these loading placeholder elements. Instead, target the stable elements containing the actual hydrated values (e.g., matching the literal text value like "$84.99" or "$69.00").
+  4. **AVOID SKELETONS, MODALS & NOISE**: Many modern websites render empty "skeleton" placeholders, hidden dialogs/modals (e.g., cart limit modals, sign-in dialogs, error alerts), or related product carousels. **NEVER** select these elements. Avoid selectors targeting \`[role="dialog"]\`, modal titles, or elements with \`.d-none\` / \`[hidden]\`. Target the genuine product details on the main page.
   5. **CASE SENSITIVITY & CAMELCASE**: If generating partial class matching selectors like \`[class*="..."]\`, make sure the matched string matches the casing of the classes in the HTML exactly. (e.g., if the class is "memberPrice" camelCase, use \`[class*="memberPrice"]\` rather than \`[class*="member-price"]\`).
 - **PRECISION MAPPING**:
   * **Price**: 
