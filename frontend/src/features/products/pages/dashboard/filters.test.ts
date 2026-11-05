@@ -16,6 +16,8 @@ import {
   StockFilter,
   TRACKING_FILTER_OPTIONS,
   TrackingFilter,
+  clearDashboardStorage,
+  DASHBOARD_STORAGE_KEYS,
 } from './utils';
 
 let nextId = 1;
@@ -377,5 +379,24 @@ describe('the grouped "By product" view', () => {
     expect(select('paused', 'in_stock')).toEqual([mixed.name]);
     expect(select('paused', 'out_of_stock')).toEqual([parked.name]);
     expect(select('active', 'out_of_stock')).toEqual([]);
+  });
+
+  describe('dashboard storage management (#260)', () => {
+    it('clears all dashboard preferences from localStorage on teardown', () => {
+      const store: Record<string, string> = {};
+      const mockStorage = {
+        getItem: (k: string) => store[k] ?? null,
+        setItem: (k: string, v: string) => { store[k] = v; },
+        removeItem: (k: string) => { delete store[k]; },
+      };
+      (globalThis as any).localStorage = mockStorage;
+      try {
+        DASHBOARD_STORAGE_KEYS.forEach(key => mockStorage.setItem(key, 'test-val'));
+        clearDashboardStorage();
+        DASHBOARD_STORAGE_KEYS.forEach(key => expect(mockStorage.getItem(key)).toBeNull());
+      } finally {
+        delete (globalThis as any).localStorage;
+      }
+    });
   });
 });

@@ -46,6 +46,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `$1,299.9900`) now keep their full fractional part instead of being floored.
   Also corrects the `Fr.` currency symbol, which persisted a non-ISO `FR.`
   currency code on Swiss listings instead of `CHF` (#285).
+- Dashboard search queries, active tags, tracking/stock filters, and view preferences persist across logout and leak into subsequent user sessions (#260).
+- Returning from product detail to dashboard intermittently displays "No stores found" when an active tag is no longer present on any product, and added a "Reset filters" button to both list views (#259).
+- Add Product form permits concurrent submissions when pressing Enter repeatedly or double clicking while an extraction request is in flight, leading to 409 unique constraint collisions and aborted navigation (#276).
+- AI auto-mapping validator rejecting Scrapy `::attr(...)` syntax due to Cheerio `css-select` pseudo-element syntax limitations (#262, #279).
+- AI auto-mapping and generic extraction picking up dialog/modal elements and cross-sell prices (`h2.explore-modal-title`, `.cross-sell-cell .product-price`, `.toc-menu-toggle`) as product titles and prices (#279).
+- Retailer configuration user-agent blank string overrides normalized to NULL to correctly inherit the system default User-Agent without losing custom user settings.
+- Canonical items `items.image_url` left blank or corrupted when product listings have valid image assets (#263).
+
 
 ## [2.2.0-beta.2] - 2026-11-02
 
