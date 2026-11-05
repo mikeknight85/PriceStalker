@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Image URL resolver (`resolveImageUrl`) now rejects loading spinners, placeholders, and loaders (such as `/static/loading.svg`, `loading.*`, `spinner.*`) so lazy-loading indicator graphics do not overwrite genuine product photos.
 - Dashboard search queries, active tags, tracking/stock filters, and view preferences persist across logout and leak into subsequent user sessions (#260).
 - Returning from product detail to dashboard intermittently displays "No stores found" when an active tag is no longer present on any product, and added a "Reset filters" button to both list views (#259).
 - Add Product form permits concurrent submissions when pressing Enter repeatedly or double clicking while an extraction request is in flight, leading to 409 unique constraint collisions and aborted navigation (#276).
