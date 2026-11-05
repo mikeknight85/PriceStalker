@@ -92,6 +92,16 @@ const Dashboard: React.FC = () => {
     navigate({ to: '/products', search: { tag: next || undefined } });
   };
 
+  const handleResetFilters = () => {
+    setActiveTag(null);
+    setSearchQuery('');
+    setTrackingFilter('all');
+    setStockFilter('all');
+    setSortBy('date_added');
+    setSortOrder('desc');
+    navigate({ to: '/products', search: {} });
+  };
+
   return (
     <Layout>
       <ConfirmationModal
@@ -185,6 +195,7 @@ const Dashboard: React.FC = () => {
                       stockFilter={stockFilter}
                       sortBy={sortBy}
                       sortOrder={sortOrder}
+                      onResetFilters={handleResetFilters}
                     />
                   </ErrorBoundary>
                 ) : (
@@ -202,6 +213,7 @@ const Dashboard: React.FC = () => {
                   onAddClick={() => navigate({ to: '/products/new' })}
                   hasAnyProducts={products.length > 0}
                   onSelect={(id) => navigate({ to: '/products/$productId', params: { productId: String(id) } })}
+                  onResetFilters={handleResetFilters}
                 />
                 </ErrorBoundary>
                 )}
