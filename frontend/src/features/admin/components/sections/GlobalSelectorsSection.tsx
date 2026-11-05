@@ -199,10 +199,11 @@ export default function GlobalSelectorsSection() {
     setIsResetting(true);
     try {
       const res = await AdminSystemService.resetSystemSettings('selectors');
-      showToast(`Reset ${res.reset_count} global selector settings to canonical defaults`, 'success');
+      const settings = res?.settings || (res as any) || {};
+      const resetCount = res?.reset_count ?? Object.keys(settings).length;
+      showToast(`Reset ${resetCount} global selector settings to canonical defaults`, 'success');
       setShowResetModal(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.adminSystemSettings });
-      const settings = res.settings;
       const newData: SavedSelectors = {
         priceSelectors: parseList(settings.generic_price_selectors),
         dealPriceSelectors: parseList(settings.generic_deal_price_selectors),

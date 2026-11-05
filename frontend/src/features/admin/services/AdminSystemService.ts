@@ -15,7 +15,7 @@ export const AdminSystemService = {
   getTelemetryStatus: (options?: RequestOptions) => api.get<TelemetryStatusResponse>('/admin/settings/telemetry', options),
   sendTelemetryPing: () => api.post<{ success: boolean; error?: string }>('/admin/settings/telemetry/ping'),
   resetSystemSettings: (scope: 'all' | 'selectors' | 'phrases' | 'network' = 'all') =>
-    api.post<{ success: boolean; settings: SystemSettings; reset_count: number }>('/admin/settings/system/reset', { scope }),
+    api.post<{ success: boolean; settings: SystemSettings; reset_count: number }>('/admin/settings/reset', { scope }),
   testSearXNG: (url: string) => api.post<{ success: boolean; message: string; error?: string }>('/admin/command', { command: 'test-searxng', params: { url } }),
   executeCommand: (command: string, params?: any) => api.post('/admin/command', { command, params }),
 

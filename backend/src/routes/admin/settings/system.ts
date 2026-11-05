@@ -32,10 +32,13 @@ router.post('/telemetry/ping', asyncHandler(async (_req: AuthRequest, res: Respo
 }, 'Admin | Trigger Telemetry Ping', 'Admin', 'Failed to trigger telemetry ping'));
 
 // Reset system settings to canonical defaults (issue #264)
-router.post('/reset', asyncHandler(async (req: AuthRequest, res: Response) => {
+const handleReset = asyncHandler(async (req: AuthRequest, res: Response) => {
   const scope = req.body?.scope || 'all';
   const settings = await systemService.resetToDefaults(scope, req.userId!);
-  res.json(settings);
-}, 'Admin | Reset Settings', 'Admin', 'Failed to reset system settings'));
+  res.json({ success: true, settings, reset_count: Object.keys(settings).length });
+}, 'Admin | Reset Settings', 'Admin', 'Failed to reset system settings');
+
+router.post('/reset', handleReset);
+router.post('/system/reset', handleReset);
 
 export default router;
