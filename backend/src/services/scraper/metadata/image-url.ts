@@ -39,6 +39,18 @@ const PLACEHOLDER_MARKERS = [
   'grey.gif',
   'pixel.gif',
   '1x1.',
+  'loading.svg',
+  'loading.gif',
+  'loading.png',
+  'loading.',
+  'loading_',
+  'loading-',
+  'spinner.',
+  'spinner-',
+  'spinner_',
+  'loader.',
+  'loader-',
+  'loader_',
 ];
 
 /** Schemes that can never be fetched by a browser rendering the dashboard. */
