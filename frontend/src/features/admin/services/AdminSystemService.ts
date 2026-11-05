@@ -11,6 +11,8 @@ export const AdminSystemService = {
   getDebugStatus: () => api.get<{ enabled: boolean }>('/admin/debug/status'),
   getSystemSettings: (options?: RequestOptions) => api.get<SystemSettings>('/admin/settings', options),
   updateSystemSettings: (settings: Partial<SystemSettings>) => api.put<SystemSettings>('/admin/settings', settings),
+  resetSystemSettings: (scope: 'all' | 'selectors' | 'phrases' | 'network' = 'all') =>
+    api.post<{ success: boolean; settings: SystemSettings; reset_count: number }>('/admin/settings/reset', { scope }),
   testSearXNG: (url: string) => api.post<{ success: boolean; message: string; error?: string }>('/admin/command', { command: 'test-searxng', params: { url } }),
   executeCommand: (command: string, params?: any) => api.post('/admin/command', { command, params }),
 

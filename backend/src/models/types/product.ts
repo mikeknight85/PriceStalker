@@ -26,6 +26,8 @@ export interface Product {
   ai_extraction_disabled: boolean;
   category: string | null;
   checking_paused: boolean;
+  item_id?: number | null;
+  is_primary?: boolean;
   created_at: Date;
 }
 

@@ -202,3 +202,24 @@ export function calculateDashboardSummary(products: Product[]): DashboardSummary
   };
 }
 
+export const DASHBOARD_STORAGE_KEYS = [
+  'dashboard_search_query',
+  'dashboard_active_tag',
+  'dashboard_pause_filter',
+  'dashboard_stock_filter',
+  'dashboard_sort_by',
+  'dashboard_sort_order',
+  'pricestalker.dashboard.view',
+] as const;
+
+export function clearDashboardStorage(): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    for (const key of DASHBOARD_STORAGE_KEYS) {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    /* localStorage access might be restricted */
+  }
+}
+
