@@ -97,11 +97,13 @@ export default function SystemSection() {
     setIsResetting(true);
     try {
       const res = await AdminSystemService.resetSystemSettings('all');
-      showToast(`Reset ${res.reset_count} system settings to defaults`, 'success');
+      const settings = res?.settings || (res as any) || {};
+      const resetCount = res?.reset_count ?? Object.keys(settings).length;
+      showToast(`Reset ${resetCount} system settings to defaults`, 'success');
       setShowResetModal(false);
-      queryClient.setQueryData(queryKeys.adminSystemSettings, res.settings);
-      setSavedSettings(res.settings);
-      setSystemSettings(res.settings);
+      queryClient.setQueryData(queryKeys.adminSystemSettings, settings);
+      setSavedSettings(settings);
+      setSystemSettings(settings);
     } catch (err: any) {
       showToast(err.message || 'Failed to reset system settings', 'error');
     } finally {
