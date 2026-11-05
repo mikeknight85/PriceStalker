@@ -2,13 +2,33 @@ import { CheerioAPI } from 'cheerio';
 
 /**
  * Normalizes a selector string into the standardized format.
- * Converts legacy "selector|attribute" into "selector::attr(attribute)".
+ * Converts legacy "selector|attribute" into "selector::attr(attribute)",
+ * converts "selector@attribute" into "selector::attr(attribute)",
+ * converts legacy "~regex~" into "regex:/regex/",
+ * and automatically attaches "::attr(content)" to <meta> attribute selectors.
  */
 export function normalizeSelector(selector: string): string {
   if (!selector) return selector;
   const trimmed = selector.trim();
-  if (trimmed.startsWith('~') && trimmed.endsWith('~')) return trimmed; // regex
+  if (trimmed.startsWith('~') && trimmed.endsWith('~')) {
+    return trimmed;
+  }
   if (trimmed.startsWith('!')) return trimmed; // html
+
+  // Check for Scrapy-style ::attr(attributeName) syntax already present
+  if (trimmed.includes('::attr(') || trimmed.includes('->')) {
+    return trimmed;
+  }
+
+  // Check for @attribute syntax at end, outside brackets/quotes: e.g. meta[...]@content
+  const atIdx = lastAtOutsideBrackets(trimmed);
+  if (atIdx !== -1) {
+    const base = trimmed.slice(0, atIdx).trim();
+    const attr = trimmed.slice(atIdx + 1).trim();
+    if (attr && /^[a-zA-Z0-9_-]+$/.test(attr)) {
+      return `${base}::attr(${attr})`;
+    }
+  }
 
   // Split only on a `|` outside square brackets (issue #166).
   //
@@ -22,7 +42,43 @@ export function normalizeSelector(selector: string): string {
     const attr = trimmed.slice(pipe + 1);
     return `${base}::attr(${attr})`;
   }
+
+  // If this selector targets a <meta> element or metadata property (e.g. meta[property="og:title"],
+  // [property="og:image"]) and does not specify ::attr(...), auto-append ::attr(content)
+  // because <meta> elements have no inner text and Cheerio cannot extract them without it.
+  if (
+    !trimmed.startsWith('xpath:') &&
+    !trimmed.startsWith('regex:')
+  ) {
+    const isMetaTag = /^\s*meta\b/i.test(trimmed);
+    const isMetaProp = /^\s*\[\s*(property|name)\s*=\s*['"]?(og:|twitter:|product:|application-name)/i.test(trimmed);
+    if (isMetaTag || isMetaProp) {
+      return `${trimmed}::attr(content)`;
+    }
+  }
+
   return trimmed;
+}
+
+/**
+ * Index of the last `@` that is not inside `[...]` or quotes, or -1.
+ */
+function lastAtOutsideBrackets(selector: string): number {
+  let depth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let found = -1;
+  for (let i = 0; i < selector.length; i++) {
+    const c = selector[i];
+    if (c === "'" && !inDoubleQuote) inSingleQuote = !inSingleQuote;
+    else if (c === '"' && !inSingleQuote) inDoubleQuote = !inDoubleQuote;
+    else if (!inSingleQuote && !inDoubleQuote) {
+      if (c === '[') depth++;
+      else if (c === ']') depth = Math.max(0, depth - 1);
+      else if (c === '@' && depth === 0) found = i;
+    }
+  }
+  return found;
 }
 
 /**
@@ -144,9 +200,31 @@ export function parseSelector(selector: string): ParsedSelector {
     if (engine === 'xpath' && !base.startsWith('/') && !base.startsWith('.')) base = '//' + base;
     return { realSelector: base, method: 'attr', engine, attribute: attr, modifier: null };
   }
+
+  // Backwards compatibility with @attribute syntax (e.g. meta[...]@content)
+  const atIdx = lastAtOutsideBrackets(workingSelector);
+  if (atIdx !== -1) {
+    const base = workingSelector.slice(0, atIdx).trim();
+    const attr = workingSelector.slice(atIdx + 1).trim();
+    if (attr && /^[a-zA-Z0-9_-]+$/.test(attr)) {
+      let realBase = base;
+      if (engine === 'xpath' && !realBase.startsWith('/') && !realBase.startsWith('.')) realBase = '//' + realBase;
+      return { realSelector: realBase, method: 'attr', engine, attribute: attr, modifier: null };
+    }
+  }
   
   if (engine === 'xpath' && !workingSelector.startsWith('/') && !workingSelector.startsWith('.')) {
     workingSelector = '//' + workingSelector;
+  }
+
+  // If selecting a <meta> element or metadata property without an explicit attribute,
+  // pull its 'content' attribute because <meta> elements contain no inner text.
+  if (engine === 'css') {
+    const isMetaTag = /^\s*meta\b/i.test(workingSelector);
+    const isMetaProp = /^\s*\[\s*(property|name)\s*=\s*['"]?(og:|twitter:|product:|application-name)/i.test(workingSelector);
+    if (isMetaTag || isMetaProp) {
+      return { realSelector: workingSelector, method: 'attr', engine: 'css', attribute: 'content', modifier: null };
+    }
   }
   
   return { realSelector: workingSelector, method: 'text', engine, modifier: null };

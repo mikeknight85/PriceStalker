@@ -1,42 +1,130 @@
 import { logger } from '../logger';
 import type { AISettings } from '../../../models/types/system';
+import { CANONICAL_USER_AGENT } from '../user-agent-constants';
 
 /**
- * Default configuration values for fallback.
+ * Canonical array defaults for extraction selectors and phrases.
+ * Used as the single source of truth across system settings cache,
+ * reset-to-defaults actions, and database migrations.
  */
-const DEFAULT_CONFIG = {
-  priceSelectors: ['[itemprop="price"]', '.price', '#price'],
-  dealPriceSelectors: ['.price-item--sale', '.special-price', '.sale-price'],
-  memberPriceSelectors: ['.member-price', '.perks-price'],
-  preOrderPriceSelectors: ['.preorder-price'],
-  originalPriceSelectors: ['.rrp', '.was-price', '.price-item--regular', '.old-price', '[class*="original" i]'],
-  nameSelectors: ['meta[property="og:title"]::attr(content)', 'meta[name="twitter:title"]::attr(content)', 'h1', '.product-title'],
-  retailerNameSelectors: ['meta[property="og:site_name"]::attr(content)', '.retailer-name', '.brand-name'],
-  imageSelectors: ['meta[property="og:image"]::attr(content)', 'meta[name="twitter:image"]::attr(content)', '.product-image img::attr(src)', '#main-image::attr(src)'],
-  stockSelectors: ['[itemprop="availability"]', '.stock-status', '.availability', '[class*="stock-status" i]', '[class*="availability" i]'],
-  exclusionSelectors: [],
-  genericInStockPhrases: ['in stock', 'available', 'ready to ship', 'auf lager', 'en stock'],
-  genericOutOfStockPhrases: ['out of stock', 'sold out', 'unavailable', 'discontinued', 'nicht lieferbar'],
-  genericPreOrderPhrases: ['pre-order', 'preorder', 'coming soon', 'vorbestellen'],
-  genericChallengePhrases: [
-    'are you a robot',
-    'just a moment',
-    'access denied',
-    'verify you are human',
-    'pardon our interruption',
-    'security check',
-    'attention required',
-    'access is temporarily restricted',
-    'unusual activity',
-    'captcha-delivery',
-    'datadome',
-    'access to this page has been denied',
-    'px-captcha',
-    'perimeterx',
-    'press & hold',
-    'press and hold',
+export const CANONICAL_SELECTOR_ARRAYS: Record<string, string[]> = {
+  generic_price_selectors: [
+    'meta[itemprop="lowPrice"]::attr(content)',
+    '[itemprop="lowPrice"]',
+    '[itemprop="price"]',
+    'meta[property="product:price:amount"]::attr(content)',
+    'meta[property="og:price:amount"]::attr(content)',
+    '[data-price-type="finalPrice"] .price',
+    '[data-price]',
+    '[data-price]::attr(data-price)',
+    '[data-price-amount]',
+    '[data-price-amount]::attr(data-price-amount)',
+    '[data-product-price]',
+    '[data-product-price]::attr(data-product-price)',
+    '[data-test="price"]',
+    '[data-test="product-price"]',
+    '[data-test="current-price"]',
+    '[data-automation-test-id*="price" i]',
+    '[data-testid*="price" i]',
+    '[data-test-id*="price" i]',
+    '.price-item--sale',
+    '.price-item--regular',
+    '.woocommerce-Price-amount.amount',
+    '.summary .price .amount',
+    '.price-box .price',
+    '.special-price .price',
+    '.price',
+    '.product-price',
+    '.current-price',
+    '.sale-price',
+    '.final-price',
+    '.offer-price',
+    '#price',
+    '[class*="price" i]'
   ],
-  genericAIPriceSelectors: [
+  generic_deal_price_selectors: [
+    '.price-item--sale',
+    '.special-price .price',
+    '.sale-price',
+    '.deal-price'
+  ],
+  generic_member_price_selectors: [
+    '.member-price',
+    '.perks-price',
+    '.club-price'
+  ],
+  generic_original_price_selectors: [
+    '.rrp',
+    '.was-price',
+    '.price-item--regular',
+    '.old-price',
+    '[class*="original" i]',
+    '[class*="rrp" i]',
+    '[class*="was-price" i]',
+    '[data-testid*="strikethrough-price"]'
+  ],
+  generic_pre_order_price_selectors: [
+    '[class*="preorder-price" i]',
+    '[class*="pre-order-price" i]',
+    '[data-testid*="preorder-price" i]',
+    '[data-testid*="pre-order-price" i]',
+    '[id*="preorder-price" i]'
+  ],
+  generic_name_selectors: [
+    'meta[property="og:title"]::attr(content)',
+    'meta[name="twitter:title"]::attr(content)',
+    '[itemprop="name"]',
+    '[data-automation-test-id*="title" i]',
+    '[data-automation-test-id*="name" i]',
+    '[data-testid*="title" i]',
+    '[data-testid*="name" i]',
+    'h1[class*="product"]',
+    'h1[class*="title"]',
+    '.product-title',
+    'h1'
+  ],
+  generic_retailer_name_selectors: [
+    'meta[property="og:site_name"]::attr(content)',
+    'meta[name="application-name"]::attr(content)',
+    '.retailer-name',
+    'a[class*="logo" i]::attr(aria-label)',
+    'a[id*="logo" i]::attr(aria-label)'
+  ],
+  generic_image_selectors: [
+    '[itemprop="image"]',
+    'meta[property="og:image"]::attr(content)',
+    'meta[name="twitter:image"]::attr(content)',
+    'link[rel="preload"][as="image"]',
+    '[data-automation-test-id*="image" i]',
+    '[data-testid*="image" i]',
+    '.product-image img',
+    '.main-image img',
+    '[data-zoom-image]',
+    'img[class*="product" i]',
+    '[class*="gallery" i] img',
+    '[class*="media" i] img',
+    '[class*="carousel" i] img',
+    '[class*="slider" i] img',
+    '.woocommerce-product-gallery__image img'
+  ],
+  generic_stock_selectors: [
+    '[itemprop="availability"]',
+    '.stock-status',
+    '.availability',
+    '[data-automation-test-id*="stock" i]',
+    '[data-automation-test-id*="availability" i]',
+    '[data-automation-test-id*="buy-box" i]',
+    '[data-testid*="stock" i]',
+    '[data-testid*="availability" i]',
+    '[data-test-id*="stock" i]',
+    '[data-test-id*="availability" i]',
+    '[class*="stock-status" i]',
+    '[class*="availability" i]'
+  ],
+  generic_exclusion_selectors: [
+    '.site-wide-ad'
+  ],
+  generic_ai_price_selectors: [
     '[class*="price" i]',
     '[class*="Price" i]',
     '[data-testid*="price" i]',
@@ -44,21 +132,17 @@ const DEFAULT_CONFIG = {
     '[data-automation*="Price" i]',
     '[itemprop="price"]',
     '[data-price]',
+    '[data-price]::attr(data-price)',
     '[data-price-amount]',
-    '[data-product-price]'
+    '[data-price-amount]::attr(data-price-amount)',
+    '[data-product-price]',
+    '[data-product-price]::attr(data-product-price)'
   ],
-  // These are the selectors used to gather *evidence* for AI auto-mapping. They
-  // must stay at least as broad as generic_image_selectors (seeded by
-  // 006_seed_generic_selectors), because the AI can only propose a selector for
-  // an element it was shown. When this list was the narrower of the two, pages
-  // whose image is matched by the broad `img[class*="product"]` were presented
-  // to the AI only through narrow patterns, so it learned an over-specific
-  // selector -- and site-specific selectors then outrank the generic one that
-  // would have worked.
-  genericAIImageSelectors: [
+  generic_ai_image_selectors: [
     'link[rel="preload"][as="image"]',
     '[itemprop="image"]',
-    '[property="og:image"]',
+    'meta[property="og:image"]::attr(content)',
+    'meta[name="twitter:image"]::attr(content)',
     'img#landingImage',
     'img#main-image',
     'img.main-image',
@@ -72,8 +156,82 @@ const DEFAULT_CONFIG = {
     '[data-testid*="image" i]',
     '.product-image img',
     '.main-image img',
-    '[data-zoom-image]'
+    '[data-zoom-image]',
+    '[class*="gallery" i] img',
+    '[class*="media" i] img',
+    '[class*="carousel" i] img',
+    '[class*="slider" i] img',
+    '.woocommerce-product-gallery__image img'
   ],
+  generic_in_stock_phrases: [
+    'in stock', 'instock', 'add to cart', 'add to basket', 'add to bag',
+    'buy now', 'available now', 'add to trolley', 'clearance', 'on sale',
+    'special offer', 'limited stock', 'available', 'ready to ship',
+    'dispatched within', 'dispatched from', 'auf lager', 'en stock'
+  ],
+  generic_out_of_stock_phrases: [
+    'out of stock', 'sold out', 'currently unavailable', 'not available',
+    'backorder', 'back-order', 'notify me when available', 'coming soon',
+    'unavailable', 'discontinued', 'nicht lieferbar'
+  ],
+  generic_pre_order_phrases: [
+    'pre-order', 'preorder', 'available starting', 'expected to ship',
+    'release date', 'pre-ordering', 'coming soon', 'vorbestellen'
+  ],
+  generic_challenge_phrases: [
+    'are you a robot',
+    'just a moment',
+    'access denied',
+    'verify you are human',
+    'pardon our interruption',
+    'security check',
+    'attention required',
+    'access is temporarily restricted',
+    'unusual activity',
+    'access to this page has been denied',
+    'press & hold',
+    'press and hold'
+  ]
+};
+
+/**
+ * Canonical dictionary mapping all configurable system settings to their factory defaults.
+ */
+export const CANONICAL_SYSTEM_DEFAULTS: Record<string, string> = {
+  default_user_agent: CANONICAL_USER_AGENT,
+  default_referrer: 'https://www.google.com/',
+  default_refresh_interval: '43200',
+  browser_timeout: '60000',
+  browser_delay: '3000',
+  jsonld_image_key: 'image',
+  jsonld_name_key: 'name',
+  jsonld_price_key: 'price',
+  prefer_jsonld_image: 'true',
+  ...Object.fromEntries(
+    Object.entries(CANONICAL_SELECTOR_ARRAYS).map(([k, arr]) => [k, JSON.stringify(arr)])
+  )
+};
+
+/**
+ * Default configuration values for fallback.
+ */
+const DEFAULT_CONFIG = {
+  priceSelectors: CANONICAL_SELECTOR_ARRAYS.generic_price_selectors,
+  dealPriceSelectors: CANONICAL_SELECTOR_ARRAYS.generic_deal_price_selectors,
+  memberPriceSelectors: CANONICAL_SELECTOR_ARRAYS.generic_member_price_selectors,
+  preOrderPriceSelectors: CANONICAL_SELECTOR_ARRAYS.generic_pre_order_price_selectors,
+  originalPriceSelectors: CANONICAL_SELECTOR_ARRAYS.generic_original_price_selectors,
+  nameSelectors: CANONICAL_SELECTOR_ARRAYS.generic_name_selectors,
+  retailerNameSelectors: CANONICAL_SELECTOR_ARRAYS.generic_retailer_name_selectors,
+  imageSelectors: CANONICAL_SELECTOR_ARRAYS.generic_image_selectors,
+  stockSelectors: CANONICAL_SELECTOR_ARRAYS.generic_stock_selectors,
+  exclusionSelectors: CANONICAL_SELECTOR_ARRAYS.generic_exclusion_selectors,
+  genericInStockPhrases: CANONICAL_SELECTOR_ARRAYS.generic_in_stock_phrases,
+  genericOutOfStockPhrases: CANONICAL_SELECTOR_ARRAYS.generic_out_of_stock_phrases,
+  genericPreOrderPhrases: CANONICAL_SELECTOR_ARRAYS.generic_pre_order_phrases,
+  genericChallengePhrases: CANONICAL_SELECTOR_ARRAYS.generic_challenge_phrases,
+  genericAIPriceSelectors: CANONICAL_SELECTOR_ARRAYS.generic_ai_price_selectors,
+  genericAIImageSelectors: CANONICAL_SELECTOR_ARRAYS.generic_ai_image_selectors,
   browserTimeout: 60000,
   browserDelay: 3000,
 };

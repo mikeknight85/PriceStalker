@@ -7,62 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.2.0-beta.3] - 2026-11-15
-
 ### Added
 
-- Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database
-  (`ps-telemetry.enuff.com`). Transmits minimal technical health metrics
-  (version, OS, architecture, and coarse item/store/user buckets) once a day.
-  Every value is either a fixed identifier or a bucket -- no counts, personal
-  data, store names or URLs are collected or stored. Opt out with
-  `DISABLE_TELEMETRY`, `DO_NOT_TRACK` (either accepts `true`, `1` or `yes`),
-  `TELEMETRY_ENABLED=false`, or the Admin -> System Settings toggle, which also
-  shows the exact payload that would be sent. The heartbeat is genuinely daily:
-  the ping sent shortly after startup is suppressed if one was already delivered
-  in the last 20 hours, so an instance that restarts often still reports once a
-  day rather than once per restart. Adds migration 025, and the collector Worker
-  and D1 schema are open source in `telemetry-collector/`.
+- User-Agent presets matrix across Windows, macOS, Linux, Android, iOS, and iPadOS updated to Chrome 154, Edge 154, Safari 18.4, and Firefox 140, including an explicit "Use System Default (Inherit)" option in retailer configuration and admin debug controls (#262).
+- User-Agent diagnostic warnings on retailer configs: flags engine mismatches when Chromium Browser Scraper is paired with Safari/Firefox User-Agents, or when an outdated Chromium version (< v140) is configured.
+- Reset to System Defaults endpoint (`POST /api/admin/settings/system/reset`) and admin UI buttons on Global Selectors and System Settings, supporting `all`, `selectors`, `phrases`, and `network` scopes (#264).
+- Retailer `re_auto_map` toggle ("Re-map on next scrape") allowing users and admins to schedule auto-retailer rediscovery on the next scheduled scrape without manual URL testing (#265).
+- Heuristic non-AI auto-mapping fallback (`handleHeuristicAutoMapping`) for re-mapping runs when AI auto-mapping is disabled or produces no valid selectors (#265).
+- Scrapy `@attribute` syntax support outside brackets in CSS selector parsing and normalization (e.g. `meta[name="..."]@content`, `img@src`).
+- Auto-append `::attr(content)` for `<meta>` elements in selector normalization and AI auto-mapping to prevent empty text extractions (#262, #263).
+- Migration `026_repair_selectors_user_agent_and_remap.ts` to add `re_auto_map` to `retailer_configs`, update `default_user_agent` to canonical Chrome 154, repair Scrapy `@attr` and bare `<meta>` tags, strip corrupted image URLs (`/c_fill`, placeholder SVGs, trailing slashes), and backfill missing `items.image_url`.
 
 ### Fixed
 
-- The telemetry collector's public dashboard now escapes version and platform
-  strings before writing them into its inline `<script>`, closing a stored
-  cross-site scripting hole that affected anyone running their own collector:
-  `JSON.stringify` does not escape `<`, and an HTML parser ends a `<script>`
-  element at the first `</script` sequence whatever the JavaScript string
-  context, so a single crafted ping could run arbitrary script for every
-  visitor to the dashboard. Ingestion now also constrains `version`,
-  `build_commit`, platform, architecture, feature keys and usage buckets to
-  allowlists, so such a value cannot be stored in the first place (#266).
-- Scraper price extraction no longer truncates prices. Any price whose
-  currency symbol or code was immediately followed by four or more digits with
-  no thousands separator lost its last digit -- `$5799.00` read as 579,
-  `AUD $3799` as 379, `CHF 1299` as 129, `$10000` as 100 -- because the pattern
-  matched greedily and then stopped. Separately, every ambiguous
-  separator case resolved to a single digit on a page with no currency symbol:
-  `1,299`, `1 299` and `12.999` all parsed as `1` or `12` regardless of locale.
-  Both are fixed, and the thousands/decimal decision is now driven by the
-  retailer's locale hint, so `1.299` reads as 1299 for a German retailer and
-  1.30 for a US one. Prices with three or more decimal places (`$1.4599`,
-  `$1,299.9900`) now keep their full fractional part instead of being floored.
-  Also corrects the `Fr.` currency symbol, which persisted a non-ISO `FR.`
-  currency code on Swiss listings instead of `CHF` (#285).
-- The image URL resolver no longer accepts loading spinners and placeholder
-  graphics as product images, so a lazy-loading indicator such as
-  `/static/loading.svg` can no longer overwrite a genuine product photo.
-- Dashboard search text, active tags, tracking and stock filters and view
-  preference are now cleared on logout. They were kept in browser storage and
-  reapplied for whoever logged in next on the same machine, so a second user
-  arrived at a filtered dashboard that did not match the controls shown (#260).
-- Returning from a product's detail page to the dashboard no longer shows
-  "No stores found" when the active tag has since been removed from every
-  product. Both list views also gained a **Reset filters** button, so an empty
-  result caused by a stale filter can be cleared without hunting for it (#259).
-- The Add Product form no longer accepts a second submission while the first
-  extraction is still in flight. Pressing Enter repeatedly, or double-clicking
-  Add, produced 409 unique-constraint collisions and abandoned the navigation
-  that should have followed the successful request (#276).
+- AI auto-mapping validator rejecting Scrapy `::attr(...)` syntax due to Cheerio `css-select` pseudo-element syntax limitations (#262, #279).
+- AI auto-mapping and generic extraction picking up dialog/modal elements and cross-sell prices (`h2.explore-modal-title`, `.cross-sell-cell .product-price`, `.toc-menu-toggle`) as product titles and prices (#279).
+- Retailer configuration user-agent blank string overrides normalized to NULL to correctly inherit the system default User-Agent without losing custom user settings.
+- Canonical items `items.image_url` left blank or corrupted when product listings have valid image assets (#263).
+
+## [2.2.0-beta.3] - 2026-11-15
 
 ## [2.2.0-beta.2] - 2026-11-02
 

@@ -7,6 +7,7 @@ import { tryAIExtraction } from '../../services/ai';
 import { logger } from '../../utils/system/logger';
 import { asyncHandler } from '../../utils/system/route-helpers';
 import { assertUrlIsSafe } from '../../utils/system/url-safety';
+import { resolveUserAgent } from '../../services/scraper/transport/headers';
 
 const router = Router();
 
@@ -44,7 +45,7 @@ router.post('/extract', asyncHandler(async (req: AuthRequest, res: Response) => 
   if (mode === 'bypass') {
     try {
       const response = await axios.get(url, {
-        headers: { 'User-Agent': config?.user_agent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36' },
+        headers: { 'User-Agent': await resolveUserAgent(config?.user_agent) },
         timeout: 15000
       });
       result = { html: response.data, name: null, price: null, imageUrl: null, url, stockStatus: 'unknown', aiStatus: null, priceCandidates: [], needsReview: false };

@@ -7,8 +7,9 @@ import { RETAILER_GENERATION_PROMPT } from '../prompts';
 import { extractJson } from '../parsers';
 import { getAIProvider } from '../client';
 import { prepareHtmlForAI } from '../html-preprocessor';
+import { normalizeSelector, parseSelector } from '../../scraper/core/selectors';
 
-function validateSelector(selector: string, url: string): boolean {
+export function validateSelector(selector: string, url: string, field?: string): boolean {
   if (!selector || typeof selector !== 'string') return false;
   const trimmed = selector.trim();
   
@@ -19,17 +20,29 @@ function validateSelector(selector: string, url: string): boolean {
     return false;
   }
 
-  // 2. Rejects selectors matching hashed CSS-in-JS patterns
-  const hashPattern = /\.(css|sc|styled|styles)-[a-z0-9]{5,10}\b/i;
+  // 2. Reject modal, dialog, popup, menu, and cross-sell noise for name and price
+  if (field === 'name_selectors' || field === 'price_selectors' || field === 'deal_price_selectors') {
+    if (/(modal|dialog|popup|toc-menu|cross-sell|\.d-none)/i.test(trimmed)) {
+      logger.warn(`AI | Auto-Map | Selector Validation | Rejected noise selector "${trimmed}" for ${field} on ${url}`, 'AI');
+      return false;
+    }
+  }
+
+  // 3. Rejects selectors matching hashed CSS-in-JS patterns or CSS modules
+  const hashPattern = /(\.(css|sc|styled|styles)-[a-z0-9]{5,10}\b|--[A-Za-z0-9_-]{6,}\b|\[class\*=['"]?(css|sc|styled)-)/i;
   if (hashPattern.test(trimmed)) {
     logger.warn(`AI | Auto-Map | Selector Validation | Rejected hashed CSS-in-JS class in "${trimmed}" for ${url}`, 'AI');
     return false;
   }
 
-  // 3. Cheerio syntax check
+  // 4. Cheerio syntax check - parse selector first to separate realSelector from ::attr() and modifiers
   try {
+    const parsed = parseSelector(trimmed);
+    if (parsed.engine === 'regex' || parsed.engine === 'xpath') {
+      return true;
+    }
     const $ = load('<div></div>');
-    $(trimmed);
+    $(parsed.realSelector || trimmed);
     return true;
   } catch (err: any) {
     logger.warn(`AI | Auto-Map | Selector Validation | Rejected invalid CSS syntax "${trimmed}" for ${url} | Error: ${err.message}`, 'AI');
@@ -37,9 +50,12 @@ function validateSelector(selector: string, url: string): boolean {
   }
 }
 
-function cleanAndValidateSelectors(selectors: any, url: string): string[] {
+function cleanAndValidateSelectors(selectors: any, url: string, field?: string): string[] {
   if (!Array.isArray(selectors)) return [];
-  return selectors.filter((sel): sel is string => typeof sel === 'string' && validateSelector(sel, url));
+  return selectors
+    .filter((sel): sel is string => typeof sel === 'string')
+    .map(sel => normalizeSelector(sel))
+    .filter(sel => validateSelector(sel, url, field));
 }
 
 /**
@@ -124,13 +140,16 @@ export async function generateRetailerConfig(
       ['stock_selectors', data.stock_selectors],
     ] as const;
     for (const [field, raw] of selectorFields) {
-      const cleaned = cleanAndValidateSelectors(raw, url);
+      const cleaned = cleanAndValidateSelectors(raw, url, field);
       if (cleaned.length > 0) resultConfig[field] = cleaned;
     }
 
     if (data.jsonld_name_key) resultConfig.jsonld_name_key = data.jsonld_name_key;
     if (data.jsonld_price_key) resultConfig.jsonld_price_key = data.jsonld_price_key;
     if (data.jsonld_image_key) resultConfig.jsonld_image_key = data.jsonld_image_key;
+    if (typeof data.prefer_jsonld_image === 'boolean') {
+      resultConfig.prefer_jsonld_image = data.prefer_jsonld_image;
+    }
 
     // Quality gate: require at least one valid price selector (standard, deal, member, pre-order) or a JSON-LD price key
     const hasPriceSelector = Boolean(

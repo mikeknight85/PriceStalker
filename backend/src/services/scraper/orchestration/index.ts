@@ -14,7 +14,7 @@ import { initScrapeSession } from './init';
 import { runExtractionPhase } from './extraction';
 import { runConsensusPhase } from './consensus';
 import { runVerificationPhase } from './verification';
-import { handleRetailerMaintenance, handleAutoMapping, handleRestoreStatus } from './maintenance';
+import { handleRetailerMaintenance, handleAutoMapping, handleHeuristicAutoMapping, handleRestoreStatus } from './maintenance';
 import { classifyTransportError } from '../../../types/availability';
 
 /**
@@ -149,19 +149,39 @@ export async function scrapeProductWithVoting(
     const priceExtracted = result.price !== null;
     let autoMapAttempted = false;
 
-    if (!challenge && !isDefinitivelyUnavailable && !priceExtracted && (!domainConfig || isShellConfig) && session.globalAiSettings.ai_auto_mapping_enabled) {
-      autoMapAttempted = true;
-      domainConfig = await handleAutoMapping({
-        html,
-        url,
-        domain: session.lookupDomain,
-        currencyHint,
-        localeHint,
-        productId,
-        extractionSteps,
-        learnedFlags: acqResult.learnedFlags,
-        isRefresh: !!domainConfig
-      });
+    const wantsReAutoMap = domainConfig?.re_auto_map === true;
+    const isNewRetailerWithoutPrice = !challenge && !isDefinitivelyUnavailable && !priceExtracted && (!domainConfig || isShellConfig);
+
+    if (wantsReAutoMap || (isNewRetailerWithoutPrice && session.globalAiSettings.ai_auto_mapping_enabled)) {
+      if (session.globalAiSettings.ai_auto_mapping_enabled) {
+        autoMapAttempted = true;
+        domainConfig = await handleAutoMapping({
+          html,
+          url,
+          domain: session.lookupDomain,
+          currencyHint,
+          localeHint,
+          productId,
+          extractionSteps,
+          learnedFlags: acqResult.learnedFlags,
+          isRefresh: !!domainConfig
+        });
+      }
+
+      // If re-mapping was requested and AI was disabled or produced no config, fall back to heuristic discovery
+      if (wantsReAutoMap && (!domainConfig || domainConfig.re_auto_map) && typeof handleHeuristicAutoMapping === 'function') {
+        autoMapAttempted = true;
+        domainConfig = await handleHeuristicAutoMapping({
+          html,
+          url,
+          domain: session.lookupDomain,
+          currencyHint,
+          localeHint,
+          extractionSteps,
+          learnedFlags: acqResult.learnedFlags,
+          existingConfig: domainConfig
+        });
+      }
 
       if (domainConfig) {
         extractionSteps.push(`Retailer | Auto-Map | Re-running extraction with new config`);

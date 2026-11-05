@@ -6,6 +6,7 @@ import { getAIProvider } from '../client';
 import { prepareHtmlForAI } from '../html-preprocessor';
 import axios from 'axios';
 import { AISettings } from '../../../models';
+import { resolveUserAgent } from '../../scraper/transport/headers';
 
 /**
  * Public API for testing AI extraction via Admin UI.
@@ -16,7 +17,7 @@ export async function extractWithAI(
 ): Promise<AIExtractionResult> {
   const response = await axios.get<string>(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      'User-Agent': await resolveUserAgent(),
       Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
     },
     timeout: 20000,

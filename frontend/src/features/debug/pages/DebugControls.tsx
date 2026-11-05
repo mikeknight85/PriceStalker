@@ -1,5 +1,5 @@
 import React from 'react';
-import { PRESET_USER_AGENTS } from '../../admin/components';
+import { GROUPED_PRESET_USER_AGENTS } from '../../admin/components';
 import { RetailerConfig } from '../../../types/api';
 import Icon from '../../../components/Icon';
 
@@ -136,9 +136,13 @@ export default function DebugControls({ state, actions, children }: DebugControl
               <div className="form-group mb-3">
                 <label>User Agent</label>
                 <select className="form-control workstation-input" value={config.user_agent || ''} onChange={e => setConfig({ ...config, user_agent: e.target.value })}>
-                  <option value="">Default Server UA</option>
-                  {PRESET_USER_AGENTS.map((ua, idx) => (
-                    <option key={idx} value={ua.value}>{ua.label}</option>
+                  <option value="">Default Server UA (Inherit)</option>
+                  {GROUPED_PRESET_USER_AGENTS.map(grp => (
+                    <optgroup key={grp.group} label={grp.group}>
+                      {grp.options.map(ua => (
+                        <option key={ua.value} value={ua.value}>{ua.label}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
