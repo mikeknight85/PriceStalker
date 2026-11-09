@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS instances (
 CREATE INDEX IF NOT EXISTS idx_instances_last_seen ON instances(last_seen_at);
 CREATE INDEX IF NOT EXISTS idx_instances_version ON instances(version);
 
+-- Reserved for future scheduled daily aggregate rollups (currently unused)
 CREATE TABLE IF NOT EXISTS daily_rollups (
   date DATE PRIMARY KEY,
   active_instances INTEGER DEFAULT 0,

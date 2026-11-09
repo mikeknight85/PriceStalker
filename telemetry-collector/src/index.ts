@@ -119,7 +119,11 @@ export default {
 async function handlePing(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   let body: TelemetryPayload;
   try {
-    body = await request.json();
+    const rawText = await request.text();
+    if (rawText.length > MAX_PAYLOAD_BYTES) {
+      return jsonResponse({ error: 'Payload Too Large (max 16KB)' }, 413);
+    }
+    body = JSON.parse(rawText);
   } catch {
     return jsonResponse({ error: 'Invalid JSON body' }, 400);
   }
@@ -129,38 +133,60 @@ async function handlePing(request: Request, env: Env, ctx: ExecutionContext): Pr
     return jsonResponse({ error: 'Invalid or missing instance_id UUID' }, 400);
   }
 
-  // Version must be a non-empty string under 64 chars
-  const version = typeof body.version === 'string' ? body.version.slice(0, 64) : 'unknown';
-  const buildCommit = typeof body.build_commit === 'string' ? body.build_commit.slice(0, 40) : null;
+  // Version must match strict allowlist (alphanumeric, dot, plus, hyphen, 1-32 chars)
+  const VERSION_REGEX = /^[0-9A-Za-z.+-]{1,32}$/;
+  const version = typeof body.version === 'string' && VERSION_REGEX.test(body.version.trim())
+    ? body.version.trim()
+    : 'unknown';
+
+  const buildCommit = typeof body.build_commit === 'string' && /^[0-9a-fA-F]{7,40}$/.test(body.build_commit.trim())
+    ? body.build_commit.trim()
+    : null;
 
   // OS & Node
-  const osPlatform = typeof body.os?.platform === 'string' ? body.os.platform.slice(0, 32) : null;
-  const osArch = typeof body.os?.arch === 'string' ? body.os.arch.slice(0, 32) : null;
-  const nodeVersion = typeof body.os?.node_version === 'string' ? body.os.node_version.slice(0, 32) : null;
+  const SAFE_ID_REGEX = /^[0-9A-Za-z._-]{1,16}$/;
+  const osPlatform = typeof body.os?.platform === 'string' && SAFE_ID_REGEX.test(body.os.platform)
+    ? body.os.platform
+    : null;
+  const osArch = typeof body.os?.arch === 'string' && SAFE_ID_REGEX.test(body.os.arch)
+    ? body.os.arch
+    : null;
+  const nodeVersion = typeof body.os?.node_version === 'string' && /^[0-9A-Za-z.v-]{1,16}$/.test(body.os.node_version)
+    ? body.os.node_version
+    : null;
 
   // Runtime
   const isDocker = body.runtime?.is_docker === true ? 1 : 0;
 
   // Privacy-first Geo: country code from header forwarded by gateway or Cloudflare edge. Never log or store IP!
-  const cfCountry = request.headers.get('cf-ipcountry') || (request as any).cf?.country;
+  const cfCountry = request.headers.get('cf-ipcountry') || (request as Request & { cf?: { country?: string } }).cf?.country;
   const country = typeof cfCountry === 'string' && cfCountry.length === 2 ? cfCountry.toUpperCase() : 'XX';
 
-  // Feature flags sanitized
+  // Feature flags sanitized (alphanumeric/underscore keys up to 32 chars, strictly boolean values)
   let featuresJson: string | null = null;
   if (body.features && typeof body.features === 'object') {
     const cleanFeatures: Record<string, boolean> = {};
     for (const [k, v] of Object.entries(body.features)) {
-      if (typeof v === 'boolean') {
-        cleanFeatures[k.slice(0, 32)] = v;
+      if (typeof v === 'boolean' && /^[a-z0-9_]{1,32}$/.test(k)) {
+        cleanFeatures[k] = v;
       }
     }
     featuresJson = JSON.stringify(cleanFeatures);
   }
 
-  // Coarse usage buckets (e.g. "1-10", "11-50", "51-200", "200+")
-  const itemsBucket = typeof body.usage?.items_bucket === 'string' ? body.usage.items_bucket.slice(0, 16) : null;
-  const storesBucket = typeof body.usage?.stores_bucket === 'string' ? body.usage.stores_bucket.slice(0, 16) : null;
-  const usersBucket = typeof body.usage?.users_bucket === 'string' ? body.usage.users_bucket.slice(0, 16) : null;
+  // Coarse usage buckets (e.g. "0", "1-10", "11-50", "51-200", "200+")
+  const VALID_ITEM_BUCKETS = new Set(['0', '1-10', '11-50', '51-200', '200+']);
+  const VALID_USER_BUCKETS = new Set(['1', '2-5', '6+']);
+
+  const itemsBucket = typeof body.usage?.items_bucket === 'string' && VALID_ITEM_BUCKETS.has(body.usage.items_bucket)
+    ? body.usage.items_bucket
+    : null;
+  const storesBucket = typeof body.usage?.stores_bucket === 'string' && VALID_ITEM_BUCKETS.has(body.usage.stores_bucket)
+    ? body.usage.stores_bucket
+    : null;
+  const usersBucket = typeof body.usage?.users_bucket === 'string' && VALID_USER_BUCKETS.has(body.usage.users_bucket)
+    ? body.usage.users_bucket
+    : null;
 
   // Upsert into D1
   await env.DB.prepare(`
@@ -278,11 +304,14 @@ async function handleStats(env: Env): Promise<Response> {
 async function renderDashboardHtml(env: Env): Promise<Response> {
   const stats = await fetchStatsData(env);
 
-  const versionLabels = JSON.stringify(stats.versions.map(v => v.version));
-  const versionCounts = JSON.stringify(stats.versions.map(v => v.count));
+  // Safely serialize data into JavaScript strings escaping '<' and '>' to prevent inline <script> breakouts / XSS
+  const escapeScriptJson = (str: string): string => str.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
-  const platformLabels = JSON.stringify(stats.platforms.map(p => `${p.os_platform}/${p.os_arch}`));
-  const platformCounts = JSON.stringify(stats.platforms.map(p => p.count));
+  const versionLabels = escapeScriptJson(JSON.stringify(stats.versions.map(v => v.version)));
+  const versionCounts = escapeScriptJson(JSON.stringify(stats.versions.map(v => v.count)));
+
+  const platformLabels = escapeScriptJson(JSON.stringify(stats.platforms.map(p => `${p.os_platform}/${p.os_arch}`)));
+  const platformCounts = escapeScriptJson(JSON.stringify(stats.platforms.map(p => p.count)));
 
   const countryRows = stats.countries
     .map(c => `<tr><td><strong>${c.country}</strong></td><td style="text-align: right;">${c.count}</td></tr>`)
