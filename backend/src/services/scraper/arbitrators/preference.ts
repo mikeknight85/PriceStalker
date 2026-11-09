@@ -75,7 +75,8 @@ export type PreferenceOutcome =
  */
 export function selectPreferredCandidate(
   candidates: PriceCandidate[],
-  preferredMethod: string | null | undefined
+  preferredMethod: string | null | undefined,
+  anchorPrice?: number | null
 ): PreferenceOutcome {
   const method = (preferredMethod || '').trim();
   if (!method) return { status: 'none' };
@@ -85,7 +86,29 @@ export function selectPreferredCandidate(
   if (matching.length === 0) return { status: 'unmatched', method };
 
   const groups = groupPriceCandidates(matching);
-  groups.sort((a, b) => b.length - a.length);
+  const hasAnchor = typeof anchorPrice === 'number' && Number.isFinite(anchorPrice) && anchorPrice > 0;
+
+  groups.sort((a, b) => {
+    if (hasAnchor) {
+      const priceA = a[0].price;
+      const priceB = b[0].price;
+      // Extreme drift matches the consensus guardrail definition (< 0.5x or > 2.5x)
+      const aPlausible = priceA >= anchorPrice * 0.5 && priceA <= anchorPrice * 2.5;
+      const bPlausible = priceB >= anchorPrice * 0.5 && priceB <= anchorPrice * 2.5;
+      if (aPlausible && !bPlausible) return -1;
+      if (!aPlausible && bPlausible) return 1;
+
+      // When both are plausible or both outliers, if candidate counts are close, prefer the one closer to anchor
+      const countDiff = Math.abs(a.length - b.length);
+      if (countDiff <= 3) {
+        const driftA = Math.abs(priceA - anchorPrice);
+        const driftB = Math.abs(priceB - anchorPrice);
+        return driftA - driftB;
+      }
+    }
+    return b.length - a.length;
+  });
+
   const winner = groups[0];
 
   return {

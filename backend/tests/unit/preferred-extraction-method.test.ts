@@ -159,6 +159,27 @@ describe('selectPreferredCandidate', () => {
       { price: Number.NaN, currency: 'EUR', method: 'custom-css', confidence: 0.9, selector: '.a' },
     ], 'custom-css').status).toBe('unmatched');
   });
+
+  it('prioritizes candidate group within plausible drift of anchorPrice over extreme-drift carousel outliers (issue #236)', () => {
+    // 7 accessory/carousel items matching .a-offscreen at $49.99 vs 3 genuine product prices at $378.00
+    const candidates: PriceCandidate[] = [
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 378, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 378, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 378, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+    ];
+
+    const outcome = selectPreferredCandidate(candidates, 'custom-css', 378);
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+    expect(outcome.selection.candidate.price).toBe(378);
+  });
 });
 
 describe('runConsensusPhase: the saved preference is honoured', () => {

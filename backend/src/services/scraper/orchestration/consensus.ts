@@ -64,7 +64,7 @@ export async function runConsensusPhase(
   // pure arbitration function and reordering its priority paths; putting it in
   // extraction would have meant a preference could not express "the JSON-LD
   // one, not the deal one" at all.
-  const preference = selectPreferredCandidate(allCandidates, preferredMethod);
+  const preference = selectPreferredCandidate(allCandidates, preferredMethod, anchorPrice);
 
   if (preference.status === 'secondary') {
     extractionSteps.push(
