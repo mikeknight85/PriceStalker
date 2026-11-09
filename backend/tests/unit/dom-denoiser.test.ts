@@ -162,6 +162,49 @@ describe('denoiseDomForExtraction Unit Tests', () => {
     expect($('.site-wide-ad').length).toBe(0);
     expect($('h1').length).toBe(1);
   });
+
+  it('should not preserve carousel or recommendation containers even if they contain elements matching custom selectors (issue #236)', () => {
+    const html = `
+      <html>
+        <body>
+          <div class="buy-box">
+            <h1>Pixel Buds</h1>
+            <span class="a-offscreen">$378.00</span>
+          </div>
+          <div class="carousel" id="desktop-dp-sims_purchase-similarities-sims-feature">
+            <div class="accessory-card">
+              <span class="accessory-title">Silicone Case</span>
+              <span class="a-offscreen">$49.99</span>
+            </div>
+            <div class="accessory-card">
+              <span class="accessory-title">Charging Pad</span>
+              <span class="a-offscreen">$49.99</span>
+            </div>
+          </div>
+          <div class="recommended-products">
+            <span class="a-offscreen">$19.99</span>
+          </div>
+        </body>
+      </html>
+    `;
+    const $ = cheerio.load(html);
+    const domainConfig = {
+      price_selectors: ['.a-offscreen']
+    };
+
+    denoiseDomForExtraction($, domainConfig);
+
+    // The primary product element must remain
+    expect($('.buy-box').length).toBe(1);
+    expect($('.buy-box .a-offscreen').text()).toBe('$378.00');
+
+    // Recommendation carousels and widgets must be completely pruned
+    expect($('.carousel').length).toBe(0);
+    expect($('#desktop-dp-sims_purchase-similarities-sims-feature').length).toBe(0);
+    expect($('.recommended-products').length).toBe(0);
+    expect($('body').text()).not.toContain('$49.99');
+    expect($('body').text()).not.toContain('$19.99');
+  });
 });
 
 describe('denoiseHtmlForRegex Unit Tests', () => {
