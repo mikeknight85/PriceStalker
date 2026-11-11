@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import * as cheerio from 'cheerio';
 import { extractJsonLdCandidates, extractByRegex } from '../../src/services/scraper/extractors/price-extraction';
 import { denoiseHtmlForRegex } from '../../src/services/scraper/extractors/dom-denoiser';
-import { parsePrice } from '../../src/utils/scraping/price/parser';
+import { parsePrice, extractPricesFromText } from '../../src/utils/scraping/price/parser';
 import { normalizePrice } from '../../src/utils/scraping/price/normalizer';
 
 // Mock currencyCache to provide predefined sync currencies list
@@ -14,7 +14,13 @@ vi.mock('../../src/utils/i18n/currency/cache', () => ({
       { locale: 'en_GB', iso: 'GBP', symbol: '£' },
       { locale: 'de_DE', iso: 'EUR', symbol: '€' },
       { locale: 'zh_Hans_MO', iso: 'CNY', symbol: '¥' },
-      { locale: 'ja_JP', iso: 'JPY', symbol: '¥' }
+      { locale: 'ja_JP', iso: 'JPY', symbol: '¥' },
+      { locale: 'hi_IN', iso: 'INR', symbol: '₹' },
+      { locale: 'de_CH', iso: 'CHF', symbol: 'CHF' },
+      { locale: 'en_CA', iso: 'CAD', symbol: '$' },
+      { locale: 'en_NZ', iso: 'NZD', symbol: '$' },
+      { locale: 'en_SG', iso: 'SGD', symbol: '$' },
+      { locale: 'zh_HK', iso: 'HKD', symbol: '$' }
     ])
   }
 }));
@@ -164,6 +170,154 @@ describe('parsePrice Robust Currency Normalisation Tests', () => {
     expect(parsed).not.toBeNull();
     expect(parsed?.price).toBe(150.00);
     expect(parsed?.currency).toBe('JPY');
+  });
+
+  describe('Issue #285: Unseparated 4-digit prices', () => {
+    it('should extract 4-digit unseparated prices with currency symbol without truncation', () => {
+      const p1 = parsePrice('$5799', 'AUD', 'en-AU');
+      expect(p1).not.toBeNull();
+      expect(p1?.price).toBe(5799);
+      expect(p1?.currency).toBe('AUD');
+
+      const p2 = parsePrice('$1000', 'USD', 'en-US');
+      expect(p2).not.toBeNull();
+      expect(p2?.price).toBe(1000);
+
+      const p3 = parsePrice('$1299', 'AUD', 'en-AU');
+      expect(p3).not.toBeNull();
+      expect(p3?.price).toBe(1299);
+    });
+
+    it('should extract 4-digit unseparated prices with decimals without truncation', () => {
+      const p1 = parsePrice('$5799.00', 'AUD', 'en-AU');
+      expect(p1).not.toBeNull();
+      expect(p1?.price).toBe(5799);
+
+      const p2 = parsePrice('$5799.99', 'AUD', 'en-AU');
+      expect(p2).not.toBeNull();
+      expect(p2?.price).toBe(5799.99);
+
+      const p3 = parsePrice('€1234,56', 'EUR', 'de-DE');
+      expect(p3).not.toBeNull();
+      expect(p3?.price).toBe(1234.56);
+    });
+
+    it('should extract 4-digit prices with prefix or suffix currency codes', () => {
+      const p1 = parsePrice('AUD $5799', undefined, 'en-AU');
+      expect(p1?.price).toBe(5799);
+      expect(p1?.currency).toBe('AUD');
+
+      const p2 = parsePrice('CHF 5799', undefined, 'de-CH');
+      expect(p2?.price).toBe(5799);
+      expect(p2?.currency).toBe('CHF');
+
+      const p3 = parsePrice('Fr. 1299.50', undefined, 'de-CH');
+      expect(p3?.price).toBe(1299.50);
+      expect(p3?.currency).toBe('CHF');
+
+      const p4 = parsePrice('5799 USD', undefined, 'en-US');
+      expect(p4?.price).toBe(5799);
+      expect(p4?.currency).toBe('USD');
+    });
+
+    it('should extract 4-digit prices embedded in surrounding text', () => {
+      const p1 = parsePrice('Now $5799 in stock', 'AUD', 'en-AU');
+      expect(p1?.price).toBe(5799);
+
+      const p2 = parsePrice('Special offer $5799.99 today', 'AUD', 'en-AU');
+      expect(p2?.price).toBe(5799.99);
+    });
+
+    it('should extract plain 4-digit numbers without currency symbol', () => {
+      const p1 = parsePrice('5799', 'AUD', 'en-AU');
+      expect(p1?.price).toBe(5799);
+
+      const p2 = parsePrice('5799.99', 'AUD', 'en-AU');
+      expect(p2?.price).toBe(5799.99);
+    });
+
+    describe('Multi-currency and multi-locale verification', () => {
+      it('should parse British Pound (GBP) 4-digit prices correctly in en-GB', () => {
+        expect(parsePrice('£1499', undefined, 'en-GB')?.price).toBe(1499);
+        expect(parsePrice('£1499', undefined, 'en-GB')?.currency).toBe('GBP');
+        expect(parsePrice('£5799.99', undefined, 'en-GB')?.price).toBe(5799.99);
+        expect(parsePrice('1499 GBP', undefined, 'en-GB')?.price).toBe(1499);
+        expect(parsePrice('GBP 1499.50', undefined, 'en-GB')?.price).toBe(1499.50);
+      });
+
+      it('should parse Euro (EUR) 4-digit prices across German and French formats', () => {
+        // German format: dot thousand separator or comma decimal
+        expect(parsePrice('€5799', undefined, 'de-DE')?.price).toBe(5799);
+        expect(parsePrice('€5799', undefined, 'de-DE')?.currency).toBe('EUR');
+        expect(parsePrice('€5799,00', undefined, 'de-DE')?.price).toBe(5799);
+        expect(parsePrice('€1.234,56', undefined, 'de-DE')?.price).toBe(1234.56);
+        expect(parsePrice('5799 EUR', undefined, 'de-DE')?.price).toBe(5799);
+
+        // French format: space thousand separator or comma decimal
+        expect(parsePrice('5799,00 €', 'EUR', 'fr-FR')?.price).toBe(5799);
+        expect(parsePrice('1 234,56 €', 'EUR', 'fr-FR')?.price).toBe(1234.56);
+      });
+
+      it('should parse Japanese Yen (JPY) 4-digit prices in ja-JP', () => {
+        expect(parsePrice('¥5799', undefined, 'ja-JP')?.price).toBe(5799);
+        expect(parsePrice('¥5799', undefined, 'ja-JP')?.currency).toBe('JPY');
+        expect(parsePrice('¥10000', undefined, 'ja-JP')?.price).toBe(10000);
+        expect(parsePrice('JPY 5799', undefined, 'ja-JP')?.price).toBe(5799);
+        expect(parsePrice('5799 JPY', undefined, 'ja-JP')?.price).toBe(5799);
+      });
+
+      it('should parse Chinese Yuan (CNY) 4-digit prices in zh-CN', () => {
+        expect(parsePrice('¥5799', undefined, 'zh-CN')?.price).toBe(5799);
+        expect(parsePrice('¥5799', undefined, 'zh-CN')?.currency).toBe('CNY');
+        expect(parsePrice('¥1299.00', undefined, 'zh-CN')?.price).toBe(1299);
+      });
+
+      it('should parse Indian Rupee (INR) 4-digit prices in hi-IN', () => {
+        expect(parsePrice('₹5799', undefined, 'hi-IN')?.price).toBe(5799);
+        expect(parsePrice('₹5799', undefined, 'hi-IN')?.currency).toBe('INR');
+        expect(parsePrice('₹1499.00', undefined, 'hi-IN')?.price).toBe(1499);
+        expect(parsePrice('INR 5799', undefined, 'hi-IN')?.price).toBe(5799);
+      });
+
+      it('should parse Canadian Dollar (CAD) 4-digit prices in en-CA', () => {
+        expect(parsePrice('CAD $1499', undefined, 'en-CA')?.price).toBe(1499);
+        expect(parsePrice('CAD $1499', undefined, 'en-CA')?.currency).toBe('CAD');
+        expect(parsePrice('CAD 1499.99', undefined, 'en-CA')?.price).toBe(1499.99);
+        expect(parsePrice('1499 CAD', undefined, 'en-CA')?.price).toBe(1499);
+      });
+
+      it('should parse Swiss Franc (CHF) with apostrophe thousands separator in de-CH', () => {
+        expect(parsePrice("CHF 1'234.50", undefined, 'de-CH')?.price).toBe(1234.50);
+        expect(parsePrice("CHF 1'234.50", undefined, 'de-CH')?.currency).toBe('CHF');
+        expect(parsePrice("1'234.50 CHF", undefined, 'de-CH')?.price).toBe(1234.50);
+        expect(parsePrice("Fr. 5'799.00", undefined, 'de-CH')?.price).toBe(5799);
+      });
+
+      it('should parse New Zealand Dollar (NZD), Singapore Dollar (SGD), and Hong Kong Dollar (HKD)', () => {
+        expect(parsePrice('NZD $1499', undefined, 'en-NZ')?.price).toBe(1499);
+        expect(parsePrice('NZD $1499', undefined, 'en-NZ')?.currency).toBe('NZD');
+
+        expect(parsePrice('SGD $1499', undefined, 'en-SG')?.price).toBe(1499);
+        expect(parsePrice('SGD $1499', undefined, 'en-SG')?.currency).toBe('SGD');
+
+        expect(parsePrice('HKD $1499', undefined, 'zh-HK')?.price).toBe(1499);
+        expect(parsePrice('HKD $1499', undefined, 'zh-HK')?.currency).toBe('HKD');
+      });
+
+      it('should extract multiple 4-digit prices from raw HTML via extractPricesFromText', () => {
+        const html = `
+          <div class="pricing">
+            <span class="original-price">Was $6499.00</span>
+            <span class="sale-price">Now AUD $5799</span>
+            <span class="member-price">Or pay $1000 deposit</span>
+          </div>
+        `;
+        const prices = extractPricesFromText(html, 'AUD', 'en-AU');
+        expect(prices.map(p => p.price)).toContain(6499);
+        expect(prices.map(p => p.price)).toContain(5799);
+        expect(prices.map(p => p.price)).toContain(1000);
+      });
+    });
   });
 
   describe('normalizePrice Fallback Unit Tests', () => {

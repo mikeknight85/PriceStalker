@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Scraper price extraction: 4-digit prices without thousands separators (e.g. `$5799`, `AUD $3799`, `€1234,56`) are no longer prematurely truncated to 3 digits. Added negative lookahead to `PRICE_PATTERNS` so greedy matching does not drop trailing digits or decimals (#285).
+
 ## [2.2.0-beta.2] - 2026-11-02
 
 ### Added
