@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Scraper price extraction: Prevent recommendation carousels and accessory containers from hijacking primary product prices on Amazon and multi-seller marketplace pages. The DOM denoiser now guarantees recommendation and carousel containers are never preserved when broad selectors match inside them, preference arbitration tie-breaks multiple price groups using anchor price proximity rather than raw DOM element repetition count, and auto-mapping rejects bare un-scoped utility classes like `.a-offscreen`. Migration 027 seeds generic carousel exclusions, marketplace out-of-stock buying options phrases, and repairs Amazon price selectors (#236, #283).
+
 ## [2.2.0-beta.2] - 2026-11-02
 
 ### Added

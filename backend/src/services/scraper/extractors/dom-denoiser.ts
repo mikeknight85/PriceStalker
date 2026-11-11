@@ -20,10 +20,45 @@ export const NOISE_CONTAINERS = [
   'aside[class*="advertisement" i]', 'section[class*="advertisement" i]', 'div[class*="advertisement" i]',
   'div[class*="social" i]', 'div[class*="share" i]',
   'aside[class*="recently-viewed" i]', 'section[class*="recently-viewed" i]', 'div[class*="recently-viewed" i]',
+  'div[class*="similar-products" i]', 'section[class*="similar-products" i]', 'div[class*="similar-items" i]',
   '[id*="sponsored-products" i]', '[id*="customer-reviews" i]',
   '[id*="frequently-bought" i]', '[id*="dp-ads-" i]',
+  '[id*="recommendations" i]', '[id*="similarities" i]', '[id*="bundle" i]', '[id*="accessory" i]',
+  '#desktop-dp-sims_purchase-similarities-sims-feature', '#similarities_feature_div',
+  '#sp_detail', '#sp_detail2', '#rhf', '#huc-v2-subcart-feature-div',
   'template',
   '[aria-hidden="true"]'
+].join(', ');
+
+// Strict recommendation, accessory, and carousel containers that never represent the primary product.
+// Elements matching selectors inside these containers must not be preserved, ensuring carousels
+// do not survive noise pruning (issue #236).
+export const RECOMMENDATION_CONTAINERS = [
+  '[class*="carousel" i]',
+  '[class*="recommend" i]',
+  '[class*="related" i]',
+  '[class*="similar" i]',
+  '[class*="upsell" i]',
+  '[class*="cross-sell" i]',
+  '[class*="crosssell" i]',
+  '[class*="sponsored" i]',
+  '[class*="advertisement" i]',
+  '[class*="recently-viewed" i]',
+  '[class*="bundle" i]',
+  '[class*="accessory" i]',
+  '[id*="recommend" i]',
+  '[id*="similar" i]',
+  '[id*="bundle" i]',
+  '[id*="accessory" i]',
+  '[id*="sponsored" i]',
+  '[id*="frequently-bought" i]',
+  '[id*="dp-ads-" i]',
+  '#rhf',
+  '#sp_detail',
+  '#sp_detail2',
+  '#desktop-dp-sims_purchase-similarities-sims-feature',
+  '#similarities_feature_div',
+  '#huc-v2-subcart-feature-div'
 ].join(', ');
 
 /**
@@ -69,6 +104,12 @@ function getPreservedElements($: CheerioAPI, domainConfig?: Partial<RetailerConf
       if (!baseSelector) continue;
 
       $(baseSelector).each((_, el) => {
+        // If this element is inside a carousel, recommendation, or accessory container,
+        // it is not the primary product and must not preserve the noise container (issue #236).
+        if ($(el).closest(RECOMMENDATION_CONTAINERS).length > 0) {
+          return;
+        }
+
         // Add the element itself
         preserved.add(el);
         // Add all ancestors up to the root
