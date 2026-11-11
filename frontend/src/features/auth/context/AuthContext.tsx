@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { AuthService, type AuthenticatedUser } from '../services/AuthService';
 import { queryClient } from '../../../api/queryClient';
+import { clearDashboardStorage } from '../../products/pages/dashboard/utils';
 
 type User = AuthenticatedUser;
 
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    clearDashboardStorage();
     queryClient.clear();
     setUser(null);
   };

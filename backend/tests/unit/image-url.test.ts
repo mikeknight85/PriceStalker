@@ -88,6 +88,9 @@ describe('resolveImageUrl', () => {
         '/img/spacer.gif',
         '/img/1x1.png',
         '/media/default-product.jpg',
+        '/static/loading.svg',
+        '/assets/spinner.gif',
+        '/images/loader.gif',
       ]) {
         expect(resolveImageUrl(path, PAGE), path).toBeNull();
       }

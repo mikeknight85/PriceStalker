@@ -16,6 +16,7 @@ interface ProductListProps {
   onAddClick: () => void;
   hasAnyProducts: boolean;
   onSelect?: (id: number) => void;
+  onResetFilters?: () => void;
 }
 
 /**
@@ -35,6 +36,7 @@ const ProductList: React.FC<ProductListProps> = ({
   onAddClick,
   hasAnyProducts,
   onSelect,
+  onResetFilters,
 }) => {
   if (isLoading) {
     return <LoadingSpinner centered />;
@@ -70,6 +72,11 @@ const ProductList: React.FC<ProductListProps> = ({
           <p className="no-results-text">
             Try adjusting your search query, tracking or stock filter, or tag.
           </p>
+          {onResetFilters && (
+            <button className="btn btn-secondary btn-sm" onClick={onResetFilters} style={{ marginTop: '0.75rem' }}>
+              Reset filters
+            </button>
+          )}
         </div>
       </>
     );

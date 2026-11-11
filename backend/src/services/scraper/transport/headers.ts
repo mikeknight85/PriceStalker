@@ -1,6 +1,7 @@
 import { settingsCache } from '../../../utils/cache';
 import { logger } from '../../../utils/system/logger';
 import { parseUserAgent, buildClientHintHeaders } from './user-agent';
+import { CANONICAL_USER_AGENT } from '../../../utils/system/user-agent-constants';
 
 /**
  * The fallback used when no User-Agent is configured.
@@ -9,8 +10,7 @@ import { parseUserAgent, buildClientHintHeaders } from './user-agent';
  * from whichever string wins, so the two can differ without producing a
  * contradiction -- but there is no reason for them to.
  */
-export const FALLBACK_USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36';
+export const FALLBACK_USER_AGENT = CANONICAL_USER_AGENT;
 
 /**
  * The User-Agent this scrape will present: retailer override, then the system

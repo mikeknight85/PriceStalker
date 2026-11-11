@@ -89,6 +89,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) =>
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     await submitUrl(url);
   };
 
@@ -112,6 +113,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSubmit, availableTags }) =>
   };
 
   const submitUrl = async (rawUrl: string) => {
+    if (isLoading) return;
     setError('');
 
     let processedUrl = rawUrl.trim();

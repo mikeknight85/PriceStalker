@@ -14,6 +14,10 @@ export class SettingsService {
     return await systemSettingsService.updateSettings(updates, userId);
   }
 
+  async resetToDefaults(scope: 'all' | 'selectors' | 'phrases' | 'network' = 'all', userId: number) {
+    return await systemSettingsService.resetToDefaults(scope, userId);
+  }
+
   async getAISettings() {
     return await aiSettingsService.getAISettings();
   }

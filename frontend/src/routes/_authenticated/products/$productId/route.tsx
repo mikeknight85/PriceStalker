@@ -7,6 +7,15 @@ function validProductId(value: string): boolean {
   return Number.isSafeInteger(id) && id > 0;
 }
 
+function ProductDetailLayout() {
+  const { productId } = Route.useParams();
+  return (
+    <ProductDetail productId={Number(productId)}>
+      <Outlet />
+    </ProductDetail>
+  );
+}
+
 export const Route = createFileRoute('/_authenticated/products/$productId')({
   beforeLoad: ({ params }) => {
     if (!validProductId(params.productId)) throw redirect({ to: '/products', replace: true });
@@ -16,5 +25,5 @@ export const Route = createFileRoute('/_authenticated/products/$productId')({
     void context.queryClient.prefetchQuery(productDetailQuery(productId));
     void context.queryClient.prefetchQuery(profileQuery());
   },
-  component: () => <ProductDetail productId={Number(Route.useParams().productId)}><Outlet /></ProductDetail>,
+  component: ProductDetailLayout,
 });
