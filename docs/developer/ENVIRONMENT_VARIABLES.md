@@ -46,6 +46,9 @@ Used to customize the database connection and volume persistence.
 | `BACKEND_MEM_LIMIT` | Docker container memory constraint for the backend service. | `1g` |
 | `REDACT_API_KEYS` | When set to `true`, AI API credentials stored in settings are masked (`sk-...xxxx`) in the Admin panel and cannot be revealed via the UI. | `false` |
 | `ALLOW_INTERNAL_SCRAPING` | When set to `true`, any URL the application fetches may point at loopback, private, or link-local addresses. Leave it unset in production. Without it, admin tools (retailer config test, debug extract, retailer remap) refuse every internal address, and the product paths (add, rescan, scheduled refresh) refuse loopback and link-local — the cloud metadata endpoint `169.254.169.254` among them — while still allowing a shop on a private LAN such as `192.168.1.50`. Only the address check is waived: non-`http`/`https` schemes are always refused. | `false` |
+| `DISABLE_TELEMETRY` | Disables the daily anonymous heartbeat ping. Accepts `true`, `1` or `yes` (case-insensitive). Can also be toggled in Admin -> System Settings. | `false` |
+| `DO_NOT_TRACK` | Standard web privacy flag. Disables anonymous telemetry. Accepts `true`, `1` or `yes` (case-insensitive). | `0` |
+| `TELEMETRY_ENABLED` | Set to `false` to disable anonymous telemetry. A third spelling of the opt-out, accepted for symmetry with the Admin setting; any of the three is sufficient on its own. | unset |
 
 ---
 

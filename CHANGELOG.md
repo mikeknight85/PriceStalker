@@ -7,9 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database
+  (`ps-telemetry.enuff.com`). Transmits minimal technical health metrics
+  (version, OS, architecture, and coarse item/store/user buckets) once a day.
+  Every value is either a fixed identifier or a bucket -- no counts, personal
+  data, store names or URLs are collected or stored. Opt out with
+  `DISABLE_TELEMETRY`, `DO_NOT_TRACK` (either accepts `true`, `1` or `yes`),
+  `TELEMETRY_ENABLED=false`, or the Admin -> System Settings toggle, which also
+  shows the exact payload that would be sent. The heartbeat is genuinely daily:
+  the ping sent shortly after startup is suppressed if one was already delivered
+  in the last 20 hours, so an instance that restarts often still reports once a
+  day rather than once per restart. Adds migration 025, and the collector Worker
+  and D1 schema are open source in `telemetry-collector/`.
+
 ### Fixed
 
-- Scraper price extraction: 4-digit prices without thousands separators (e.g. `$5799`, `AUD $3799`, `€1234,56`) are no longer prematurely truncated to 3 digits. Added negative lookahead to `PRICE_PATTERNS` so greedy matching does not drop trailing digits or decimals (#285).
+- The telemetry collector's public dashboard now escapes version and platform
+  strings before writing them into its inline `<script>`, closing a stored
+  cross-site scripting hole that affected anyone running their own collector:
+  `JSON.stringify` does not escape `<`, and an HTML parser ends a `<script>`
+  element at the first `</script` sequence whatever the JavaScript string
+  context, so a single crafted ping could run arbitrary script for every
+  visitor to the dashboard. Ingestion now also constrains `version`,
+  `build_commit`, platform, architecture, feature keys and usage buckets to
+  allowlists, so such a value cannot be stored in the first place (#266).
+- Scraper price extraction no longer truncates prices. Any price whose
+  currency symbol or code was immediately followed by four or more digits with
+  no thousands separator lost its last digit -- `$5799.00` read as 579,
+  `AUD $3799` as 379, `CHF 1299` as 129, `$10000` as 100 -- because the pattern
+  matched greedily and then stopped. Separately, every ambiguous
+  separator case resolved to a single digit on a page with no currency symbol:
+  `1,299`, `1 299` and `12.999` all parsed as `1` or `12` regardless of locale.
+  Both are fixed, and the thousands/decimal decision is now driven by the
+  retailer's locale hint, so `1.299` reads as 1299 for a German retailer and
+  1.30 for a US one. Prices with three or more decimal places (`$1.4599`,
+  `$1,299.9900`) now keep their full fractional part instead of being floored.
+  Also corrects the `Fr.` currency symbol, which persisted a non-ISO `FR.`
+  currency code on Swiss listings instead of `CHF` (#285).
 
 ## [2.2.0-beta.2] - 2026-11-02
 

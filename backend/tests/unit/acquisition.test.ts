@@ -1,12 +1,41 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
-import { acquireStandardHtml } from '../../src/services/scraper/acquisition/standard';
+import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from 'axios';
+import { acquireStandardHtml, BotChallengeError } from '../../src/services/scraper/acquisition/standard';
 import { acquireHtml } from '../../src/services/scraper/acquisition/index';
 import { PageNotAvailableError } from '../../src/services/scraper/transport/errors';
 import type { RetailerConfig } from '../../src/models';
 
-// Mock axios and settingsCache
-vi.mock('axios');
+// Keep real AxiosError / AxiosHeaders while mocking network methods
+vi.mock('axios', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('axios')>();
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      get: vi.fn(),
+      post: vi.fn(),
+    },
+    get: vi.fn(),
+    post: vi.fn(),
+  };
+});
+
+function httpStatusError(status: number, data: unknown): AxiosError {
+  const config: InternalAxiosRequestConfig = { headers: new AxiosHeaders() };
+  return new AxiosError(
+    `Request failed with status code ${status}`,
+    'ERR_BAD_REQUEST',
+    config,
+    undefined,
+    {
+      status,
+      statusText: status === 410 ? 'Gone' : status === 403 ? 'Forbidden' : 'Not Found',
+      data,
+      headers: {},
+      config,
+    }
+  );
+}
 vi.mock('../../src/utils/cache', () => ({
   settingsCache: {
     getScraperProxy: vi.fn().mockResolvedValue('http://proxy.com:8888'),
@@ -327,5 +356,197 @@ describe('acquireHtml does not learn use_browser_scraper from a failed fallback'
     expect(result.html).toContain('Real Product');
     expect(result.learnedFlags).toEqual({ use_browser_scraper: true });
     expect(result.usedRemoteFallback).toBe(true);
+  });
+
+  it('updates challengeReason to the browser challenge when remote fallback is also challenged', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html><head><title>Access Denied</title></head><body>Reference #18.abc</body></html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+    vi.mocked(axios.post).mockResolvedValue({
+      status: 200,
+      data: {
+        html: '<html><head><title>Just a moment...</title></head><body><script src="/cdn-cgi/challenge-platform/h/b/x"></script></body></html>'
+      }
+    });
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      extractionSteps: steps
+    });
+
+    expect(result.challengeReason).toBe('Cloudflare Challenge');
+    expect(result.usedRemoteFallback).toBe(true);
+  });
+
+  it('leaves learnedFlags empty when the remote fallback throws an error', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html><head><title>Access Denied</title></head><body>Reference #18.abc</body></html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+    vi.mocked(axios.post).mockRejectedValue(new Error('Browser Scraper failed (500)'));
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      extractionSteps: steps
+    });
+
+    expect(result.challengeReason).toBe('Akamai Access Denied');
+    expect(result.learnedFlags).toEqual({});
+    expect(result.learnedFlags?.use_browser_scraper).toBeUndefined();
+  });
+});
+
+describe('bot walls disguised as HTTP 403/404/410 and soft-404s', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('throws BotChallengeError for HTTP 403 Forbidden', async () => {
+    vi.mocked(axios.get).mockRejectedValue(httpStatusError(403, 'Forbidden'));
+
+    await expect(acquireStandardHtml({
+      url: 'https://example.com/product',
+      domain: 'example.com',
+      extractionSteps: []
+    })).rejects.toThrow(new BotChallengeError('HTTP 403 Forbidden'));
+  });
+
+  it.each([
+    [
+      'Akamai Access Denied on 404',
+      404,
+      '<html><head><title>Access Denied</title></head><body>Reference #18.abc12345</body></html>',
+      'Akamai Access Denied (served as HTTP 404)',
+    ],
+    [
+      'Akamai Behavioural Challenge on 404',
+      404,
+      '<html><body><div id="sec-if-cpt-container" role="main"></div></body></html>',
+      'Akamai Behavioural Challenge (served as HTTP 404)',
+    ],
+    [
+      'Cloudflare Challenge on 410',
+      410,
+      '<html><head><title>Just a moment...</title></head><body>cf-browser-verification</body></html>',
+      'Cloudflare Challenge (served as HTTP 410)',
+    ],
+    [
+      'DataDome Challenge on 404',
+      404,
+      '<html><body><script src="https://geo.captcha-delivery.com/c.js"></script></body></html>',
+      'DataDome Challenge (served as HTTP 404)',
+    ],
+  ])('classifies %s as BotChallengeError rather than PageNotAvailableError', async (_label, status, body, expectedMessage) => {
+    vi.mocked(axios.get).mockRejectedValue(httpStatusError(status, body));
+
+    const steps: string[] = [];
+    await expect(acquireStandardHtml({
+      url: 'https://www.digitec.ch/en/s1/product/item-123',
+      domain: 'digitec.ch',
+      extractionSteps: steps
+    })).rejects.toThrow(new BotChallengeError(expectedMessage));
+
+    expect(steps.some(s => s.includes('Request | Challenge |'))).toBe(true);
+  });
+
+  it('throws PageNotAvailableError with http_404 / http_410 when the body carries no challenge markers', async () => {
+    vi.mocked(axios.get).mockRejectedValueOnce(
+      httpStatusError(404, '<html><head><title>404 Not Found</title></head><body>No such product.</body></html>')
+    );
+
+    await expect(acquireStandardHtml({
+      url: 'https://example.com/product',
+      domain: 'example.com',
+      extractionSteps: []
+    })).rejects.toMatchObject({
+      name: 'PageNotAvailableError',
+      reason: 'http_404',
+    });
+
+    vi.mocked(axios.get).mockRejectedValueOnce(
+      httpStatusError(410, { error: 'Gone' })
+    );
+
+    await expect(acquireStandardHtml({
+      url: 'https://example.com/product',
+      domain: 'example.com',
+      extractionSteps: []
+    })).rejects.toMatchObject({
+      name: 'PageNotAvailableError',
+      reason: 'http_410',
+    });
+  });
+
+  it('routes a 404 carrying a bot wall into the browser fallback instead of declaring the product gone', async () => {
+    // End-to-end invariant for commit 98c97da: Digitec's Akamai wall returned
+    // HTTP 404, which used to throw PageNotAvailableError straight out of
+    // acquireHtml without trying the browser fallback.
+    vi.mocked(axios.get).mockRejectedValue(
+      httpStatusError(404, '<html><head><title>Access Denied</title></head><body>Reference #18.abc12345</body></html>')
+    );
+    vi.mocked(axios.post).mockResolvedValue({
+      status: 200,
+      data: { html: '<html><head><title>Sony WH-1000XM5</title></head><body><span class="price">CHF 279</span></body></html>' }
+    });
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'https://www.digitec.ch/en/s1/product/sony-wh-1000xm5-123',
+      domain: 'digitec.ch',
+      extractionSteps: steps
+    });
+
+    expect(result.html).toContain('Sony WH-1000XM5');
+    expect(result.challengeReason).toBeNull();
+    expect(result.usedRemoteFallback).toBe(true);
+    expect(result.learnedFlags).toEqual({ use_browser_scraper: true });
+    expect(steps).toContain('Scraper | Fallback | Triggered by Akamai Access Denied (served as HTTP 404)');
+  });
+
+  it('does not trigger the browser fallback on a genuine 404', async () => {
+    vi.mocked(axios.get).mockRejectedValue(
+      httpStatusError(404, '<html><head><title>404</title></head><body>Page removed</body></html>')
+    );
+
+    await expect(acquireHtml({
+      url: 'https://example.com/removed-product',
+      domain: 'example.com',
+      extractionSteps: []
+    })).rejects.toThrow(PageNotAvailableError);
+
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
+  it('classifies a robot-check interstitial carrying robots=noindex as a challenge rather than a soft-404', async () => {
+    // Commit e82b05b: Digitec's "Are you a robot?" interstitial ships with
+    // <meta name="robots" content="noindex"> and no product metadata, so
+    // running checkSoft404 before detectBotChallenge misread it as a dead page.
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html><head><title>Are you a robot?</title><meta name="robots" content="noindex, nofollow"></head><body><p>Please complete the security check.</p></body></html>',
+      request: { res: { responseUrl: 'https://www.digitec.ch/en/s1/product/item-123' } }
+    });
+    vi.mocked(axios.post).mockResolvedValue({
+      status: 200,
+      data: { html: '<html><head><title>Recovered Product</title></head><body><span class="price">CHF 99</span></body></html>' }
+    });
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'https://www.digitec.ch/en/s1/product/item-123',
+      domain: 'digitec.ch',
+      extractionSteps: steps
+    });
+
+    expect(result.html).toContain('Recovered Product');
+    expect(result.usedRemoteFallback).toBe(true);
+    expect(steps).toContain('Scraper | Fallback | Triggered by Robot Check Interstitial');
   });
 });

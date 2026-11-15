@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pricestalker-telemetry",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-10-01",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pricestalker-telemetry",
+      "database_id": "bcb93d6a-47da-476c-972d-b9f534aca91c"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

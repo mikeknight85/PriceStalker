@@ -204,4 +204,65 @@ describe('Auto-Config Selector Staleness & Eviction Unit Tests', () => {
     expect(upsertedData.price_selectors).toContain('.s9');
     expect(upsertedData.price_selectors).toContain('.s10');
   });
+
+  it('persists learnedFlags.use_browser_scraper when remote fallback succeeded without AI auto-mapping (issue #45)', async () => {
+    const { retailerRepository } = await import('../../src/models');
+    vi.mocked(retailerRepository.getByDomainForUpdate).mockResolvedValueOnce(null);
+
+    await runAutoRetailerConfig({
+      url: 'https://example.com/product',
+      productId: 123,
+      html: '<html></html>',
+      scrapedData: {
+        price: { price: 99.99, currency: 'USD' },
+        priceCandidates: [{ price: 99.99, currency: 'USD', method: 'custom-css', selector: '.s1', confidence: 0.90 }],
+        selectedMethod: 'custom-css',
+        needsReview: false,
+        name: 'Test Product',
+        stockStatus: 'in_stock',
+        imageUrl: '',
+        url: 'https://example.com/product',
+        aiStatus: null,
+        learnedFlags: { use_browser_scraper: true },
+      },
+      source: 'manual-add',
+      client: mockClient as unknown as import('pg').PoolClient,
+    });
+
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+    expect(mockUpsert.mock.calls[0][0].use_browser_scraper).toBe(true);
+  });
+
+  it('preserves an existing use_browser_scraper=true when a later scrape has no learnedFlags', async () => {
+    const { retailerRepository } = await import('../../src/models');
+    vi.mocked(retailerRepository.getByDomainForUpdate).mockResolvedValueOnce({
+      id: 1,
+      domain: 'example.com',
+      use_browser_scraper: true,
+      price_selectors: ['.s1'],
+      selector_metadata: { selectors: {} },
+    } as unknown as Awaited<ReturnType<typeof retailerRepository.getByDomainForUpdate>>);
+
+    await runAutoRetailerConfig({
+      url: 'https://example.com/product',
+      productId: 123,
+      html: '<html></html>',
+      scrapedData: {
+        price: { price: 99.99, currency: 'USD' },
+        priceCandidates: [{ price: 99.99, currency: 'USD', method: 'custom-css', selector: '.s1', confidence: 0.90 }],
+        selectedMethod: 'custom-css',
+        needsReview: false,
+        name: 'Test Product',
+        stockStatus: 'in_stock',
+        imageUrl: '',
+        url: 'https://example.com/product',
+        aiStatus: null,
+      },
+      source: 'refresh',
+      client: mockClient as unknown as import('pg').PoolClient,
+    });
+
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+    expect(mockUpsert.mock.calls[0][0].use_browser_scraper).toBe(true);
+  });
 });
