@@ -110,6 +110,14 @@ export function useProductFilters({ products, userTags }: UseProductFiltersProps
     return Array.from(new Set([...tags, ...userTags])).filter(Boolean) as string[];
   }, [tags, userTags]);
 
+  // If activeTag is set but does not match any existing product's tag, clear it so
+  // the user is not stranded on an empty list with no visual indication of why (issue #259).
+  useEffect(() => {
+    if (products.length > 0 && activeTag && !tags.includes(activeTag)) {
+      setActiveTag(null);
+    }
+  }, [products.length, activeTag, tags]);
+
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
 

@@ -242,6 +242,190 @@ test('allows admins into every admin section and exposes guarded debug', async (
   await expect(page.getByRole('heading', { name: 'Debug Access Restricted' })).toBeVisible();
 });
 
+/**
+ * Notification channel credentials are write-only (issue #272).
+ *
+ * The form loads every field into a draft and PUTs the whole draft, so what it
+ * sends for a credential it was never given is the thing that can silently
+ * detach a working channel. Checked against the built bundle, because the
+ * draft-to-request mapping is the part that only exists at runtime.
+ */
+test('keeps notification channel credentials write-only', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  const stored = {
+    telegram_bot_token: null,
+    telegram_chat_id: '987654321',
+    telegram_enabled: true,
+    has_telegram_bot_token: true,
+    has_discord_webhook_url: false,
+  };
+  const puts: Record<string, unknown>[] = [];
+
+  await page.route('**/api/settings/notifications', async (route) => {
+    if (route.request().method() === 'PUT') {
+      puts.push(route.request().postDataJSON());
+      return route.fulfill({ json: { ...stored, message: 'Notification settings updated successfully' } });
+    }
+    return route.fulfill({ json: stored });
+  });
+
+  await page.goto('/settings/notifications');
+  await page.getByRole('button', { name: /Telegram Bot/ }).click();
+
+  // A stored credential shows as set, with the box empty: the value is not
+  // returned by the API, so there is nothing to prefill.
+  const botToken = page.getByLabel('Bot Token (set)');
+  await expect(botToken).toHaveValue('');
+  await expect(botToken).toHaveAttribute('placeholder', /leave empty to keep existing/);
+
+  const save = page.getByRole('button', { name: 'Save' });
+
+  // Replacing it sends the typed value, and only that field.
+  await botToken.fill('999999:A-NEW-BOT-TOKEN');
+  await save.click();
+  await expect.poll(() => puts.length).toBe(1);
+  expect(puts[0].telegram_bot_token).toBe('999999:A-NEW-BOT-TOKEN');
+  expect(puts[0]).not.toHaveProperty('discord_webhook_url');
+  // Stored now, so it is not left on screen to be sent again.
+  await expect(botToken).toHaveValue('');
+
+  // Removing it is an explicit action and sends null, which empty does not.
+  await page.getByRole('button', { name: 'Clear' }).click();
+  await expect(page.getByText('Will be removed on save.')).toBeVisible();
+  await save.click();
+  await expect.poll(() => puts.length).toBe(2);
+  expect(puts[1].telegram_bot_token).toBeNull();
+
+  // An unrelated change carries no credential at all.
+  await page.locator('.pg-collapsible-card.expanded .toggle-switch').first().click();
+  await save.click();
+  await expect.poll(() => puts.length).toBe(3);
+  expect(puts[2].telegram_enabled).toBe(false);
+  expect(puts[2]).not.toHaveProperty('telegram_bot_token');
+  expect(puts[2]).not.toHaveProperty('webhook_url');
+});
+
+/**
+ * A plain-text webhook survives its headers being withheld (issues #268, #272).
+ *
+ * `webhook_payload_template` is not a credential and comes back in full;
+ * `webhook_headers` is one and comes back null. Reading the template's format
+ * off the empty Headers field said "JSON", so a working text/plain template was
+ * reported as broken -- and the section's single Save then refused every
+ * channel. The server sends the format instead.
+ */
+test('keeps a plain-text webhook template valid when its headers are withheld', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  const stored = {
+    telegram_enabled: true,
+    webhook_enabled: true,
+    webhook_url: null,
+    has_webhook_url: true,
+    webhook_headers: null,
+    has_webhook_headers: true,
+    webhook_payload_template: 'Now {{price}} at {{store}}: {{product_url}}',
+    webhook_sends_plain_text: true,
+  };
+  const puts: Record<string, unknown>[] = [];
+
+  await page.route('**/api/settings/notifications', async (route) => {
+    if (route.request().method() === 'PUT') {
+      puts.push(route.request().postDataJSON());
+      return route.fulfill({ json: { ...stored, message: 'ok' } });
+    }
+    return route.fulfill({ json: stored });
+  });
+
+  await page.goto('/settings/notifications');
+  await page.getByRole('button', { name: /Generic Webhook/ }).click();
+
+  // The format came from the server, so the plain-text template is accepted.
+  await expect(page.getByText('Payload Template (plain text)')).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+  // Stored headers show as set, empty, and removable.
+  const headers = page.getByLabel('Headers (set)');
+  await expect(headers).toHaveValue('');
+  await expect(headers).toHaveAttribute('placeholder', /leave empty to keep existing/);
+
+  // Editing them hands the format back to the draft, and the check still
+  // catches a document the backend could not send.
+  await headers.fill('{"Authorization": Bearer abc');
+  await expect(page.getByText(/Fix before saving/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+  // Clearing them is explicit and sends null. With the headers gone the webhook
+  // sends the default JSON Content-Type, so the plain-text template goes too --
+  // and the clear marker itself must not be read as a broken JSON document.
+  await page.getByLabel(/Payload Template/).fill('');
+  await page.locator('form.form-group', { has: page.locator('#webhook-headers') })
+    .getByRole('button', { name: 'Clear' }).click();
+  await expect(page.getByText('Will be removed on save.')).toBeVisible();
+  await expect(page.getByText(/Fix before saving/)).toHaveCount(0);
+
+  const save = page.getByRole('button', { name: 'Save' });
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect.poll(() => puts.length).toBe(1);
+  expect(puts[0].webhook_headers).toBeNull();
+  expect(puts[0].webhook_payload_template).toBe('');
+});
+
+/**
+ * One Save covers every channel on the page, so a problem in a webhook the user
+ * has not touched must not lock the rest of it (issue #272).
+ */
+test('does not let an untouched webhook block saving another channel', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  const stored = {
+    telegram_enabled: true,
+    telegram_chat_id: '987654321',
+    has_telegram_bot_token: true,
+    webhook_enabled: true,
+    // Stored through the API, or by an older version: not valid JSON.
+    webhook_payload_template: '{"title": {{product_name}}',
+    webhook_sends_plain_text: false,
+  };
+  const puts: Record<string, unknown>[] = [];
+
+  await page.route('**/api/settings/notifications', async (route) => {
+    if (route.request().method() === 'PUT') {
+      puts.push(route.request().postDataJSON());
+      return route.fulfill({ json: { ...stored, message: 'ok' } });
+    }
+    return route.fulfill({ json: stored });
+  });
+
+  await page.goto('/settings/notifications');
+  await page.getByRole('button', { name: /Generic Webhook/ }).click();
+
+  // The problem is reported where it is.
+  await expect(page.getByText(/Fix before saving/).first()).toBeVisible();
+
+  // A change to another channel still saves.
+  await page.getByRole('button', { name: /Telegram Bot/ }).click();
+  await page.locator('.pg-collapsible-card', { hasText: 'Telegram Bot' })
+    .locator('.toggle-switch').first().click();
+  const save = page.getByRole('button', { name: 'Save' });
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect.poll(() => puts.length).toBe(1);
+  expect(puts[0].telegram_enabled).toBe(false);
+});
+
 test('lists notification history and marks every alert as read', async ({ page }) => {
   await page.addInitScript((user) => {
     localStorage.setItem('token', 'acceptance-token');

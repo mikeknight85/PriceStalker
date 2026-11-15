@@ -67,6 +67,12 @@ async function request<T>(method: string, path: string, body?: unknown, options:
     if (response.status === 401 && !isAuthRequest(path)) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      try {
+        ['dashboard_search_query', 'dashboard_active_tag', 'dashboard_pause_filter', 'dashboard_stock_filter', 'dashboard_sort_by', 'dashboard_sort_order', 'pricestalker.dashboard.view']
+          .forEach(k => localStorage.removeItem(k));
+      } catch {
+        /* storage cleanup is best-effort */
+      }
       queryClient.clear();
       const onAuthPage = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register');
       if (!onAuthPage) {

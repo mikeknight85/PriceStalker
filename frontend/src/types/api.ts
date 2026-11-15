@@ -207,6 +207,12 @@ export interface NotificationSettings {
   gotify_app_token: string | null;
   gotify_enabled: boolean;
   gotify_message_template: string | null;
+  apprise_url: string | null;
+  apprise_config_key: string | null;
+  apprise_urls: string | null;
+  apprise_tag: string | null;
+  apprise_enabled: boolean;
+  apprise_message_template: string | null;
   webhook_url: string | null;
   webhook_headers: string | null;
   webhook_payload_template: string | null;
@@ -218,6 +224,36 @@ export interface NotificationSettings {
   email_to: string | null;
   email_subject_template: string | null;
   email_body_template: string | null;
+
+  /*
+   * Channel credentials are write-only (issue #272). The fields above are
+   * returned as null whatever is stored; these flags say whether a credential
+   * is there, the same way the auth-config endpoint answers
+   * `has_client_secret`.
+   *
+   * To change one, PUT the new value. To keep it, omit the field or send `''`.
+   * To remove it, send `null`. See `features/settings/notificationSecrets.ts`.
+   */
+  has_telegram_bot_token: boolean;
+  has_discord_webhook_url: boolean;
+  has_pushover_user_key: boolean;
+  has_pushover_app_token: boolean;
+  has_ntfy_password: boolean;
+  has_gotify_app_token: boolean;
+  has_apprise_config_key: boolean;
+  has_apprise_urls: boolean;
+  has_webhook_url: boolean;
+  has_webhook_headers: boolean;
+
+  /*
+   * Derived from the withheld `webhook_headers`: whether they set a non-JSON
+   * Content-Type, so the payload template is plain text rather than JSON.
+   *
+   * The media type is not a credential and the settings page needs it to check
+   * a template before saving (#268). Computed with the same rule the provider
+   * sends by, so the two cannot disagree.
+   */
+  webhook_sends_plain_text: boolean;
 }
 
 export interface RetailerConfig {
@@ -302,6 +338,9 @@ export interface SystemSettings {
   generic_pre_order_phrases?: string;
   generic_challenge_phrases?: string;
   prefer_jsonld_image?: boolean | string;
+  telemetry_enabled?: boolean | string;
+  telemetry_instance_id?: string;
+  telemetry_last_ping_at?: string;
   /** Seconds. The instance-wide default check interval for new products (#239). */
   default_refresh_interval?: number | string;
   jsonld_name_key?: string;
@@ -490,4 +529,20 @@ export interface AIExtractionTestResult {
   image?: string | null;
   in_stock?: boolean | null;
   [key: string]: unknown;
+}
+
+export interface TelemetryStatusResponse {
+  enabled: boolean;
+  envDisabled: boolean;
+  instanceId: string;
+  lastPingAt: string | null;
+  preview: {
+    instance_id: string;
+    version: string;
+    build_commit?: string | null;
+    os: { platform: string; arch: string; node_version: string };
+    runtime: { is_docker: boolean };
+    features: Record<string, boolean>;
+    usage: { items_bucket: string; stores_bucket: string; users_bucket: string };
+  };
 }

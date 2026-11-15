@@ -7,6 +7,13 @@ PriceStalker supports a wide range of notification channels and customizable ale
 ## 1. Notification Channels Setup
 You can configure and test your notification channels under **User Settings → Notifications**:
 
+> **Credentials are write-only.** Once a bot token, webhook URL, app token,
+> password, Apprise config key or set of webhook headers is saved, PriceStalker
+> does not send it back to your browser. The field shows as **(set)** and stays
+> empty: leave it empty to keep what is stored, type a new value to replace it,
+> or use **Clear** to remove it. The **Send Test Notification** buttons use the
+> saved credentials, so they keep working without you re-entering anything.
+
 ### Telegram
 1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram.
 2. Get your Chat ID from [@userinfobot](https://t.me/userinfobot).
@@ -32,6 +39,26 @@ You can configure and test your notification channels under **User Settings → 
 2. Create an application in Gotify to retrieve an App Token.
 3. Enter your Gotify server URL and the App Token in Settings → Notifications; click **Test Connection** to verify before saving.
 
+### Apprise
+[Apprise](https://github.com/caronc/apprise) reaches over 100 services through one integration. PriceStalker talks to an [apprise-api](https://github.com/caronc/apprise-api) server, so deploy that first (for example the `caronc/apprise` container).
+
+In **Settings → Notifications → Apprise**:
+* **Server URL**: The apprise-api base URL, e.g. `http://apprise:8000`.
+* **Config Key**: Optional. Names a configuration stored on the apprise-api server; alerts are posted to `/notify/<key>`. Leave empty for stateless mode. apprise-api has no authentication of its own, and this key also reads the stored configuration back (`/get/<key>`, `/json/urls/<key>`) with every token in it, so it is treated as a credential and is write-only.
+* **Apprise URLs**: Stateless mode only, used when there is no config key. One or more Apprise service URLs such as `ntfys://topic`, separated by commas, spaces or new lines. These usually embed credentials, so the field is write-only like the other secrets.
+* **Tag**: Optional. Routes the alert to the services carrying this tag within a stored configuration. It is only sent together with a config key; in stateless mode it is ignored, because apprise-api would match no services and deliver nothing.
+* **Message Template**: Optional. Leave blank for the same event-aware wording the ntfy and Telegram channels use, with the product link appended. The request is JSON-encoded for you, so no escaping is needed.
+
+The channel is active once it has a server URL and either a config key or Apprise URLs (fields containing only spaces do not count). Click **Send Test Notification** after saving to verify.
+
+Each alert is sent with a title naming the event and an Apprise `type` that lets the receiving service style it:
+
+| Event | Apprise `type` |
+|---|---|
+| `price_drop`, `target_price`, `back_in_stock` | `success` |
+| `product_restored`, `price_announced` | `info` |
+| `not_available` | `warning` |
+
 ### Email (SMTP)
 1. In **Settings → Notifications**, enable **Email Notifications**.
 2. Enter your **SMTP Server Host** (e.g. `smtp.example.com`), **Port** (e.g. `587` or `465`), and SMTP username/password if authentication is required.
@@ -42,8 +69,12 @@ You can configure and test your notification channels under **User Settings → 
 ### Custom Webhook
 For integrations with Home Assistant, Apprise, n8n, Zapier, or custom APIs, select **Custom Webhook** in Settings → Notifications:
 * **URL**: The endpoint of the receiver.
-* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default.
-* **Body Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
+* **Headers**: Optional JSON object of header key-value pairs (e.g. `{"Authorization": "Bearer ..."}`). `Content-Type: application/json` is sent by default; a `Content-Type` of your own replaces it. If the headers are not a JSON object, nothing is sent and the failure is logged, rather than sending without them. They usually carry an `Authorization` value, so the whole document is a credential and is write-only: it shows as **(set)** and empty, typing replaces it wholesale, and **Clear** removes it. The page still knows whether your stored headers make the payload template plain text or JSON, because the server tells it — the media type is not a secret.
+* **Payload Template**: Optional. Leave blank to send PriceStalker's default JSON payload, below. If you supply one, variables in **double** braces are substituted — `{{product_name}}`, not `{product_name}`. Single braces are left untouched.
+  * Write the template as JSON and keep **every** variable inside quotes: `{"title": "{{product_name}}"}`. Each value is escaped for you, so a product named `Monitor 27" 4K` arrives intact. Do not leave a variable bare, even a numeric one such as `{{current_price}}`: it reads `unavailable` when there is no price, which is not valid JSON.
+  * A variable's value is inserted as text and never expanded again, so a product name that contains `{{reason}}` stays as written.
+  * If the template is not valid JSON, nothing is sent and the failure is logged. The settings page flags this as you type and will not save it.
+  * **Plain text**: to send something other than JSON, set a `Content-Type` header that does not mention JSON, e.g. `{"Content-Type": "text/plain"}`. The template is then sent as written, with no escaping and no requirement to be JSON.
 
 The request is always a `POST`. (v1 had a configurable method; v2 does not.)
 

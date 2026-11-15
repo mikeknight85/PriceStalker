@@ -120,15 +120,17 @@ describe('Challenge recognition does not fire on working pages', () => {
     // These are challenge widgets and endpoints, not sensors, so they are not
     // size-gated: PerimeterX's press-and-hold container and DataDome's CAPTCHA
     // host only exist on a wall.
-    expect(
-      looksLikeChallenge('', productPage('<div id="px-captcha"></div>'), pattern)
-    ).toBe(true);
-    expect(
-      looksLikeChallenge('', productPage('<iframe src="https://geo.captcha-delivery.com/captcha/?initialCid=x"></iframe>'), pattern)
-    ).toBe(true);
-    expect(
-      looksLikeChallenge('', productPage('<div class="dd-captcha-container"></div>'), pattern)
-    ).toBe(true);
+    for (const marker of [
+      '<div id="px-captcha"></div>',
+      '<iframe src="https://geo.captcha-delivery.com/captcha/?initialCid=x"></iframe>',
+      '<div class="dd-captcha-container"></div>',
+      '<script src="https://block.perimeterx.net/px.js"></script>',
+      '<div class="cf-browser-verification"></div>',
+      '<script src="/cdn-cgi/challenge-platform/h/b/orchestrate"></script>',
+      '<iframe src="/_Incapsula_Resource?SWJIYLWA=719d"></iframe>',
+    ]) {
+      expect(looksLikeChallenge('', productPage(marker), pattern)).toBe(true);
+    }
   });
 
   it('still fires on a small DataDome wall page', () => {
@@ -165,10 +167,25 @@ describe('buildChallengePattern', () => {
     expect(buildChallengePattern([])?.source).toBe(buildChallengePattern()?.source);
   });
 
-  it('escapes regex metacharacters in configured phrases', () => {
-    const escaped = buildChallengePattern(['press & hold']);
-    expect(escaped?.source).toContain('press & hold');
+  it('escapes regex metacharacters and trims whitespace in configured phrases', () => {
+    const escaped = buildChallengePattern([
+      'press & hold',
+      'Access Denied [Error 1020]',
+      'Are you human (verification required)?',
+      'Rate-limit + DDoS',
+      '\n  custom challenge warning  \r\n',
+    ]);
+    expect(escaped).not.toBeNull();
     expect(looksLikeChallenge('', wallPage('press & hold'), escaped)).toBe(true);
+    expect(looksLikeChallenge('Access Denied [Error 1020]', '', escaped)).toBe(true);
+    expect(looksLikeChallenge('Are you human (verification required)?', '', escaped)).toBe(true);
+    expect(looksLikeChallenge('', wallPage('Rate-limit + DDoS'), escaped)).toBe(true);
+    expect(looksLikeChallenge('custom challenge warning', '', escaped)).toBe(true);
+
+    // Brackets, parens, and quantifiers must be matched literally, not as regex syntax.
+    expect(looksLikeChallenge('Access Denied Error 1020', '', escaped)).toBe(false);
+    expect(looksLikeChallenge('Are you human verification required', '', escaped)).toBe(false);
+    expect(looksLikeChallenge('', wallPage('Rate-limit  DDoS'), escaped)).toBe(false);
   });
 
   it('seeds no bare vendor names in the built-in list', () => {

@@ -33,6 +33,7 @@ const NotificationSettingsSection: React.FC<NotificationSettingsSectionProps> = 
       settings.pushover_enabled ||
       settings.ntfy_enabled ||
       settings.gotify_enabled ||
+      settings.apprise_enabled ||
       settings.email_enabled ||
       settings.webhook_enabled
     );

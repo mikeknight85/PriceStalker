@@ -41,6 +41,7 @@ export const ProfileService = {
   testNtfy: () => api.post('/settings/notifications/test/ntfy'),
   testGotify: () => api.post('/settings/notifications/test/gotify'),
   testGotifyConnection: (url: string, token: string) => api.post('/settings/notifications/test/gotify/connection', { url, app_token: token }),
+  testApprise: () => api.post('/settings/notifications/test/apprise'),
   testEmail: () => api.post('/settings/notifications/test/email'),
   testWebhook: () => api.post('/settings/notifications/test/webhook'),
 };

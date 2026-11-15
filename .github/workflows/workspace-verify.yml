@@ -40,3 +40,26 @@ jobs:
 
       - name: Run frontend route acceptance tests
         run: pnpm --filter pricestalker-frontend run test:routes
+
+  # The telemetry collector is a Cloudflare Worker and is deliberately NOT a pnpm
+  # workspace package: it has its own toolchain (wrangler) that the application
+  # workspaces do not need. It still has to be typechecked — it was previously
+  # the only code in the repository that CI never compiled.
+  telemetry-collector:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+
+      - name: Install collector dependencies
+        working-directory: telemetry-collector
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck collector
+        working-directory: telemetry-collector
+        run: npm run typecheck

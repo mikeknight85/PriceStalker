@@ -41,6 +41,29 @@ const PLACEHOLDER_MARKERS = [
   '1x1.',
 ];
 
+/**
+ * Loading indicators are identified by the *name of the file*, not by a
+ * substring of the path. A substring test rejects real products: a price
+ * tracker legitimately tracks a "fidget-spinner.jpg", a
+ * "top-loading-washer-01.jpg" and a "front-loader-dryer.webp", and all three
+ * contain one of these words. A spinner shipped as UI, by contrast, is named
+ * for what it is -- loading.svg, spinner-2x.png, loader.gif -- so requiring
+ * the basename to *begin* with the word separates the two cleanly.
+ */
+const LOADING_FILENAME_WORDS = ['loading', 'spinner', 'loader', 'preloader', 'ajax-loader', 'ajaxloader'];
+
+function hasLoadingIndicatorFilename(path: string): boolean {
+  const basename = path.slice(path.lastIndexOf('/') + 1);
+  if (!basename) return false;
+
+  return LOADING_FILENAME_WORDS.some((word) => {
+    if (!basename.startsWith(word)) return false;
+    const next = basename.charAt(word.length);
+    // End of name, an extension, or a size/variant suffix such as -2x or _large.
+    return next === '' || next === '.' || next === '-' || next === '_' || next === '@';
+  });
+}
+
 /** Schemes that can never be fetched by a browser rendering the dashboard. */
 const UNUSABLE_SCHEMES = ['javascript:', 'about:', 'blob:', 'file:'];
 
@@ -58,6 +81,8 @@ export function isPlaceholderImageUrl(url: string): boolean {
   } catch {
     // Not absolute yet; match against the whole string.
   }
+
+  if (hasLoadingIndicatorFilename(path)) return true;
 
   return PLACEHOLDER_MARKERS.some((marker) => path.includes(marker));
 }

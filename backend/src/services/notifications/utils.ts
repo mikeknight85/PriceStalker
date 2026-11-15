@@ -34,10 +34,24 @@ function formatStockStatus(status?: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+export interface InterpolateOptions {
+  /**
+   * The template is JSON. Each value is escaped as the inside of a JSON string
+   * before it is substituted, so a product named `Monitor 27" 4K` cannot close
+   * the string early (issue #268). Templates are written as `"{{product_name}}"`,
+   * so the quotes belong to the template and only the contents are escaped.
+   */
+  json?: boolean;
+}
+
 /**
  * Simple template engine to replace {{variable}} with real data.
  */
-export function interpolateTemplate(template: string, payload: NotificationPayload): string {
+export function interpolateTemplate(
+  template: string,
+  payload: NotificationPayload,
+  options: InterpolateOptions = {}
+): string {
   const currencySymbol = getCurrencySymbol(payload.currency);
   
   const variables: Record<string, string> = {
@@ -67,14 +81,22 @@ export function interpolateTemplate(template: string, payload: NotificationPaylo
     'store': payload.storeName || '',
   };
 
-  let result = template;
-  for (const [key, value] of Object.entries(variables)) {
-    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-    result = result.replace(regex, value);
-  }
-  
-  result = result.replace(/\\n/g, '\n');
-  return result;
+  // One pass over the template, not one pass per variable. Substituting
+  // variable by variable ran each later pattern over text an earlier value had
+  // already put there, so a product named `Foo {{reason}}` had the reason
+  // spliced into its name: scraped retailer text could pull other variables
+  // into the message. The replacement is also a function, because as a string
+  // `$&`, `$1` and `$$` in a product name would be expanded instead of inserted.
+  // In a JSON template `\n` is already a valid escape; turning it into a real
+  // newline inside a string is what makes the document unparseable. In plain
+  // text it is rewritten in the template, before values go in, so a value that
+  // happens to contain a backslash and an `n` is left as it is.
+  const source = options.json ? template : template.replace(/\\n/g, '\n');
+
+  return source.replace(/\{\{\s*(\w+)\s*\}\}/g, (token, key: string) => {
+    if (!Object.hasOwn(variables, key)) return token;
+    return options.json ? JSON.stringify(variables[key]).slice(1, -1) : variables[key];
+  });
 }
 
 /**

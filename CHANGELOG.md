@@ -10,11 +10,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Model Context Protocol (MCP) server workspace (`pricestalker-mcp`) providing diagnostic and operational tools (including live URL debug extraction), 3 context resources, and a `debug-retailer` prompt over `stdio`, authenticated with scoped system API tokens and egress output scrubbing (#163, ADR 001).
+- Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database
+  (`ps-telemetry.enuff.com`). Transmits minimal technical health metrics
+  (version, OS, architecture, and coarse item/store/user buckets) once a day.
+  Every value is either a fixed identifier or a bucket -- no counts, personal
+  data, store names or URLs are collected or stored. Opt out with
+  `DISABLE_TELEMETRY`, `DO_NOT_TRACK` (either accepts `true`, `1` or `yes`),
+  `TELEMETRY_ENABLED=false`, or the Admin -> System Settings toggle, which also
+  shows the exact payload that would be sent. The heartbeat is genuinely daily:
+  the ping sent shortly after startup is suppressed if one was already delivered
+  in the last 20 hours, so an instance that restarts often still reports once a
+  day rather than once per restart. Adds migration 025, and the collector Worker
+  and D1 schema are open source in `telemetry-collector/`.
 
 ### Fixed
 
+- The telemetry collector's public dashboard now escapes version and platform
+  strings before writing them into its inline `<script>`, closing a stored
+  cross-site scripting hole that affected anyone running their own collector:
+  `JSON.stringify` does not escape `<`, and an HTML parser ends a `<script>`
+  element at the first `</script` sequence whatever the JavaScript string
+  context, so a single crafted ping could run arbitrary script for every
+  visitor to the dashboard. Ingestion now also constrains `version`,
+  `build_commit`, platform, architecture, feature keys and usage buckets to
+  allowlists, so such a value cannot be stored in the first place (#266).
+- Scraper price extraction no longer truncates prices. Any price whose
+  currency symbol or code was immediately followed by four or more digits with
+  no thousands separator lost its last digit -- `$5799.00` read as 579,
+  `AUD $3799` as 379, `CHF 1299` as 129, `$10000` as 100 -- because the pattern
+  matched greedily and then stopped. Separately, every ambiguous
+  separator case resolved to a single digit on a page with no currency symbol:
+  `1,299`, `1 299` and `12.999` all parsed as `1` or `12` regardless of locale.
+  Both are fixed, and the thousands/decimal decision is now driven by the
+  retailer's locale hint, so `1.299` reads as 1299 for a German retailer and
+  1.30 for a US one. Prices with three or more decimal places (`$1.4599`,
+  `$1,299.9900`) now keep their full fractional part instead of being floored.
+  Also corrects the `Fr.` currency symbol, which persisted a non-ISO `FR.`
+  currency code on Swiss listings instead of `CHF` (#285).
+- The image URL resolver no longer accepts loading spinners and placeholder
+  graphics as product images, so a lazy-loading indicator such as
+  `/static/loading.svg` can no longer overwrite a genuine product photo.
+- Dashboard search text, active tags, tracking and stock filters and view
+  preference are now cleared on logout. They were kept in browser storage and
+  reapplied for whoever logged in next on the same machine, so a second user
+  arrived at a filtered dashboard that did not match the controls shown (#260).
+- Returning from a product's detail page to the dashboard no longer shows
+  "No stores found" when the active tag has since been removed from every
+  product. Both list views also gained a **Reset filters** button, so an empty
+  result caused by a stale filter can be cleared without hunting for it (#259).
+- The Add Product form no longer accepts a second submission while the first
+  extraction is still in flight. Pressing Enter repeatedly, or double-clicking
+  Add, produced 409 unique-constraint collisions and abandoned the navigation
+  that should have followed the successful request (#276).
+
+## [2.2.0-beta.2] - 2026-11-02
+
+### Added
+
+- Native Apprise notification channel. Settings -> Notifications -> Apprise sends alerts through an apprise-api server, either to a stored configuration (config key) or statelessly to a list of Apprise URLs, with an optional tag and message template. Events are sent with an Apprise `type` (`success`, `info` or `warning`), so receiving services can style them. Adds migration 024 (#270).
+
+### Fixed
+
+- Notification channel credentials are no longer returned by the API.
+  `GET /settings/notifications` used to answer with every channel's bot token,
+  webhook URL, app token, password and header document in plaintext, so they
+  appeared in the response body, browser devtools, HAR exports and anywhere the
+  response was logged or proxied. Each is now returned as `null` with a
+  `has_<field>` flag beside it, the way the auth-config endpoint answers
+  `has_client_secret`. In Settings -> Notifications a configured credential shows
+  as **(set)** with an empty field: leave it empty to keep the stored value, type
+  a new one to replace it, or use **Clear** to remove it. Saving can no longer
+  overwrite a credential with the blank the form was handed. The Apprise config
+  key is covered too, because apprise-api has no authentication of its own and
+  that key also reads the stored configuration back. The test buttons use the
+  saved credentials and are unaffected (#272).
+- The Generic Webhook's Payload Template is no longer reported as broken JSON
+  when the webhook sends plain text. Its headers are a credential and are not
+  returned to the browser, so the page could not tell which format to check the
+  template against -- and because Settings -> Notifications has one Save for
+  every channel, this also blocked saving unrelated channels (#272).
+- The Generic Webhook no longer writes its endpoint URL to the log, and a
+  malformed headers or payload template is reported by name rather than by
+  quoting the text, which could include part of an `Authorization` header or a
+  scraped product name (#272).
+- Browser scraper: a session wedged by an aborted scrape or a CDP protocol error
+  is now retired instead of returned to the warm pool, where the next request
+  for the same proxy and User-Agent inherited it and failed with
+  `Network.enable timed out` until the idle timer expired (#254).
+- Browser scraper: the anti-bot challenge auto-resolve loop now has a reserved
+  slice of the scrape budget that the hydration delay and selector wait cannot
+  spend, polls the page instead of sleeping blind so it returns the moment a
+  challenge clears, and makes three attempts by default instead of two (#256).
+- Browser scraper: a scrape that returns an unresolved challenge wall is logged
+  as such instead of as a success, and the result carries the flag so the backend
+  sees the same thing (#255).
+- Webhook payload templates are now valid JSON for any product name. Values containing `"`, `\` or a newline used to break the JSON, and the broken body was sent anyway; each value is now escaped, and a template that still is not valid JSON is logged and not sent. Template variables containing `$&`, `$1` or `$$` are also inserted as written on every channel instead of being expanded. A variable's value is also never expanded again, so a product name containing `{{reason}}` stays as written. The webhook's headers must be a JSON object, and are no longer dropped silently when they are not. To send plain text, set a non-JSON `Content-Type` header (#268).
+- Restored the Headers and Payload Template fields on the Generic Webhook card in Settings -> Notifications. They were missing after the v2 import, so the template could only be set through the API. The settings page checks both as you type and will not save JSON the backend cannot send (#268).
 - Forward `SMTP_FALLBACK_USER` and `SMTP_FALLBACK_PASS` to the backend container in `docker-compose.yaml` so authenticated fallback SMTP functions properly under Docker Compose.
 - Synchronized documentation across admin, developer, and user guides, corrected migration references, and regenerated product lifecycle diagrams.
+
+### Changed
+
+- Browser scraper: the proxy URL is no longer written to the log with its inline
+  credentials.
 
 ## [2.2.0-beta.1] - 2026-10-11
 

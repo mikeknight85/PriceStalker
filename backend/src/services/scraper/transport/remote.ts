@@ -3,11 +3,20 @@ import axios from 'axios';
 import { logger } from '../../../utils/system/logger';
 import { PageNotAvailableError } from './errors';
 
-/** Matches the scraper service's own default when no `timeout` is sent. */
+/**
+ * Budget assumed when a caller sends no `timeout`.
+ *
+ * It is the same number as the `browser_timeout` setting's default, not the
+ * scraper service's own fallback, which is lower. Every production call path
+ * -- `acquisition/remote.ts`, `acquisition/fallback.ts` and
+ * `transport/browser.ts` -- sends `browser_timeout` explicitly, so this only
+ * applies to a caller that forgot to, and it deliberately errs on the side of
+ * waiting longer than the scraper will take rather than less (issue #256).
+ */
 const DEFAULT_BROWSER_TIMEOUT_MS = 60000;
 
 /** Floor, so a tiny per-retailer timeout cannot make the request unservable. */
-const MIN_REQUEST_TIMEOUT_MS = 70000;
+export const MIN_REQUEST_TIMEOUT_MS = 70000;
 
 /**
  * Slack on top of the scraper's own budget.
@@ -19,15 +28,15 @@ const MIN_REQUEST_TIMEOUT_MS = 70000;
  * body to JSON, and the hop back over the network.
  *
  * It was `+ 10000`, back when `timeout` went straight to `page.goto` and the
- * post-navigation phase -- the hydration delay plus two 8s auto-resolve rounds
- * with their synthetic input, roughly 23s -- was outside it entirely. A
+ * post-navigation phase -- the hydration delay plus the auto-resolve rounds
+ * with their synthetic input -- was outside it entirely. A
  * `page.goto` that *succeeded* late in the window was then aborted here before
  * the scrape could return, losing a scrape that had worked. `browserDelay` is
  * still added even though the scraper now counts the delay inside its own
  * budget: double-counting it is free headroom on the one phase whose length the
  * backend actually knows.
  */
-const REMOTE_RESPONSE_OVERHEAD_MS = 15000;
+export const REMOTE_RESPONSE_OVERHEAD_MS = 15000;
 
 /**
  * Fetches HTML via the remote scraper instance (ruski).

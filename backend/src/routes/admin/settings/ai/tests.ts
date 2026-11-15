@@ -5,7 +5,7 @@ import { asyncHandler } from '../../../../utils/system/route-helpers';
 
 import { systemSettingsRepository } from '../../../../models';
 import { AISettings } from '../../../../models/types';
-import { isMaskedSecret } from '../../../../services/ai/masking';
+import { isMaskedSecret } from '../../../../utils/system/masking';
 
 const router = Router();
 

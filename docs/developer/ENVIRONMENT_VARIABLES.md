@@ -46,6 +46,9 @@ Used to customize the database connection and volume persistence.
 | `BACKEND_MEM_LIMIT` | Docker container memory constraint for the backend service. | `1g` |
 | `REDACT_API_KEYS` | When set to `true`, AI API credentials stored in settings are masked (`sk-...xxxx`) in the Admin panel and cannot be revealed via the UI. | `false` |
 | `ALLOW_INTERNAL_SCRAPING` | When set to `true`, any URL the application fetches may point at loopback, private, or link-local addresses. Leave it unset in production. Without it, admin tools (retailer config test, debug extract, retailer remap) refuse every internal address, and the product paths (add, rescan, scheduled refresh) refuse loopback and link-local — the cloud metadata endpoint `169.254.169.254` among them — while still allowing a shop on a private LAN such as `192.168.1.50`. Only the address check is waived: non-`http`/`https` schemes are always refused. | `false` |
+| `DISABLE_TELEMETRY` | Disables the daily anonymous heartbeat ping. Accepts `true`, `1` or `yes` (case-insensitive). Can also be toggled in Admin -> System Settings. | `false` |
+| `DO_NOT_TRACK` | Standard web privacy flag. Disables anonymous telemetry. Accepts `true`, `1` or `yes` (case-insensitive). | `0` |
+| `TELEMETRY_ENABLED` | Set to `false` to disable anonymous telemetry. A third spelling of the opt-out, accepted for symmetry with the Admin setting; any of the three is sufficient on its own. | unset |
 
 ---
 
@@ -109,7 +112,14 @@ auto-resolve knobs (`interstitialWaitMs`, `interstitialRetries`) arrive per
 request over the scraper's HTTP API, not from the environment. The backend
 sources the first three from the `browser_timeout` and `browser_delay` system
 settings under **Admin -> System**; `browser_timeout` is the budget for the
-*whole* scrape, which the scraper splits across navigation and the
-post-navigation phase. The challenge phrase list is the
-`generic_challenge_phrases` system setting, editable under
+*whole* scrape, which the scraper divides across navigation, the
+post-navigation phase and a reserved slice for the challenge auto-resolve loop
+(`scraper/src/utils/budget.ts`). All three remote call paths send it, so the
+scraper's own 45s fallback is not reachable in a normal install. The challenge
+phrase list is the `generic_challenge_phrases` system setting, editable under
 **Admin -> Extraction Rules**.
+
+Defaults for the auto-resolve loop are three attempts of up to 8s each. Each
+attempt polls the page and returns the moment the challenge clears, so the
+budget is only spent in full on a wall that never resolves -- which the scraper
+then logs as `Unresolved challenge wall returned`, not as a success.

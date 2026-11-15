@@ -167,3 +167,112 @@ describe('a denied refresh', () => {
     expect(repo.recordFailure).not.toHaveBeenCalled();
   });
 });
+
+describe('page-gone streak debouncing and auto-pause recovery (commit 98c97da)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    persistence.saveScrapeResult.mockResolvedValue(null);
+  });
+
+  const gone = (reason: UnavailableReason = 'http_404'): ScrapedProductWithVoting => ({
+    name: null,
+    price: null,
+    imageUrl: null,
+    url: 'https://www.digitec.ch/en/s1/product/item-123',
+    stockStatus: 'not_available',
+    aiStatus: null,
+    priceCandidates: [],
+    needsReview: false,
+    unavailableReason: reason,
+  });
+
+  it('holds the previous stock status on the first two 404s rather than pausing immediately', async () => {
+    // Bot walls sometimes serve an unflagged 404 briefly; requiring 3
+    // consecutive page-gone scrapes prevents a single blip from pausing
+    // monitoring and alerting the user.
+    await refresh(gone('http_404'), { stock_status: 'in_stock', page_gone_streak: 0 });
+    expect(repo.setPageGoneStreak).toHaveBeenCalledWith(42, 1);
+    expect(repo.setUnavailableReason).toHaveBeenCalledWith(42, 'http_404');
+    const [, , firstScraped] = persistence.saveScrapeResult.mock.calls[0];
+    expect((firstScraped as ScrapedProductWithVoting).stockStatus).toBe('in_stock');
+    expect(repo.setPaused).not.toHaveBeenCalled();
+    expect(notifications.notifyNotAvailable).not.toHaveBeenCalled();
+
+    vi.clearAllMocks();
+    await refresh(gone('http_404'), { stock_status: 'in_stock', page_gone_streak: 1 });
+    expect(repo.setPageGoneStreak).toHaveBeenCalledWith(42, 2);
+    const [, , secondScraped] = persistence.saveScrapeResult.mock.calls[0];
+    expect((secondScraped as ScrapedProductWithVoting).stockStatus).toBe('in_stock');
+    expect(repo.setPaused).not.toHaveBeenCalled();
+    expect(notifications.notifyNotAvailable).not.toHaveBeenCalled();
+  });
+
+  it('marks the product not_available, pauses monitoring, and notifies on the third consecutive 404', async () => {
+    persistence.saveScrapeResult.mockResolvedValueOnce({ from: 'in_stock', to: 'not_available' });
+
+    await refresh(gone('http_404'), { stock_status: 'in_stock', page_gone_streak: 2 });
+
+    expect(repo.setPageGoneStreak).toHaveBeenCalledWith(42, 3);
+    expect(repo.setUnavailableReason).toHaveBeenCalledWith(42, 'http_404');
+    const [, , thirdScraped] = persistence.saveScrapeResult.mock.calls[0];
+    expect((thirdScraped as ScrapedProductWithVoting).stockStatus).toBe('not_available');
+    expect(repo.setPaused).toHaveBeenCalledWith(42, true, false);
+    expect(notifications.notifyNotAvailable).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 42 }),
+      'http_404',
+      true,
+      3
+    );
+  });
+
+  it('resets a non-zero page_gone_streak when a subsequent scrape succeeds', async () => {
+    const recovered: ScrapedProductWithVoting = {
+      ...gone(),
+      unavailableReason: undefined,
+      stockStatus: 'in_stock',
+      price: { price: 79, currency: 'CHF' },
+    };
+
+    await refresh(recovered, { stock_status: 'in_stock', page_gone_streak: 2 });
+
+    expect(repo.setPageGoneStreak).toHaveBeenCalledWith(42, 0);
+    expect(repo.clearFailureState).toHaveBeenCalledWith(42);
+  });
+
+  it('resumes monitoring and notifies when an auto-paused product becomes available again', async () => {
+    const recovered: ScrapedProductWithVoting = {
+      ...gone(),
+      unavailableReason: undefined,
+      stockStatus: 'in_stock',
+      price: { price: 79, currency: 'CHF' },
+    };
+
+    await refresh(recovered, {
+      stock_status: 'not_available',
+      checking_paused: true,
+      auto_paused: true,
+    });
+
+    expect(repo.setPaused).toHaveBeenCalledWith(42, false, false);
+    expect(repo.setUnavailableReason).toHaveBeenCalledWith(42, null);
+    expect(notifications.notifyProductRestored).toHaveBeenCalledWith(expect.objectContaining({ id: 42 }));
+  });
+
+  it('does not unpause a product that the user manually paused', async () => {
+    const recovered: ScrapedProductWithVoting = {
+      ...gone(),
+      unavailableReason: undefined,
+      stockStatus: 'in_stock',
+      price: { price: 79, currency: 'CHF' },
+    };
+
+    await refresh(recovered, {
+      stock_status: 'in_stock',
+      checking_paused: true,
+      auto_paused: false,
+    });
+
+    expect(repo.setPaused).not.toHaveBeenCalled();
+    expect(notifications.notifyProductRestored).not.toHaveBeenCalled();
+  });
+});

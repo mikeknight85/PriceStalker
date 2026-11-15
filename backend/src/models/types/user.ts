@@ -32,6 +32,12 @@ export interface User {
   gotify_app_token: string | null;
   gotify_enabled: boolean;
   gotify_message_template: string | null;
+  apprise_url: string | null;
+  apprise_config_key: string | null;
+  apprise_urls: string | null;
+  apprise_tag: string | null;
+  apprise_enabled: boolean;
+  apprise_message_template: string | null;
   webhook_url: string | null;
   webhook_headers: string | null;
   webhook_payload_template: string | null;
@@ -96,6 +102,12 @@ export interface NotificationSettings {
   gotify_app_token: string | null;
   gotify_enabled: boolean;
   gotify_message_template: string | null;
+  apprise_url: string | null;
+  apprise_config_key: string | null;
+  apprise_urls: string | null;
+  apprise_tag: string | null;
+  apprise_enabled: boolean;
+  apprise_message_template: string | null;
   webhook_url: string | null;
   webhook_headers: string | null;
   webhook_payload_template: string | null;

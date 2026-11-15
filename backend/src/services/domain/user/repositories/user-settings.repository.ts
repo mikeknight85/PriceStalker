@@ -1,16 +1,18 @@
 import pool from '../../../../config/database';
 import { NotificationSettings } from '../../../../models/types';
+import { assertNoMaskedCredentials } from '../notification-credentials';
 
 /**
  * Fields for notification settings.
  * Mapping of key to its type for dynamic query generation.
  */
-const NOTIFICATION_FIELDS = [
+const NOTIFICATION_FIELDS: readonly (keyof NotificationSettings)[] = [
   'telegram_bot_token', 'telegram_chat_id', 'telegram_enabled', 'telegram_message_template',
   'discord_webhook_url', 'discord_enabled', 'discord_message_template',
   'pushover_user_key', 'pushover_app_token', 'pushover_enabled', 'pushover_message_template',
   'ntfy_topic', 'ntfy_server_url', 'ntfy_username', 'ntfy_password', 'ntfy_enabled', 'ntfy_message_template',
   'gotify_url', 'gotify_app_token', 'gotify_enabled', 'gotify_message_template',
+  'apprise_url', 'apprise_config_key', 'apprise_urls', 'apprise_tag', 'apprise_enabled', 'apprise_message_template',
   'webhook_url', 'webhook_headers', 'webhook_payload_template', 'webhook_enabled',
   'email_enabled', 'smtp_host', 'smtp_port', 'email_from', 'email_to', 'email_subject_template', 'email_body_template'
 ];
@@ -21,6 +23,7 @@ const SELECT_FIELDS_SQL = `
   pushover_user_key, pushover_app_token, COALESCE(pushover_enabled, false) as pushover_enabled, pushover_message_template,
   ntfy_topic, ntfy_server_url, ntfy_username, ntfy_password, COALESCE(ntfy_enabled, false) as ntfy_enabled, ntfy_message_template,
   gotify_url, gotify_app_token, COALESCE(gotify_enabled, false) as gotify_enabled, gotify_message_template,
+  apprise_url, apprise_config_key, apprise_urls, apprise_tag, COALESCE(apprise_enabled, false) as apprise_enabled, apprise_message_template,
   webhook_url, webhook_headers, webhook_payload_template, COALESCE(webhook_enabled, false) as webhook_enabled,
   COALESCE(email_enabled, false) as email_enabled, smtp_host, COALESCE(smtp_port, 25) as smtp_port,
   email_from, email_to, email_subject_template, email_body_template
@@ -39,13 +42,19 @@ export const userSettingsRepository = {
     id: number,
     settings: Partial<NotificationSettings>
   ): Promise<NotificationSettings | null> => {
+    // The last gate before the columns themselves: a masked placeholder is not
+    // a credential, and storing one would break the channel while looking as
+    // though it were configured (issue #272). Every route into this function
+    // resolves placeholders first; this throws if one ever stops doing so.
+    assertNoMaskedCredentials(settings);
+
     const fields: string[] = [];
     const values: (string | boolean | number | null)[] = [];
     let paramIndex = 1;
 
     // Dynamically build the UPDATE fields
     for (const key of NOTIFICATION_FIELDS) {
-      const value = (settings as any)[key];
+      const value = settings[key];
       if (value !== undefined) {
         fields.push(`${key} = $${paramIndex++}`);
         values.push(value);

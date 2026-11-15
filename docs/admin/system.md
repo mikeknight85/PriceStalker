@@ -33,7 +33,7 @@ PriceStalker integrates with SearXNG to search for products across search engine
 Adjusts how the remote Puppeteer browser behaves when resolving anti-bot protections:
 * **Default User-Agent (`default_user_agent`)**: The User-Agent string sent during standard HTTP calls.
 * **Default Referrer (`default_referrer`)**: The referrer headers set on requests (default: `https://www.google.com/`).
-* **Browser Timeout (`browser_timeout`)**: Time in milliseconds (e.g. `60000`) before a browser scrape attempt aborts.
+* **Browser Timeout (`browser_timeout`)**: Time in milliseconds (e.g. `60000`) for the **whole** browser scrape, not just the page load. The scraper divides it between navigation (60%) and the phases after it, reserving a slice of up to 40% for waiting out an anti-bot challenge interstitial so a slow navigation cannot starve it.
 * **Browser Delay (`browser_delay`)**: Time in milliseconds (e.g. `3000`) to wait after page load before taking the DOM screenshot and extracting the HTML (helps wait for lazy-loaded content).
 
 *(Note: The **Prefer JSON-LD for Images** toggle lives under **Extraction Rules**, beside the global image selectors).*

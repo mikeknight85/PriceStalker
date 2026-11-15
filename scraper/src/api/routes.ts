@@ -2,9 +2,12 @@ import express from 'express';
 import { log } from '../utils/logger.js';
 import { ScraperService } from '../services/ScraperService.js';
 import { SessionService } from '../services/SessionService.js';
-import { IDLE_TIMEOUT, MAX_SCRAPES_PER_BROWSER } from '../core/SessionManager.js';
+import { IDLE_TIMEOUT, MAX_SCRAPES_PER_BROWSER, markSessionTainted } from '../core/SessionManager.js';
+import { isProtocolError } from '../core/health.js';
+import { scrapeOutcomeLog } from '../utils/outcome.js';
 import type { ScrapeOptions } from '../types.js';
 import { errorMessage } from '../types.js';
+import { scrubUrlCredentials } from '../utils/scrub.js';
 
 const router = express.Router();
 
@@ -12,8 +15,10 @@ const router = express.Router();
 router.post('/scrape', async (req, res) => {
   const { url, options = {} } = req.body as { url?: string; options?: ScrapeOptions };
   
-  // Diagnostic log for identity debugging
-  log(`Incoming Scrape Request | URL: ${url} | UA: ${options.userAgent || 'None'} | Proxy: ${options.proxyUrl || 'None'}`, 'INFO');
+  // Diagnostic log for identity debugging. The proxy URL carries inline
+  // credentials in the usual deployment, so it is never logged raw.
+  const proxyForLog = options.proxyUrl ? scrubUrlCredentials(options.proxyUrl) : 'None';
+  log(`Incoming Scrape Request | URL: ${url} | UA: ${options.userAgent || 'None'} | Proxy: ${proxyForLog}`, 'INFO');
 
   const context = {
     requestId: options.requestId,
@@ -38,14 +43,22 @@ router.post('/scrape', async (req, res) => {
   session.totalScrapes++;
   session.lastActivity = Date.now();
   
-  log(`Scraping: ${url} (Session: ${session.id}, Active: ${session.activePages}, Total: ${session.totalScrapes}) [Proxy: ${options.proxyUrl || 'None'}, UA: ${options.userAgent || 'None'}, Ref: ${options.referrer || 'None'}]`, 'INFO', context);
-  
+  log(`Scraping: ${url} (Session: ${session.id}, Active: ${session.activePages}, Total: ${session.totalScrapes}) [Proxy: ${proxyForLog}, UA: ${options.userAgent || 'None'}, Ref: ${options.referrer || 'None'}]`, 'INFO', context);
+
   const abortController = new AbortController();
 
   res.on('close', () => {
     if (!res.writableEnded) {
       log(`Client disconnected: ${url}. Aborting request.`, 'WARN', context);
       abortController.abort();
+      // The abort closes the page out from under whatever CDP command was in
+      // flight, which is what leaves the browser wedged with
+      // `browser.connected` still true (issue #254). The session is retired
+      // rather than returned to the warm pool, where the next request for the
+      // same proxy and User-Agent would inherit it and fail every
+      // `browser.newPage()` with `Network.enable timed out` until the idle
+      // timer expired. A browser relaunch is cheap next to that.
+      markSessionTainted(session, 'scrape aborted by client disconnect');
     }
   });
 
@@ -61,10 +74,19 @@ router.post('/scrape', async (req, res) => {
       throw new Error('Scrape failed or returned no data');
     }
 
-    log(`Success: ${url} (${result.html.length} bytes)`, 'INFO', context);
+    // Never "Success" for a wall page: the flag comes from what the scrape
+    // observed on the live page, not from re-sniffing the HTML here (#255).
+    const outcome = scrapeOutcomeLog(url, result);
+    log(outcome.message, outcome.level, context);
     res.json(result);
 
   } catch (error) {
+    // A CDP protocol failure means the DevTools connection, not the page, is
+    // the problem, and the browser behind it is not safe to reuse (#254).
+    if (isProtocolError(error)) {
+      markSessionTainted(session, `CDP protocol error: ${errorMessage(error)}`);
+    }
+
     if (abortController.signal.aborted) {
       log(`Scrape aborted: ${url}`, 'DEBUG', context);
     } else {
@@ -75,9 +97,14 @@ router.post('/scrape', async (req, res) => {
   } finally {
     session.activePages--;
     session.lastActivity = Date.now();
-    
+
     if (session.activePages === 0) {
-      if (session.totalScrapes >= MAX_SCRAPES_PER_BROWSER) {
+      if (session.tainted) {
+        // Retired, not pooled. `releaseSession` goes through `closeSession`,
+        // which still owns the profile-directory removal from issue #208.
+        log(`Discarding session ${session.id}: ${session.taintReason || 'marked unusable'}`, 'WARN', context);
+        await SessionService.releaseSession(session);
+      } else if (session.totalScrapes >= MAX_SCRAPES_PER_BROWSER) {
         log(`Recycling exhausted session ${session.id}`, 'INFO', context);
         await SessionService.releaseSession(session);
       } else {
