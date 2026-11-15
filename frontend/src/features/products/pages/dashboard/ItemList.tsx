@@ -29,6 +29,7 @@ interface ItemListProps {
    */
   sortBy: SortOption;
   sortOrder: SortOrder;
+  onResetFilters?: () => void;
 }
 
 /**
@@ -47,6 +48,7 @@ const ItemList: React.FC<ItemListProps> = ({
   stockFilter,
   sortBy,
   sortOrder,
+  onResetFilters,
 }) => {
   const { user } = useAuth();
   const itemsQuery = useQuery(itemListQuery());
@@ -93,6 +95,11 @@ const ItemList: React.FC<ItemListProps> = ({
         <div className="products-empty">
           <div className="products-empty-icon"><Icon name="package" /></div>
           <div>{isFiltered ? 'No products match these filters' : 'Nothing tracked yet'}</div>
+          {isFiltered && onResetFilters && (
+            <button className="btn btn-secondary btn-sm" onClick={onResetFilters} style={{ marginTop: '0.75rem' }}>
+              Reset filters
+            </button>
+          )}
         </div>
       </>
     );

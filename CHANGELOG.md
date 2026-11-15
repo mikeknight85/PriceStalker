@@ -46,6 +46,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `$1,299.9900`) now keep their full fractional part instead of being floored.
   Also corrects the `Fr.` currency symbol, which persisted a non-ISO `FR.`
   currency code on Swiss listings instead of `CHF` (#285).
+- The image URL resolver no longer accepts loading spinners and placeholder
+  graphics as product images, so a lazy-loading indicator such as
+  `/static/loading.svg` can no longer overwrite a genuine product photo.
+- Dashboard search text, active tags, tracking and stock filters and view
+  preference are now cleared on logout. They were kept in browser storage and
+  reapplied for whoever logged in next on the same machine, so a second user
+  arrived at a filtered dashboard that did not match the controls shown (#260).
+- Returning from a product's detail page to the dashboard no longer shows
+  "No stores found" when the active tag has since been removed from every
+  product. Both list views also gained a **Reset filters** button, so an empty
+  result caused by a stale filter can be cleared without hunting for it (#259).
+- The Add Product form no longer accepts a second submission while the first
+  extraction is still in flight. Pressing Enter repeatedly, or double-clicking
+  Add, produced 409 unique-constraint collisions and abandoned the navigation
+  that should have followed the successful request (#276).
 
 ## [2.2.0-beta.2] - 2026-11-02
 
