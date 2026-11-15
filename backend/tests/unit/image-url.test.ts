@@ -132,4 +132,25 @@ describe('sanitizeProductImage', () => {
       sanitizeProductImage('https://cdn.example.com/same.jpg', 'https://cdn.example.com/same.jpg')
     ).toBeNull();
   });
+
+  describe('loading indicators are matched by filename, not by substring', () => {
+    // The markers were originally substrings of the whole path, which rejected
+    // real products: a price tracker tracks fidget spinners and top-loading
+    // washing machines, and both contain one of these words.
+    it('rejects files actually named for a loading indicator', () => {
+      expect(isPlaceholderImageUrl('https://x.test/static/loading.svg')).toBe(true);
+      expect(isPlaceholderImageUrl('https://x.test/assets/spinner.gif')).toBe(true);
+      expect(isPlaceholderImageUrl('https://x.test/img/loader.png')).toBe(true);
+      expect(isPlaceholderImageUrl('https://x.test/assets/spinner-2x.png')).toBe(true);
+      expect(isPlaceholderImageUrl('https://x.test/assets/loading_large.gif')).toBe(true);
+      expect(isPlaceholderImageUrl('https://x.test/js/ajax-loader.gif')).toBe(true);
+    });
+
+    it('keeps product photos whose names merely contain those words', () => {
+      expect(isPlaceholderImageUrl('https://x.test/media/fidget-spinner.jpg')).toBe(false);
+      expect(isPlaceholderImageUrl('https://x.test/media/top-loading-washer-01.jpg')).toBe(false);
+      expect(isPlaceholderImageUrl('https://x.test/media/hand-spinner-blue.png')).toBe(false);
+      expect(isPlaceholderImageUrl('https://x.test/media/front-loader-dryer.webp')).toBe(false);
+    });
+  });
 });
