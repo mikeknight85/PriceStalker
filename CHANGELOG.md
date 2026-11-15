@@ -33,6 +33,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   visitor to the dashboard. Ingestion now also constrains `version`,
   `build_commit`, platform, architecture, feature keys and usage buckets to
   allowlists, so such a value cannot be stored in the first place (#266).
+- Scraper price extraction no longer truncates prices. Any price whose
+  currency symbol or code was immediately followed by four or more digits with
+  no thousands separator lost its last digit -- `$5799.00` read as 579,
+  `AUD $3799` as 379, `CHF 1299` as 129, `$10000` as 100 -- because the pattern
+  matched greedily and then stopped. Separately, every ambiguous
+  separator case resolved to a single digit on a page with no currency symbol:
+  `1,299`, `1 299` and `12.999` all parsed as `1` or `12` regardless of locale.
+  Both are fixed, and the thousands/decimal decision is now driven by the
+  retailer's locale hint, so `1.299` reads as 1299 for a German retailer and
+  1.30 for a US one. Prices with three or more decimal places (`$1.4599`,
+  `$1,299.9900`) now keep their full fractional part instead of being floored.
+  Also corrects the `Fr.` currency symbol, which persisted a non-ISO `FR.`
+  currency code on Swiss listings instead of `CHF` (#285).
 
 ## [2.2.0-beta.2] - 2026-11-02
 
