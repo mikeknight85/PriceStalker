@@ -332,4 +332,39 @@ describe('parsePrice Robust Currency Normalisation Tests', () => {
       expect(normalizePrice('123.456,78', 'fr-FR')).toBe(123456.78);
     });
   });
+
+  describe('Fractional precision beyond two digits (#285)', () => {
+    // Capping the pattern's fraction group at two digits made it unmatchable
+    // when a third decimal followed: the group backtracked to empty, the
+    // trailing (?!\d) was satisfied by the separator, and the value was
+    // floored. Nothing in the suite covered a 3+ decimal input, so the
+    // regression was invisible.
+    it('keeps the full fractional part of a unit price', () => {
+      expect(parsePrice('$1.4599')?.price).toBeCloseTo(1.46, 2);
+      expect(parsePrice('$2.5999')?.price).toBeCloseTo(2.6, 2);
+      expect(parsePrice('$8.9999')?.price).toBeCloseTo(9, 2);
+    });
+
+    it('does not floor a four-decimal price to whole units', () => {
+      expect(parsePrice('$1,299.9900')?.price).toBeCloseTo(1299.99, 2);
+      expect(parsePrice("CHF 1'299.9900")?.price).toBeCloseTo(1299.99, 2);
+    });
+
+    it('handles a 3-decimal price embedded in surrounding copy', () => {
+      expect(parsePrice('$1.4599 per litre')?.price).toBeCloseTo(1.46, 2);
+    });
+
+    it('still parses the ordinary two-decimal and whole cases unchanged', () => {
+      expect(parsePrice('$29.99')?.price).toBe(29.99);
+      expect(parsePrice('$1,299.99')?.price).toBe(1299.99);
+      expect(parsePrice('$1299')?.price).toBe(1299);
+      expect(parsePrice('$0.50')?.price).toBe(0.5);
+    });
+  });
+
+  describe('Fr. resolves to CHF, not a bogus FR. code (#285)', () => {
+    it('maps the Swiss franc prefix to an ISO currency code', () => {
+      expect(parsePrice("Fr. 1'299.00")?.currency).toBe('CHF');
+    });
+  });
 });
