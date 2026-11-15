@@ -8,6 +8,7 @@ export { userRepository as userQueries, userRepository } from '../services/domai
 export { notificationRepository as notificationQueries, notificationRepository } from '../services/domain/notification/repositories/notification.repository';
 export { systemSettingsRepository as systemSettingsQueries, systemSettingsRepository } from '../services/domain/system/repositories/system-settings.repository';
 export { systemLogRepository as logQueries, systemLogRepository } from '../services/domain/system/repositories/system-log.repository';
+export { telemetryRepository } from '../services/domain/system/repositories/telemetry.repository';
 export { 
   regionalCurrencyRepository as regionalCurrencyQueries, regionalCurrencyRepository,
   globalCurrencyRepository as globalCurrencyQueries, globalCurrencyRepository,

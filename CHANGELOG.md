@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database
+  (`ps-telemetry.enuff.com`). Transmits minimal technical health metrics
+  (version, OS, architecture, and coarse item/store/user buckets) once a day.
+  Every value is either a fixed identifier or a bucket -- no counts, personal
+  data, store names or URLs are collected or stored. Opt out with
+  `DISABLE_TELEMETRY`, `DO_NOT_TRACK` (either accepts `true`, `1` or `yes`),
+  `TELEMETRY_ENABLED=false`, or the Admin -> System Settings toggle, which also
+  shows the exact payload that would be sent. The heartbeat is genuinely daily:
+  the ping sent shortly after startup is suppressed if one was already delivered
+  in the last 20 hours, so an instance that restarts often still reports once a
+  day rather than once per restart. Adds migration 025, and the collector Worker
+  and D1 schema are open source in `telemetry-collector/`.
+
+### Fixed
+
+- The telemetry collector's public dashboard now escapes version and platform
+  strings before writing them into its inline `<script>`, closing a stored
+  cross-site scripting hole that affected anyone running their own collector:
+  `JSON.stringify` does not escape `<`, and an HTML parser ends a `<script>`
+  element at the first `</script` sequence whatever the JavaScript string
+  context, so a single crafted ping could run arbitrary script for every
+  visitor to the dashboard. Ingestion now also constrains `version`,
+  `build_commit`, platform, architecture, feature keys and usage buckets to
+  allowlists, so such a value cannot be stored in the first place (#266).
+
 ## [2.2.0-beta.2] - 2026-11-02
 
 ### Added
