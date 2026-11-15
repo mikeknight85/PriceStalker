@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0-beta.3] - 2026-11-15
+
 ### Added
 
 - Anonymous heartbeat telemetry service via Cloudflare Worker and D1 database
