@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TelemetryService, TELEMETRY_ENDPOINT } from '../../src/services/domain/system/telemetry.service';
-import { systemSettingsRepository } from '../../src/models';
+import { TelemetryService, TELEMETRY_ENDPOINT, BOOT_PING_MIN_AGE_MS } from '../../src/services/domain/system/telemetry.service';
+import { systemSettingsRepository, telemetryRepository } from '../../src/models';
 import axios from 'axios';
 
 vi.mock('../../src/models', () => ({
@@ -8,6 +8,13 @@ vi.mock('../../src/models', () => ({
     get: vi.fn(),
     set: vi.fn(),
     getAll: vi.fn().mockResolvedValue({}),
+  },
+  telemetryRepository: {
+    getEntityCounts: vi.fn().mockResolvedValue({
+      itemsCount: 25,
+      storesCount: 42,
+      usersCount: 2,
+    }),
   },
 }));
 
@@ -164,6 +171,176 @@ describe('TelemetryService', () => {
       const result = await service.sendPing();
       expect(result.success).toBe(false);
       expect(result.error).toContain('Connection timed out');
+    });
+  });
+});
+
+describe('TelemetryService | opt-out and heartbeat guards', () => {
+  let service: TelemetryService;
+  const originalEnv = { ...process.env };
+  const settingsGet = vi.mocked(systemSettingsRepository.get);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env = { ...originalEnv };
+    delete process.env.DISABLE_TELEMETRY;
+    delete process.env.DO_NOT_TRACK;
+    delete process.env.TELEMETRY_ENABLED;
+    vi.mocked(telemetryRepository.getEntityCounts).mockResolvedValue({
+      itemsCount: 25,
+      storesCount: 42,
+      usersCount: 2,
+    });
+    service = new TelemetryService();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  describe('isEnabled | the default-on branch', () => {
+    it('is enabled when the setting has never been written', async () => {
+      settingsGet.mockResolvedValue(null);
+      expect(await service.isEnabled()).toBe(true);
+    });
+
+    it('is enabled when the setting holds an unrecognised value', async () => {
+      settingsGet.mockResolvedValue('maybe');
+      expect(await service.isEnabled()).toBe(true);
+    });
+
+    it('is disabled only for the exact string "false"', async () => {
+      settingsGet.mockResolvedValue('false');
+      expect(await service.isEnabled()).toBe(false);
+    });
+  });
+
+  describe('isEnvDisabled | accepted opt-out spellings', () => {
+    it.each(['true', 'TRUE', '1', 'yes', ' 1 '])(
+      'DISABLE_TELEMETRY=%s opts out',
+      (value) => {
+        process.env.DISABLE_TELEMETRY = value;
+        expect(service.isEnvDisabled()).toBe(true);
+      }
+    );
+
+    it.each(['true', '1', 'YES'])('DO_NOT_TRACK=%s opts out', (value) => {
+      process.env.DO_NOT_TRACK = value;
+      expect(service.isEnvDisabled()).toBe(true);
+    });
+
+    it('TELEMETRY_ENABLED=false opts out', () => {
+      process.env.TELEMETRY_ENABLED = 'false';
+      expect(service.isEnvDisabled()).toBe(true);
+    });
+
+    it.each(['false', '0', 'no', ''])(
+      'DISABLE_TELEMETRY=%s does not opt out',
+      (value) => {
+        process.env.DISABLE_TELEMETRY = value;
+        expect(service.isEnvDisabled()).toBe(false);
+      }
+    );
+  });
+
+  describe('shouldSendBootPing', () => {
+    const now = new Date('2026-11-15T12:00:00.000Z');
+
+    it('pings when no successful ping is recorded', async () => {
+      settingsGet.mockResolvedValue(null);
+      expect(await service.shouldSendBootPing(now)).toBe(true);
+    });
+
+    it('pings when the stored timestamp is unparseable', async () => {
+      settingsGet.mockResolvedValue('not-a-date');
+      expect(await service.shouldSendBootPing(now)).toBe(true);
+    });
+
+    it('does not ping when the last ping is newer than the minimum age', async () => {
+      settingsGet.mockResolvedValue(
+        new Date(now.getTime() - BOOT_PING_MIN_AGE_MS + 60_000).toISOString()
+      );
+      expect(await service.shouldSendBootPing(now)).toBe(false);
+    });
+
+    it('pings once the last ping reaches the minimum age', async () => {
+      settingsGet.mockResolvedValue(
+        new Date(now.getTime() - BOOT_PING_MIN_AGE_MS).toISOString()
+      );
+      expect(await service.shouldSendBootPing(now)).toBe(true);
+    });
+  });
+
+  describe('sendBootPing | restarts do not each ping', () => {
+    it('suppresses the request when a ping was already delivered today', async () => {
+      settingsGet.mockResolvedValue(new Date().toISOString());
+
+      const result = await service.sendBootPing();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Already pinged recently');
+      expect(axios.post).not.toHaveBeenCalled();
+    });
+
+    it('sends when the heartbeat is due', async () => {
+      settingsGet.mockImplementation(async (key: string) => {
+        if (key === 'telemetry_last_ping_at') {
+          return new Date(Date.now() - BOOT_PING_MIN_AGE_MS - 1000).toISOString();
+        }
+        if (key === 'telemetry_instance_id') {
+          return '3f1a9c6e-1b2d-4c3e-8a9b-0d1e2f3a4b5c';
+        }
+        return null;
+      });
+      vi.mocked(axios.post).mockResolvedValue({ status: 204 });
+
+      const result = await service.sendBootPing();
+
+      expect(result.success).toBe(true);
+      expect(axios.post).toHaveBeenCalledWith(
+        TELEMETRY_ENDPOINT,
+        expect.any(Object),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('payload', () => {
+    beforeEach(() => {
+      settingsGet.mockImplementation(async (key: string) =>
+        key === 'telemetry_instance_id' ? '3f1a9c6e-1b2d-4c3e-8a9b-0d1e2f3a4b5c' : null
+      );
+    });
+
+    it('does not disclose uptime', async () => {
+      const payload = await service.getPayload();
+
+      expect(payload.runtime).not.toHaveProperty('uptime_hours');
+      expect(JSON.stringify(payload)).not.toContain('uptime');
+    });
+
+    it('reports usage only as coarse buckets', async () => {
+      const payload = await service.getPayload();
+
+      expect(payload.usage).toEqual({
+        items_bucket: '11-50',
+        stores_bucket: '11-50',
+        users_bucket: '2-5',
+      });
+      expect(JSON.stringify(payload)).not.toContain('25');
+      expect(JSON.stringify(payload)).not.toContain('42');
+    });
+
+    it('falls back to unknown buckets when the count query fails', async () => {
+      vi.mocked(telemetryRepository.getEntityCounts).mockRejectedValue(new Error('db down'));
+
+      const payload = await service.getPayload();
+
+      expect(payload.usage).toEqual({
+        items_bucket: 'unknown',
+        stores_bucket: 'unknown',
+        users_bucket: 'unknown',
+      });
     });
   });
 });

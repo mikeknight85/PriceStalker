@@ -541,7 +541,7 @@ export interface TelemetryStatusResponse {
     version: string;
     build_commit?: string | null;
     os: { platform: string; arch: string; node_version: string };
-    runtime: { is_docker: boolean; uptime_hours: number };
+    runtime: { is_docker: boolean };
     features: Record<string, boolean>;
     usage: { items_bucket: string; stores_bucket: string; users_bucket: string };
   };

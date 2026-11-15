@@ -1,8 +1,7 @@
 import fs from 'fs';
 import crypto from 'crypto';
 import axios from 'axios';
-import pool from '../../../config/database';
-import { systemSettingsRepository } from '../../../models';
+import { systemSettingsRepository, telemetryRepository } from '../../../models';
 import { logger } from '../../../utils/system/logger';
 import { APP_VERSION } from '../../../utils/system/app-version';
 
@@ -17,7 +16,6 @@ export interface TelemetryPayload {
   };
   runtime: {
     is_docker: boolean;
-    uptime_hours: number;
   };
   features: {
     ai_enabled: boolean;
@@ -33,6 +31,14 @@ export interface TelemetryPayload {
 }
 
 export const TELEMETRY_ENDPOINT = 'https://ps-telemetry.enuff.com/v1/ping';
+
+/**
+ * How old the last successful ping must be before a process start is allowed to
+ * send another one. The heartbeat is documented as daily; without this guard a
+ * container that restarts often would ping once per restart, so `ping_count`
+ * would measure restarts rather than days.
+ */
+export const BOOT_PING_MIN_AGE_MS = 20 * 60 * 60 * 1000;
 
 export class TelemetryService {
   /**
@@ -54,10 +60,15 @@ export class TelemetryService {
    * Environment variable check (headless / Docker deployment override).
    */
   isEnvDisabled(): boolean {
+    const optOut = (value: string | undefined): boolean => {
+      const normalized = value?.trim().toLowerCase();
+      return normalized === 'true' || normalized === '1' || normalized === 'yes';
+    };
+
     return (
-      process.env.DISABLE_TELEMETRY === 'true' ||
-      process.env.DO_NOT_TRACK === '1' ||
-      process.env.TELEMETRY_ENABLED === 'false'
+      optOut(process.env.DISABLE_TELEMETRY) ||
+      optOut(process.env.DO_NOT_TRACK) ||
+      process.env.TELEMETRY_ENABLED?.trim().toLowerCase() === 'false'
     );
   }
 
@@ -118,7 +129,6 @@ export class TelemetryService {
       },
       runtime: {
         is_docker: isDocker,
-        uptime_hours: Math.round(process.uptime() / 3600),
       },
       features,
       usage,
@@ -151,11 +161,44 @@ export class TelemetryService {
 
       logger.debug('Telemetry | Ping delivered successfully', 'Telemetry');
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Never throw or interrupt application flow
-      logger.debug(`Telemetry | Ping skipped or unreachable: ${err?.message || err}`, 'Telemetry');
-      return { success: false, error: err?.message || 'Failed to send telemetry' };
+      const message = err instanceof Error ? err.message : String(err);
+      logger.debug(`Telemetry | Ping skipped or unreachable: ${message}`, 'Telemetry');
+      return { success: false, error: message || 'Failed to send telemetry' };
     }
+  }
+
+  /**
+   * Whether a ping sent at process start would be the first of the day.
+   * Returns true when no successful ping is recorded, when the stored
+   * timestamp is unparseable, or when it is older than BOOT_PING_MIN_AGE_MS.
+   */
+  async shouldSendBootPing(now: Date = new Date()): Promise<boolean> {
+    const lastPingAt = await systemSettingsRepository.get('telemetry_last_ping_at');
+    if (!lastPingAt) {
+      return true;
+    }
+
+    const lastPingMs = Date.parse(lastPingAt);
+    if (Number.isNaN(lastPingMs)) {
+      return true;
+    }
+
+    return now.getTime() - lastPingMs >= BOOT_PING_MIN_AGE_MS;
+  }
+
+  /**
+   * Sends the startup ping, but only if the daily heartbeat has not already
+   * been delivered. Used by the scheduler so that restarts do not each ping.
+   */
+  async sendBootPing(): Promise<{ success: boolean; error?: string }> {
+    if (!(await this.shouldSendBootPing())) {
+      logger.debug('Telemetry | Boot ping skipped | Already pinged within the last 20h', 'Telemetry');
+      return { success: false, error: 'Already pinged recently' };
+    }
+
+    return this.sendPing();
   }
 
   /**
@@ -190,17 +233,7 @@ export class TelemetryService {
     users_bucket: string;
   }> {
     try {
-      const res = await pool.query(`
-        SELECT
-          (SELECT COUNT(*) FROM items) as items_count,
-          (SELECT COUNT(*) FROM products) as stores_count,
-          (SELECT COUNT(*) FROM users) as users_count
-      `);
-
-      const row = res.rows[0] || {};
-      const itemsCount = parseInt(row.items_count, 10) || 0;
-      const storesCount = parseInt(row.stores_count, 10) || 0;
-      const usersCount = parseInt(row.users_count, 10) || 0;
+      const { itemsCount, storesCount, usersCount } = await telemetryRepository.getEntityCounts();
 
       return {
         items_bucket: this.toBucket(itemsCount),

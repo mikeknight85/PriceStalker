@@ -23,7 +23,6 @@ interface TelemetryPayload {
   };
   runtime?: {
     is_docker?: boolean;
-    uptime_hours?: number;
   };
   features?: Record<string, boolean>;
   usage?: {

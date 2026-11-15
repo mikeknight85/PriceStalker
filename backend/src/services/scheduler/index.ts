@@ -4,7 +4,7 @@ import { checkPrices } from './tasks/PriceCheckTask';
 import { runCleanup } from './tasks/CleanupTask';
 import { updateExchangeRates, checkInitialExchangeRates } from './tasks/ExchangeRateTask';
 import { refreshAIModels } from './tasks/AIModelRefreshTask';
-import { runTelemetryPing } from './tasks/TelemetryTask';
+import { runTelemetryPing, runTelemetryBootPing } from './tasks/TelemetryTask';
 
 export * from './tasks/PriceCheckTask';
 export * from './tasks/CleanupTask';
@@ -44,9 +44,11 @@ export function startScheduler(): void {
 
   // 6. Initial startup checks
   checkInitialExchangeRates();
+  // Gated on the last successful ping, so frequent restarts do not each ping.
+  // unref() so a short-lived process is never held open by this timer.
   setTimeout(() => {
-    runTelemetryPing().catch((err) => logger.debug('Scheduler | Telemetry | Initial ping unhandled error', 'Scheduler', err));
-  }, 120_000);
+    runTelemetryBootPing().catch((err) => logger.debug('Scheduler | Telemetry | Initial ping unhandled error', 'Scheduler', err));
+  }, 120_000).unref();
 
   logger.info('System | Scheduler | Started | Price check (1m)', 'Scheduler');
   logger.info('System | Scheduler | Started | Log cleanup (3am)', 'Scheduler');
