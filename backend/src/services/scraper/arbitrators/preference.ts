@@ -1,5 +1,6 @@
 import { PriceCandidate } from '../../../types/scraper';
 import { groupPriceCandidates, withGroupCurrency } from './utils';
+import { PRICE_DRIFT_LOWER, PRICE_DRIFT_UPPER } from '../../../utils/scraping/price/constants';
 
 /**
  * The saved extraction preference (issue #159, second symptom).
@@ -75,7 +76,8 @@ export type PreferenceOutcome =
  */
 export function selectPreferredCandidate(
   candidates: PriceCandidate[],
-  preferredMethod: string | null | undefined
+  preferredMethod: string | null | undefined,
+  anchorPrice?: number | null
 ): PreferenceOutcome {
   const method = (preferredMethod || '').trim();
   if (!method) return { status: 'none' };
@@ -85,7 +87,38 @@ export function selectPreferredCandidate(
   if (matching.length === 0) return { status: 'unmatched', method };
 
   const groups = groupPriceCandidates(matching);
-  groups.sort((a, b) => b.length - a.length);
+  const hasAnchor = typeof anchorPrice === 'number' && Number.isFinite(anchorPrice) && anchorPrice > 0;
+
+  if (hasAnchor) {
+    const meanPrice = (g: PriceCandidate[]) =>
+      g.reduce((sum, c) => sum + c.price, 0) / g.length;
+
+    groups.sort((a, b) => {
+      const avgA = meanPrice(a);
+      const avgB = meanPrice(b);
+      // Extreme drift matches the consensus guardrail definition (< 0.5x or > 2.5x)
+      const aPlausible = avgA >= anchorPrice * PRICE_DRIFT_LOWER && avgA <= anchorPrice * PRICE_DRIFT_UPPER;
+      const bPlausible = avgB >= anchorPrice * PRICE_DRIFT_LOWER && avgB <= anchorPrice * PRICE_DRIFT_UPPER;
+
+      // 1. Plausible groups strictly beat extreme drift outliers (e.g. recommendation carousels)
+      if (aPlausible !== bPlausible) {
+        return aPlausible ? -1 : 1;
+      }
+
+      // 2. Larger candidate agreement count wins
+      if (b.length !== a.length) {
+        return b.length - a.length;
+      }
+
+      // 3. Deterministic tie-break at equal count: prefer price closer to anchor
+      const driftA = Math.abs(avgA - anchorPrice);
+      const driftB = Math.abs(avgB - anchorPrice);
+      return driftA - driftB;
+    });
+  } else {
+    groups.sort((a, b) => b.length - a.length);
+  }
+
   const winner = groups[0];
 
   return {

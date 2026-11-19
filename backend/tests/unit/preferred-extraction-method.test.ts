@@ -159,6 +159,84 @@ describe('selectPreferredCandidate', () => {
       { price: Number.NaN, currency: 'EUR', method: 'custom-css', confidence: 0.9, selector: '.a' },
     ], 'custom-css').status).toBe('unmatched');
   });
+
+  it('prioritizes candidate group within plausible drift of anchorPrice over extreme-drift carousel outliers (issue #236)', () => {
+    // 7 accessory/carousel items matching .a-offscreen at $49.99 vs 3 genuine product prices at $378.00
+    const candidates: PriceCandidate[] = [
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 49.99, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 378, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 378, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+      { price: 378, currency: 'AUD', method: 'custom-css', confidence: 0.9, selector: '.a-offscreen' },
+    ];
+
+    const outcome = selectPreferredCandidate(candidates, 'custom-css', 378);
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+    expect(outcome.selection.candidate.price).toBe(378);
+  });
+
+  it('guarantees deterministic total order regardless of candidate arrival permutations', () => {
+    // 3 plausible groups relative to anchor 378:
+    // A: $380 (5 candidates, drift 2)
+    // B: $420 (8 candidates, drift 42)
+    // C: $500 (11 candidates, drift 122)
+    const makeGroup = (price: number, count: number): PriceCandidate[] =>
+      Array.from({ length: count }, () => ({
+        price,
+        currency: 'USD',
+        method: 'custom-css',
+        confidence: 0.9,
+        selector: '.p'
+      }));
+
+    const groupA = makeGroup(380, 5);
+    const groupB = makeGroup(420, 8);
+    const groupC = makeGroup(500, 11);
+
+    const perm1 = [...groupA, ...groupB, ...groupC];
+    const perm2 = [...groupB, ...groupC, ...groupA];
+    const perm3 = [...groupC, ...groupA, ...groupB];
+    const perm4 = [...groupC, ...groupB, ...groupA];
+
+    const res1 = selectPreferredCandidate(perm1, 'custom-css', 378);
+    const res2 = selectPreferredCandidate(perm2, 'custom-css', 378);
+    const res3 = selectPreferredCandidate(perm3, 'custom-css', 378);
+    const res4 = selectPreferredCandidate(perm4, 'custom-css', 378);
+
+    expect(res1.status).toBe('applied');
+    expect(res2.status).toBe('applied');
+    expect(res3.status).toBe('applied');
+    expect(res4.status).toBe('applied');
+
+    if (res1.status === 'applied' && res2.status === 'applied' && res3.status === 'applied' && res4.status === 'applied') {
+      // In all permutations, group C (count 11) must win deterministically
+      expect(res1.selection.candidate.price).toBe(500);
+      expect(res2.selection.candidate.price).toBe(500);
+      expect(res3.selection.candidate.price).toBe(500);
+      expect(res4.selection.candidate.price).toBe(500);
+    }
+  });
+
+  it('tie-breaks equal count groups deterministically by anchor price drift', () => {
+    const candidates: PriceCandidate[] = [
+      { price: 420, currency: 'USD', method: 'custom-css', confidence: 0.9, selector: '.p' },
+      { price: 420, currency: 'USD', method: 'custom-css', confidence: 0.9, selector: '.p' },
+      { price: 380, currency: 'USD', method: 'custom-css', confidence: 0.9, selector: '.p' },
+      { price: 380, currency: 'USD', method: 'custom-css', confidence: 0.9, selector: '.p' },
+    ];
+
+    const outcome = selectPreferredCandidate(candidates, 'custom-css', 378);
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+    // 380 is drift 2 from 378, while 420 is drift 42
+    expect(outcome.selection.candidate.price).toBe(380);
+  });
 });
 
 describe('runConsensusPhase: the saved preference is honoured', () => {

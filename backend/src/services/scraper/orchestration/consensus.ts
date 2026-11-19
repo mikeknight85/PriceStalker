@@ -3,6 +3,7 @@ import { findPriceConsensus } from '../extractors/prices';
 import { selectPreferredCandidate } from '../arbitrators/preference';
 import { pricesMatch } from '../arbitrators/utils';
 import { performArbitration } from '../arbitration';
+import { PRICE_DRIFT_LOWER, PRICE_DRIFT_UPPER } from '../../../utils/scraping/price/constants';
 
 export interface ConsensusOptions {
   url: string;
@@ -64,7 +65,7 @@ export async function runConsensusPhase(
   // pure arbitration function and reordering its priority paths; putting it in
   // extraction would have meant a preference could not express "the JSON-LD
   // one, not the deal one" at all.
-  const preference = selectPreferredCandidate(allCandidates, preferredMethod);
+  const preference = selectPreferredCandidate(allCandidates, preferredMethod, anchorPrice);
 
   if (preference.status === 'secondary') {
     extractionSteps.push(
@@ -204,7 +205,7 @@ export async function runConsensusPhase(
       // where the unit price belonged -- passed unchallenged while the same
       // magnitude of error downward was caught.
       const isExtremeDrift = !!anchorPrice &&
-        (resolvedPrice < anchorPrice * 0.5 || resolvedPrice > anchorPrice * 2.5);
+        (resolvedPrice < anchorPrice * PRICE_DRIFT_LOWER || resolvedPrice > anchorPrice * PRICE_DRIFT_UPPER);
       
       if (!isHighConfidence || isJsonLdWithoutCorroboration || isExtremeDrift) {
         let reason = '';

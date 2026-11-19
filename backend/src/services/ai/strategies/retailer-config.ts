@@ -8,7 +8,7 @@ import { extractJson } from '../parsers';
 import { getAIProvider } from '../client';
 import { prepareHtmlForAI } from '../html-preprocessor';
 
-function validateSelector(selector: string, url: string): boolean {
+export function validateSelector(selector: string, url: string): boolean {
   if (!selector || typeof selector !== 'string') return false;
   const trimmed = selector.trim();
   
@@ -26,7 +26,15 @@ function validateSelector(selector: string, url: string): boolean {
     return false;
   }
 
-  // 3. Cheerio syntax check
+  // 3. Rejects bare un-scoped accessibility/utility classes (e.g. .a-offscreen, .sr-only, .visually-hidden)
+  // which match all offscreen text on the page rather than the specific product element.
+  const bareUtilityPattern = /^(?:span|div|p|a)?\.(?:a-offscreen|sr-only|visually-hidden|screen-reader-text|hidden-text)$/i;
+  if (bareUtilityPattern.test(trimmed)) {
+    logger.warn(`AI | Auto-Map | Selector Validation | Rejected bare utility selector "${trimmed}" for ${url} (must be scoped to a parent container)`, 'AI');
+    return false;
+  }
+
+  // 4. Cheerio syntax check
   try {
     const $ = load('<div></div>');
     $(trimmed);

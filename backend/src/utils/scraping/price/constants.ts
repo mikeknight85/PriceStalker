@@ -48,3 +48,9 @@ export const PAYMENT_DENY_LIST = [
   '/mo', 'per month', 'monthly payment', 'a month', 
   'payments starting', 'payment of', 'payments of'
 ];
+
+/** Lower bound multiplier for plausible price drift relative to anchor price (50% of anchor) */
+export const PRICE_DRIFT_LOWER = 0.5;
+
+/** Upper bound multiplier for plausible price drift relative to anchor price (250% of anchor) */
+export const PRICE_DRIFT_UPPER = 2.5;
