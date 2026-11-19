@@ -49,10 +49,10 @@ export async function handleRetailerMaintenance(
       if (wantsBrowserScraper && !domainConfig.use_browser_scraper && await browserScraperIsAvailable()) {
         domainConfig.use_browser_scraper = true;
       }
-      if (wantsProxyHttp && !domainConfig.use_proxy_http) {
+      if (wantsProxyHttp && domainConfig.use_proxy_http !== false) {
         domainConfig.use_proxy_http = true;
       }
-      if (wantsProxyBrowser && !domainConfig.use_proxy_browser) {
+      if (wantsProxyBrowser && domainConfig.use_proxy_browser !== false) {
         domainConfig.use_proxy_browser = true;
       }
       await flagBlockedRetailer(domainConfig, challenge, extractionSteps);
@@ -65,8 +65,8 @@ export async function handleRetailerMaintenance(
         name: autoNameFor(domain),
         status: 'BLOCKED',
         use_browser_scraper: useBrowserScraper,
-        use_proxy_http: wantsProxyHttp,
-        use_proxy_browser: wantsProxyBrowser,
+        use_proxy_http: wantsProxyHttp ? true : null,
+        use_proxy_browser: wantsProxyBrowser ? true : null,
         description: `Auto-flagged: ${challenge} detected during extraction`,
         active: true
       };
@@ -87,8 +87,8 @@ export async function handleRetailerMaintenance(
       name: autoNameFor(domain),
       status: 'OK',
       use_browser_scraper: wantsBrowserScraper,
-      use_proxy_http: wantsProxyHttp,
-      use_proxy_browser: wantsProxyBrowser,
+      use_proxy_http: wantsProxyHttp ? true : null,
+      use_proxy_browser: wantsProxyBrowser ? true : null,
       description: 'Auto-created: extraction configuration learned',
       active: true
     };

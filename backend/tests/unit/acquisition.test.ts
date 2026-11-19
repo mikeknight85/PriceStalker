@@ -569,6 +569,26 @@ describe('acquireHtml decoupled proxy retry and learning loop', () => {
     expect(result.challengeReason).toBe('Cloudflare Challenge');
   });
 
+  it('does not attempt HTTP proxy retry when retailer is explicitly configured with use_proxy_http: false (Direct Only)', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'));
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: false, use_browser_scraper: false } as unknown as RetailerConfig;
+
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    // Should only have attempted direct HTTP once and NOT retried with proxy
+    expect(axios.get).toHaveBeenCalledTimes(1);
+    expect(steps.some(s => s.includes('Retrying with HTTP Proxy'))).toBe(false);
+    expect(result.learnedFlags?.use_proxy_http).toBeUndefined();
+  });
+
   it('retries remote browser scraper with proxy when direct remote scraper hits challenge and learns use_proxy_browser', async () => {
     vi.mocked(axios.get)
       .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'))

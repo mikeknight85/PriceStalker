@@ -88,12 +88,13 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
   // --- Attempt 2b: Standard HTTP via Proxy (if direct HTTP was blocked, proxy is configured, and direct didn't use a proxy) ---
   const standardHttpRan = !useBrowserScraper || remoteScraperUnavailable;
   const httpProxyAll = await settingsCache.getHttpProxyAll();
-  const alreadyUsedHttpProxy = domainConfig?.use_proxy_http !== undefined
-    ? Boolean(domainConfig.use_proxy_http || httpProxyAll)
-    : Boolean(domainConfig?.use_proxy || httpProxyAll);
+  const alreadyUsedHttpProxy = domainConfig?.use_proxy_http !== undefined && domainConfig?.use_proxy_http !== null
+    ? domainConfig.use_proxy_http
+    : (domainConfig?.use_proxy ? true : httpProxyAll);
   const systemProxyAvailable = Boolean(await settingsCache.getScraperProxy());
+  const proxyAllowed = domainConfig?.use_proxy_http !== false;
 
-  if (standardHttpRan && challengeReason && !alreadyUsedHttpProxy && systemProxyAvailable) {
+  if (standardHttpRan && challengeReason && !alreadyUsedHttpProxy && systemProxyAvailable && proxyAllowed) {
     try {
       extractionSteps.push(`Request | HTTP | Direct request blocked (${challengeReason}). Retrying with HTTP Proxy before browser fallback.`);
       const proxiedConfig = { ...(domainConfig || {}), use_proxy_http: true } as RetailerConfig;
