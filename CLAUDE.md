@@ -78,6 +78,16 @@ manual "run the migrations" step in production.
 - Cast parameters when a placeholder is used both as an inserted value and in a
   `WHERE` — Postgres cannot always deduce the type, and it fails at runtime, not
   compile time (`inconsistent types deduced for parameter $N`).
+- **Destructive data updates must snapshot for rollback.** If an `up` migration
+  modifies existing user or learned configurations (such as repairing
+  `retailer_configs.price_selectors`), snapshot the affected rows in a dedicated
+  backup table (e.g. `_backup_NNN_...`) so `down` can cleanly restore them.
+  Never leave `down` as an empty no-op after a data mutation.
+- **Match the exact defective string, not the absence of a pattern.** Use
+  precise equality (such as `jsonb_array_elements_text(...) = '.a-offscreen'`)
+  rather than negative pattern checks (`NOT LIKE '%corePrice%'`). Negative
+  matching inadvertently overwrites valid alternative configurations already
+  learned by the system.
 - Test it against a throwaway Postgres before committing. `tsc` will not catch a
   bad query.
 
@@ -125,6 +135,12 @@ Other rules that hold across all three:
   database are not immediately visible to running code. If a settings change
   appears not to have taken effect, the cache has not expired yet — restart the
   backend or wait before concluding something is broken.
+- **Default system settings require a migration to reach existing installs.**
+  `SettingsCache.DEFAULT_CONFIG` is only a cold fallback for when a database key
+  is completely absent or unparseable. Because initial migrations seed keys like
+  `generic_exclusion_selectors` and `generic_out_of_stock_phrases`, changing
+  defaults in TypeScript code will never take effect on existing deployments
+  without an accompanying database migration.
 - **AI and auth config are instance-wide**, stored in the database and edited
   under **Admin**, not per user. SSO requires **both** `ENABLE_SSO=true` in the
   environment **and** the in-app Admin toggle — enabling one without the other
@@ -173,6 +189,28 @@ The AI auto-mapping flow (Phase 4) and the Voting Modal are how PriceStalker
 skip, or cache-bust these flows when debugging extraction issues. If a scrape
 looks wrong, check the `retailer_configs` table in the database for the
 domain's selector config and `system_logs` for recent scrape trace history first.
+
+- **Global exclusions run unconditionally before DOM preservation.** Step 0 of
+  the denoiser prunes `generic_exclusion_selectors` before
+  `getPreservedElements()` compiles custom selector ancestors. Never put generic
+  component classes (`[class*="carousel"]`, `[id*="bundle"]`, `[id*="accessory"]`)
+  into global exclusions — product galleries use carousel classes, and
+  bundle/accessory kits are valid tracked products. Site-specific noise belongs
+  in `retailer_configs.exclusion_selectors` or targeted by unique, non-colliding
+  IDs.
+- **Generic out-of-stock phrases must never describe in-stock pages.** The
+  generic OOS phrase scanner searches the full document body and returns *before*
+  the "Add to Cart" in-stock check. Phrases like `"buying options"` or `"other sellers on"`
+  routinely appear on marketplace pages with an active buy-box; matching them
+  marks in-stock items as out-of-stock and nullifies their prices. Keep generic
+  phrases strictly unambiguous (`"see all buying options"`, `"available from these sellers"`).
+- **Candidate comparators must define a single total order.** Sorting candidate
+  groups must never switch criteria conditionally per pair (e.g. comparing drift
+  only when count difference <= 3). This causes intransitive cycles and makes
+  the selected price non-deterministic based on DOM arrival order. Score candidate
+  groups on a strict total order: `(isPlausible, count, drift)` using the group's
+  mean price, and import canonical drift constants (`PRICE_DRIFT_LOWER`,
+  `PRICE_DRIFT_UPPER`).
 
 ### Debugging scraper HTML
 
