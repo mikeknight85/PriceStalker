@@ -253,4 +253,31 @@ export const itemRepository = {
     );
     return (result.rowCount ?? 0) > 0;
   },
+
+  /**
+   * Updates an item's image URL if the existing image is missing or holds
+   * a corrupted URL (e.g. truncated /c_fill or trailing slash), keeping
+   * items in sync with canonical listing images (issue #263).
+   */
+  updateImageIfMissingOrCorrupted: async (
+    id: number,
+    imageUrl: string,
+    client?: Executor
+  ): Promise<boolean> => {
+    const executor = client || pool;
+    const result = await executor.query(
+      `UPDATE items
+       SET image_url = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+         AND (
+           image_url IS NULL
+           OR image_url = ''
+           OR image_url LIKE '%/c\\_fill' ESCAPE '\\'
+           OR image_url LIKE '%/c\\_fill/' ESCAPE '\\'
+           OR image_url LIKE '%/'
+         )`,
+      [imageUrl, id]
+    );
+    return (result.rowCount ?? 0) > 0;
+  },
 };

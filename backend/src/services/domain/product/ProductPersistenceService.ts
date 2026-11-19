@@ -1,5 +1,6 @@
 import { 
   productRepository, 
+  itemRepository,
   priceHistoryRepository, 
   stockHistoryRepository, 
 } from '../../../models';
@@ -133,6 +134,12 @@ export class ProductPersistenceService {
     if (Object.keys(metadataUpdates).length > 0) {
       await productRepository.update(productId, userId, metadataUpdates, client);
       logger.debug(`Product ${productId} | Metadata Updated | ${source}`, 'Products');
+    }
+
+    // Keep items.image_url in sync with the canonical listing image when
+    // the item has no image or holds a corrupted URL (issue #263).
+    if (sanitizedImage && product.item_id) {
+      await itemRepository.updateImageIfMissingOrCorrupted(product.item_id, sanitizedImage, client);
     }
   }
 

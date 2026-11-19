@@ -5,6 +5,7 @@ import {
   PageNotAvailableError,
   resolveUserAgent
 } from '../transport';
+import { parseUserAgent } from '../transport/user-agent';
 import { RetailerConfig } from '../../../models';
 
 /**
@@ -121,6 +122,20 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
     // default is no longer indistinguishable from sending nothing at all.
     logger.debug(`Scraper | Remote | Details | UA: ${remoteOptions.userAgent}, Proxy: ${remoteOptions.proxyUrl || 'None'}, Ref: ${remoteOptions.referrer || 'None'}`, 'Scraper');
     extractionSteps.push(`Scraper | Remote | UA: ${domainConfig?.user_agent ? 'Custom' : 'Default'} | Proxy: ${remoteOptions.proxyUrl ? 'Yes' : 'No'}`);
+
+    if (domainConfig?.user_agent) {
+      const identity = parseUserAgent(remoteOptions.userAgent);
+      const isChromium = ['chrome', 'edge', 'opera'].includes(identity.family);
+      const chromiumMajor = identity.chromiumVersion ? parseInt(identity.chromiumVersion, 10) : 0;
+      if (!isChromium) {
+        const warnMsg = `Scraper | Remote | Warning: Retailer User-Agent specifies ${identity.family}, but browser scraper runs Chromium. Engine mismatch may trigger anti-bot detection.`;
+        extractionSteps.push(warnMsg);
+        logger.warn(warnMsg, 'Scraper');
+      } else if (chromiumMajor > 0 && chromiumMajor < 140) {
+        const warnMsg = `Scraper | Remote | Warning: Retailer User-Agent uses older Chrome v${chromiumMajor}. Consider updating to current Chrome.`;
+        extractionSteps.push(warnMsg);
+      }
+    }
     
     const html = await fetchRemoteHtml(url, rsUrl, remoteOptions);
     extractionSteps.push(`Scraper | Remote | Success`);

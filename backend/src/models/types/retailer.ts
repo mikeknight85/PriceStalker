@@ -29,6 +29,8 @@ export interface RetailerConfig {
    * true prefer JSON-LD, false prefer CSS selectors, null inherit the global.
    */
   prefer_jsonld_image: boolean | null;
+  /** When true, the next scrape will regenerate retailer selectors (issue #265) */
+  re_auto_map?: boolean;
   user_agent: string | null;
   referrer: string | null;
   custom_selectors: any;

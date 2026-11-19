@@ -24,6 +24,8 @@
   --secondary: #047857;
   --danger: #dc2626;
   --danger-dark: #b91c1c;
+  --warning: #d97706;
+  --warning-rgb: 217, 119, 6;
   --background: #eef2f7;
   --surface: #ffffff;
   --text: #1e293b;
@@ -51,6 +53,8 @@
   --secondary: #34d399;
   --danger: #f87171;
   --danger-dark: #dc2626;
+  --warning: #fbbf24;
+  --warning-rgb: 251, 191, 36;
   --background: #0f172a;
   --surface: #1e293b;
   --text: #f1f5f9;

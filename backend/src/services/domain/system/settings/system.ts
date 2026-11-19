@@ -1,6 +1,6 @@
 import { systemSettingsRepository } from '../../../../models';
 import { logger } from '../../../../utils/system/logger';
-import { settingsCache } from '../../../../utils/cache';
+import { settingsCache, CANONICAL_SYSTEM_DEFAULTS } from '../../../../utils/cache';
 import {
   DEFAULT_REFRESH_INTERVAL_SETTING_KEY,
   FALLBACK_REFRESH_INTERVAL_SECONDS,
@@ -66,6 +66,75 @@ export class SystemSettingsService {
     }
 
     return await systemSettingsRepository.getAll();
+  }
+
+  /**
+   * Resets specified settings categories to their canonical factory defaults (issue #264).
+   */
+  async resetToDefaults(
+    scope: 'all' | 'selectors' | 'phrases' | 'network' = 'all',
+    userId: number
+  ): Promise<{ settings: Record<string, string>; reset_count: number }> {
+    const selectorKeys = [
+      'generic_price_selectors',
+      'generic_deal_price_selectors',
+      'generic_member_price_selectors',
+      'generic_pre_order_price_selectors',
+      'generic_retailer_name_selectors',
+      'generic_original_price_selectors',
+      'generic_name_selectors',
+      'generic_image_selectors',
+      'generic_stock_selectors',
+      'generic_exclusion_selectors',
+      'jsonld_image_key',
+      'jsonld_name_key',
+      'jsonld_price_key',
+      'prefer_jsonld_image',
+    ];
+
+    const phraseKeys = [
+      'generic_in_stock_phrases',
+      'generic_out_of_stock_phrases',
+      'generic_pre_order_phrases',
+      'generic_challenge_phrases',
+    ];
+
+    const networkKeys = [
+      'default_user_agent',
+      'default_referrer',
+      'browser_timeout',
+      'browser_delay',
+      DEFAULT_REFRESH_INTERVAL_SETTING_KEY,
+    ];
+
+    let targetKeys: string[] = [];
+    if (scope === 'selectors') targetKeys = selectorKeys;
+    else if (scope === 'phrases') targetKeys = phraseKeys;
+    else if (scope === 'network') targetKeys = networkKeys;
+    else targetKeys = [...selectorKeys, ...phraseKeys, ...networkKeys];
+
+    const currentSettings = await systemSettingsRepository.getAll();
+    const resetKeys: string[] = [];
+    for (const key of targetKeys) {
+      const val = CANONICAL_SYSTEM_DEFAULTS[key];
+      if (val !== undefined) {
+        const serialised = this.serialiseSetting(key, val);
+        if (currentSettings[key] !== serialised) {
+          await systemSettingsRepository.set(key, serialised);
+          resetKeys.push(key);
+        }
+      }
+    }
+
+    if (resetKeys.length > 0) {
+      logger.info(`Settings | Reset to Defaults | ID: ${userId} | Scope: ${scope} | Keys: ${resetKeys.join(', ')}`, 'Admin');
+      settingsCache.clear();
+    }
+
+    return {
+      settings: await systemSettingsRepository.getAll(),
+      reset_count: resetKeys.length,
+    };
   }
 
   /**

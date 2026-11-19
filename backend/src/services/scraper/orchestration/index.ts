@@ -14,7 +14,9 @@ import { initScrapeSession } from './init';
 import { runExtractionPhase } from './extraction';
 import { runConsensusPhase } from './consensus';
 import { runVerificationPhase } from './verification';
-import { handleRetailerMaintenance, handleAutoMapping, handleRestoreStatus } from './maintenance';
+import { handleRetailerMaintenance, handleAutoMapping, handleHeuristicAutoMapping, handleRestoreStatus } from './maintenance';
+import { retailerMutationRepository } from '../../domain/retailer/repositories/retailer-mutation.repository';
+import { configCache } from '../../../utils/cache';
 import { classifyTransportError } from '../../../types/availability';
 
 /**
@@ -149,19 +151,52 @@ export async function scrapeProductWithVoting(
     const priceExtracted = result.price !== null;
     let autoMapAttempted = false;
 
-    if (!challenge && !isDefinitivelyUnavailable && !priceExtracted && (!domainConfig || isShellConfig) && session.globalAiSettings.ai_auto_mapping_enabled) {
-      autoMapAttempted = true;
-      domainConfig = await handleAutoMapping({
-        html,
-        url,
-        domain: session.lookupDomain,
-        currencyHint,
-        localeHint,
-        productId,
-        extractionSteps,
-        learnedFlags: acqResult.learnedFlags,
-        isRefresh: !!domainConfig
-      });
+    // Never auto-map against anti-bot walls or 404/410 unavailable pages (issue #265, #274)
+    const canAttemptAutoMap = !challenge && !isDefinitivelyUnavailable;
+    const wantsReAutoMap = canAttemptAutoMap && domainConfig?.re_auto_map === true;
+    const isNewRetailerWithoutPrice = canAttemptAutoMap && !priceExtracted && (!domainConfig || isShellConfig);
+
+    if (wantsReAutoMap || (isNewRetailerWithoutPrice && session.globalAiSettings.ai_auto_mapping_enabled)) {
+      if (session.globalAiSettings.ai_auto_mapping_enabled) {
+        autoMapAttempted = true;
+        domainConfig = await handleAutoMapping({
+          html,
+          url,
+          domain: session.lookupDomain,
+          currencyHint,
+          localeHint,
+          productId,
+          extractionSteps,
+          learnedFlags: acqResult.learnedFlags,
+          isRefresh: !!domainConfig
+        });
+      }
+
+      // If re-mapping was requested and AI was disabled or produced no config, fall back to heuristic discovery
+      if (wantsReAutoMap && (!domainConfig || domainConfig.re_auto_map) && typeof handleHeuristicAutoMapping === 'function') {
+        autoMapAttempted = true;
+        domainConfig = await handleHeuristicAutoMapping({
+          html,
+          url,
+          domain: session.lookupDomain,
+          currencyHint,
+          localeHint,
+          extractionSteps,
+          learnedFlags: acqResult.learnedFlags,
+          existingConfig: domainConfig
+        });
+      }
+
+      // If re-mapping was requested and both AI and heuristic auto-mapping failed,
+      // clear the flag so subsequent scrapes do not loop forever (issue #265)
+      if (wantsReAutoMap && (!domainConfig || domainConfig.re_auto_map)) {
+        await retailerMutationRepository.clearReAutoMap(session.lookupDomain);
+        if (domainConfig) {
+          domainConfig.re_auto_map = false;
+        }
+        configCache.invalidate(session.lookupDomain);
+        extractionSteps.push(`Retailer | Auto-Map | Re-mapping failed; cleared re_auto_map flag`);
+      }
 
       if (domainConfig) {
         extractionSteps.push(`Retailer | Auto-Map | Re-running extraction with new config`);
