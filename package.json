@@ -13,16 +13,19 @@
   "workspaces": [
     "frontend",
     "backend",
-    "scraper"
+    "scraper",
+    "mcp"
   ],
   "scripts": {
     "install:all": "pnpm install",
     "build:backend": "pnpm --filter pricestalker-backend run build",
     "build:frontend": "pnpm --filter pricestalker-frontend run build",
     "build:scraper": "pnpm --filter stealth-scraper run build",
-    "build:all": "pnpm run build:backend && pnpm run build:frontend && pnpm run build:scraper",
+    "build:mcp": "pnpm --filter pricestalker-mcp run build",
+    "build:all": "pnpm run build:backend && pnpm run build:frontend && pnpm run build:scraper && pnpm run build:mcp",
     "start:backend": "pnpm --filter pricestalker-backend start",
     "start:frontend": "pnpm --filter pricestalker-frontend run dev",
+    "start:mcp": "pnpm --filter pricestalker-mcp start",
     "db:migrate": "pnpm --filter pricestalker-backend run db:migrate",
     "db:migrate:dev": "pnpm --filter pricestalker-backend run db:migrate:dev",
     "reset-password": "pnpm --filter pricestalker-backend run reset-password",

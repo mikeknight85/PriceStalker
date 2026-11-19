@@ -35,6 +35,9 @@ jobs:
       - name: Run frontend unit tests
         run: pnpm --filter pricestalker-frontend test
 
+      - name: Run MCP server tests
+        run: pnpm --filter pricestalker-mcp exec vitest run
+
       - name: Install Playwright Chromium
         run: pnpm --filter pricestalker-frontend exec playwright install --with-deps chromium
 

@@ -146,6 +146,7 @@ verify: ## Run a clean install, all builds, and backend tests.
 	PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 	pnpm run build:all
 	pnpm --filter pricestalker-backend exec vitest run
+	pnpm --filter pricestalker-mcp test
 
 diagrams: ## Rebuild product lifecycle overview and detailed diagrams from .dot files.
 	dot -Tsvg assets/product_lifecycle.dot -o assets/product_lifecycle.svg
