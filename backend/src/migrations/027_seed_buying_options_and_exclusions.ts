@@ -7,29 +7,29 @@ import { MigrationContext } from '../config/migrate';
  *
  * 1. generic_exclusion_selectors:
  *    Prunes recommendation carousels, sponsored items, related products, and accessory
- *    widgets before candidate extraction runs.
+ *    widgets before candidate extraction runs. Excludes broad patterns like `[class*="carousel"]`
+ *    and `[id*="bundle"]` which could match legitimate product galleries or bundles.
  *
  * 2. generic_out_of_stock_phrases:
  *    Adds marketplace multi-seller / buying option phrases ("see all buying options",
- *    "available from these sellers", etc.) so suppressed buy-box pages are recognized
+ *    "available from these sellers") so suppressed buy-box pages are recognized
  *    as out-of-stock rather than extracting unrelated carousel prices.
  *
- * 3. retailer_configs Amazon price selector repair:
+ * 3. retailer_configs Amazon price selector repair & exclusion selectors:
  *    Replaces bare un-scoped `.a-offscreen` utility selectors on Amazon domains with
- *    properly scoped buy-box price selectors.
+ *    properly scoped buy-box price selectors, while preserving already-scoped selectors
+ *    like `.apex-pricetopay-value .a-offscreen`. Also seeds Amazon-specific exclusion
+ *    selectors (#sp_detail, #desktop-dp-sims, etc.) directly into Amazon retailer configs.
  */
 
 const NEW_EXCLUSION_SELECTORS = [
   '.site-wide-ad',
-  '[class*="carousel" i]',
   '[class*="recommendation" i]',
   '[class*="sponsored" i]',
   '[class*="similar-products" i]',
   '[class*="related-products" i]',
   '[id*="recommendations" i]',
   '[id*="similarities" i]',
-  '[id*="bundle" i]',
-  '[id*="accessory" i]',
   '#desktop-dp-sims_purchase-similarities-sims-feature',
   '#sp_detail',
   '#sp_detail2',
@@ -46,16 +46,20 @@ const NEW_OOS_PHRASES = [
   'backorder',
   'back-order',
   'notify me when available',
-  'coming soon',
   'temporarily out of stock',
   'see all buying options',
   'available from these sellers',
-  'buying options',
-  'other sellers on',
-  'view all offers',
-  'options from',
   'discontinued',
   'nicht lieferbar'
+];
+
+const AMAZON_EXCLUSION_SELECTORS = [
+  '#sp_detail',
+  '#sp_detail2',
+  '#rhf',
+  '#huc-v2-subcart-feature-div',
+  '#desktop-dp-sims_purchase-similarities-sims-feature',
+  '#similarities_feature_div'
 ];
 
 const REPAIRED_AMAZON_PRICE_SELECTORS = JSON.stringify([
@@ -69,7 +73,7 @@ function mergeArrays(existingJson: string | null | undefined, toMerge: string[])
   let list: string[] = [];
   if (existingJson) {
     try {
-      const parsed = JSON.parse(existingJson);
+      const parsed = typeof existingJson === 'string' ? JSON.parse(existingJson) : existingJson;
       if (Array.isArray(parsed)) {
         list = parsed.filter(item => typeof item === 'string');
       }
@@ -124,19 +128,56 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
       [updatedOos]
     );
 
-    // 3. Repair Amazon retailer configs that have bare or un-scoped .a-offscreen
+    // 3. Snapshot Amazon configs before modifying them for a reversible down rollback
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS _backup_027_amazon_configs (
+        id integer PRIMARY KEY,
+        price_selectors jsonb,
+        exclusion_selectors jsonb
+      );
+    `);
+
+    await client.query(`
+      INSERT INTO _backup_027_amazon_configs (id, price_selectors, exclusion_selectors)
+      SELECT id, price_selectors, exclusion_selectors
+      FROM retailer_configs
+      WHERE domain ILIKE '%amazon%'
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    // 4. Repair Amazon retailer configs that have bare un-scoped .a-offscreen
     await client.query(
       `
       UPDATE retailer_configs
-      SET price_selectors = $1
+      SET price_selectors = $1::jsonb
       WHERE domain ILIKE '%amazon%'
         AND (
           price_selectors::text = '[".a-offscreen"]'
-          OR (price_selectors::text LIKE '%.a-offscreen%' AND NOT (price_selectors::text LIKE '%corePrice%'))
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements_text(COALESCE(price_selectors, '[]'::jsonb)) elem
+            WHERE elem = '.a-offscreen'
+          )
         );
       `,
       [REPAIRED_AMAZON_PRICE_SELECTORS]
     );
+
+    // 5. Seed Amazon-specific exclusion selectors into retailer_configs
+    const amazonRows = await client.query<{ id: number; exclusion_selectors: any }>(
+      `SELECT id, exclusion_selectors FROM retailer_configs WHERE domain ILIKE '%amazon%'`
+    );
+    for (const row of amazonRows.rows) {
+      const mergedExclusions = mergeArrays(
+        typeof row.exclusion_selectors === 'string'
+          ? row.exclusion_selectors
+          : JSON.stringify(row.exclusion_selectors || []),
+        AMAZON_EXCLUSION_SELECTORS
+      );
+      await client.query(
+        `UPDATE retailer_configs SET exclusion_selectors = $1::jsonb WHERE id = $2`,
+        [mergedExclusions, row.id]
+      );
+    }
 
     await client.query('COMMIT');
   } catch (error) {
@@ -151,7 +192,24 @@ export const down = async ({ context: pool }: { context: MigrationContext }) => 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    // Idempotent no-op for down: settings and healed selectors remain safe
+
+    // Restore original retailer_configs from snapshot if snapshot table exists
+    const tableCheck = await client.query(`
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = '_backup_027_amazon_configs';
+    `);
+
+    if (tableCheck.rows.length > 0) {
+      await client.query(`
+        UPDATE retailer_configs rc
+        SET price_selectors = b.price_selectors,
+            exclusion_selectors = b.exclusion_selectors
+        FROM _backup_027_amazon_configs b
+        WHERE rc.id = b.id;
+      `);
+      await client.query(`DROP TABLE IF EXISTS _backup_027_amazon_configs;`);
+    }
+
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');

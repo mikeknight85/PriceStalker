@@ -23,36 +23,28 @@ export const NOISE_CONTAINERS = [
   'div[class*="similar-products" i]', 'section[class*="similar-products" i]', 'div[class*="similar-items" i]',
   '[id*="sponsored-products" i]', '[id*="customer-reviews" i]',
   '[id*="frequently-bought" i]', '[id*="dp-ads-" i]',
-  '[id*="recommendations" i]', '[id*="similarities" i]', '[id*="bundle" i]', '[id*="accessory" i]',
+  '[id*="recommendations" i]', '[id*="similarities" i]',
   '#desktop-dp-sims_purchase-similarities-sims-feature', '#similarities_feature_div',
   '#sp_detail', '#sp_detail2', '#rhf', '#huc-v2-subcart-feature-div',
   'template',
   '[aria-hidden="true"]'
 ].join(', ');
 
-// Strict recommendation, accessory, and carousel containers that never represent the primary product.
-// Elements matching selectors inside these containers must not be preserved, ensuring carousels
-// do not survive noise pruning (issue #236).
+// Strict recommendation and sponsored containers that never represent the primary product.
+// Elements matching selectors inside these containers must not be preserved, ensuring recommendation
+// and sponsored widgets do not survive noise pruning (issue #236).
 export const RECOMMENDATION_CONTAINERS = [
-  '[class*="carousel" i]',
-  '[class*="recommend" i]',
-  '[class*="related" i]',
-  '[class*="similar" i]',
-  '[class*="upsell" i]',
-  '[class*="cross-sell" i]',
-  '[class*="crosssell" i]',
-  '[class*="sponsored" i]',
-  '[class*="advertisement" i]',
-  '[class*="recently-viewed" i]',
-  '[class*="bundle" i]',
-  '[class*="accessory" i]',
-  '[id*="recommend" i]',
-  '[id*="similar" i]',
-  '[id*="bundle" i]',
-  '[id*="accessory" i]',
-  '[id*="sponsored" i]',
+  'aside[class*="recommend" i]', 'section[class*="recommend" i]', 'div[class*="recommendations" i]', 'div[class*="recommended-products" i]',
+  'aside[class*="sponsored" i]', 'section[class*="sponsored" i]', 'div[class*="sponsored" i]',
+  'aside[class*="advertisement" i]', 'section[class*="advertisement" i]', 'div[class*="advertisement" i]',
+  'aside[class*="recently-viewed" i]', 'section[class*="recently-viewed" i]', 'div[class*="recently-viewed" i]',
+  'div[class*="similar-products" i]', 'section[class*="similar-products" i]', 'div[class*="similar-items" i]',
+  'div[class*="related-products" i]', 'div[class*="related-items" i]',
+  '[id*="sponsored-products" i]',
   '[id*="frequently-bought" i]',
   '[id*="dp-ads-" i]',
+  '[id*="recommendations" i]',
+  '[id*="similarities" i]',
   '#rhf',
   '#sp_detail',
   '#sp_detail2',

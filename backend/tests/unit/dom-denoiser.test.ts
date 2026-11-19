@@ -205,6 +205,65 @@ describe('denoiseDomForExtraction Unit Tests', () => {
     expect($('body').text()).not.toContain('$49.99');
     expect($('body').text()).not.toContain('$19.99');
   });
+
+  it('preserves product image galleries with carousel classes when targeted by image_selectors', () => {
+    const html = `
+      <html>
+        <body>
+          <div class="product-gallery carousel slide" id="main-product-carousel">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img class="hero-image" src="https://example.com/hero.jpg" alt="Hero Image">
+              </div>
+            </div>
+          </div>
+          <div class="product-info">
+            <h1 class="title">Product Name</h1>
+            <span class="price">$199.00</span>
+          </div>
+        </body>
+      </html>
+    `;
+    const $ = cheerio.load(html);
+    const domainConfig = {
+      image_selectors: ['.hero-image::attr(src)', '#main-product-carousel img::attr(src)']
+    };
+
+    denoiseDomForExtraction($, domainConfig);
+
+    // Gallery carousel and hero image must be preserved
+    expect($('#main-product-carousel').length).toBe(1);
+    expect($('.hero-image').length).toBe(1);
+    expect($('.hero-image').attr('src')).toBe('https://example.com/hero.jpg');
+  });
+
+  it('preserves bundle and accessory kit buy-boxes when targeted by custom price selectors', () => {
+    const html = `
+      <html>
+        <body>
+          <div class="bundle-container" id="bundle-buybox">
+            <h1>Camera + Lens Kit Bundle</h1>
+            <span class="bundle-price">$899.00</span>
+          </div>
+          <aside class="sidebar">
+            <div class="ad">Ad</div>
+          </aside>
+        </body>
+      </html>
+    `;
+    const $ = cheerio.load(html);
+    const domainConfig = {
+      price_selectors: ['#bundle-buybox .bundle-price']
+    };
+
+    denoiseDomForExtraction($, domainConfig);
+
+    // Bundle container and price must be preserved
+    expect($('#bundle-buybox').length).toBe(1);
+    expect($('.bundle-price').text()).toBe('$899.00');
+    // Generic sidebar noise must still be pruned
+    expect($('.sidebar').length).toBe(0);
+  });
 });
 
 describe('denoiseHtmlForRegex Unit Tests', () => {

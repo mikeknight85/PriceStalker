@@ -1,5 +1,6 @@
 import { PriceCandidate } from '../../../types/scraper';
 import { groupPriceCandidates, withGroupCurrency } from './utils';
+import { PRICE_DRIFT_LOWER, PRICE_DRIFT_UPPER } from '../../../utils/scraping/price/constants';
 
 /**
  * The saved extraction preference (issue #159, second symptom).
@@ -88,26 +89,35 @@ export function selectPreferredCandidate(
   const groups = groupPriceCandidates(matching);
   const hasAnchor = typeof anchorPrice === 'number' && Number.isFinite(anchorPrice) && anchorPrice > 0;
 
-  groups.sort((a, b) => {
-    if (hasAnchor) {
-      const priceA = a[0].price;
-      const priceB = b[0].price;
-      // Extreme drift matches the consensus guardrail definition (< 0.5x or > 2.5x)
-      const aPlausible = priceA >= anchorPrice * 0.5 && priceA <= anchorPrice * 2.5;
-      const bPlausible = priceB >= anchorPrice * 0.5 && priceB <= anchorPrice * 2.5;
-      if (aPlausible && !bPlausible) return -1;
-      if (!aPlausible && bPlausible) return 1;
+  if (hasAnchor) {
+    const meanPrice = (g: PriceCandidate[]) =>
+      g.reduce((sum, c) => sum + c.price, 0) / g.length;
 
-      // When both are plausible or both outliers, if candidate counts are close, prefer the one closer to anchor
-      const countDiff = Math.abs(a.length - b.length);
-      if (countDiff <= 3) {
-        const driftA = Math.abs(priceA - anchorPrice);
-        const driftB = Math.abs(priceB - anchorPrice);
-        return driftA - driftB;
+    groups.sort((a, b) => {
+      const avgA = meanPrice(a);
+      const avgB = meanPrice(b);
+      // Extreme drift matches the consensus guardrail definition (< 0.5x or > 2.5x)
+      const aPlausible = avgA >= anchorPrice * PRICE_DRIFT_LOWER && avgA <= anchorPrice * PRICE_DRIFT_UPPER;
+      const bPlausible = avgB >= anchorPrice * PRICE_DRIFT_LOWER && avgB <= anchorPrice * PRICE_DRIFT_UPPER;
+
+      // 1. Plausible groups strictly beat extreme drift outliers (e.g. recommendation carousels)
+      if (aPlausible !== bPlausible) {
+        return aPlausible ? -1 : 1;
       }
-    }
-    return b.length - a.length;
-  });
+
+      // 2. Larger candidate agreement count wins
+      if (b.length !== a.length) {
+        return b.length - a.length;
+      }
+
+      // 3. Deterministic tie-break at equal count: prefer price closer to anchor
+      const driftA = Math.abs(avgA - anchorPrice);
+      const driftB = Math.abs(avgB - anchorPrice);
+      return driftA - driftB;
+    });
+  } else {
+    groups.sort((a, b) => b.length - a.length);
+  }
 
   const winner = groups[0];
 
