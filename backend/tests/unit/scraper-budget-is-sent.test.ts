@@ -27,6 +27,8 @@ vi.mock('../../src/utils/cache', () => ({
   settingsCache: {
     getRemoteScraperUrl: vi.fn().mockResolvedValue('http://scraper:5100'),
     getScraperProxy: vi.fn().mockResolvedValue(null),
+    getRemoteScraperProxy: vi.fn().mockResolvedValue(null),
+    getHttpProxyAll: vi.fn().mockResolvedValue(false),
     getDefaultReferrer: vi.fn().mockResolvedValue(null),
     getDefaultUserAgent: vi.fn().mockResolvedValue('Mozilla/5.0 System Default Chrome/146.0.0.0'),
     getGenericChallengePhrases: vi.fn().mockResolvedValue(['pardon our interruption']),

@@ -262,6 +262,8 @@ export interface RetailerConfig {
   name: string | null;
   status: string | null;
   use_proxy: boolean;
+  use_proxy_http?: boolean | null;
+  use_proxy_browser?: boolean | null;
   use_browser_scraper: boolean;
   currency_hint: string | null;
   name_selectors: string[];
@@ -318,6 +320,8 @@ export interface SystemSettings {
   browser_timeout?: number;
   browser_delay?: number;
   scraper_proxy?: string;
+  remote_scraper_proxy?: string;
+  http_proxy_all?: boolean | string;
   remote_scraper_url?: string;
   default_user_agent?: string;
   default_referrer?: string;

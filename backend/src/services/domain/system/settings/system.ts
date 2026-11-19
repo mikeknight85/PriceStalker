@@ -24,6 +24,8 @@ export class SystemSettingsService {
       'browser_timeout', 
       'browser_delay', 
       'scraper_proxy', 
+      'remote_scraper_proxy',
+      'http_proxy_all',
       'remote_scraper_url',
       'default_user_agent',
       'default_referrer',

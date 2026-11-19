@@ -44,7 +44,15 @@ export class RetailerMutationService {
     }
 
     const settingsList = [];
-    if (updated.use_proxy) settingsList.push('Proxy');
+    if (updated.use_proxy_http && updated.use_proxy_browser) {
+      settingsList.push('Proxy (HTTP & Browser)');
+    } else if (updated.use_proxy_http) {
+      settingsList.push('Proxy (HTTP)');
+    } else if (updated.use_proxy_browser) {
+      settingsList.push('Proxy (Browser)');
+    } else if (updated.use_proxy) {
+      settingsList.push('Proxy');
+    }
     if (settingsList.length > 0) {
       manualTrace.push(`Settings: ${settingsList.join(', ')}`);
     }

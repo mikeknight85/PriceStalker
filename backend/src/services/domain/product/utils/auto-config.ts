@@ -180,11 +180,12 @@ export async function runAutoRetailerConfig(params: {
         active: true,
         selector_metadata: metadata,
         description: getRetailerDescription(existing, source === 'manual-add' ? 'scan' : (source === 'manual-confirm' ? 're-scan' : source)),
-        // Acquisition learned that this domain needs the browser scraper
-        // (plain HTTP failed, remote fallback succeeded). Persist it here so
-        // the flag is set even without AI auto-mapping (issue #45). Only ever
-        // learned positively — absence means "leave the stored value alone".
-        ...(scrapedData?.learnedFlags?.use_browser_scraper ? { use_browser_scraper: true } : {})
+        // Acquisition learned flags (e.g. browser scraper or proxy required).
+        // Only ever learned positively — absence means "leave the stored value alone".
+        // Respects explicit false ("Direct Only") overrides set by admins.
+        ...(scrapedData?.learnedFlags?.use_browser_scraper ? { use_browser_scraper: true } : {}),
+        ...(scrapedData?.learnedFlags?.use_proxy_http && existing?.use_proxy_http !== false ? { use_proxy_http: true } : {}),
+        ...(scrapedData?.learnedFlags?.use_proxy_browser && existing?.use_proxy_browser !== false ? { use_proxy_browser: true } : {})
       };
 
       await retailerRepository.upsert(finalUpsertData, client);

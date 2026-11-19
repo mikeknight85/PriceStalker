@@ -17,7 +17,7 @@ function describeScrapeFailure(reason?: ScrapeFailureReason, detail?: string, us
   switch (reason) {
     case 'bot_challenge':
       if (usedBrowserScraper) {
-        return `The retailer blocked the request${detail ? ` (${detail})` : ''}. The Browser Scraper was used, but the retailer presented a persistent challenge. Configure a proxy for this retailer under Admin -> Retailers, then try again.`;
+        return `The retailer blocked the request${detail ? ` (${detail})` : ''}. The Browser Scraper was used, but the retailer presented a persistent challenge. Configure a Browser Proxy for this retailer under Admin -> Retailers, then try again.`;
       }
       return `The retailer blocked the request${detail ? ` (${detail})` : ''}. Enable the Browser Scraper for this retailer under Admin -> Retailers, or configure a proxy, then try again.`;
     case 'page_unavailable':

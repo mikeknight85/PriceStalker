@@ -28,9 +28,18 @@ export async function handleRetailerMaintenance(
   overrideConfig: boolean,
   extractionSteps: string[],
   productId?: number,
-  fallbackContext?: { domain: string; learnedFlags?: { use_browser_scraper?: boolean } }
+  fallbackContext?: {
+    domain: string;
+    learnedFlags?: {
+      use_browser_scraper?: boolean;
+      use_proxy_http?: boolean;
+      use_proxy_browser?: boolean;
+    };
+  }
 ): Promise<RetailerConfig | null> {
   const wantsBrowserScraper = Boolean(fallbackContext?.learnedFlags?.use_browser_scraper);
+  const wantsProxyHttp = Boolean(fallbackContext?.learnedFlags?.use_proxy_http);
+  const wantsProxyBrowser = Boolean(fallbackContext?.learnedFlags?.use_proxy_browser);
 
   if (challenge) {
     logger.info(`Scraper | Block | Persistent challenge: ${challenge}`, 'Scraper', { product_id: productId });
@@ -39,6 +48,12 @@ export async function handleRetailerMaintenance(
     if (domainConfig && !overrideConfig) {
       if (wantsBrowserScraper && !domainConfig.use_browser_scraper && await browserScraperIsAvailable()) {
         domainConfig.use_browser_scraper = true;
+      }
+      if (wantsProxyHttp && domainConfig.use_proxy_http !== false) {
+        domainConfig.use_proxy_http = true;
+      }
+      if (wantsProxyBrowser && domainConfig.use_proxy_browser !== false) {
+        domainConfig.use_proxy_browser = true;
       }
       await flagBlockedRetailer(domainConfig, challenge, extractionSteps);
       return domainConfig;
@@ -50,6 +65,8 @@ export async function handleRetailerMaintenance(
         name: autoNameFor(domain),
         status: 'BLOCKED',
         use_browser_scraper: useBrowserScraper,
+        use_proxy_http: wantsProxyHttp ? true : null,
+        use_proxy_browser: wantsProxyBrowser ? true : null,
         description: `Auto-flagged: ${challenge} detected during extraction`,
         active: true
       };
@@ -58,10 +75,9 @@ export async function handleRetailerMaintenance(
       extractionSteps.push(`Retailer | Config | Auto-created as BLOCKED with Browser Scraper: ${useBrowserScraper}`);
       return created;
     }
-  } else if (!domainConfig && fallbackContext?.domain && wantsBrowserScraper) {
-    if (!await browserScraperIsAvailable()) {
-      // Nothing to learn: the fallback cannot have been a browser, and writing
-      // the flag would only cut the domain off from HTTP.
+  } else if (!domainConfig && fallbackContext?.domain && (wantsBrowserScraper || wantsProxyHttp || wantsProxyBrowser)) {
+    if (wantsBrowserScraper && !await browserScraperIsAvailable()) {
+      // Nothing to learn for browser: writing the flag would only cut the domain off from HTTP.
       extractionSteps.push(`Retailer | Config | Browser Scraper not configured, no config auto-created`);
       return domainConfig;
     }
@@ -70,13 +86,15 @@ export async function handleRetailerMaintenance(
       domain,
       name: autoNameFor(domain),
       status: 'OK',
-      use_browser_scraper: true,
-      description: 'Auto-created: Browser scraper required (fallback triggered)',
+      use_browser_scraper: wantsBrowserScraper,
+      use_proxy_http: wantsProxyHttp ? true : null,
+      use_proxy_browser: wantsProxyBrowser ? true : null,
+      description: 'Auto-created: extraction configuration learned',
       active: true
     };
     const created = await retailerRepository.upsert(newConfig);
     configCache.invalidate(domain);
-    extractionSteps.push(`Retailer | Config | Auto-created with Browser Scraper enabled`);
+    extractionSteps.push(`Retailer | Config | Auto-created with learned flags (Browser: ${wantsBrowserScraper}, ProxyHTTP: ${wantsProxyHttp}, ProxyBrowser: ${wantsProxyBrowser})`);
     return created;
   }
   return domainConfig;
@@ -139,7 +157,15 @@ export async function handleAutoMapping(
       }
 
       const settingsList = [];
-      if (upsertData.use_proxy) settingsList.push('Proxy');
+      if (upsertData.use_proxy_http && upsertData.use_proxy_browser) {
+        settingsList.push('Proxy (HTTP & Browser)');
+      } else if (upsertData.use_proxy_http) {
+        settingsList.push('Proxy (HTTP)');
+      } else if (upsertData.use_proxy_browser) {
+        settingsList.push('Proxy (Browser)');
+      } else if (upsertData.use_proxy) {
+        settingsList.push('Proxy');
+      }
       if (settingsList.length > 0) {
         autoMapTrace.push(`Settings: ${settingsList.join(', ')}`);
       }

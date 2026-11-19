@@ -39,6 +39,8 @@ function httpStatusError(status: number, data: unknown): AxiosError {
 vi.mock('../../src/utils/cache', () => ({
   settingsCache: {
     getScraperProxy: vi.fn().mockResolvedValue('http://proxy.com:8888'),
+    getHttpProxyAll: vi.fn().mockResolvedValue(false),
+    getRemoteScraperProxy: vi.fn().mockResolvedValue('http://proxy.com:8888'),
     get: vi.fn().mockResolvedValue('45000'),
     getDefaultUserAgent: vi.fn().mockResolvedValue('Mozilla/5.0 Mock UA'),
     getRemoteScraperUrl: vi.fn().mockResolvedValue('http://scraper:5100'),
@@ -117,6 +119,96 @@ describe('acquireStandardHtml Unit Tests', () => {
     })).rejects.toThrow('Redirect Loop (Queue-it / Anti-Bot Challenge)');
 
     expect(steps.some(s => s.includes('Redirect Loop'))).toBe(true);
+  });
+
+  it('should use proxy when use_proxy_http is true', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html>Proxied HTML</html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: true, use_proxy_browser: false } as unknown as RetailerConfig;
+
+    await acquireStandardHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(true);
+    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: Yes');
+  });
+
+  it('should NOT use proxy when only use_proxy_browser is true', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html>Direct HTML</html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: false, use_proxy_browser: true } as unknown as RetailerConfig;
+
+    await acquireStandardHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(false);
+    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: No');
+  });
+
+  it('should use proxy for standard HTTP when http_proxy_all is true and retailer is system default', async () => {
+    const { settingsCache } = await import('../../src/utils/cache');
+    vi.mocked(settingsCache.getHttpProxyAll).mockResolvedValueOnce(true);
+
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html>Globally Proxied HTML</html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: null, use_proxy_browser: null } as unknown as RetailerConfig;
+
+    await acquireStandardHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(true);
+    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: Yes');
+  });
+
+  it('should bypass proxy when use_proxy_http is false even if http_proxy_all is true', async () => {
+    const { settingsCache } = await import('../../src/utils/cache');
+    vi.mocked(settingsCache.getHttpProxyAll).mockResolvedValueOnce(true);
+
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html>Bypassed Proxy HTML</html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: false, use_proxy_browser: false } as unknown as RetailerConfig;
+
+    await acquireStandardHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(false);
+    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: No');
   });
 });
 
@@ -400,6 +492,134 @@ describe('acquireHtml does not learn use_browser_scraper from a failed fallback'
     expect(result.challengeReason).toBe('Akamai Access Denied');
     expect(result.learnedFlags).toEqual({});
     expect(result.learnedFlags?.use_browser_scraper).toBeUndefined();
+  });
+});
+
+describe('acquireHtml decoupled proxy retry and learning loop', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('retries standard HTTP with proxy when direct request hits bot challenge and learns use_proxy_http', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'))
+      .mockResolvedValueOnce({
+        status: 200,
+        data: '<html><head><title>Clean Product Page</title></head><body><div class="price">$50</div></body></html>',
+        request: { res: { responseUrl: 'http://example.com/product' } }
+      });
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      extractionSteps: steps
+    });
+
+    expect(result.html).toContain('Clean Product Page');
+    expect(result.challengeReason).toBeNull();
+    expect(result.learnedFlags).toEqual({ use_proxy_http: true });
+    expect(result.usedRemoteFallback).toBe(false);
+    expect(steps.some(s => s.includes('Success via HTTP Proxy. Learned use_proxy_http = true.'))).toBe(true);
+  });
+
+  it('escalates to browser fallback when HTTP proxy retry is also challenged', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'))
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'));
+
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      status: 200,
+      data: { html: '<html><head><title>Browser Rendered Product</title></head><body><div class="price">$50</div></body></html>' }
+    });
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      extractionSteps: steps
+    });
+
+    expect(result.html).toContain('Browser Rendered Product');
+    expect(result.challengeReason).toBeNull();
+    expect(result.learnedFlags).toEqual({ use_browser_scraper: true });
+    expect(result.usedRemoteFallback).toBe(true);
+  });
+
+  it('does not attempt HTTP proxy retry when retailer is configured for browser scraper', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      status: 200,
+      data: {
+        html: '<html><head><title>Just a moment...</title></head><body><script src="/cdn-cgi/challenge-platform/h/b/x"></script></body></html>'
+      }
+    });
+
+    const steps: string[] = [];
+    const domainConfig = { use_browser_scraper: true } as unknown as RetailerConfig;
+
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    // Plain Axios HTTP should NEVER have been called
+    expect(axios.get).not.toHaveBeenCalled();
+    expect(result.challengeReason).toBe('Cloudflare Challenge');
+  });
+
+  it('does not attempt HTTP proxy retry when retailer is explicitly configured with use_proxy_http: false (Direct Only)', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'));
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: false, use_browser_scraper: false } as unknown as RetailerConfig;
+
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    // Should only have attempted direct HTTP once and NOT retried with proxy
+    expect(axios.get).toHaveBeenCalledTimes(1);
+    expect(steps.some(s => s.includes('Retrying with HTTP Proxy'))).toBe(false);
+    expect(result.learnedFlags?.use_proxy_http).toBeUndefined();
+  });
+
+  it('retries remote browser scraper with proxy when direct remote scraper hits challenge and learns use_proxy_browser', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'))
+      .mockRejectedValueOnce(httpStatusError(403, 'Forbidden'));
+
+    vi.mocked(axios.post)
+      .mockResolvedValueOnce({
+        status: 200,
+        data: {
+          html: '<html><head><title>Just a moment...</title></head><body><script src="/cdn-cgi/challenge-platform/h/b/x"></script></body></html>'
+        }
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        data: {
+          html: '<html><head><title>Proxied Browser Scraper</title></head><body><div class="price">$99</div></body></html>'
+        }
+      });
+
+    const steps: string[] = [];
+    const result = await acquireHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      extractionSteps: steps
+    });
+
+    expect(result.html).toContain('Proxied Browser Scraper');
+    expect(result.challengeReason).toBeNull();
+    expect(result.learnedFlags).toEqual({ use_browser_scraper: true, use_proxy_browser: true });
+    expect(result.usedRemoteFallback).toBe(true);
+    expect(steps.some(s => s.includes('Learned use_browser_scraper = true, use_proxy_browser = true.'))).toBe(true);
   });
 });
 

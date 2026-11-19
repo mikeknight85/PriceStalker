@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Decoupled proxy routing for standard Axios HTTP fetches and remote browser
+  scraper sessions (#284). Retailers now configure proxy behavior via a clean
+  tri-state selector (`System Default`, `Always Proxy`, `Direct Only`) with
+  independent `use_proxy_http` and `use_proxy_browser` backend controls, allowing
+  local homelab backends to keep Axios egress on residential IPs while routing
+  remote cloud scrapers through proxies, and allowing cloud backends to route raw
+  HTTP fetches through residential tunnels without spinning up heavy Chromium
+  sessions. Adds migration 028, unified system proxy configuration with an optional
+  browser scraper proxy override, and intelligent proxy retry/fallback in
+  the auto-learning loop before escalating to browser rendering.
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added

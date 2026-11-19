@@ -45,6 +45,10 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
       // omit it entirely, so the fallback presented a different browser -- and
       // headless Chromium's own -- to a retailer that had just been shown the
       // configured one.
+      const remoteScraperProxy = await settingsCache.getRemoteScraperProxy();
+      const systemProxyEnabled = await settingsCache.getHttpProxyAll();
+      const initialUseProxy = Boolean(systemProxyEnabled && remoteScraperProxy);
+
       const remoteOptions: RemoteScraperOptions = {
         productId,
         isDiscovery,
@@ -52,6 +56,8 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
         challengePatterns: await settingsCache.getGenericChallengePhrases(),
         delay: await settingsCache.getBrowserDelay(),
         timeout: await settingsCache.getBrowserTimeout(),
+        useProxy: initialUseProxy,
+        proxyUrl: initialUseProxy ? (remoteScraperProxy || undefined) : undefined
       };
       // Referrer policy: system default or none — never a fabricated random
       // one (issue #44).
@@ -60,16 +66,46 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
 
       html = await fetchRemoteHtml(url, rsUrl, remoteOptions);
       logger.info(`Scraper | Fallback | Remote success for ${domain}`, 'Scraper', { product_id: productId });
-      extractionSteps.push(`Scraper | Fallback | Remote Success`);
+      extractionSteps.push(`Scraper | Fallback | Remote Success${initialUseProxy ? ' (via Proxy)' : ''}`);
       $ = load(html);
       finalChallengeReason = detectBotChallenge(html, $);
+
+      if (finalChallengeReason && remoteScraperProxy && !initialUseProxy) {
+        extractionSteps.push(`Scraper | Fallback | Remote hit challenge (${finalChallengeReason}). Retrying Remote Scraper with Proxy.`);
+        try {
+          const proxiedRemoteOptions: RemoteScraperOptions = {
+            ...remoteOptions,
+            useProxy: true,
+            proxyUrl: remoteScraperProxy
+          };
+          const proxiedHtml = await fetchRemoteHtml(url, rsUrl, proxiedRemoteOptions);
+          const proxied$ = load(proxiedHtml);
+          const proxiedChallenge = detectBotChallenge(proxiedHtml, proxied$);
+          if (!proxiedChallenge) {
+            html = proxiedHtml;
+            $ = proxied$;
+            finalChallengeReason = null;
+            learnedFlags = { use_browser_scraper: true, use_proxy_browser: true };
+            extractionSteps.push(`Scraper | Fallback | Remote Success with Proxy. Learned use_browser_scraper = true, use_proxy_browser = true.`);
+            return { html, $, challengeReason: null, learnedFlags };
+          }
+        } catch (proxyErr) {
+          const proxyMessage = proxyErr instanceof Error ? proxyErr.message : String(proxyErr);
+          logger.warn(`Scraper | Fallback | Remote with proxy failed: ${proxyMessage}`, 'Scraper');
+        }
+      }
+
       // Plain HTTP was blocked (triggering fallback), so this domain requires the browser scraper.
-      learnedFlags = { use_browser_scraper: true };
+      learnedFlags = {
+        use_browser_scraper: true,
+        ...(initialUseProxy ? { use_proxy_browser: true } : {})
+      };
       
       return { html, $, challengeReason: finalChallengeReason, learnedFlags };
     } catch (e) {
-      logger.error(`Scraper | Fallback | Remote failed for ${domain}: ${(e as any).message}`, 'Scraper', { product_id: productId, error: e });
-      extractionSteps.push(`Scraper | Fallback | Remote Failed: ${(e as any).message}`);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      logger.error(`Scraper | Fallback | Remote failed for ${domain}: ${errMsg}`, 'Scraper', { product_id: productId, error: e });
+      extractionSteps.push(`Scraper | Fallback | Remote Failed: ${errMsg}`);
     }
   } else {
     try {
@@ -85,8 +121,9 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
         return { html, $, challengeReason: finalChallengeReason, learnedFlags };
       }
     } catch (e) {
-      logger.error(`Scraper | Fallback | Local failed for ${domain}: ${(e as any).message}`, 'Scraper', { product_id: productId, error: e });
-      extractionSteps.push(`Scraper | Fallback | Local Failed: ${(e as any).message}`);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      logger.error(`Scraper | Fallback | Local failed for ${domain}: ${errMsg}`, 'Scraper', { product_id: productId, error: e });
+      extractionSteps.push(`Scraper | Fallback | Local Failed: ${errMsg}`);
     }
   }
 
