@@ -262,8 +262,8 @@ export interface RetailerConfig {
   name: string | null;
   status: string | null;
   use_proxy: boolean;
-  use_proxy_http?: boolean;
-  use_proxy_browser?: boolean;
+  use_proxy_http?: boolean | null;
+  use_proxy_browser?: boolean | null;
   use_browser_scraper: boolean;
   currency_hint: string | null;
   name_selectors: string[];

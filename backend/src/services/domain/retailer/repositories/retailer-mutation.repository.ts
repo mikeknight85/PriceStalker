@@ -51,18 +51,16 @@ export const retailerMutationRepository = {
     const hasProxyHttp = config.use_proxy_http !== undefined || config.use_proxy !== undefined;
     const effectiveProxyHttp = config.use_proxy_http !== undefined
       ? config.use_proxy_http
-      : (config.use_proxy !== undefined ? config.use_proxy : false);
+      : (config.use_proxy !== undefined ? (config.use_proxy ? true : null) : null);
 
     const hasProxyBrowser = config.use_proxy_browser !== undefined || config.use_proxy !== undefined;
     const effectiveProxyBrowser = config.use_proxy_browser !== undefined
       ? config.use_proxy_browser
-      : (config.use_proxy !== undefined ? config.use_proxy : false);
+      : (config.use_proxy !== undefined ? (config.use_proxy ? true : null) : null);
 
     const effectiveLegacyProxy = config.use_proxy !== undefined
       ? config.use_proxy
-      : (config.use_proxy_http !== undefined || config.use_proxy_browser !== undefined
-          ? Boolean(config.use_proxy_http || config.use_proxy_browser)
-          : null);
+      : Boolean(config.use_proxy_http === true || config.use_proxy_browser === true);
 
     const result = await executor.query(
       `INSERT INTO retailer_configs (

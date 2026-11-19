@@ -163,13 +163,37 @@ describe('acquireStandardHtml Unit Tests', () => {
     expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: No');
   });
 
-  it('should use proxy for standard HTTP when http_proxy_all is true', async () => {
+  it('should use proxy for standard HTTP when http_proxy_all is true and retailer is system default', async () => {
     const { settingsCache } = await import('../../src/utils/cache');
     vi.mocked(settingsCache.getHttpProxyAll).mockResolvedValueOnce(true);
 
     vi.mocked(axios.get).mockResolvedValue({
       status: 200,
       data: '<html>Globally Proxied HTML</html>',
+      request: { res: { responseUrl: 'http://example.com/product' } }
+    });
+
+    const steps: string[] = [];
+    const domainConfig = { use_proxy_http: null, use_proxy_browser: null } as unknown as RetailerConfig;
+
+    await acquireStandardHtml({
+      url: 'http://example.com/product',
+      domain: 'example.com',
+      domainConfig,
+      extractionSteps: steps
+    });
+
+    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(true);
+    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: Yes');
+  });
+
+  it('should bypass proxy when use_proxy_http is false even if http_proxy_all is true', async () => {
+    const { settingsCache } = await import('../../src/utils/cache');
+    vi.mocked(settingsCache.getHttpProxyAll).mockResolvedValueOnce(true);
+
+    vi.mocked(axios.get).mockResolvedValue({
+      status: 200,
+      data: '<html>Bypassed Proxy HTML</html>',
       request: { res: { responseUrl: 'http://example.com/product' } }
     });
 
@@ -183,8 +207,8 @@ describe('acquireStandardHtml Unit Tests', () => {
       extractionSteps: steps
     });
 
-    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(true);
-    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: Yes');
+    expect(steps.some(s => s.includes('Request | Proxy | Using:'))).toBe(false);
+    expect(steps).toContain('Request | HTTP | UA: Yes | Proxy: No');
   });
 });
 

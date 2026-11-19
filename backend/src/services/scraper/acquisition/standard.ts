@@ -25,9 +25,9 @@ export interface StandardAcquisitionOptions {
 export async function acquireStandardHtml(options: StandardAcquisitionOptions): Promise<string> {
   const { url, domain, domainConfig, extractionSteps, requestId, strictProxy } = options;
   const httpProxyAll = await settingsCache.getHttpProxyAll();
-  const useProxy = domainConfig?.use_proxy_http !== undefined
-    ? Boolean(domainConfig.use_proxy_http || httpProxyAll)
-    : Boolean(domainConfig?.use_proxy || httpProxyAll);
+  const useProxy = domainConfig?.use_proxy_http !== undefined && domainConfig?.use_proxy_http !== null
+    ? domainConfig.use_proxy_http
+    : (domainConfig?.use_proxy ? true : httpProxyAll);
 
   const timeoutSetting = await settingsCache.get('scraper_timeout');
   const timeout = timeoutSetting ? parseInt(timeoutSetting, 10) : 30000;

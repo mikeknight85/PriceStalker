@@ -18,15 +18,22 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
 
     await client.query(`
       ALTER TABLE public.retailer_configs
-        ADD COLUMN IF NOT EXISTS use_proxy_http boolean NOT NULL DEFAULT false,
-        ADD COLUMN IF NOT EXISTS use_proxy_browser boolean NOT NULL DEFAULT false;
+        ADD COLUMN IF NOT EXISTS use_proxy_http boolean DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS use_proxy_browser boolean DEFAULT NULL;
+
+      ALTER TABLE public.retailer_configs
+        ALTER COLUMN use_proxy_http DROP NOT NULL,
+        ALTER COLUMN use_proxy_http SET DEFAULT NULL,
+        ALTER COLUMN use_proxy_browser DROP NOT NULL,
+        ALTER COLUMN use_proxy_browser SET DEFAULT NULL;
     `);
 
-    // Backfill existing use_proxy setting so behavior is preserved
+    // Backfill existing use_proxy setting:
+    // true -> true (Always Proxy), false/null -> null (System Default)
     await client.query(`
       UPDATE public.retailer_configs
-      SET use_proxy_http = COALESCE(use_proxy, false),
-          use_proxy_browser = COALESCE(use_proxy, false)
+      SET use_proxy_http = true,
+          use_proxy_browser = true
       WHERE use_proxy = true;
     `);
 

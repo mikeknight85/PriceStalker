@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AdminSystemService } from '../../services/AdminSystemService';
 import { SystemSettings, TelemetryStatusResponse } from '../../../../types/api';
 import { useToast } from '../../../../context/ToastContext';
@@ -22,6 +22,10 @@ export default function SystemSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingAdmin, setIsSavingAdmin] = useState(false);
   const [isTestingSearXNG, setIsTestingSearXNG] = useState(false);
+  const [enableProxy, setEnableProxy] = useState<boolean>(false);
+  const [showBrowserProxyOverride, setShowBrowserProxyOverride] = useState<boolean>(false);
+  const cachedProxyRef = useRef<string>('');
+  const cachedBrowserProxyRef = useRef<string>('');
 
   const { expandedSections, toggleSection } = useExpandedSections({
     sys_network: false,
@@ -47,6 +51,12 @@ export default function SystemSection() {
       setSavedSettings(res);
       setSystemSettings(res);
       setTelemetryStatus(tel);
+      const hasProxy = Boolean(res?.scraper_proxy || res?.http_proxy_all === true || res?.http_proxy_all === 'true');
+      setEnableProxy(hasProxy);
+      if (res?.scraper_proxy) cachedProxyRef.current = res.scraper_proxy;
+      const hasOverride = Boolean(res?.remote_scraper_proxy);
+      setShowBrowserProxyOverride(hasOverride);
+      if (res?.remote_scraper_proxy) cachedBrowserProxyRef.current = res.remote_scraper_proxy;
     } catch {
       showToast('Failed to load system settings', 'error');
     } finally {
@@ -93,6 +103,12 @@ export default function SystemSection() {
       setSavedSettings(res);
       setSystemSettings(res);
       queryClient.setQueryData(queryKeys.adminSystemSettings, res);
+      const hasProxy = Boolean(res?.scraper_proxy || res?.http_proxy_all === true || res?.http_proxy_all === 'true');
+      setEnableProxy(hasProxy);
+      if (res?.scraper_proxy) cachedProxyRef.current = res.scraper_proxy;
+      const hasOverride = Boolean(res?.remote_scraper_proxy);
+      setShowBrowserProxyOverride(hasOverride);
+      if (res?.remote_scraper_proxy) cachedBrowserProxyRef.current = res.remote_scraper_proxy;
       showToast('Admin settings saved', 'success');
     } catch { showToast('Save failed', 'error'); } finally { setIsSavingAdmin(false); }
   };
@@ -105,45 +121,91 @@ export default function SystemSection() {
         <h2 className="settings-card-title">Core System Settings</h2>
       
       <CollapsibleCard title="Network & Integration" leadingIcon={<Icon name="globe" />} id="sys_network" isExpanded={expandedSections.sys_network} onToggle={toggleSection}>
-        <div className="form-group">
-          <label>Proxy URL/Port</label>
-          <input
-            type="text"
-            className="form-control"
-            value={systemSettings?.scraper_proxy || ''}
-            onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)}
-            placeholder="http://proxy:port"
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: enableProxy ? '0.75rem' : '1.25rem', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Enable Proxy</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              Route scraping requests through a proxy to bypass datacenter IP blocks.
+            </div>
+          </div>
+          <ToggleSwitch
+            active={enableProxy}
+            onToggle={() => {
+              if (enableProxy) {
+                if (systemSettings?.scraper_proxy) {
+                  cachedProxyRef.current = systemSettings.scraper_proxy;
+                }
+                setEnableProxy(false);
+                setShowBrowserProxyOverride(false);
+                setSystemSettings(s => s ? { ...s, scraper_proxy: '', remote_scraper_proxy: '', http_proxy_all: false } : null);
+              } else {
+                setEnableProxy(true);
+                setSystemSettings(s => s ? { ...s, scraper_proxy: cachedProxyRef.current || s.scraper_proxy || '', http_proxy_all: true } : null);
+              }
+            }}
           />
-          <small style={{ color: 'var(--text-muted)' }}>
-            Default proxy used for HTTP requests and remote browser scraper sessions.
-          </small>
         </div>
-        <div className="form-group">
-          <label>Remote Scraper Proxy URL (Optional)</label>
-          <input
-            type="text"
-            className="form-control"
-            value={systemSettings?.remote_scraper_proxy || ''}
-            onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_proxy: e.target.value } : null)}
-            placeholder="http://proxy:port"
-          />
-          <small style={{ color: 'var(--text-muted)' }}>
-            Specific proxy endpoint for the remote browser scraper container. Leave empty to use the default Proxy URL.
-          </small>
-        </div>
-        <div className="form-group mb-3">
-          <label className="toggle-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={systemSettings?.http_proxy_all === true || systemSettings?.http_proxy_all === 'true'}
-              onChange={e => setSystemSettings(s => s ? { ...s, http_proxy_all: e.target.checked } : null)}
-            />
-            Route all HTTP (Axios) fetches through proxy
-          </label>
-          <small style={{ color: 'var(--text-muted)', display: 'block', marginLeft: '1.5rem' }}>
-            When enabled, all standard HTTP price checks egress via the configured proxy by default without needing per-retailer configuration. Recommended when running the backend on cloud instances.
-          </small>
-        </div>
+
+        {enableProxy && (
+          <div style={{ marginBottom: '1.25rem', paddingLeft: '0.25rem', paddingRight: '0.25rem' }}>
+            <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+              <label>Proxy URL / Port</label>
+              <input
+                type="text"
+                className="form-control"
+                value={systemSettings?.scraper_proxy || ''}
+                onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)}
+                placeholder="http://proxy:port"
+              />
+              <small style={{ color: 'var(--text-muted)' }}>
+                Default proxy used for HTTP price checks and remote browser scraper sessions.
+              </small>
+            </div>
+
+            <div style={{ marginTop: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-raised, rgba(255, 255, 255, 0.03))', padding: '0.625rem 0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border)' }}>
+                <div>
+                  <div style={{ fontWeight: 500, fontSize: '0.8125rem' }}>Use a separate proxy for Browser Scraper</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
+                    Optional override for the remote browser container when JavaScript rendering is required.
+                  </div>
+                </div>
+                <ToggleSwitch
+                  active={showBrowserProxyOverride}
+                  onToggle={() => {
+                    if (showBrowserProxyOverride) {
+                      if (systemSettings?.remote_scraper_proxy) {
+                        cachedBrowserProxyRef.current = systemSettings.remote_scraper_proxy;
+                      }
+                      setShowBrowserProxyOverride(false);
+                      setSystemSettings(s => s ? { ...s, remote_scraper_proxy: '' } : null);
+                    } else {
+                      setShowBrowserProxyOverride(true);
+                      setSystemSettings(s => s ? { ...s, remote_scraper_proxy: cachedBrowserProxyRef.current || s.remote_scraper_proxy || '' } : null);
+                    }
+                  }}
+                />
+              </div>
+
+              {showBrowserProxyOverride && (
+                <div className="form-group" style={{ marginTop: '0.75rem', paddingLeft: '0.25rem', paddingRight: '0.25rem' }}>
+                  <label>Browser Scraper Proxy Override</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={systemSettings?.remote_scraper_proxy || ''}
+                    onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_proxy: e.target.value } : null)}
+                    placeholder="http://proxy:port"
+                  />
+                  <small style={{ color: 'var(--text-muted)' }}>
+                    Dedicated proxy endpoint passed to the remote Chromium container.
+                  </small>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="form-group">
           <label>Browser Scraper URL</label>
           <input type="text" className="form-control" value={systemSettings?.remote_scraper_url || ''} onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_url: e.target.value } : null)} placeholder="http://scraper:5100/scrape" />
@@ -361,7 +423,21 @@ export default function SystemSection() {
       </CollapsibleCard>
 
       <div className="settings-actions">
-        <button type="button" className="btn btn-secondary" onClick={() => savedSettings && setSystemSettings(savedSettings)} disabled={!isDirty || isSavingAdmin}>Cancel</button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => {
+            if (!savedSettings) return;
+            setSystemSettings(savedSettings);
+            const hasProxy = Boolean(savedSettings.scraper_proxy || savedSettings.http_proxy_all === true || savedSettings.http_proxy_all === 'true');
+            setEnableProxy(hasProxy);
+            const hasOverride = Boolean(savedSettings.remote_scraper_proxy);
+            setShowBrowserProxyOverride(hasOverride);
+          }}
+          disabled={!isDirty || isSavingAdmin}
+        >
+          Cancel
+        </button>
         <button type="submit" className="btn btn-primary" disabled={!isDirty || isSavingAdmin}>
           {isSavingAdmin ? 'Saving...' : 'Save'}
         </button>
