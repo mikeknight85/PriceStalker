@@ -44,16 +44,35 @@ export const retailerMutationRepository = {
     // $31..$52 — presence flags for PRESENCE_FIELDS, in that order.
     // $53/$54 — prefer_jsonld_image value and its presence flag, appended so
     // adding it did not renumber everything above.
+    // $55/$56 — use_proxy_http and its presence flag.
+    // $57/$58 — use_proxy_browser and its presence flag.
     const presence = PRESENCE_FIELDS.map(field => config[field] !== undefined);
+
+    const hasProxyHttp = config.use_proxy_http !== undefined || config.use_proxy !== undefined;
+    const effectiveProxyHttp = config.use_proxy_http !== undefined
+      ? config.use_proxy_http
+      : (config.use_proxy !== undefined ? config.use_proxy : false);
+
+    const hasProxyBrowser = config.use_proxy_browser !== undefined || config.use_proxy !== undefined;
+    const effectiveProxyBrowser = config.use_proxy_browser !== undefined
+      ? config.use_proxy_browser
+      : (config.use_proxy !== undefined ? config.use_proxy : false);
+
+    const effectiveLegacyProxy = config.use_proxy !== undefined
+      ? config.use_proxy
+      : (config.use_proxy_http !== undefined || config.use_proxy_browser !== undefined
+          ? Boolean(config.use_proxy_http || config.use_proxy_browser)
+          : null);
+
     const result = await executor.query(
       `INSERT INTO retailer_configs (
          domain, name, status, status_history, use_proxy, use_browser_scraper, currency_hint,
          name_selectors, price_selectors, deal_price_selectors, member_price_selectors, image_selectors, stock_selectors,
          in_stock_phrases, out_of_stock_phrases, pre_order_phrases, pre_order_price_selectors, user_agent, custom_selectors, active, description,
          retailer_name_selectors, jsonld_image_key, jsonld_price_key, jsonld_name_key, original_price_selectors, ai_selectors, exclusion_selectors,
-         selector_metadata, prefer_jsonld_image
+         selector_metadata, prefer_jsonld_image, use_proxy_http, use_proxy_browser
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $53)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $53, $55, $57)
        ON CONFLICT (domain) DO UPDATE SET
          name = CASE
            WHEN $30 = true THEN EXCLUDED.name
@@ -73,7 +92,20 @@ export const retailerMutationRepository = {
            ELSE retailer_configs.status_history
          END,
          status = COALESCE(EXCLUDED.status, retailer_configs.status),
-         use_proxy = COALESCE(EXCLUDED.use_proxy, retailer_configs.use_proxy),
+         use_proxy = CASE
+           WHEN $56 = true OR $58 = true THEN (
+             COALESCE(
+               CASE WHEN $56 = true THEN EXCLUDED.use_proxy_http ELSE retailer_configs.use_proxy_http END,
+               false
+             ) OR COALESCE(
+               CASE WHEN $58 = true THEN EXCLUDED.use_proxy_browser ELSE retailer_configs.use_proxy_browser END,
+               false
+             )
+           )
+           ELSE COALESCE(EXCLUDED.use_proxy, retailer_configs.use_proxy)
+         END,
+         use_proxy_http = CASE WHEN $56 = true THEN EXCLUDED.use_proxy_http ELSE retailer_configs.use_proxy_http END,
+         use_proxy_browser = CASE WHEN $58 = true THEN EXCLUDED.use_proxy_browser ELSE retailer_configs.use_proxy_browser END,
          use_browser_scraper = COALESCE(EXCLUDED.use_browser_scraper, retailer_configs.use_browser_scraper),
          name_selectors = CASE WHEN $31 = true THEN EXCLUDED.name_selectors ELSE retailer_configs.name_selectors END,
          retailer_name_selectors = CASE WHEN $32 = true THEN EXCLUDED.retailer_name_selectors ELSE retailer_configs.retailer_name_selectors END,
@@ -106,7 +138,7 @@ export const retailerMutationRepository = {
         config.name || null,
         config.status || null,
         JSON.stringify(config.status_history || (config.status ? [{ status: config.status, timestamp: new Date().toISOString() }] : [])),
-        config.use_proxy !== undefined ? config.use_proxy : null,
+        effectiveLegacyProxy,
         config.use_browser_scraper !== undefined ? config.use_browser_scraper : null,
         config.currency_hint || null,
         JSON.stringify(config.name_selectors || []),
@@ -139,6 +171,11 @@ export const retailerMutationRepository = {
         // passed through rather than collapsed with ||.
         config.prefer_jsonld_image ?? null,
         config.prefer_jsonld_image !== undefined,
+        // $55..$58: use_proxy_http and use_proxy_browser with their presence flags.
+        effectiveProxyHttp,
+        hasProxyHttp,
+        effectiveProxyBrowser,
+        hasProxyBrowser,
       ]
     );
     return result.rows[0];

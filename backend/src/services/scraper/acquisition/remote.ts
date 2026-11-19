@@ -69,13 +69,15 @@ export async function acquireRemoteHtml(options: RemoteAcquisitionOptions): Prom
   }
 
   try {
-    const useProxy = domainConfig?.use_proxy || false;
+    const useProxy = domainConfig?.use_proxy_browser !== undefined
+      ? domainConfig.use_proxy_browser
+      : (domainConfig?.use_proxy || false);
 
     logger.info(`Scraper | Remote | Requesting ${domain} (Browser: true)`, 'Scraper');
     extractionSteps.push(`Scraper | Remote | Requesting via ${rsUrl}`);
     
     const isDiscovery = !productId;
-    const currentProxy = useProxy ? await settingsCache.getScraperProxy() : undefined;
+    const currentProxy = useProxy ? await settingsCache.getRemoteScraperProxy() : undefined;
 
     // Always resolve a User-Agent, never only the retailer's override (issue
     // #67). This branch used to set one *only* when the retailer had an

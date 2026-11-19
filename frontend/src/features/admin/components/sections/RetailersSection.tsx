@@ -113,7 +113,9 @@ export default function RetailersSection({ globalCurrencies, initialSearch }: Re
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>{r.domain}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.7rem' }}>
                 <div style={{ opacity: r.use_browser_scraper ? 1 : 0.3 }}><Icon name="globe" /> Browser Scraper</div>
-                <div style={{ opacity: r.use_proxy ? 1 : 0.3 }}><Icon name="shield" /> Proxy</div>
+                <div style={{ opacity: (r.use_proxy_http || r.use_proxy_browser || r.use_proxy) ? 1 : 0.3 }}>
+                  <Icon name="shield" /> {(r.use_proxy_http && r.use_proxy_browser) ? 'Proxy: Both' : (r.use_proxy_http ? 'Proxy: HTTP' : (r.use_proxy_browser ? 'Proxy: Browser' : 'Proxy'))}
+                </div>
               </div>
             </div>
           ))}

@@ -157,6 +157,8 @@ export class SystemSettingsCache {
   async getSearXNGUrl(): Promise<string | null> { await this.refresh(); return this.settings.searxng_url || null; }
   async isSearXNGEnabled(): Promise<boolean> { await this.refresh(); return this.settings.searxng_enabled === 'true'; }
   async getScraperProxy(): Promise<string | null> { await this.refresh(); return this.settings.scraper_proxy || null; }
+  async getHttpProxyAll(): Promise<boolean> { await this.refresh(); return this.settings.http_proxy_all === 'true'; }
+  async getRemoteScraperProxy(): Promise<string | null> { await this.refresh(); return this.settings.remote_scraper_proxy || this.settings.scraper_proxy || null; }
   async getDefaultUserAgent(): Promise<string | null> { await this.refresh(); return this.settings.default_user_agent || null; }
   async getDefaultReferrer(): Promise<string | null> { await this.refresh(); return this.settings.default_referrer || null; }
 

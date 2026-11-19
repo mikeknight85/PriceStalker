@@ -19,11 +19,42 @@ export default function ScraperEngineSection({ draftConfig, onUpdateConfig }: Sc
             onToggle={() => onUpdateConfig({ use_browser_scraper: !draftConfig.use_browser_scraper })} 
           />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-          <span>Proxy Traffic</span>
-          <ToggleSwitch 
-            active={!!draftConfig.use_proxy} 
-            onToggle={() => onUpdateConfig({ use_proxy: !draftConfig.use_proxy })} 
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center' }}>
+          <div>
+            <span>HTTP Proxy (Axios)</span>
+            <small style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              Route standard HTTP requests through the proxy
+            </small>
+          </div>
+          <ToggleSwitch
+            active={draftConfig.use_proxy_http !== undefined ? !!draftConfig.use_proxy_http : !!draftConfig.use_proxy}
+            onToggle={() => {
+              const current = draftConfig.use_proxy_http !== undefined ? !!draftConfig.use_proxy_http : !!draftConfig.use_proxy;
+              const next = !current;
+              onUpdateConfig({
+                use_proxy_http: next,
+                use_proxy: next || (draftConfig.use_proxy_browser !== undefined ? !!draftConfig.use_proxy_browser : !!draftConfig.use_proxy)
+              });
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center' }}>
+          <div>
+            <span>Browser Proxy (Scraper)</span>
+            <small style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              Route remote browser scraper sessions through the proxy
+            </small>
+          </div>
+          <ToggleSwitch
+            active={draftConfig.use_proxy_browser !== undefined ? !!draftConfig.use_proxy_browser : !!draftConfig.use_proxy}
+            onToggle={() => {
+              const current = draftConfig.use_proxy_browser !== undefined ? !!draftConfig.use_proxy_browser : !!draftConfig.use_proxy;
+              const next = !current;
+              onUpdateConfig({
+                use_proxy_browser: next,
+                use_proxy: next || (draftConfig.use_proxy_http !== undefined ? !!draftConfig.use_proxy_http : !!draftConfig.use_proxy)
+              });
+            }}
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>

@@ -105,7 +105,45 @@ export default function SystemSection() {
         <h2 className="settings-card-title">Core System Settings</h2>
       
       <CollapsibleCard title="Network & Integration" leadingIcon={<Icon name="globe" />} id="sys_network" isExpanded={expandedSections.sys_network} onToggle={toggleSection}>
-        <div className="form-group"><label>Proxy URL/Port</label><input type="text" className="form-control" value={systemSettings?.scraper_proxy || ''} onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)} placeholder="http://proxy:port" /></div>
+        <div className="form-group">
+          <label>Proxy URL/Port</label>
+          <input
+            type="text"
+            className="form-control"
+            value={systemSettings?.scraper_proxy || ''}
+            onChange={e => setSystemSettings(s => s ? { ...s, scraper_proxy: e.target.value } : null)}
+            placeholder="http://proxy:port"
+          />
+          <small style={{ color: 'var(--text-muted)' }}>
+            Default proxy used for HTTP requests and remote browser scraper sessions.
+          </small>
+        </div>
+        <div className="form-group">
+          <label>Remote Scraper Proxy URL (Optional)</label>
+          <input
+            type="text"
+            className="form-control"
+            value={systemSettings?.remote_scraper_proxy || ''}
+            onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_proxy: e.target.value } : null)}
+            placeholder="http://proxy:port"
+          />
+          <small style={{ color: 'var(--text-muted)' }}>
+            Specific proxy endpoint for the remote browser scraper container. Leave empty to use the default Proxy URL.
+          </small>
+        </div>
+        <div className="form-group mb-3">
+          <label className="toggle-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={systemSettings?.http_proxy_all === true || systemSettings?.http_proxy_all === 'true'}
+              onChange={e => setSystemSettings(s => s ? { ...s, http_proxy_all: e.target.checked } : null)}
+            />
+            Route all HTTP (Axios) fetches through proxy
+          </label>
+          <small style={{ color: 'var(--text-muted)', display: 'block', marginLeft: '1.5rem' }}>
+            When enabled, all standard HTTP price checks egress via the configured proxy by default without needing per-retailer configuration. Recommended when running the backend on cloud instances.
+          </small>
+        </div>
         <div className="form-group">
           <label>Browser Scraper URL</label>
           <input type="text" className="form-control" value={systemSettings?.remote_scraper_url || ''} onChange={e => setSystemSettings(s => s ? { ...s, remote_scraper_url: e.target.value } : null)} placeholder="http://scraper:5100/scrape" />

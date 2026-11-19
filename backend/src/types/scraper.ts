@@ -56,8 +56,13 @@ export interface ScrapedProductWithVoting extends ScrapedProduct {
   selectedMethod?: string;
   reviewReason?: ReviewReason;
   // Flags learned during acquisition (e.g. the page only rendered via the
-  // browser scraper), persisted to the retailer config on save.
-  learnedFlags?: { use_browser_scraper?: boolean };
+  // browser scraper, or required an HTTP/browser proxy), persisted to the
+  // retailer config on save.
+  learnedFlags?: {
+    use_browser_scraper?: boolean;
+    use_proxy_http?: boolean;
+    use_proxy_browser?: boolean;
+  };
   /** Set only when the scrape produced no usable price. */
   failureReason?: ScrapeFailureReason;
   /** Free-text detail for the reason, e.g. which challenge was detected. */

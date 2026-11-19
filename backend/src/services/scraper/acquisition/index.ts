@@ -1,5 +1,6 @@
 import { load, type CheerioAPI } from 'cheerio';
 import { logger } from '../../../utils/system/logger';
+import { settingsCache } from '../../../utils/cache';
 import { detectBotChallenge, PageNotAvailableError } from '../transport';
 import { RetailerConfig } from '../../../models';
 
@@ -82,6 +83,52 @@ export async function acquireHtml(options: AcquisitionOptions): Promise<Acquisit
      } else {
        checkSoft404($, html, extractionSteps);
      }
+  }
+
+  // --- Attempt 2b: Standard HTTP via Proxy (if direct HTTP was blocked, proxy is configured, and direct didn't use a proxy) ---
+  const standardHttpRan = !useBrowserScraper || remoteScraperUnavailable;
+  const httpProxyAll = await settingsCache.getHttpProxyAll();
+  const alreadyUsedHttpProxy = domainConfig?.use_proxy_http !== undefined
+    ? Boolean(domainConfig.use_proxy_http || httpProxyAll)
+    : Boolean(domainConfig?.use_proxy || httpProxyAll);
+  const systemProxyAvailable = Boolean(await settingsCache.getScraperProxy());
+
+  if (standardHttpRan && challengeReason && !alreadyUsedHttpProxy && systemProxyAvailable) {
+    try {
+      extractionSteps.push(`Request | HTTP | Direct request blocked (${challengeReason}). Retrying with HTTP Proxy before browser fallback.`);
+      const proxiedConfig = { ...(domainConfig || {}), use_proxy_http: true } as RetailerConfig;
+      const proxiedHtml = await acquireStandardHtml({
+        url,
+        domain,
+        domainConfig: proxiedConfig,
+        extractionSteps,
+        requestId,
+        strictProxy: true
+      });
+      if (proxiedHtml) {
+        const proxied$ = load(proxiedHtml);
+        const proxiedChallenge = detectBotChallenge(proxiedHtml, proxied$);
+        if (!proxiedChallenge) {
+          html = proxiedHtml;
+          $ = proxied$;
+          challengeReason = null;
+          learnedFlags = { ...learnedFlags, use_proxy_http: true };
+          extractionSteps.push(`Request | HTTP | Success via HTTP Proxy. Learned use_proxy_http = true.`);
+          checkSoft404($, html, extractionSteps);
+        } else {
+          extractionSteps.push(`Request | HTTP | Blocked even with HTTP Proxy (${proxiedChallenge}). Escalating.`);
+        }
+      }
+    } catch (e) {
+      if (e instanceof PageNotAvailableError) {
+        throw e;
+      } else if (e instanceof BotChallengeError) {
+        challengeReason = e.message;
+      } else {
+        const message = e instanceof Error ? e.message : String(e);
+        logger.warn(`Scraper | HTTP Proxy Retry | Failed: ${message}`, 'Scraper');
+      }
+    }
   }
 
   // --- Attempt 3: Dynamic Fallback (if blocked and no config exists) ---

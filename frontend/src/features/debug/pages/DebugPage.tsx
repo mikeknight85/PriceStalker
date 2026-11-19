@@ -63,6 +63,8 @@ export default function Debug() {
         domain,
         name: state.result.retailerName,
         use_proxy: state.config.use_proxy,
+        use_proxy_http: state.config.use_proxy_http,
+        use_proxy_browser: state.config.use_proxy_browser,
         use_browser_scraper: state.config.use_browser_scraper,
         user_agent: state.config.user_agent,
         price_selectors: state.tempPriceSelectors,

@@ -144,7 +144,34 @@ export default function DebugControls({ state, actions, children }: DebugControl
               </div>
 
               <div className="toggle-grid mb-3" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <label className="toggle-label" style={{ whiteSpace: 'nowrap', minWidth: '80px' }}><input type="checkbox" checked={config.use_proxy || false} onChange={e => setConfig({...config, use_proxy: e.target.checked})} /> Proxy</label>
+                <label className="toggle-label" style={{ whiteSpace: 'nowrap', minWidth: '80px' }}>
+                  <input
+                    type="checkbox"
+                    checked={config.use_proxy_http !== undefined ? !!config.use_proxy_http : !!config.use_proxy}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      setConfig({
+                        ...config,
+                        use_proxy_http: val,
+                        use_proxy: val || (config.use_proxy_browser !== undefined ? !!config.use_proxy_browser : !!config.use_proxy)
+                      });
+                    }}
+                  /> Proxy (HTTP)
+                </label>
+                <label className="toggle-label" style={{ whiteSpace: 'nowrap', minWidth: '80px' }}>
+                  <input
+                    type="checkbox"
+                    checked={config.use_proxy_browser !== undefined ? !!config.use_proxy_browser : !!config.use_proxy}
+                    onChange={e => {
+                      const val = e.target.checked;
+                      setConfig({
+                        ...config,
+                        use_proxy_browser: val,
+                        use_proxy: val || (config.use_proxy_http !== undefined ? !!config.use_proxy_http : !!config.use_proxy)
+                      });
+                    }}
+                  /> Proxy (Browser)
+                </label>
                 <label className="toggle-label" style={{ whiteSpace: 'nowrap', minWidth: '120px' }}><input type="checkbox" checked={config.use_browser_scraper || false} onChange={e => setConfig({...config, use_browser_scraper: e.target.checked})} /> Browser Scraper</label>
               </div>
               

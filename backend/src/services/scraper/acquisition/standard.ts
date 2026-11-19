@@ -18,11 +18,16 @@ export interface StandardAcquisitionOptions {
   domainConfig?: RetailerConfig;
   extractionSteps: string[];
   requestId?: string;
+  /** When true, proxy connection failures throw immediately rather than falling back to unproxied request */
+  strictProxy?: boolean;
 }
 
 export async function acquireStandardHtml(options: StandardAcquisitionOptions): Promise<string> {
-  const { url, domain, domainConfig, extractionSteps, requestId } = options;
-  const useProxy = domainConfig?.use_proxy || false;
+  const { url, domain, domainConfig, extractionSteps, requestId, strictProxy } = options;
+  const httpProxyAll = await settingsCache.getHttpProxyAll();
+  const useProxy = domainConfig?.use_proxy_http !== undefined
+    ? Boolean(domainConfig.use_proxy_http || httpProxyAll)
+    : Boolean(domainConfig?.use_proxy || httpProxyAll);
 
   const timeoutSetting = await settingsCache.get('scraper_timeout');
   const timeout = timeoutSetting ? parseInt(timeoutSetting, 10) : 30000;
@@ -45,7 +50,10 @@ export async function acquireStandardHtml(options: StandardAcquisitionOptions): 
     // future path is covered by construction: the secret never enters the
     // array. CLAUDE.md's rule is not to write credentials in the first place,
     // and the scrubber is a backstop rather than a licence.
-    extractionSteps.push(`Request | Proxy | Using: ${scrubUrlCredentials(currentProxy)}`);
+    const proxySource = domainConfig?.use_proxy_http
+      ? 'Retailer HTTP'
+      : (httpProxyAll ? 'Global System' : 'Legacy Retailer');
+    extractionSteps.push(`Request | Proxy | Using: ${scrubUrlCredentials(currentProxy)} (${proxySource})`);
   }
   extractionSteps.push(`Request | HTTP | UA: ${headers['User-Agent'] ? 'Yes' : 'No'} | Proxy: ${currentProxy ? 'Yes' : 'No'}`);
 
@@ -80,7 +88,7 @@ export async function acquireStandardHtml(options: StandardAcquisitionOptions): 
       err.message?.toLowerCase().includes('tunnel')
     );
 
-    if (isProxyErr) {
+    if (isProxyErr && !strictProxy) {
       extractionSteps.push(`Request | Proxy Fallback | Proxy failed (${err.code || 'Error'}). Retrying without proxy.`);
       logger.warn(`Scraper | Axios | [${requestId || 'N/A'}] | Proxy connection failed (${err.message}). Retrying without proxy.`, 'Scraper', { requestId, domain });
       

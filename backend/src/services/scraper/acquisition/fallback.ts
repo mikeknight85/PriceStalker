@@ -63,13 +63,41 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
       extractionSteps.push(`Scraper | Fallback | Remote Success`);
       $ = load(html);
       finalChallengeReason = detectBotChallenge(html, $);
+
+      const remoteScraperProxy = await settingsCache.getRemoteScraperProxy();
+      if (finalChallengeReason && remoteScraperProxy) {
+        extractionSteps.push(`Scraper | Fallback | Remote hit challenge (${finalChallengeReason}). Retrying Remote Scraper with Proxy.`);
+        try {
+          const proxiedRemoteOptions: RemoteScraperOptions = {
+            ...remoteOptions,
+            useProxy: true,
+            proxyUrl: remoteScraperProxy
+          };
+          const proxiedHtml = await fetchRemoteHtml(url, rsUrl, proxiedRemoteOptions);
+          const proxied$ = load(proxiedHtml);
+          const proxiedChallenge = detectBotChallenge(proxiedHtml, proxied$);
+          if (!proxiedChallenge) {
+            html = proxiedHtml;
+            $ = proxied$;
+            finalChallengeReason = null;
+            learnedFlags = { use_browser_scraper: true, use_proxy_browser: true };
+            extractionSteps.push(`Scraper | Fallback | Remote Success with Proxy. Learned use_browser_scraper = true, use_proxy_browser = true.`);
+            return { html, $, challengeReason: null, learnedFlags };
+          }
+        } catch (proxyErr) {
+          const proxyMessage = proxyErr instanceof Error ? proxyErr.message : String(proxyErr);
+          logger.warn(`Scraper | Fallback | Remote with proxy failed: ${proxyMessage}`, 'Scraper');
+        }
+      }
+
       // Plain HTTP was blocked (triggering fallback), so this domain requires the browser scraper.
       learnedFlags = { use_browser_scraper: true };
       
       return { html, $, challengeReason: finalChallengeReason, learnedFlags };
     } catch (e) {
-      logger.error(`Scraper | Fallback | Remote failed for ${domain}: ${(e as any).message}`, 'Scraper', { product_id: productId, error: e });
-      extractionSteps.push(`Scraper | Fallback | Remote Failed: ${(e as any).message}`);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      logger.error(`Scraper | Fallback | Remote failed for ${domain}: ${errMsg}`, 'Scraper', { product_id: productId, error: e });
+      extractionSteps.push(`Scraper | Fallback | Remote Failed: ${errMsg}`);
     }
   } else {
     try {
@@ -85,8 +113,9 @@ export async function handleAcquisitionFallback(options: FallbackOptions): Promi
         return { html, $, challengeReason: finalChallengeReason, learnedFlags };
       }
     } catch (e) {
-      logger.error(`Scraper | Fallback | Local failed for ${domain}: ${(e as any).message}`, 'Scraper', { product_id: productId, error: e });
-      extractionSteps.push(`Scraper | Fallback | Local Failed: ${(e as any).message}`);
+      const errMsg = e instanceof Error ? e.message : String(e);
+      logger.error(`Scraper | Fallback | Local failed for ${domain}: ${errMsg}`, 'Scraper', { product_id: productId, error: e });
+      extractionSteps.push(`Scraper | Fallback | Local Failed: ${errMsg}`);
     }
   }
 
