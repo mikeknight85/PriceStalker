@@ -109,12 +109,12 @@ export interface ExtractionResult {
   currency?: string | null;
   imageUrl?: string | null;
   stockStatus?: string | null;
-  priceCandidates?: any[];
+  priceCandidates?: unknown[];
   html?: string;
   error?: string;
   needsReview?: boolean;
   debugFileUrl?: string | null;
-  ai_extraction_result?: any;
+  ai_extraction_result?: unknown;
 }
 
 export interface SystemLog {
@@ -122,7 +122,7 @@ export interface SystemLog {
   level: string;
   context: string;
   message: string;
-  meta?: any;
+  meta?: unknown;
   created_at: string;
 }
 

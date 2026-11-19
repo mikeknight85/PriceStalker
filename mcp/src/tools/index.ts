@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { PriceStalkerApiClient } from '../client/api.js';
 import { formatScrubbedJson, scrubSensitiveData } from '../utils/scrubber.js';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 export function registerTools(server: McpServer, client: PriceStalkerApiClient) {
   // 1. get_system_health
   server.tool(
@@ -12,8 +17,8 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
     async () => {
       try {
         const [dbHealth, version] = await Promise.all([
-          client.getDbHealth().catch(e => ({ status: 'unknown', error: e.message })),
-          client.getVersion().catch(e => ({ version: 'unknown', error: e.message }))
+          client.getDbHealth().catch((e: unknown) => ({ status: 'unknown', error: getErrorMessage(e) })),
+          client.getVersion().catch((e: unknown) => ({ version: 'unknown', error: getErrorMessage(e) }))
         ]);
 
         return {
@@ -26,10 +31,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             })
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to get system health: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to get system health: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -61,10 +66,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             })
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to query system logs: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to query system logs: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -84,10 +89,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(items)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to list items: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to list items: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -109,10 +114,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(product)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to get item #${id}: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to get item #${id}: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -134,10 +139,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(results)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Search failed for "${query}": ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Search failed for "${query}": ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -167,10 +172,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             })
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to get price history for product #${productId}: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to get price history for product #${productId}: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -200,10 +205,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(config)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to get retailer config for "${domain}": ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to get retailer config for "${domain}": ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -225,10 +230,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(result)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to refresh product #${productId}: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to refresh product #${productId}: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -248,10 +253,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(result)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Failed to flush system caches: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Failed to flush system caches: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }
@@ -282,10 +287,10 @@ export function registerTools(server: McpServer, client: PriceStalkerApiClient) 
             text: formatScrubbedJson(result)
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           isError: true,
-          content: [{ type: 'text', text: `Debug extraction failed: ${scrubSensitiveData(error.message)}` }]
+          content: [{ type: 'text', text: `Debug extraction failed: ${String(scrubSensitiveData(getErrorMessage(error)))}` }]
         };
       }
     }

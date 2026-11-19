@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import 'dotenv/config';
 import { PriceStalkerApiClient } from './client/api.js';
-import { createCli } from './cli/index.js';
+import { createCli, CliOptions } from './cli/index.js';
 import { runStdioServer } from './server.js';
 
-function getClient(options: { url?: string; token?: string }) {
+function getClient(options: CliOptions) {
   const url = options.url || process.env.PRICESTALKER_URL || 'http://localhost:3000';
   const token = options.token || process.env.PRICESTALKER_TOKEN || '';
   return new PriceStalkerApiClient({ baseUrl: url, apiToken: token });
@@ -25,7 +25,7 @@ async function main() {
   await cli.parseAsync(process.argv);
 }
 
-main().catch((err) => {
+main().catch((err: unknown) => {
   console.error('PriceStalker CLI Error:', err);
   process.exit(1);
 });

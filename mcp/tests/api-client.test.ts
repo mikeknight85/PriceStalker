@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
-import { PriceStalkerApiClient } from '../src/client/api.js';
+import { PriceStalkerApiClient, PriceStalkerApiError } from '../src/client/api.js';
 
 vi.mock('axios');
 
@@ -171,5 +171,48 @@ describe('PriceStalkerApiClient', () => {
       use_ai: true
     });
     expect(res).toEqual(mockResult);
+  });
+
+  describe('interceptors and PriceStalkerApiError', () => {
+    it('wraps 403 response errors in PriceStalkerApiError with scope details', async () => {
+      const errorHandler = mockAxiosInstance.interceptors.response.use.mock.calls[0][1];
+      const error403 = {
+        response: {
+          status: 403,
+          data: { required: ['mcp:extract', 'admin:system'] }
+        }
+      };
+
+      await expect(errorHandler(error403)).rejects.toThrow(PriceStalkerApiError);
+      try {
+        await errorHandler(error403);
+      } catch (err) {
+        expect(err).toBeInstanceOf(PriceStalkerApiError);
+        const apiErr = err as PriceStalkerApiError;
+        expect(apiErr.status).toBe(403);
+        expect(apiErr.response).toBe(error403.response);
+        expect(apiErr.message).toContain('mcp:extract, admin:system');
+      }
+    });
+
+    it('wraps backend response.data.error into PriceStalkerApiError', async () => {
+      const errorHandler = mockAxiosInstance.interceptors.response.use.mock.calls[0][1];
+      const errorResp = {
+        response: {
+          status: 400,
+          data: { error: 'Invalid URL target' }
+        }
+      };
+
+      try {
+        await errorHandler(errorResp);
+      } catch (err) {
+        expect(err).toBeInstanceOf(PriceStalkerApiError);
+        const apiErr = err as PriceStalkerApiError;
+        expect(apiErr.status).toBe(400);
+        expect(apiErr.response).toBe(errorResp.response);
+        expect(apiErr.message).toBe('Invalid URL target');
+      }
+    });
   });
 });

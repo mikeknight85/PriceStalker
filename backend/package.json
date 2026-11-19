@@ -3,6 +3,12 @@
   "version": "2.2.0-beta.2",
   "description": "PriceStalker price tracking API",
   "main": "dist/index.js",
+  "exports": {
+    "./notification-credentials": {
+      "types": "./dist/services/domain/user/notification-credentials.d.ts",
+      "default": "./dist/services/domain/user/notification-credentials.js"
+    }
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

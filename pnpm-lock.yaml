@@ -172,6 +172,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      pricestalker-backend:
+        specifier: workspace:*
+        version: link:../backend
       zod:
         specifier: ^3.24.2
         version: 3.25.76

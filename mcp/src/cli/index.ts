@@ -3,7 +3,12 @@ import { PriceStalkerApiClient } from '../client/api.js';
 import { runStdioServer } from '../server.js';
 import { scrubSensitiveData } from '../utils/scrubber.js';
 
-export function createCli(clientFactory: (options: any) => PriceStalkerApiClient): Command {
+export interface CliOptions {
+  url?: string;
+  token?: string;
+}
+
+export function createCli(clientFactory: (options: CliOptions) => PriceStalkerApiClient): Command {
   const program = new Command();
 
   program
@@ -18,7 +23,7 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
     .command('mcp')
     .description('Start the Model Context Protocol (MCP) server over stdio')
     .action(async () => {
-      const opts = program.opts();
+      const opts = program.opts<CliOptions>();
       const client = clientFactory(opts);
       await runStdioServer(client);
     });
@@ -29,7 +34,7 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
     .description('List and search tracked items')
     .option('-q, --query <query>', 'Search filter')
     .action(async (cmdOpts) => {
-      const opts = program.opts();
+      const opts = program.opts<CliOptions>();
       const client = clientFactory(opts);
       try {
         const items = await client.getItems();
@@ -44,11 +49,12 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
           const priceStr = item.best_price !== null && item.best_price !== undefined
             ? `${item.currency || '$'}${item.best_price}`
             : 'N/A';
-          console.log(`• [ID: ${item.id}] ${scrubSensitiveData(item.name)}`);
+          console.log(`• [ID: ${item.id}] ${String(scrubSensitiveData(item.name))}`);
           console.log(`  Best Price: ${priceStr} | Stores: ${item.stores?.length || 0} | Target: ${item.target_price ?? 'None'}`);
         }
-      } catch (err: any) {
-        console.error(`Error fetching items: ${scrubSensitiveData(err.message)}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Error fetching items: ${String(scrubSensitiveData(message))}`);
         process.exit(1);
       }
     });
@@ -58,18 +64,19 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
     .command('health')
     .description('Check PriceStalker backend health and database status')
     .action(async () => {
-      const opts = program.opts();
+      const opts = program.opts<CliOptions>();
       const client = clientFactory(opts);
       try {
         const [db, ver] = await Promise.all([
-          client.getDbHealth().catch(e => ({ status: 'unknown', error: e.message })),
-          client.getVersion().catch(e => ({ version: 'unknown', error: e.message }))
+          client.getDbHealth().catch((e: unknown) => ({ status: 'unknown', error: e instanceof Error ? e.message : String(e) })),
+          client.getVersion().catch((e: unknown) => ({ version: 'unknown', error: e instanceof Error ? e.message : String(e) }))
         ]);
         console.log('PriceStalker System Health:');
         console.log(`Version:  ${ver.version}`);
         console.log(`Database: ${JSON.stringify(scrubSensitiveData(db), null, 2)}`);
-      } catch (err: any) {
-        console.error(`Health check failed: ${scrubSensitiveData(err.message)}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Health check failed: ${String(scrubSensitiveData(message))}`);
         process.exit(1);
       }
     });
@@ -79,13 +86,14 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
     .command('flush')
     .description('Flush system and retailer configuration caches (requires admin:system scope)')
     .action(async () => {
-      const opts = program.opts();
+      const opts = program.opts<CliOptions>();
       const client = clientFactory(opts);
       try {
         const res = await client.clearCaches();
         console.log(`Success: ${res.message}`);
-      } catch (err: any) {
-        console.error(`Flush failed: ${scrubSensitiveData(err.message)}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Flush failed: ${String(scrubSensitiveData(message))}`);
         process.exit(1);
       }
     });
@@ -97,10 +105,10 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
     .option('--bypass', 'Use raw HTTP bypass fetch instead of standard scraper')
     .option('--ai', 'Enable AI extraction fallback')
     .action(async (url, cmdOpts) => {
-      const opts = program.opts();
+      const opts = program.opts<CliOptions>();
       const client = clientFactory(opts);
       try {
-        console.log(`Extracting from ${scrubSensitiveData(url)}...`);
+        console.log(`Extracting from ${String(scrubSensitiveData(url))}...`);
         const result = await client.debugExtract({
           url,
           mode: cmdOpts.bypass ? 'bypass' : 'standard',
@@ -116,8 +124,9 @@ export function createCli(clientFactory: (options: any) => PriceStalkerApiClient
           console.log('\nPrice Candidates:');
           console.log(JSON.stringify(scrubSensitiveData(result.priceCandidates), null, 2));
         }
-      } catch (err: any) {
-        console.error(`Extraction failed: ${scrubSensitiveData(err.message)}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Extraction failed: ${String(scrubSensitiveData(message))}`);
         process.exit(1);
       }
     });

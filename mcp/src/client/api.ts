@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
   PriceStalkerClientConfig,
   Item,
@@ -10,6 +10,17 @@ import {
   SearXNGSearchResult,
   ExtractionResult
 } from './types.js';
+
+export class PriceStalkerApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly response?: AxiosResponse
+  ) {
+    super(message);
+    this.name = 'PriceStalkerApiError';
+  }
+}
 
 export class PriceStalkerApiClient {
   private client: AxiosInstance;
@@ -36,19 +47,13 @@ export class PriceStalkerApiClient {
           const message = required
             ? `Forbidden: System API token lacks required scope [${required}]. Grant this scope in Admin -> API Tokens.`
             : `Forbidden: Access denied (${data?.error || 'insufficient token privileges'}).`;
-          const enhancedError = new Error(message);
-          (enhancedError as any).status = 403;
-          (enhancedError as any).response = error.response;
-          return Promise.reject(enhancedError);
+          return Promise.reject(new PriceStalkerApiError(message, 403, error.response));
         }
         if (error.response?.data?.error) {
           const message = typeof error.response.data.error === 'string'
             ? error.response.data.error
             : JSON.stringify(error.response.data.error);
-          const enhancedError = new Error(message);
-          (enhancedError as any).status = error.response.status;
-          (enhancedError as any).response = error.response;
-          return Promise.reject(enhancedError);
+          return Promise.reject(new PriceStalkerApiError(message, error.response.status, error.response));
         }
         return Promise.reject(error);
       }
@@ -92,7 +97,7 @@ export class PriceStalkerApiClient {
     return response.data;
   }
 
-  async refreshProductPrice(productId: number): Promise<any> {
+  async refreshProductPrice(productId: number): Promise<unknown> {
     const response = await this.client.post(`/api/prices/${productId}/refresh`);
     return response.data;
   }
@@ -103,8 +108,11 @@ export class PriceStalkerApiClient {
     try {
       const response = await this.client.get<RetailerConfig>(`/api/admin/retailers/domain/${encodeURIComponent(domain)}`);
       return response.data;
-    } catch (e: any) {
-      if (e.response?.status === 404) return null;
+    } catch (e: unknown) {
+      if (typeof e === 'object' && e !== null && 'response' in e) {
+        const resp = (e as { response?: { status?: number } }).response;
+        if (resp?.status === 404) return null;
+      }
       throw e;
     }
   }
@@ -130,7 +138,7 @@ export class PriceStalkerApiClient {
     return response.data;
   }
 
-  async getDbHealth(): Promise<any> {
+  async getDbHealth(): Promise<unknown> {
     const response = await this.client.get('/api/admin/debug/db-health');
     return response.data;
   }
@@ -142,7 +150,7 @@ export class PriceStalkerApiClient {
 
   async debugExtract(options: {
     url: string;
-    config?: any;
+    config?: unknown;
     mode?: 'bypass' | 'standard';
     returnHtml?: boolean;
     use_ai?: boolean;

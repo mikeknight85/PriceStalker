@@ -1,9 +1,12 @@
+import { NOTIFICATION_CREDENTIAL_FIELDS } from 'pricestalker-backend/notification-credentials';
+
 /**
  * Scrubs inline credentials from a URL string (e.g., http://user:pass@host -> http://[REDACTED]:[REDACTED]@host)
+ * Constrained so that query strings and paths with colons and at-signs do not get corrupted.
  */
 export const scrubUrlCredentials = (val: string): string => {
   if (typeof val !== 'string') return val;
-  return val.replace(/(https?:\/\/)([^:]+):([^@]+)(@[^\s/?#]+)/gi, '$1[REDACTED]:[REDACTED]$4');
+  return val.replace(/(https?:\/\/)([^:/?#]+):([^@/?#]+)(@[^\s/?#]+)/gi, '$1[REDACTED]:[REDACTED]$4');
 };
 
 /**
@@ -14,10 +17,36 @@ export const scrubEmails = (val: string): string => {
   return val.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED_EMAIL]');
 };
 
+const BASE_SENSITIVE_PATTERNS = [
+  'password',
+  'token',
+  'api_key',
+  'secret',
+  'password_hash',
+  'token_hash',
+  'authorization',
+  'proxy',
+  'private_key',
+  'passphrase',
+  'session_cookie',
+  'cookie'
+];
+
+const NOTIFICATION_FIELDS: readonly string[] = NOTIFICATION_CREDENTIAL_FIELDS;
+
+function isSensitiveKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  if (NOTIFICATION_FIELDS.some(f => lower === f.toLowerCase() || lower.endsWith(`_${f.toLowerCase()}`))) {
+    return true;
+  }
+  return BASE_SENSITIVE_PATTERNS.some(sk => lower.includes(sk));
+}
+
 /**
  * Scrubs sensitive keys, credentials, and emails from any data type (object, array, string, Error).
+ * Equipped with a WeakSet cycle guard to protect against self-referential structures.
  */
-export const scrubSensitiveData = (data: any): any => {
+export const scrubSensitiveData = (data: unknown, seen = new WeakSet<object>()): unknown => {
   if (!data) return data;
 
   if (typeof data === 'string') {
@@ -33,54 +62,47 @@ export const scrubSensitiveData = (data: any): any => {
     return scrubbedError;
   }
 
+  if (typeof data !== 'object') {
+    return data;
+  }
+
+  if (seen.has(data)) {
+    return '[CIRCULAR]';
+  }
+  seen.add(data);
+
   if (Array.isArray(data)) {
-    return data.map(item => scrubSensitiveData(item));
+    return data.map(item => scrubSensitiveData(item, seen));
   }
 
-  if (typeof data === 'object') {
-    const scrubbed: any = {};
-    const sensitiveKeys = [
-      'password',
-      'token',
-      'api_key',
-      'secret',
-      'password_hash',
-      'token_hash',
-      'authorization',
-      'proxy'
-    ];
+  const scrubbed: Record<string, unknown> = {};
+  const obj = data as Record<string, unknown>;
 
-    for (const key of Object.keys(data)) {
-      const val = data[key];
-      const lowerKey = key.toLowerCase();
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    const lowerKey = key.toLowerCase();
 
-      if (lowerKey === 'email' || lowerKey.endsWith('_email')) {
-        scrubbed[key] = '[REDACTED_EMAIL]';
-      } else if (sensitiveKeys.some(sk => lowerKey.includes(sk))) {
-        if (lowerKey.includes('proxy') && typeof val === 'boolean') {
-          scrubbed[key] = val;
-        } else if (typeof val === 'string') {
-          if (val.match(/https?:\/\//i)) {
-            scrubbed[key] = scrubEmails(scrubUrlCredentials(val));
-          } else {
-            scrubbed[key] = '[REDACTED]';
-          }
-        } else {
-          scrubbed[key] = '[REDACTED]';
-        }
+    if (lowerKey === 'email' || lowerKey.endsWith('_email')) {
+      scrubbed[key] = '[REDACTED_EMAIL]';
+    } else if (isSensitiveKey(key)) {
+      if (lowerKey.includes('proxy') && typeof val === 'boolean') {
+        scrubbed[key] = val;
+      } else if (lowerKey.includes('proxy') && typeof val === 'string' && /^https?:\/\//i.test(val)) {
+        scrubbed[key] = scrubEmails(scrubUrlCredentials(val));
       } else {
-        scrubbed[key] = scrubSensitiveData(val);
+        scrubbed[key] = '[REDACTED]';
       }
+    } else {
+      scrubbed[key] = scrubSensitiveData(val, seen);
     }
-    return scrubbed;
   }
 
-  return data;
+  return scrubbed;
 };
 
 /**
  * Helper to serialize scrubbed data into formatted JSON.
  */
-export const formatScrubbedJson = (data: any): string => {
+export const formatScrubbedJson = (data: unknown): string => {
   return JSON.stringify(scrubSensitiveData(data), null, 2);
 };

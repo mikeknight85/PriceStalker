@@ -2,6 +2,11 @@ import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mc
 import { PriceStalkerApiClient } from '../client/api.js';
 import { formatScrubbedJson, scrubSensitiveData } from '../utils/scrubber.js';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 export function registerResources(server: McpServer, client: PriceStalkerApiClient) {
   // 1. pricestalker://retailers/{domain}
   server.resource(
@@ -17,11 +22,11 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
             mimeType: 'application/json'
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           contents: [{
             uri: uri.href,
-            text: formatScrubbedJson({ error: scrubSensitiveData(error.message) }),
+            text: formatScrubbedJson({ error: scrubSensitiveData(getErrorMessage(error)) }),
             mimeType: 'application/json'
           }]
         };
@@ -43,11 +48,11 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
             mimeType: 'application/json'
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           contents: [{
             uri: uri.href,
-            text: formatScrubbedJson({ error: scrubSensitiveData(error.message) }),
+            text: formatScrubbedJson({ error: scrubSensitiveData(getErrorMessage(error)) }),
             mimeType: 'application/json'
           }]
         };
@@ -62,8 +67,8 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
     async (uri) => {
       try {
         const [db, version] = await Promise.all([
-          client.getDbHealth().catch(e => ({ status: 'unknown', error: e.message })),
-          client.getVersion().catch(e => ({ version: 'unknown', error: e.message }))
+          client.getDbHealth().catch((e: unknown) => ({ status: 'unknown', error: getErrorMessage(e) })),
+          client.getVersion().catch((e: unknown) => ({ version: 'unknown', error: getErrorMessage(e) }))
         ]);
 
         return {
@@ -77,11 +82,11 @@ export function registerResources(server: McpServer, client: PriceStalkerApiClie
             mimeType: 'application/json'
           }]
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         return {
           contents: [{
             uri: uri.href,
-            text: formatScrubbedJson({ error: scrubSensitiveData(error.message) }),
+            text: formatScrubbedJson({ error: scrubSensitiveData(getErrorMessage(error)) }),
             mimeType: 'application/json'
           }]
         };
