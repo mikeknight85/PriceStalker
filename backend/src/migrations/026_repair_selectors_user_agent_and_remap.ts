@@ -107,37 +107,52 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
     `);
 
     // 4. Update system_settings generic selector arrays
-    const genericImageRes = await client.query<{ value: string | null }>(
-      `SELECT value FROM system_settings WHERE key = 'generic_image_selectors';`
-    );
-    if (genericImageRes.rows.length > 0 && genericImageRes.rows[0].value) {
-      try {
-        const arr = JSON.parse(genericImageRes.rows[0].value);
-        if (Array.isArray(arr)) {
-          const cleaned = arr
-            .filter((sel: string) => !sel.includes('.productthumbnail'))
-            .map((sel: string) => normalizeMigrationSelector(sel, 'generic_image_selectors'))
-            .filter((sel): sel is string => !!sel);
+    for (const key of ['generic_image_selectors', 'generic_ai_image_selectors']) {
+      const genericImageRes = await client.query<{ value: string | null }>(
+        `SELECT value FROM system_settings WHERE key = $1;`,
+        [key]
+      );
+      if (genericImageRes.rows.length > 0 && genericImageRes.rows[0].value) {
+        try {
+          const arr = JSON.parse(genericImageRes.rows[0].value);
+          if (Array.isArray(arr)) {
+            const cleaned = arr
+              .filter((sel: string) => !sel.includes('.productthumbnail'))
+              .map((sel: string) => normalizeMigrationSelector(sel, key))
+              .filter((sel): sel is string => !!sel);
 
-          // Ensure canonical meta image selectors are included
-          const toAdd = [
-            'meta[property="og:image"]::attr(content)',
-            'meta[name="twitter:image"]::attr(content)',
-            'meta[itemprop="image"]::attr(content)',
-          ];
-          for (const item of toAdd) {
-            if (!cleaned.includes(item)) cleaned.unshift(item);
+            // Ensure canonical meta image selectors are included
+            const toAdd = [
+              'meta[property="og:image"]::attr(content)',
+              'meta[name="twitter:image"]::attr(content)',
+              'meta[itemprop="image"]::attr(content)',
+            ];
+            for (const item of toAdd) {
+              if (!cleaned.includes(item)) cleaned.unshift(item);
+            }
+
+            await client.query(
+              `UPDATE system_settings SET value = $1::text, updated_at = CURRENT_TIMESTAMP WHERE key = $2;`,
+              [JSON.stringify(Array.from(new Set(cleaned))), key]
+            );
           }
-
-          await client.query(
-            `UPDATE system_settings SET value = $1::text, updated_at = CURRENT_TIMESTAMP WHERE key = 'generic_image_selectors';`,
-            [JSON.stringify(Array.from(new Set(cleaned)))]
-          );
+        } catch {
+          // Leave unparseable settings as-is
         }
-      } catch {
-        // Leave unparseable settings as-is
       }
     }
+
+    // Repair legacy 'image[0]' key format to canonical 'image'
+    await client.query(`
+      UPDATE retailer_configs
+      SET jsonld_image_key = 'image', updated_at = CURRENT_TIMESTAMP
+      WHERE jsonld_image_key = 'image[0]';
+    `);
+    await client.query(`
+      UPDATE system_settings
+      SET value = 'image', updated_at = CURRENT_TIMESTAMP
+      WHERE key = 'jsonld_image_key' AND value = 'image[0]';
+    `);
 
     // 5. Repair retailer_configs selector columns
     const selectorFields = [
@@ -204,7 +219,7 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
     await client.query(`
       UPDATE products
       SET image_url = NULL
-      WHERE image_url LIKE '%/c_fill%'
+      WHERE (image_url LIKE '%/c\\_fill' ESCAPE '\\' OR image_url LIKE '%/c\\_fill/' ESCAPE '\\')
          OR image_url LIKE '%hn-logo.svg%'
          OR image_url LIKE '%fafloading.png%'
          OR image_url LIKE '%assistant-avatar-%.svg%'
@@ -214,7 +229,7 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
     await client.query(`
       UPDATE items
       SET image_url = NULL, updated_at = CURRENT_TIMESTAMP
-      WHERE image_url LIKE '%/c_fill%'
+      WHERE (image_url LIKE '%/c\\_fill' ESCAPE '\\' OR image_url LIKE '%/c\\_fill/' ESCAPE '\\')
          OR image_url LIKE '%hn-logo.svg%'
          OR image_url LIKE '%fafloading.png%'
          OR image_url LIKE '%assistant-avatar-%.svg%'

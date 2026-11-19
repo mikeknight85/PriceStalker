@@ -113,7 +113,7 @@ export default function RetailersSection({ globalCurrencies, initialSearch }: Re
                   <div style={{ fontWeight: 700, fontSize: '1rem', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name || r.domain}</div>
                   <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
                     {diag.message && (
-                      <span title={diag.message} style={{ color: 'var(--warning-color, #f59e0b)', display: 'inline-flex' }}>
+                      <span title={diag.message} style={{ color: 'var(--warning)', display: 'inline-flex' }}>
                         <Icon name="alertTriangle" size="14px" />
                       </span>
                     )}

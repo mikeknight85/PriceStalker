@@ -28,8 +28,9 @@ export function validateSelector(selector: string, url: string, field?: string):
     }
   }
 
-  // 3. Rejects selectors matching hashed CSS-in-JS patterns or CSS modules
-  const hashPattern = /(\.(css|sc|styled|styles)-[a-z0-9]{5,10}\b|--[A-Za-z0-9_-]{6,}\b|\[class\*=['"]?(css|sc|styled)-)/i;
+  // 3. Rejects selectors matching hashed CSS-in-JS patterns or CSS modules (e.g. .css-1x84a9z, --3k9xZ1),
+  // while permitting standard BEM modifier classes (e.g. .price--current, .product__price--compare-at).
+  const hashPattern = /(\.(css|sc|styled|styles)-[a-z0-9]{5,10}\b|--(?=[a-z0-9_-]*\d)[a-z0-9_-]{5,}\b|\[class\*=['"]?(css|sc|styled)-)/i;
   if (hashPattern.test(trimmed)) {
     logger.warn(`AI | Auto-Map | Selector Validation | Rejected hashed CSS-in-JS class in "${trimmed}" for ${url}`, 'AI');
     return false;

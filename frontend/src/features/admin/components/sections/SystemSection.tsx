@@ -105,15 +105,16 @@ export default function SystemSection() {
     setIsResetting(true);
     try {
       const res = await AdminSystemService.resetSystemSettings('all');
-      const settings = res?.settings || (res as any) || {};
-      const resetCount = res?.reset_count ?? Object.keys(settings).length;
+      const settings = res.settings;
+      const resetCount = res.reset_count;
       showToast(`Reset ${resetCount} system settings to defaults`, 'success');
       setShowResetModal(false);
       queryClient.setQueryData(queryKeys.adminSystemSettings, settings);
       setSavedSettings(settings);
       setSystemSettings(settings);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to reset system settings', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to reset system settings';
+      showToast(msg, 'error');
     } finally {
       setIsResetting(false);
     }
@@ -229,7 +230,7 @@ export default function SystemSection() {
             const diag = diagnoseRetailerUserAgent(systemSettings?.default_user_agent, false);
             if (diag.message) {
               return (
-                <div style={{ fontSize: '0.75rem', color: 'var(--warning-color, #f59e0b)', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--warning)', marginTop: '0.25rem' }}>
                   {diag.message}
                 </div>
               );

@@ -31,14 +31,19 @@ router.post('/telemetry/ping', asyncHandler(async (_req: AuthRequest, res: Respo
   res.json(result);
 }, 'Admin | Trigger Telemetry Ping', 'Admin', 'Failed to trigger telemetry ping'));
 
+const VALID_RESET_SCOPES = ['all', 'selectors', 'phrases', 'network'] as const;
+type ResetScope = typeof VALID_RESET_SCOPES[number];
+
 // Reset system settings to canonical defaults (issue #264)
 const handleReset = asyncHandler(async (req: AuthRequest, res: Response) => {
   const scope = req.body?.scope || 'all';
-  const settings = await systemService.resetToDefaults(scope, req.userId!);
-  res.json({ success: true, settings, reset_count: Object.keys(settings).length });
+  if (!VALID_RESET_SCOPES.includes(scope)) {
+    return res.status(400).json({ error: `Invalid scope: must be one of ${VALID_RESET_SCOPES.join(', ')}` });
+  }
+  const { settings, reset_count } = await systemService.resetToDefaults(scope as ResetScope, req.userId!);
+  res.json({ success: true, settings, reset_count });
 }, 'Admin | Reset Settings', 'Admin', 'Failed to reset system settings');
 
 router.post('/reset', handleReset);
-router.post('/system/reset', handleReset);
 
 export default router;

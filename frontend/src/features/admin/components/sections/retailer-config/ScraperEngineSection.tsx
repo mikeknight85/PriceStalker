@@ -56,6 +56,14 @@ export default function ScraperEngineSection({ draftConfig, onUpdateConfig }: Sc
           onChange={e => { onUpdateConfig({ user_agent: e.target.value || null }); }}
         >
           <option value="">Use System Default (Inherit)</option>
+          {Boolean(
+            draftConfig.user_agent &&
+            !GROUPED_PRESET_USER_AGENTS.some(grp => grp.options.some(p => p.value === draftConfig.user_agent))
+          ) && (
+            <option value={draftConfig.user_agent || ''}>
+              Custom User-Agent
+            </option>
+          )}
           {GROUPED_PRESET_USER_AGENTS.map(grp => (
             <optgroup key={grp.group} label={grp.group}>
               {grp.options.map(p => (
@@ -85,9 +93,9 @@ export default function ScraperEngineSection({ draftConfig, onUpdateConfig }: Sc
                   marginTop: '0.5rem',
                   padding: '0.5rem 0.75rem',
                   borderRadius: '0.375rem',
-                  background: 'rgba(245, 158, 11, 0.1)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                  color: 'var(--warning-color, #f59e0b)',
+                  background: 'rgba(var(--warning-rgb, 217, 119, 6), 0.1)',
+                  border: '1px solid rgba(var(--warning-rgb, 217, 119, 6), 0.3)',
+                  color: 'var(--warning)',
                   fontSize: '0.8rem'
                 }}
               >

@@ -15,6 +15,8 @@ import { runExtractionPhase } from './extraction';
 import { runConsensusPhase } from './consensus';
 import { runVerificationPhase } from './verification';
 import { handleRetailerMaintenance, handleAutoMapping, handleHeuristicAutoMapping, handleRestoreStatus } from './maintenance';
+import { retailerMutationRepository } from '../../domain/retailer/repositories/retailer-mutation.repository';
+import { configCache } from '../../../utils/cache';
 import { classifyTransportError } from '../../../types/availability';
 
 /**
@@ -149,8 +151,10 @@ export async function scrapeProductWithVoting(
     const priceExtracted = result.price !== null;
     let autoMapAttempted = false;
 
-    const wantsReAutoMap = domainConfig?.re_auto_map === true;
-    const isNewRetailerWithoutPrice = !challenge && !isDefinitivelyUnavailable && !priceExtracted && (!domainConfig || isShellConfig);
+    // Never auto-map against anti-bot walls or 404/410 unavailable pages (issue #265, #274)
+    const canAttemptAutoMap = !challenge && !isDefinitivelyUnavailable;
+    const wantsReAutoMap = canAttemptAutoMap && domainConfig?.re_auto_map === true;
+    const isNewRetailerWithoutPrice = canAttemptAutoMap && !priceExtracted && (!domainConfig || isShellConfig);
 
     if (wantsReAutoMap || (isNewRetailerWithoutPrice && session.globalAiSettings.ai_auto_mapping_enabled)) {
       if (session.globalAiSettings.ai_auto_mapping_enabled) {
@@ -181,6 +185,17 @@ export async function scrapeProductWithVoting(
           learnedFlags: acqResult.learnedFlags,
           existingConfig: domainConfig
         });
+      }
+
+      // If re-mapping was requested and both AI and heuristic auto-mapping failed,
+      // clear the flag so subsequent scrapes do not loop forever (issue #265)
+      if (wantsReAutoMap && (!domainConfig || domainConfig.re_auto_map)) {
+        await retailerMutationRepository.clearReAutoMap(session.lookupDomain);
+        if (domainConfig) {
+          domainConfig.re_auto_map = false;
+        }
+        configCache.invalidate(session.lookupDomain);
+        extractionSteps.push(`Retailer | Auto-Map | Re-mapping failed; cleared re_auto_map flag`);
       }
 
       if (domainConfig) {

@@ -245,7 +245,7 @@ export async function handleHeuristicAutoMapping(options: {
       jsonldPriceKey = obj.offers?.price ? 'offers.price' : (Array.isArray(obj.offers) ? 'offers[0].price' : 'price');
     }
     if (obj.image) {
-      jsonldImageKey = Array.isArray(obj.image) ? 'image[0]' : 'image';
+      jsonldImageKey = 'image';
     }
     if (obj.name) {
       jsonldNameKey = 'name';

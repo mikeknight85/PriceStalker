@@ -71,7 +71,10 @@ export class SystemSettingsService {
   /**
    * Resets specified settings categories to their canonical factory defaults (issue #264).
    */
-  async resetToDefaults(scope: 'all' | 'selectors' | 'phrases' | 'network' = 'all', userId: number): Promise<Record<string, string>> {
+  async resetToDefaults(
+    scope: 'all' | 'selectors' | 'phrases' | 'network' = 'all',
+    userId: number
+  ): Promise<{ settings: Record<string, string>; reset_count: number }> {
     const selectorKeys = [
       'generic_price_selectors',
       'generic_deal_price_selectors',
@@ -110,12 +113,16 @@ export class SystemSettingsService {
     else if (scope === 'network') targetKeys = networkKeys;
     else targetKeys = [...selectorKeys, ...phraseKeys, ...networkKeys];
 
+    const currentSettings = await systemSettingsRepository.getAll();
     const resetKeys: string[] = [];
     for (const key of targetKeys) {
       const val = CANONICAL_SYSTEM_DEFAULTS[key];
       if (val !== undefined) {
-        await systemSettingsRepository.set(key, this.serialiseSetting(key, val));
-        resetKeys.push(key);
+        const serialised = this.serialiseSetting(key, val);
+        if (currentSettings[key] !== serialised) {
+          await systemSettingsRepository.set(key, serialised);
+          resetKeys.push(key);
+        }
       }
     }
 
@@ -124,7 +131,10 @@ export class SystemSettingsService {
       settingsCache.clear();
     }
 
-    return await systemSettingsRepository.getAll();
+    return {
+      settings: await systemSettingsRepository.getAll(),
+      reset_count: resetKeys.length,
+    };
   }
 
   /**

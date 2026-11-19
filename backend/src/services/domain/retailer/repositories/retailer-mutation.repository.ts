@@ -146,5 +146,17 @@ export const retailerMutationRepository = {
       ]
     );
     return result.rows[0];
+  },
+
+  /**
+   * Resets the re_auto_map flag to false after an auto-mapping attempt
+   * finishes or fails, preventing infinite auto-mapping loops (issue #265).
+   */
+  clearReAutoMap: async (domain: string, client?: any): Promise<void> => {
+    const executor = client || pool;
+    await executor.query(
+      `UPDATE retailer_configs SET re_auto_map = false, updated_at = CURRENT_TIMESTAMP WHERE domain = $1`,
+      [domain.toLowerCase()]
+    );
   }
 };

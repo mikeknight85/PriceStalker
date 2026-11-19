@@ -138,6 +138,14 @@ export const CANONICAL_SELECTOR_ARRAYS: Record<string, string[]> = {
     '[data-product-price]',
     '[data-product-price]::attr(data-product-price)'
   ],
+  // These are the selectors used to gather *evidence* for AI auto-mapping. They
+  // must stay at least as broad as generic_image_selectors (seeded by
+  // 006_seed_generic_selectors), because the AI can only propose a selector for
+  // an element it was shown. When this list was the narrower of the two, pages
+  // whose image is matched by the broad `img[class*="product"]` were presented
+  // to the AI only through narrow patterns, so it learned an over-specific
+  // selector -- and site-specific selectors then outrank the generic one that
+  // would have worked.
   generic_ai_image_selectors: [
     'link[rel="preload"][as="image"]',
     '[itemprop="image"]',

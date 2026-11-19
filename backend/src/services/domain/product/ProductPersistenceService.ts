@@ -1,5 +1,6 @@
 import { 
   productRepository, 
+  itemRepository,
   priceHistoryRepository, 
   stockHistoryRepository, 
 } from '../../../models';
@@ -138,12 +139,7 @@ export class ProductPersistenceService {
     // Keep items.image_url in sync with the canonical listing image when
     // the item has no image or holds a corrupted URL (issue #263).
     if (sanitizedImage && product.item_id) {
-      await client.query(
-        `UPDATE items
-         SET image_url = $1, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $2 AND (image_url IS NULL OR image_url = '' OR image_url ILIKE '%/c_fill%' OR image_url ILIKE '%/w_%' OR image_url ILIKE '%/')`,
-        [sanitizedImage, product.item_id]
-      );
+      await itemRepository.updateImageIfMissingOrCorrupted(product.item_id, sanitizedImage, client);
     }
   }
 

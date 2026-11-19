@@ -5,7 +5,6 @@ import aiSettingsRoutes from './ai';
 const router = Router();
 
 router.use('/ai', aiSettingsRoutes);
-router.use('/system', systemSettingsRoutes);
 router.use('/', systemSettingsRoutes);
 
 export default router;

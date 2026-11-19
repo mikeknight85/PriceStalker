@@ -199,8 +199,8 @@ export default function GlobalSelectorsSection() {
     setIsResetting(true);
     try {
       const res = await AdminSystemService.resetSystemSettings('selectors');
-      const settings = res?.settings || (res as any) || {};
-      const resetCount = res?.reset_count ?? Object.keys(settings).length;
+      const settings = res.settings;
+      const resetCount = res.reset_count;
       showToast(`Reset ${resetCount} global selector settings to canonical defaults`, 'success');
       setShowResetModal(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.adminSystemSettings });
@@ -417,7 +417,7 @@ export default function GlobalSelectorsSection() {
       <ConfirmationModal
         isOpen={showResetModal}
         title="Reset Global Selectors to Defaults"
-        message="This will restore all global selectors and phrases to canonical tuned defaults. Any custom selectors you have configured here will be overwritten. Proceed?"
+        message="This will restore all global selectors to canonical tuned defaults. Any custom selectors you have configured here will be overwritten. Proceed?"
         confirmText={isResetting ? 'Resetting...' : 'Reset to Defaults'}
         onConfirm={handleResetDefaults}
         onClose={() => setShowResetModal(false)}
