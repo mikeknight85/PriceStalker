@@ -50,6 +50,7 @@ export class SystemSettingsService {
       'telemetry_enabled',
       'telemetry_instance_id',
       'telemetry_last_ping_at',
+      'url_canonical_rules',
       DEFAULT_REFRESH_INTERVAL_SETTING_KEY
     ];
 
@@ -83,6 +84,55 @@ export class SystemSettingsService {
   private serialiseSetting(key: string, value: any): string {
     if (key === DEFAULT_REFRESH_INTERVAL_SETTING_KEY) {
       return String(normaliseDefaultRefreshInterval(value) ?? FALLBACK_REFRESH_INTERVAL_SECONDS);
+    }
+    if (key === 'url_canonical_rules') {
+      let candidate: any = value;
+      if (typeof value === 'string') {
+        try {
+          candidate = JSON.parse(value);
+        } catch {
+          throw new Error('Invalid URL canonicalization rules: payload must be valid JSON');
+        }
+      }
+      if (!Array.isArray(candidate)) {
+        throw new Error('Invalid URL canonicalization rules: rules must be an array');
+      }
+
+      const validated = candidate.map((rule, idx) => {
+        if (!rule || typeof rule !== 'object') {
+          throw new Error(`Invalid URL canonicalization rule at index ${idx}: expected an object`);
+        }
+        const { domain_pattern, path_match, path_replacement, description } = rule;
+        if (!domain_pattern || typeof domain_pattern !== 'string') {
+          throw new Error(`Invalid URL canonicalization rule at index ${idx}: domain_pattern is required`);
+        }
+        if (!path_match || typeof path_match !== 'string') {
+          throw new Error(`Invalid URL canonicalization rule at index ${idx}: path_match is required`);
+        }
+        if (typeof path_replacement !== 'string') {
+          throw new Error(`Invalid URL canonicalization rule at index ${idx}: path_replacement is required`);
+        }
+
+        try {
+          new RegExp(domain_pattern);
+        } catch (e: any) {
+          throw new Error(`Invalid domain pattern regex at index ${idx}: ${e.message}`);
+        }
+        try {
+          new RegExp(path_match);
+        } catch (e: any) {
+          throw new Error(`Invalid path match regex at index ${idx}: ${e.message}`);
+        }
+
+        return {
+          domain_pattern: domain_pattern.trim(),
+          path_match: path_match.trim(),
+          path_replacement: path_replacement.trim(),
+          description: typeof description === 'string' ? description.trim() : undefined,
+        };
+      });
+
+      return JSON.stringify(validated);
     }
     return String(value);
   }

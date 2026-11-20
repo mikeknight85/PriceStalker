@@ -11,10 +11,12 @@ import {
   PriorityNote,
   FieldHelp
 } from '../../components';
+import UrlCanonicalRulesSection from './UrlCanonicalRulesSection';
 import Icon from '../../../../components/Icon';
 import { queryClient } from '../../../../api/queryClient';
 import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 import { useExpandedSections } from '../../../../hooks';
+import { UrlCanonicalRule } from '../../../../types/api';
 
 interface SavedSelectors {
   priceSelectors: string[];
@@ -32,10 +34,20 @@ interface SavedSelectors {
   outOfStockPhrases: string[];
   preOrderPhrases: string[];
   challengePhrases: string[];
+  urlCanonicalRules: UrlCanonicalRule[];
 }
 
 const parseList = (val?: string | null): string[] => {
   try { return JSON.parse(val || '[]'); } catch { return []; }
+};
+
+const parseRules = (val?: string | null): UrlCanonicalRule[] => {
+  try {
+    const parsed = JSON.parse(val || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 };
 
 export default function GlobalSelectorsSection() {
@@ -66,6 +78,9 @@ export default function GlobalSelectorsSection() {
   const [globalPreOrderPhrases, setGlobalPreOrderPhrases] = useState<string[]>([]);
   const [globalChallengePhrases, setGlobalChallengePhrases] = useState<string[]>([]);
 
+  // URL Canonicalization state
+  const [urlCanonicalRules, setUrlCanonicalRules] = useState<UrlCanonicalRule[]>([]);
+
   const applySelectors = (data: SavedSelectors) => {
     setGlobalPriceSelectors(data.priceSelectors);
     setGlobalDealPriceSelectors(data.dealPriceSelectors);
@@ -82,9 +97,11 @@ export default function GlobalSelectorsSection() {
     setGlobalOutOfStockPhrases(data.outOfStockPhrases);
     setGlobalPreOrderPhrases(data.preOrderPhrases);
     setGlobalChallengePhrases(data.challengePhrases);
+    setUrlCanonicalRules(data.urlCanonicalRules || []);
   };
 
   const { expandedSections, toggleSection } = useExpandedSections({
+    sys_url_canonical: false,
     sys_sel_price: false,
     sys_sel_deal: false,
     sys_sel_member: false,
@@ -127,6 +144,7 @@ export default function GlobalSelectorsSection() {
         outOfStockPhrases: parseList(settings.generic_out_of_stock_phrases),
         preOrderPhrases: parseList(settings.generic_pre_order_phrases),
         challengePhrases: parseList(settings.generic_challenge_phrases),
+        urlCanonicalRules: parseRules(settings.url_canonical_rules),
       };
 
       applySelectors(data);
@@ -154,6 +172,7 @@ export default function GlobalSelectorsSection() {
     outOfStockPhrases: globalOutOfStockPhrases,
     preOrderPhrases: globalPreOrderPhrases,
     challengePhrases: globalChallengePhrases,
+    urlCanonicalRules,
   };
 
   const isDirty = Boolean(
@@ -179,6 +198,7 @@ export default function GlobalSelectorsSection() {
         generic_pre_order_phrases: JSON.stringify(globalPreOrderPhrases),
         generic_challenge_phrases: JSON.stringify(globalChallengePhrases),
         prefer_jsonld_image: preferJsonLdImage,
+        url_canonical_rules: JSON.stringify(urlCanonicalRules),
       };
 
       const updated = await AdminSystemService.updateSystemSettings(payload);
@@ -231,6 +251,18 @@ export default function GlobalSelectorsSection() {
       </p>
 
       <SettingsCacheNotice />
+
+      <RuleGroup
+        title="URL Canonicalization"
+        description="Rewrite product URLs into clean, deduplicated canonical forms (stripping localized title slugs and tracking paths)."
+      >
+        <UrlCanonicalRulesSection
+          rules={urlCanonicalRules}
+          onChange={setUrlCanonicalRules}
+          isExpanded={expandedSections.sys_url_canonical}
+          onToggle={toggleSection}
+        />
+      </RuleGroup>
 
       <RuleGroup
         title="Product information"

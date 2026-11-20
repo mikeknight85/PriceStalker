@@ -1,5 +1,6 @@
 import { logger } from '../logger';
 import type { AISettings } from '../../../models/types/system';
+import type { UrlCanonicalRule } from '../../scraping/urlHelper';
 
 /**
  * Default configuration values for fallback.
@@ -74,6 +75,32 @@ const DEFAULT_CONFIG = {
     '.main-image img',
     '[data-zoom-image]'
   ],
+  urlCanonicalRules: [
+    {
+      domain_pattern: '(?:^|\\.)amazon\\..*',
+      path_match: '(?:^|.*\\/)(?:dp|gp\\/product)\\/([A-Z0-9]{10})(?:\\/.*)?$',
+      path_replacement: '/dp/$1',
+      description: 'Amazon ASIN canonicalizer'
+    },
+    {
+      domain_pattern: '(?:^|\\.)ebay\\..*',
+      path_match: '^/itm/(?:.+/)?([0-9]{10,14})(?:/.*)?$',
+      path_replacement: '/itm/$1',
+      description: 'eBay Item ID canonicalizer'
+    },
+    {
+      domain_pattern: '(?:^|\\.)aliexpress\\..*',
+      path_match: '^/item/(?:.+/)?([0-9]+)\\.html(?:/.*)?$',
+      path_replacement: '/item/$1.html',
+      description: 'AliExpress Item ID canonicalizer'
+    },
+    {
+      domain_pattern: '.*',
+      path_match: '^/collections/[^/]+/products/([^/?#]+)$',
+      path_replacement: '/products/$1',
+      description: 'Shopify collection path canonicalizer'
+    }
+  ] as UrlCanonicalRule[],
   browserTimeout: 60000,
   browserDelay: 3000,
 };
@@ -149,6 +176,24 @@ export class SystemSettingsCache {
   async getGenericOutOfStockPhrases(): Promise<string[]> { return this.getArray('generic_out_of_stock_phrases', 'genericOutOfStockPhrases'); }
   async getGenericPreOrderPhrases(): Promise<string[]> { return this.getArray('generic_pre_order_phrases', 'genericPreOrderPhrases'); }
   async getGenericChallengePhrases(): Promise<string[]> { return this.getArray('generic_challenge_phrases', 'genericChallengePhrases'); }
+  async getUrlCanonicalRules(): Promise<UrlCanonicalRule[]> {
+    await this.refresh();
+    const key = 'url_canonical_rules';
+    if (this.settings[key]) {
+      try {
+        const parsed = JSON.parse(this.settings[key]);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        logger.warn(
+          `Settings | ${key} is not valid JSON; falling back to default rules.`,
+          'System'
+        );
+      }
+    }
+    return DEFAULT_CONFIG.urlCanonicalRules;
+  }
   
   async getBrowserTimeout(): Promise<number> { return this.getInt('browser_timeout', DEFAULT_CONFIG.browserTimeout); }
   async getBrowserDelay(): Promise<number> { return this.getInt('browser_delay', DEFAULT_CONFIG.browserDelay); }

@@ -5,7 +5,9 @@ import {
   CreateSystemApiTokenResponse,
   SystemLogsResponse,
   TokenScopeOption,
-  TelemetryStatusResponse
+  TelemetryStatusResponse,
+  UrlCanonicalRule,
+  TestCanonicalRuleResponse
 } from '../../../types/api';
 
 export const AdminSystemService = {
@@ -15,6 +17,8 @@ export const AdminSystemService = {
   getTelemetryStatus: (options?: RequestOptions) => api.get<TelemetryStatusResponse>('/admin/settings/telemetry', options),
   sendTelemetryPing: () => api.post<{ success: boolean; error?: string }>('/admin/settings/telemetry/ping'),
   testSearXNG: (url: string) => api.post<{ success: boolean; message: string; error?: string }>('/admin/command', { command: 'test-searxng', params: { url } }),
+  testCanonicalRule: (url: string, rules?: UrlCanonicalRule[]) =>
+    api.post<TestCanonicalRuleResponse>('/admin/settings/test-canonical-rule', { url, rules }),
   executeCommand: (command: string, params?: any) => api.post('/admin/command', { command, params }),
 
   // Logs

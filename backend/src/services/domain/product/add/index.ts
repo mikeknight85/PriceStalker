@@ -1,5 +1,6 @@
 import { productRepository } from '../../../../models';
 import { cleanUrl } from '../../../../utils/scraping/urlHelper';
+import { settingsCache } from '../../../../utils/cache';
 import { productDiscoveryService } from './discovery';
 import { productConfirmationService } from './confirmation';
 import { productRescanService } from './rescan';
@@ -10,7 +11,8 @@ export class ProductAddService {
    * Main entry point for adding a product.
    */
   async addProduct(userId: number, url: string, options: any): Promise<any> {
-    const cleanedUrl = cleanUrl(url);
+    const canonicalRules = await settingsCache.getUrlCanonicalRules();
+    const cleanedUrl = cleanUrl(url, canonicalRules);
     
     // Check for duplicate
     const existingId = await productRepository.findDuplicateUrl(cleanedUrl, userId);
