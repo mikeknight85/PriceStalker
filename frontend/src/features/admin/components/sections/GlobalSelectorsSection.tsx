@@ -101,7 +101,7 @@ export default function GlobalSelectorsSection() {
   };
 
   const { expandedSections, toggleSection } = useExpandedSections({
-    sys_url_canonical: true,
+    sys_url_canonical: false,
     sys_sel_price: false,
     sys_sel_deal: false,
     sys_sel_member: false,

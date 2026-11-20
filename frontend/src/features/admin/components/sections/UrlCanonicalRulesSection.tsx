@@ -68,6 +68,15 @@ export default function UrlCanonicalRulesSection({
     });
   };
 
+  const moveRule = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === rules.length - 1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const updated = [...rules];
+    [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
+    onChange(updated);
+  };
+
   const saveRule = () => {
     if (!ruleForm.domain_pattern.trim()) {
       showToast('Domain pattern is required', 'error');
@@ -112,7 +121,6 @@ export default function UrlCanonicalRulesSection({
 
     onChange(updated);
     cancelEdit();
-    showToast(isAdding ? 'Canonical rule added' : 'Canonical rule updated', 'success');
   };
 
   const deleteRule = (index: number) => {
@@ -174,13 +182,33 @@ export default function UrlCanonicalRulesSection({
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginRight: '0.25rem' }}>
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => moveRule(idx, 'up')}
+                      className="mini-arrow-btn"
+                      title="Move rule up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === rules.length - 1}
+                      onClick={() => moveRule(idx, 'down')}
+                      className="mini-arrow-btn"
+                      title="Move rule down"
+                    >
+                      ▼
+                    </button>
+                  </div>
                   <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
                     {rule.description || `Rule #${idx + 1}`}
                   </span>
                   <span
                     style={{
                       fontSize: '0.75rem',
-                      background: 'var(--card-background)',
+                      background: 'var(--surface)',
                       border: '1px solid var(--border)',
                       padding: '0.15rem 0.4rem',
                       borderRadius: '0.25rem',
@@ -206,7 +234,7 @@ export default function UrlCanonicalRulesSection({
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={() => deleteRule(idx)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--danger, #ef4444)' }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--danger)' }}
                     title="Delete rule"
                   >
                     <Icon name="trash" size="0.85em" />
@@ -222,7 +250,7 @@ export default function UrlCanonicalRulesSection({
                   alignItems: 'center',
                   fontSize: '0.8rem',
                   fontFamily: 'monospace',
-                  background: 'var(--card-background)',
+                  background: 'var(--surface)',
                   padding: '0.4rem 0.6rem',
                   borderRadius: '0.25rem',
                   overflowX: 'auto',
@@ -232,7 +260,7 @@ export default function UrlCanonicalRulesSection({
                   {rule.path_match}
                 </div>
                 <div style={{ color: 'var(--text-muted)' }}>→</div>
-                <div style={{ color: 'var(--primary, #3b82f6)', fontWeight: 600 }}>
+                <div style={{ color: 'var(--primary)', fontWeight: 600 }}>
                   {rule.path_replacement}
                 </div>
               </div>
@@ -270,8 +298,8 @@ export default function UrlCanonicalRulesSection({
                 </label>
                 <input
                   type="text"
-                  className="input"
-                  style={{ width: '100%' }}
+                  className="form-control"
+                  style={{ width: '100%', height: '36px' }}
                   placeholder="e.g. Amazon ASIN canonicalizer"
                   value={ruleForm.description || ''}
                   onChange={(e) => setRuleForm({ ...ruleForm, description: e.target.value })}
@@ -284,9 +312,9 @@ export default function UrlCanonicalRulesSection({
                 </label>
                 <input
                   type="text"
-                  className="input"
-                  style={{ width: '100%', fontFamily: 'monospace' }}
-                  placeholder="e.g. amazon\..*"
+                  className="form-control"
+                  style={{ width: '100%', height: '36px', fontFamily: 'monospace' }}
+                  placeholder="e.g. (?:^|\.)amazon\..*"
                   value={ruleForm.domain_pattern}
                   onChange={(e) => setRuleForm({ ...ruleForm, domain_pattern: e.target.value })}
                 />
@@ -300,8 +328,8 @@ export default function UrlCanonicalRulesSection({
                 </label>
                 <input
                   type="text"
-                  className="input"
-                  style={{ width: '100%', fontFamily: 'monospace' }}
+                  className="form-control"
+                  style={{ width: '100%', height: '36px', fontFamily: 'monospace' }}
                   placeholder="e.g. (?:^|.*\/)(?:dp|gp\/product)\/([A-Z0-9]{10})(?:\/.*)?$"
                   value={ruleForm.path_match}
                   onChange={(e) => setRuleForm({ ...ruleForm, path_match: e.target.value })}
@@ -314,8 +342,8 @@ export default function UrlCanonicalRulesSection({
                 </label>
                 <input
                   type="text"
-                  className="input"
-                  style={{ width: '100%', fontFamily: 'monospace' }}
+                  className="form-control"
+                  style={{ width: '100%', height: '36px', fontFamily: 'monospace' }}
                   placeholder="e.g. /dp/$1"
                   value={ruleForm.path_replacement}
                   onChange={(e) => setRuleForm({ ...ruleForm, path_replacement: e.target.value })}
@@ -328,7 +356,7 @@ export default function UrlCanonicalRulesSection({
                 Cancel
               </button>
               <button type="button" className="btn btn-primary btn-sm" onClick={saveRule}>
-                {isAdding ? 'Add Rule' : 'Save Changes'}
+                {isAdding ? 'Add Rule' : 'Update Rule'}
               </button>
             </div>
           </div>
@@ -368,7 +396,7 @@ export default function UrlCanonicalRulesSection({
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
             <input
               type="text"
-              className="input"
+              className="form-control"
               style={{ flex: 1, fontSize: '0.85rem' }}
               placeholder="e.g. https://www.amazon.fr/product-title-slug/dp/B08WXT12BN/ref=pd_.../?th=1"
               value={testUrl}
@@ -408,7 +436,7 @@ export default function UrlCanonicalRulesSection({
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontWeight: 600 }}>Matched Rule:</span>
                 {testResult.matched ? (
-                  <span style={{ color: 'var(--success, #22c55e)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <span style={{ color: 'var(--secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                     <Icon name="checkCircle" size="0.9em" />
                     {testResult.rule?.description || testResult.rule?.domain_pattern}
                   </span>
@@ -422,7 +450,7 @@ export default function UrlCanonicalRulesSection({
                 <code
                   style={{
                     display: 'block',
-                    background: 'var(--card-background)',
+                    background: 'var(--surface)',
                     padding: '0.5rem',
                     borderRadius: '0.25rem',
                     wordBreak: 'break-all',
@@ -438,9 +466,29 @@ export default function UrlCanonicalRulesSection({
         </div>
 
         <FieldHelp>
-          Rules execute in order. The first rule whose domain pattern matches the hostname and whose path pattern matches the pathname is applied.
+          Rules execute in order. The first rule whose domain pattern matches the hostname and whose path pattern matches the pathname is applied. Use the arrow buttons to adjust priority.
         </FieldHelp>
       </div>
+
+      <style>{`
+        .mini-arrow-btn {
+          padding: 0;
+          border: none;
+          background: none;
+          color: var(--text-muted);
+          font-size: 0.6rem;
+          cursor: pointer;
+          height: 12px;
+          line-height: 1;
+        }
+        .mini-arrow-btn:hover:not(:disabled) {
+          color: var(--primary);
+        }
+        .mini-arrow-btn:disabled {
+          opacity: 0.2;
+          cursor: default;
+        }
+      `}</style>
     </CollapsibleCard>
   );
 }

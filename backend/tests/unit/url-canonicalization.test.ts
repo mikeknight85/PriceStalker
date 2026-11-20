@@ -3,19 +3,19 @@ import { cleanUrl, canonicalizeUrl, findMatchingCanonicalRule, UrlCanonicalRule 
 
 const DEFAULT_TEST_RULES: UrlCanonicalRule[] = [
   {
-    domain_pattern: 'amazon\\..*',
+    domain_pattern: '(?:^|\\.)amazon\\..*',
     path_match: '(?:^|.*\\/)(?:dp|gp\\/product)\\/([A-Z0-9]{10})(?:\\/.*)?$',
     path_replacement: '/dp/$1',
     description: 'Amazon ASIN canonicalizer'
   },
   {
-    domain_pattern: 'ebay\\..*',
+    domain_pattern: '(?:^|\\.)ebay\\..*',
     path_match: '^/itm/(?:.+/)?([0-9]{10,14})(?:/.*)?$',
     path_replacement: '/itm/$1',
     description: 'eBay Item ID canonicalizer'
   },
   {
-    domain_pattern: 'aliexpress\\..*',
+    domain_pattern: '(?:^|\\.)aliexpress\\..*',
     path_match: '^/item/(?:.+/)?([0-9]+)\\.html(?:/.*)?$',
     path_replacement: '/item/$1.html',
     description: 'AliExpress Item ID canonicalizer'
@@ -97,6 +97,13 @@ describe('URL Canonicalization Rules (#289, #282)', () => {
       const url = 'https://www.amazon.fr/Slug/dp/B08WXT12BN?utm_source=twitter';
       const cleaned = cleanUrl(url);
       expect(cleaned).toBe('https://www.amazon.fr/Slug/dp/B08WXT12BN');
+    });
+
+    it('respects domain boundaries and does not match spoofed domains', () => {
+      const spoofedUrl = 'https://notamazon.com/dp/B08WXT12BN';
+      const cleaned = cleanUrl(spoofedUrl, DEFAULT_TEST_RULES);
+      expect(cleaned).toBe('https://notamazon.com/dp/B08WXT12BN');
+      expect(findMatchingCanonicalRule(spoofedUrl, DEFAULT_TEST_RULES)).toBeNull();
     });
   });
 

@@ -19,19 +19,19 @@ export const up = async ({ context: pool }: { context: MigrationContext }) => {
 
     const defaultRules = JSON.stringify([
       {
-        domain_pattern: 'amazon\\..*',
+        domain_pattern: '(?:^|\\.)amazon\\..*',
         path_match: '(?:^|.*\\/)(?:dp|gp\\/product)\\/([A-Z0-9]{10})(?:\\/.*)?$',
         path_replacement: '/dp/$1',
         description: 'Amazon ASIN canonicalizer'
       },
       {
-        domain_pattern: 'ebay\\..*',
+        domain_pattern: '(?:^|\\.)ebay\\..*',
         path_match: '^/itm/(?:.+/)?([0-9]{10,14})(?:/.*)?$',
         path_replacement: '/itm/$1',
         description: 'eBay Item ID canonicalizer'
       },
       {
-        domain_pattern: 'aliexpress\\..*',
+        domain_pattern: '(?:^|\\.)aliexpress\\..*',
         path_match: '^/item/(?:.+/)?([0-9]+)\\.html(?:/.*)?$',
         path_replacement: '/item/$1.html',
         description: 'AliExpress Item ID canonicalizer'

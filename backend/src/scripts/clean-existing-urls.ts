@@ -1,5 +1,6 @@
 import { pool } from '../models';
 import { cleanUrl } from '../utils/scraping/urlHelper';
+import { settingsCache } from '../utils/cache';
 
 interface ProductRow {
   id: number;
@@ -20,6 +21,9 @@ async function main() {
       await client.query('BEGIN');
     }
 
+    const rules = await settingsCache.getUrlCanonicalRules();
+    console.log(`Loaded ${rules.length} active URL canonicalization rules.\n`);
+
     const productsResult = await client.query('SELECT id, user_id, url FROM products');
     const products: ProductRow[] = productsResult.rows;
 
@@ -28,7 +32,7 @@ async function main() {
     let mergeCount = 0;
 
     for (const product of products) {
-      const cleaned = cleanUrl(product.url);
+      const cleaned = cleanUrl(product.url, rules);
 
       if (cleaned === product.url) {
         cleanCount++;
