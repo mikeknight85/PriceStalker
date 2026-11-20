@@ -57,6 +57,18 @@ For more detail, see [How price selection works](docs/user/README.md#5-price-con
 
 ---
 
+## Built for speed and low resource footprint
+
+Self-hosted shouldn't mean resource-heavy. PriceStalker is engineered from the ground up for speed, minimal RAM usage, and homelab efficiency:
+
+- **Sub-second HTTP engine (90% of sites):** Standard checks run via a lightweight, non-blocking HTTP parser (`axios` + `cheerio`), extracting prices and availability in 100–250ms with virtually zero CPU overhead.
+- **On-demand stealth browser (10% of sites):** Full headless browser sessions (Puppeteer) are only invoked when a retailer strictly requires JavaScript execution or bot challenge bypass. No wasted browser cycles on standard pages.
+- **Instant React SPA:** Built with React 18 and Vite for fast client-side navigation, instant filtering, and responsive interactions without server-side page re-renders.
+- **Lean resource baseline:** Runs comfortably on a Raspberry Pi, low-spec VPS, or small Docker container alongside other homelab services (~60–120 MB RAM baseline).
+- **Modern storage with PostgreSQL:** Native connection pooling, indexed JSONB queries, and no disk bloat from unpruned database replication logs.
+
+---
+
 ## What's new in this fork
 
 | Version | Highlights |

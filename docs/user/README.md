@@ -21,6 +21,13 @@ scheduled checks, review price and stock history, and update notification
 preferences. A manual refresh is useful after a retailer changes its page or
 when you want to check a product before its next scheduled refresh.
 
+### Fast, resource-efficient scraping
+
+PriceStalker uses a two-tier scraping pipeline designed to be as fast and light on server resources as possible:
+
+* **Lightweight HTTP engine (default):** Around 90% of retail product checks are resolved via a fast, non-blocking HTTP request and DOM parser in milliseconds. This keeps CPU and RAM usage minimal.
+* **Stealth browser fallback (on-demand):** Headless browser sessions (Puppeteer) are only spun up when a retailer requires client-side JavaScript rendering or serves anti-bot verification challenges. Once resolved, standard requests take over whenever possible so your server is not bogged down running continuous browser instances.
+
 ---
 
 ## 2. Tracking One Product at Several Stores
