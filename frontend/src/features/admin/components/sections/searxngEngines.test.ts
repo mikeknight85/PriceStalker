@@ -42,6 +42,10 @@ describe('searxngEngines', () => {
     it('ignores empty input', () => {
       expect(addSearXNGEngine('brave,google', '   ')).toBe('brave,google');
     });
+
+    it('splits and deduplicates comma-separated input', () => {
+      expect(addSearXNGEngine('brave', 'google, bing, Brave, qwant')).toBe('brave,google,bing,qwant');
+    });
   });
 
   describe('removeSearXNGEngine', () => {

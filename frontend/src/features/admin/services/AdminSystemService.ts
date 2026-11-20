@@ -14,7 +14,7 @@ export const AdminSystemService = {
   updateSystemSettings: (settings: Partial<SystemSettings>) => api.put<SystemSettings>('/admin/settings', settings),
   getTelemetryStatus: (options?: RequestOptions) => api.get<TelemetryStatusResponse>('/admin/settings/telemetry', options),
   sendTelemetryPing: () => api.post<{ success: boolean; error?: string }>('/admin/settings/telemetry/ping'),
-  testSearXNG: (url: string) => api.post<{ success: boolean; message: string; error?: string }>('/admin/command', { command: 'test-searxng', params: { url } }),
+  testSearXNG: (url: string, engines?: string) => api.post<{ success: boolean; message: string; error?: string }>('/admin/command', { command: 'test-searxng', params: { url, engines } }),
   executeCommand: (command: string, params?: any) => api.post('/admin/command', { command, params }),
 
   // Logs

@@ -25,7 +25,7 @@ router.post('/', asyncHandler(async (req: AuthRequest, res: Response) => {
       res.json(result);
       break;
     case 'test-searxng':
-      const { url } = req.body.params || {};
+      const { url, engines } = req.body.params || {};
       if (!url) {
         res.status(400).json({ success: false, error: 'SearXNG URL is required' });
         return;
@@ -34,12 +34,17 @@ router.post('/', asyncHandler(async (req: AuthRequest, res: Response) => {
         const { default: axios } = await import('axios');
         const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
         const testEndpoint = cleanUrl.includes('/search') ? cleanUrl : `${cleanUrl}/search`;
+        const params: Record<string, string> = { q: 'test', format: 'json' };
+        if (engines && typeof engines === 'string' && engines.trim()) {
+          params.engines = engines.trim();
+        }
         const response = await axios.get(testEndpoint, {
-          params: { q: 'test', format: 'json' },
+          params,
           timeout: 5000
         });
         if (response.data && response.data.results) {
-          res.json({ success: true, message: `Connected to SearXNG. Found ${response.data.results.length} results for 'test'.` });
+          const engineNote = params.engines ? ` (engines: ${params.engines})` : '';
+          res.json({ success: true, message: `Connected to SearXNG${engineNote}. Found ${response.data.results.length} results for 'test'.` });
         } else {
           res.status(400).json({ success: false, error: 'SearXNG returned an unexpected response format.' });
         }

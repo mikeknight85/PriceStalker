@@ -28,14 +28,17 @@ export function parseSearXNGEngines(raw?: string | null): string[] {
 }
 
 /**
- * Adds an engine to an existing comma-separated string if not already present.
+ * Adds an engine (or comma-separated engines) to an existing comma-separated string if not already present.
  */
 export function addSearXNGEngine(current: string | undefined | null, engineToAdd: string): string {
-  const norm = engineToAdd.trim().toLowerCase();
-  if (!norm) return current?.trim() ?? '';
+  if (!engineToAdd) return current?.trim() ?? '';
+  const newItems = parseSearXNGEngines(engineToAdd);
+  if (newItems.length === 0) return current?.trim() ?? '';
   const list = parseSearXNGEngines(current);
-  if (!list.includes(norm)) {
-    list.push(norm);
+  for (const item of newItems) {
+    if (!list.includes(item)) {
+      list.push(item);
+    }
   }
   return list.join(',');
 }

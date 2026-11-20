@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../../components/Icon';
 import {
   PRESET_ENGINES,
@@ -17,17 +17,27 @@ export const SearXNGEngineSelector: React.FC<SearXNGEngineSelectorProps> = ({ va
   const [customInput, setCustomInput] = useState('');
 
   const engines = parseSearXNGEngines(value);
-  const isDefaultMode = engines.length === 0;
+  const [mode, setMode] = useState<'system' | 'custom'>(() => (value && value.trim().length > 0 ? 'custom' : 'system'));
+
+  useEffect(() => {
+    if (value && value.trim().length > 0) {
+      setMode('custom');
+    }
+  }, [value]);
+
+  const isDefaultMode = mode === 'system';
 
   // Available suggestions: popular engines that have not been added yet
   const availableSuggestions = PRESET_ENGINES.filter(preset => !engines.includes(preset));
 
   const handleSelectDefaultMode = () => {
+    setMode('system');
     onChange('');
   };
 
   const handleSelectCustomMode = () => {
-    if (isDefaultMode) {
+    setMode('custom');
+    if (engines.length === 0) {
       onChange(DEFAULT_RECOMMENDED_ENGINES);
     }
   };
@@ -77,7 +87,7 @@ export const SearXNGEngineSelector: React.FC<SearXNGEngineSelectorProps> = ({ va
         <div
           style={{
             padding: '0.75rem',
-            background: 'var(--surface-sunken)',
+            background: 'var(--background)',
             borderRadius: '0.375rem',
             fontSize: '0.75rem',
             color: 'var(--text-muted)',
@@ -117,7 +127,7 @@ export const SearXNGEngineSelector: React.FC<SearXNGEngineSelectorProps> = ({ va
                   borderRadius: '1rem',
                   fontSize: '0.75rem',
                   fontWeight: 500,
-                  color: 'var(--text-primary)'
+                  color: 'var(--text)'
                 }}
               >
                 <span>{engine}</span>
@@ -159,7 +169,7 @@ export const SearXNGEngineSelector: React.FC<SearXNGEngineSelectorProps> = ({ va
                 border: 'none',
                 background: 'transparent',
                 outline: 'none',
-                color: 'var(--text-primary)',
+                color: 'var(--text)',
                 fontSize: '0.75rem',
                 padding: '0.2rem 0.25rem'
               }}

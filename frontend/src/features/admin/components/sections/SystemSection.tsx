@@ -65,7 +65,7 @@ export default function SystemSection() {
     if (!systemSettings?.searxng_url) return;
     setIsTestingSearXNG(true);
     try {
-      const res = await AdminSystemService.testSearXNG(systemSettings.searxng_url);
+      const res = await AdminSystemService.testSearXNG(systemSettings.searxng_url, systemSettings.searxng_engines);
       if (res?.success) {
         showToast(res.message, 'success');
       } else {

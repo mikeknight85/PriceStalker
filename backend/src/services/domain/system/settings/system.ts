@@ -85,6 +85,14 @@ export class SystemSettingsService {
     if (key === DEFAULT_REFRESH_INTERVAL_SETTING_KEY) {
       return String(normaliseDefaultRefreshInterval(value) ?? FALLBACK_REFRESH_INTERVAL_SECONDS);
     }
+    if (key === 'searxng_engines') {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .split(',')
+        .map(e => e.trim().toLowerCase())
+        .filter(Boolean)
+        .join(',');
+    }
     return String(value);
   }
 }
