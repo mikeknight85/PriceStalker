@@ -323,6 +323,7 @@ export interface SystemSettings {
   default_referrer?: string;
   searxng_url?: string;
   searxng_enabled?: boolean | string;
+  searxng_engines?: string;
   generic_price_selectors?: string;
   generic_retailer_name_selectors?: string;
   generic_deal_price_selectors?: string;

@@ -47,6 +47,7 @@ export class SystemSettingsService {
       'prefer_jsonld_image',
       'searxng_url',
       'searxng_enabled',
+      'searxng_engines',
       'telemetry_enabled',
       'telemetry_instance_id',
       'telemetry_last_ping_at',

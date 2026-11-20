@@ -11,6 +11,7 @@ import { queryClient } from '../../../../api/queryClient';
 import { adminSystemSettingsQuery, queryKeys } from '../../../../api/queries';
 import { useExpandedSections } from '../../../../hooks';
 import { REFRESH_INTERVALS, snapToOfferedInterval } from '../../../../utils/refreshInterval';
+import { SearXNGEngineSelector } from './SearXNGEngineSelector';
 
 export default function SystemSection() {
   const { showToast } = useToast();
@@ -140,27 +141,7 @@ export default function SystemSection() {
       </CollapsibleCard>
 
       <CollapsibleCard title="Product Discovery (SearXNG)" leadingIcon={<Icon name="search" />} id="sys_discovery" isExpanded={expandedSections.sys_discovery} onToggle={toggleSection}>
-        <div className="form-group">
-          <label>SearXNG API URL</label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input 
-              type="text" 
-              className="form-control"
-              value={systemSettings?.searxng_url || ''} 
-              onChange={e => setSystemSettings(s => s ? { ...s, searxng_url: e.target.value } : null)} 
-              placeholder="https://searxng.example.com" 
-              style={{ flex: 1 }}
-            />
-            <button 
-              className="btn btn-secondary btn-sm" 
-              onClick={handleTestSearXNG}
-              disabled={isTestingSearXNG || !systemSettings?.searxng_url}
-            >
-              {isTestingSearXNG ? '...' : 'Test'}
-            </button>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--background)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: (systemSettings?.searxng_enabled === true || systemSettings?.searxng_enabled === 'true') ? '1.25rem' : '0' }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Enable Product Search</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Allow users to find products by name in the Add Product modal.</div>
@@ -170,6 +151,37 @@ export default function SystemSection() {
             onToggle={() => setSystemSettings(s => s ? { ...s, searxng_enabled: !(s.searxng_enabled === true || s.searxng_enabled === 'true') } : null)} 
           />
         </div>
+
+        {(systemSettings?.searxng_enabled === true || systemSettings?.searxng_enabled === 'true') && (
+          <>
+            <div className="form-group">
+              <label>SearXNG API URL</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={systemSettings?.searxng_url || ''}
+                  onChange={e => setSystemSettings(s => s ? { ...s, searxng_url: e.target.value } : null)}
+                  placeholder="https://searxng.example.com"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleTestSearXNG}
+                  disabled={isTestingSearXNG || !systemSettings?.searxng_url}
+                >
+                  {isTestingSearXNG ? '...' : 'Test'}
+                </button>
+              </div>
+            </div>
+
+            <SearXNGEngineSelector
+              value={systemSettings?.searxng_engines}
+              onChange={(newEngines) => setSystemSettings(s => s ? { ...s, searxng_engines: newEngines } : null)}
+            />
+          </>
+        )}
       </CollapsibleCard>
 
       <CollapsibleCard title="Browser Configuration" leadingIcon={<Icon name="monitor" />} id="sys_browser" isExpanded={expandedSections.sys_browser} onToggle={toggleSection}>

@@ -31,12 +31,17 @@ export class SearchService {
       const cleanBaseUrl = searxngUrl.endsWith('/') ? searxngUrl.slice(0, -1) : searxngUrl;
       const searchUrl = cleanBaseUrl.includes('/search') ? cleanBaseUrl : `${cleanBaseUrl}/search`;
 
+      const configuredEngines = (await settingsCache.getSearXNGEngines())?.trim();
+      const params: Record<string, string> = {
+        q: query,
+        format: 'json'
+      };
+      if (configuredEngines) {
+        params.engines = configuredEngines;
+      }
+
       const response = await axios.get(searchUrl, {
-        params: {
-          q: query,
-          format: 'json',
-          engines: 'google,bing,duckduckgo'
-        },
+        params,
         timeout: 10000
       });
 
