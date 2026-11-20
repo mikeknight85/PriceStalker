@@ -338,6 +338,7 @@ export interface SystemSettings {
   generic_pre_order_phrases?: string;
   generic_challenge_phrases?: string;
   prefer_jsonld_image?: boolean | string;
+  url_canonical_rules?: string;
   telemetry_enabled?: boolean | string;
   telemetry_instance_id?: string;
   telemetry_last_ping_at?: string;
@@ -349,6 +350,20 @@ export interface SystemSettings {
   active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UrlCanonicalRule {
+  domain_pattern: string;
+  path_match: string;
+  path_replacement: string;
+  description?: string;
+}
+
+export interface TestCanonicalRuleResponse {
+  originalUrl: string;
+  canonicalUrl: string;
+  matched: boolean;
+  rule: UrlCanonicalRule | null;
 }
 
 export interface AISettings {

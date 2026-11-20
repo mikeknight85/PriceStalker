@@ -1,3 +1,10 @@
+export interface UrlCanonicalRule {
+  domain_pattern: string;
+  path_match: string;
+  path_replacement: string;
+  description?: string;
+}
+
 /**
  * Lists of parameters to explicitly strip or keep.
  */
@@ -22,12 +29,62 @@ const KEEP_LIST = [
 ];
 
 /**
- * Cleans a URL by removing tracking parameters and unnecessary fragments,
- * while preserving essential product identifiers (using a hybrid blacklist/whitelist approach).
+ * Finds the first URL canonicalization rule matching the given URL hostname and pathname.
  */
-export function cleanUrl(url: string): string {
+export function findMatchingCanonicalRule(url: string, rules?: UrlCanonicalRule[]): UrlCanonicalRule | null {
+  if (!rules || rules.length === 0) return null;
   try {
     const urlObj = new URL(url.trim());
+    const hostname = urlObj.hostname.replace(/^www\./i, '').toLowerCase();
+
+    for (const rule of rules) {
+      if (!rule.domain_pattern || !rule.path_match || rule.path_replacement === undefined) continue;
+      try {
+        const domainRegex = new RegExp(rule.domain_pattern, 'i');
+        if (domainRegex.test(hostname)) {
+          const pathRegex = new RegExp(rule.path_match, 'i');
+          if (pathRegex.test(urlObj.pathname)) {
+            return rule;
+          }
+        }
+      } catch {
+        // Safe against malformed user-supplied regexes
+      }
+    }
+  } catch {
+    // Ignore URL parse error
+  }
+  return null;
+}
+
+/**
+ * Cleans a URL by removing tracking parameters and unnecessary fragments,
+ * applying data-driven path canonicalization rules if provided,
+ * while preserving essential product identifiers (using a hybrid blacklist/whitelist approach).
+ */
+export function cleanUrl(url: string, rules?: UrlCanonicalRule[]): string {
+  try {
+    const urlObj = new URL(url.trim());
+
+    // 0. Apply URL canonicalization rules to pathname if configured
+    if (rules && rules.length > 0) {
+      const hostname = urlObj.hostname.replace(/^www\./i, '').toLowerCase();
+      for (const rule of rules) {
+        if (!rule.domain_pattern || !rule.path_match || rule.path_replacement === undefined) continue;
+        try {
+          const domainRegex = new RegExp(rule.domain_pattern, 'i');
+          if (domainRegex.test(hostname)) {
+            const pathRegex = new RegExp(rule.path_match, 'i');
+            if (pathRegex.test(urlObj.pathname)) {
+              urlObj.pathname = urlObj.pathname.replace(pathRegex, rule.path_replacement);
+              break;
+            }
+          }
+        } catch {
+          // Ignore invalid regex in user-configured rules
+        }
+      }
+    }
 
     // 1. Trim trailing slash from pathname if it's not the root path
     if (urlObj.pathname.length > 1 && urlObj.pathname.endsWith('/')) {
@@ -72,6 +129,13 @@ export function cleanUrl(url: string): string {
     // Return original if parsing fails (fallback)
     return url;
   }
+}
+
+/**
+ * Convenience wrapper for cleanUrl with canonicalization rules.
+ */
+export function canonicalizeUrl(url: string, rules?: UrlCanonicalRule[]): string {
+  return cleanUrl(url, rules);
 }
 
 /**

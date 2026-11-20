@@ -50,6 +50,7 @@ export class SystemSettingsService {
       'telemetry_enabled',
       'telemetry_instance_id',
       'telemetry_last_ping_at',
+      'url_canonical_rules',
       DEFAULT_REFRESH_INTERVAL_SETTING_KEY
     ];
 
@@ -83,6 +84,18 @@ export class SystemSettingsService {
   private serialiseSetting(key: string, value: any): string {
     if (key === DEFAULT_REFRESH_INTERVAL_SETTING_KEY) {
       return String(normaliseDefaultRefreshInterval(value) ?? FALLBACK_REFRESH_INTERVAL_SECONDS);
+    }
+    if (key === 'url_canonical_rules') {
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) return JSON.stringify(parsed);
+        } catch {
+          // fall through
+        }
+      } else if (Array.isArray(value)) {
+        return JSON.stringify(value);
+      }
     }
     return String(value);
   }

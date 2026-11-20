@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Configurable, data-driven URL canonicalization rules for retailers under
+  Admin -> Extraction Rules (#289, generalizing #282). Normalizes product URLs
+  to canonical formats (rewriting Amazon ASINs, eBay item IDs, AliExpress item
+  IDs, and Shopify collection hierarchies) and strips non-essential path slugs
+  and tracking parameters while preserving product variation parameters like `th=1`.
+  Includes migration 029 with default rules, backend path rewrite execution,
+  and an interactive URL testing playground in the Admin interface.
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added
