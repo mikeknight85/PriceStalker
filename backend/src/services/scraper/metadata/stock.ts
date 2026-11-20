@@ -22,7 +22,8 @@ export async function extractProductStock(
     { pre: prePhrases, oos: oosPhrases, is: isPhrases },
     extractionSteps,
     globalStockSelectors,
-    result.html || undefined
+    result.html || undefined,
+    result.url || undefined
   );
 
   result.stockStatus = status;

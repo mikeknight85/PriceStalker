@@ -21,7 +21,8 @@ export async function extractStock(
   phrases?: { pre: string[], oos: string[], is: string[] },
   extractionSteps: string[] = [],
   globalStockSelectors?: string[],
-  html: string = ''
+  html: string = '',
+  targetUrl?: string
 ): Promise<{ status: StockStatus; candidates: StockCandidate[] }> {
   const candidates: StockCandidate[] = [];
 
@@ -36,7 +37,7 @@ export async function extractStock(
   }
 
   // 3. Check schema.org availability and JSON-LD
-  const schemaCandidates = checkSchemaStock($);
+  const schemaCandidates = checkSchemaStock($, targetUrl);
   candidates.push(...schemaCandidates);
 
   // 3b. Global System Stock Selectors (New Layer)
