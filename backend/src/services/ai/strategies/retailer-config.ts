@@ -21,8 +21,14 @@ export function validateSelector(selector: string, url: string, field?: string):
   }
 
   // 2. Reject modal, dialog, popup, menu, and cross-sell noise for name and price
-  if (field === 'name_selectors' || field === 'price_selectors' || field === 'deal_price_selectors') {
-    if (/(modal|dialog|popup|toc-menu|cross-sell|\.d-none)/i.test(trimmed)) {
+  if (
+    field === 'name' ||
+    field === 'name_selectors' ||
+    field === 'price' ||
+    field === 'price_selectors' ||
+    field === 'deal_price_selectors'
+  ) {
+    if (/(modal|dialog|popup|alertdialog|toc-menu|cross-sell|\.d-none|\[hidden\])/i.test(trimmed)) {
       logger.warn(`AI | Auto-Map | Selector Validation | Rejected noise selector "${trimmed}" for ${field} on ${url}`, 'AI');
       return false;
     }

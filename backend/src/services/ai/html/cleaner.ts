@@ -14,7 +14,16 @@ export function cleanHtml($: CheerioAPI): void {
   $('script:not([type="application/ld+json"]), style, noscript, iframe, svg, path, link, comment, img[src^="data:"]').remove();
 
   // 2. Remove layout, navigation, and boilerplate tags to reduce size
-  $('header, footer, nav, aside, [role="navigation"], .header, #header, .footer, #footer, #nav, .nav, .menu, #menu, .navigation, #navigation, .header-container, .footer-container, .nav-container, .menu-container').remove();
+  $('header, footer, nav, aside, dialog, [role="dialog"], [role="alertdialog"], [role="navigation"], .header, #header, .footer, #footer, #nav, .nav, .menu, #menu, .navigation, #navigation, .header-container, .footer-container, .nav-container, .menu-container, [hidden]').remove();
+
+  // Prune .d-none hidden containers while preserving responsive breakpoint elements visible on desktop
+  $('.d-none').each((_, el) => {
+    const tag = (el as any).tagName?.toLowerCase() || (el as any).name?.toLowerCase();
+    if (tag === 'html' || tag === 'body') return;
+    const classAttr = $(el).attr('class') || '';
+    if (/\bd-(sm|md|lg|xl|xxl)-(block|inline|flex|grid|table)\b/i.test(classAttr)) return;
+    $(el).remove();
+  });
 
   // Re-append the cloned JSON-LD blocks to the body so they remain in the pruned DOM
   const body = $('body');
@@ -22,8 +31,14 @@ export function cleanHtml($: CheerioAPI): void {
     body.append(block);
   }
 
-  // 2b. Remove product-noise containers (related, upsell, carousel, breadcrumbs, reviews)
+  // 2b. Remove product-noise containers (related, upsell, carousel, breadcrumbs, reviews, modals, popups)
   const noiseContainerPatterns = [
+    'div[class*="modal" i]',
+    'section[class*="modal" i]',
+    'aside[class*="modal" i]',
+    'div[class*="popup" i]',
+    'section[class*="popup" i]',
+    'aside[class*="popup" i]',
     '[class*="related" i]',
     '[class*="recommend" i]',
     '[class*="upsell" i]',
@@ -51,7 +66,11 @@ export function cleanHtml($: CheerioAPI): void {
     '[id*="wayfinding-breadcrumbs" i]',
     '[id*="dp-ads-" i]',
   ].join(', ');
-  $(noiseContainerPatterns).remove();
+  $(noiseContainerPatterns).each((_, el) => {
+    const tag = (el as any).tagName?.toLowerCase() || (el as any).name?.toLowerCase();
+    if (tag === 'html' || tag === 'body') return;
+    $(el).remove();
+  });
 
   // 3. Prune non-semantic attributes
 

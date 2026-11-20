@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hidden modal, dialog, and shopping cart alert text ("Cart limit reached", "Account limit reached") extracted as product titles instead of canonical catalog metadata on storefronts using Adobe Experience Manager and similar CMS platforms (#279).
+- Initial product discovery and manual confirmation writing un-sanitized generic noise into product and item records (#279).
 - AI auto-mapping validator rejecting Scrapy `::attr(...)` syntax due to Cheerio `css-select` pseudo-element syntax limitations (#262, #279).
 - AI auto-mapping and generic extraction picking up dialog/modal elements and cross-sell prices (`h2.explore-modal-title`, `.cross-sell-cell .product-price`, `.toc-menu-toggle`) as product titles and prices (#279).
 - Retailer configuration user-agent blank string overrides normalized to NULL to correctly inherit the system default User-Agent without losing custom user settings.
