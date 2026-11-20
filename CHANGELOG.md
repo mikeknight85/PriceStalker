@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Multiple JSON-LD offers now respect primary/buybox offer precedence for stock
+  availability (#169). Secondary marketplace sellers, back-orders, or add-ons
+  marked in-stock no longer falsely mark an out-of-stock retail item as
+  available, while variant listings match the tracked variant URL or preserve
+  in-stock availability across available product options.
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added
