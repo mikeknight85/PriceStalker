@@ -5,6 +5,10 @@ import { parseSelector } from '../core/selectors';
 // Target CSS selectors matching structural noise containers
 export const NOISE_CONTAINERS = [
   'header', 'footer', 'nav', 'aside',
+  'dialog', '[role="dialog"]', '[role="alertdialog"]',
+  'div[class*="modal" i]', 'section[class*="modal" i]', 'aside[class*="modal" i]',
+  'div[class*="popup" i]', 'section[class*="popup" i]', 'aside[class*="popup" i]',
+  '.d-none', '[hidden]',
   '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]',
   'aside[class*="related" i]', 'section[class*="related" i]', 'div[class*="related-products" i]', 'div[class*="related-items" i]',
   'aside[class*="recommend" i]', 'section[class*="recommend" i]', 'div[class*="recommendations" i]', 'div[class*="recommended-products" i]',
@@ -57,9 +61,11 @@ function getPreservedElements($: CheerioAPI, domainConfig?: Partial<RetailerConf
     }
   }
 
+  const noiseSelectorPattern = /(modal|dialog|popup|alertdialog|toc-menu|cross-sell|\.d-none|\[hidden\])/i;
+
   for (const selector of customSelectors) {
-    if (!selector || (selector.startsWith('~') && selector.endsWith('~'))) {
-      continue; // Skip empty selectors and custom regexes
+    if (!selector || (selector.startsWith('~') && selector.endsWith('~')) || noiseSelectorPattern.test(selector)) {
+      continue; // Skip empty selectors, custom regexes, and rogue noise selectors
     }
 
     try {
@@ -161,6 +167,15 @@ export function denoiseDomForExtraction(
 
   // 4. Remove structural noise containers
   $(NOISE_CONTAINERS).each((_, el) => {
+    const tag = (el as any).tagName?.toLowerCase() || (el as any).name?.toLowerCase();
+    if (tag === 'html' || tag === 'body') return; // NEVER remove document root or body
+
+    // Do not remove responsive breakpoint containers visible on desktop (e.g. d-none d-md-block)
+    const classAttr = $(el).attr('class') || '';
+    if (/\bd-none\b/i.test(classAttr) && /\bd-(sm|md|lg|xl|xxl)-(block|inline|flex|grid|table)\b/i.test(classAttr)) {
+      return;
+    }
+
     if (!preservedElements.has(el)) {
       $(el).remove();
     }

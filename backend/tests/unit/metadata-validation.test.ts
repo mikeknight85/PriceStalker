@@ -12,12 +12,24 @@ describe('Product Metadata Utilities', () => {
 
     it('should identify names containing blacklisted phrases', () => {
       expect(isGenericName('Your Cart is Empty')).toBe(true);
+      expect(isGenericName('Cart limit reached')).toBe(true);
+      expect(isGenericName('Account limit reached')).toBe(true);
+      expect(isGenericName('Limited stock available')).toBe(true);
       expect(isGenericName('Notifications Red Dot')).toBe(true);
+      expect(isGenericName('Cart')).toBe(true);
+      expect(isGenericName('Shopping Cart')).toBe(true);
+      expect(isGenericName('Checkout')).toBe(true);
     });
 
     it('should allow valid names', () => {
       expect(isGenericName('Apple iPhone 15 Pro')).toBe(false);
       expect(isGenericName('Sony WH-1000XM5')).toBe(false);
+      expect(isGenericName('HP 67 Black Ink Cartridge')).toBe(false);
+      expect(isGenericName('Cartier Tank Must Watch')).toBe(false);
+      expect(isGenericName('Golf Cart Battery')).toBe(false);
+      expect(isGenericName('Utility Cart')).toBe(false);
+      expect(isGenericName('Folding Shopping Cart Trolley')).toBe(false);
+      expect(isGenericName('Checkout Counter Shelf')).toBe(false);
     });
   });
 

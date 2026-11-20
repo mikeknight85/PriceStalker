@@ -8,9 +8,19 @@ export const GENERIC_NAME_BLACKLIST = [
   'javascript disabled',
   'enable javascript',
   'loading...',
-  'checkout',
-  'cart',
-  'unknown product'
+  'unknown product',
+  // Shopping cart, checkout, and modal alert noise (Issue #279)
+  'cart limit',
+  'account limit',
+  'limit reached',
+  'limited stock available',
+  'cart is empty',
+  'empty cart',
+  'your cart is empty',
+  'add to cart',
+  'added to cart',
+  'proceed to checkout',
+  'go to checkout'
 ];
 
 /**
@@ -18,7 +28,22 @@ export const GENERIC_NAME_BLACKLIST = [
  */
 export function isGenericName(name: string | null | undefined): boolean {
   if (!name) return true;
-  const lowerName = name.toLowerCase();
+  const trimmed = name.trim();
+  if (!trimmed) return true;
+  const lowerName = trimmed.toLowerCase();
+
+  // Reject bare generic terms that cannot be genuine product titles
+  if (
+    lowerName === 'cart' ||
+    lowerName === 'checkout' ||
+    lowerName === 'shopping cart' ||
+    lowerName === 'my cart' ||
+    lowerName === 'view cart' ||
+    lowerName === 'your cart'
+  ) {
+    return true;
+  }
+
   return GENERIC_NAME_BLACKLIST.some(phrase => lowerName.includes(phrase));
 }
 

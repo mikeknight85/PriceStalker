@@ -94,9 +94,19 @@ export function isPlaceholderImageUrl(url: string): boolean {
  * slash is deliberately *not* a rejection: several CDNs serve images from a
  * directory-style endpoint, and rejecting those threw away working images.
  */
+/**
+ * Single-token CDN image transformation parameters (e.g. from fragmented srcsets
+ * or malformed extraction) that must not resolve as relative URL paths (issue #262).
+ */
+const CDN_TRANSFORM_FRAGMENT = /^(c_[a-z0-9_-]+|w_\d+|h_\d+|ar_\d+:\d+|q_[a-z0-9]+|f_[a-z0-9]+|dpr_[\d.]+)$/i;
+
 export function resolveImageUrl(rawValue: string, pageUrl?: string | null): string | null {
   const value = rawValue?.trim();
   if (!value) return null;
+
+  if (CDN_TRANSFORM_FRAGMENT.test(value)) {
+    return null;
+  }
 
   if (UNUSABLE_SCHEMES.some((scheme) => value.toLowerCase().startsWith(scheme))) {
     return null;

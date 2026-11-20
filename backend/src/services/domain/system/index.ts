@@ -21,6 +21,7 @@ export class SystemService {
   getSettings = settingsService.getSettings.bind(settingsService);
   getSetting = settingsService.getSetting.bind(settingsService);
   updateSettings = settingsService.updateSettings.bind(settingsService);
+  resetToDefaults = settingsService.resetToDefaults.bind(settingsService);
   getAISettings = settingsService.getAISettings.bind(settingsService);
   updateAISettings = settingsService.updateAISettings.bind(settingsService);
   refreshGeminiModels = settingsService.refreshGeminiModels.bind(settingsService);

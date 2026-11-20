@@ -90,7 +90,7 @@ router.post('/remap', asyncHandler(async (req: AuthRequest, res: Response) => {
   }
 
   const { acquireHtml } = await import('../../services/scraper/acquisition');
-  const { handleAutoMapping } = await import('../../services/scraper/orchestration/maintenance');
+  const { handleAutoMapping, handleHeuristicAutoMapping } = await import('../../services/scraper/orchestration/maintenance');
 
   const extractionSteps: string[] = [];
   const acquired = await acquireHtml({
@@ -109,7 +109,7 @@ router.post('/remap', asyncHandler(async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const config = await handleAutoMapping({
+  let config = await handleAutoMapping({
     html: acquired.html,
     url,
     domain,
@@ -119,6 +119,20 @@ router.post('/remap', asyncHandler(async (req: AuthRequest, res: Response) => {
     learnedFlags: acquired.learnedFlags || {},
     isRefresh: true,
   });
+
+  if (!config) {
+    extractionSteps.push('AI auto-mapping unavailable or produced no config; falling back to heuristic auto-mapping.');
+    config = await handleHeuristicAutoMapping({
+      html: acquired.html,
+      url,
+      domain,
+      currencyHint: existing.currency_hint || null,
+      localeHint: 'en-US',
+      extractionSteps,
+      learnedFlags: acquired.learnedFlags || {},
+      existingConfig: existing,
+    });
+  }
 
   if (!config) {
     res.status(422).json({

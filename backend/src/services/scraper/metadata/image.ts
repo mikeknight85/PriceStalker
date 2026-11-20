@@ -64,7 +64,10 @@ export interface SrcsetCandidate {
 
 export function parseSrcset(srcsetVal: string): SrcsetCandidate[] {
   if (!srcsetVal) return [];
-  return srcsetVal.split(',').map(entry => {
+  // Split on candidate separators: either a comma preceded by a width/density descriptor (e.g. 1440w, 2x)
+  // or a comma followed by whitespace and a path/protocol start. This prevents splitting commas inside CDN transform paths (issue #262).
+  const entries = srcsetVal.split(/(?<=\b\d+(?:\.\d+)?[wx])\s*,\s*|,\s+(?=[a-zA-Z0-9+.-]+:\/\/|\/|\.\/)/);
+  return entries.map(entry => {
     const trimmed = entry.trim();
     const parts = trimmed.split(/\s+/);
     const url = parts[0];
@@ -225,9 +228,20 @@ export async function extractProductImage(
   const resolvedImageKey = domainConfig?.jsonld_image_key || settings?.jsonld_image_key || 'image';
 
   findInJsonLd($, 'Product', (obj) => {
-    const imgVal = obj[resolvedImageKey];
+    // Support direct property, bracket notation (image[0]), and dot paths (image.url, image[0].contentUrl)
+    let imgVal: any;
+    if (obj[resolvedImageKey] !== undefined) {
+      imgVal = obj[resolvedImageKey];
+    } else {
+      const normalizedPath = resolvedImageKey.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '');
+      imgVal = normalizedPath.split('.').reduce((acc: any, part: string) => (acc && acc[part] !== undefined ? acc[part] : undefined), obj);
+    }
+
     if (imgVal) {
-      const imageUrl = Array.isArray(imgVal) ? imgVal[0] : imgVal;
+      let imageUrl: any = Array.isArray(imgVal) ? imgVal[0] : imgVal;
+      if (imageUrl && typeof imageUrl === 'object') {
+        imageUrl = imageUrl.contentUrl || imageUrl.url || null;
+      }
       if (typeof imageUrl === 'string') {
         // JSON-LD is the worst offender for directory-style and relative values.
         const resolved = resolveImageUrl(imageUrl, pageUrl);
@@ -240,6 +254,14 @@ export async function extractProductImage(
 
   const ogImg = resolveImageUrl($('meta[property="og:image"]').attr('content') || '', pageUrl);
   if (ogImg) result.imageCandidates.push({ value: ogImg, method: 'og:image', confidence: 0.8 });
+
+  const twitterImg = resolveImageUrl(
+    $('meta[name="twitter:image"]').attr('content') ||
+    $('meta[property="twitter:image"]').attr('content') ||
+    '',
+    pageUrl
+  );
+  if (twitterImg) result.imageCandidates.push({ value: twitterImg, method: 'twitter:image', confidence: 0.8 });
 
   $('link[rel="preload"][as="image"]').each((_, el) => {
     processImageElement(el, $, (url) => {

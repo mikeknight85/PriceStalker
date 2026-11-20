@@ -4,6 +4,7 @@ import { RetailerConfig } from '../../../models';
 import { settingsCache } from '../../../utils/cache';
 import { extractRetailerName } from '../extractors/metadata';
 import { extractMetaWithCandidates, findInJsonLd, evaluateMetadataSelectors } from './utils';
+import { isGenericName } from '../../domain/product/utils/metadata';
 
 export async function extractProductTitle(
   $: CheerioAPI,
@@ -25,7 +26,7 @@ export async function extractProductTitle(
   findInJsonLd($, 'Product', (obj) => {
     const val = obj[jsonLdNameKey];
     if (val && typeof val === 'string') {
-      result.nameCandidates?.push({ value: val.trim(), method: 'json-ld', confidence: 0.99 });
+      result.nameCandidates?.push({ value: val.trim(), method: 'json-ld', confidence: 1.0 });
     }
   });
 
@@ -38,10 +39,16 @@ export async function extractProductTitle(
   if (result.nameCandidates.length > 0) {
     const seen = new Set();
     result.nameCandidates = result.nameCandidates
-      .sort((a, b) => b.confidence - a.confidence)
+      .sort((a, b) => {
+        if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+        // Prioritize canonical schema.org Product data over DOM matches on confidence ties (issue #279)
+        if (a.method === 'json-ld' && b.method !== 'json-ld') return -1;
+        if (b.method === 'json-ld' && a.method !== 'json-ld') return 1;
+        return 0;
+      })
       .filter(c => {
         const val = String(c.value || '').trim();
-        if (!val || seen.has(val.toLowerCase())) return false;
+        if (!val || isGenericName(val) || seen.has(val.toLowerCase())) return false;
         seen.add(val.toLowerCase());
         return true;
       });
@@ -51,7 +58,7 @@ export async function extractProductTitle(
 
   if (!result.name) {
     const bestCandidate = result.nameCandidates?.[0];
-    const rawName = String(bestCandidate?.value || pageTitle || '');
+    const rawName = String(bestCandidate?.value || (!isGenericName(pageTitle) ? pageTitle : '') || '');
     
     const retailerResult = await extractRetailerName($, domainConfig || undefined);
     result.retailerName = retailerResult.name;
@@ -65,16 +72,26 @@ export async function extractProductTitle(
           const parts = rawName.split(sep);
           if (parts[parts.length - 1].toLowerCase().includes(retailerName.toLowerCase())) {
             parts.pop();
-            result.name = parts.join(sep).trim();
-            break;
+            const candidate = parts.join(sep).trim();
+            if (!isGenericName(candidate)) {
+              result.name = candidate;
+              break;
+            }
           } else if (parts[0].toLowerCase().includes(retailerName.toLowerCase())) {
             parts.shift();
-            result.name = parts.join(sep).trim();
-            break;
+            const candidate = parts.join(sep).trim();
+            if (!isGenericName(candidate)) {
+              result.name = candidate;
+              break;
+            }
           }
         }
       }
     }
-    if (!result.name) result.name = rawName;
+    if (!result.name && !isGenericName(rawName)) {
+      result.name = rawName;
+    }
+  } else if (isGenericName(result.name)) {
+    result.name = null;
   }
 }

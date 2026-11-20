@@ -292,6 +292,7 @@ export interface RetailerConfig {
   active: boolean;
   created_at: string;
   updated_at: string;
+  re_auto_map?: boolean;
   forceNameRemoval?: boolean;
   skip_denoising?: boolean;
   ai_selectors?: { price?: string[]; image?: string[] } | null;
