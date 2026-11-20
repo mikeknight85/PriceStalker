@@ -25,6 +25,7 @@ describe('SearchService', () => {
     
     vi.mocked(settingsCache.isSearXNGEnabled).mockResolvedValue(true);
     vi.mocked(settingsCache.getSearXNGUrl).mockResolvedValue('https://searxng.test');
+    vi.mocked(settingsCache.getSearXNGEngines).mockResolvedValue(null);
   });
 
   it('should throw error if SearXNG is disabled', async () => {
@@ -98,5 +99,50 @@ describe('SearchService', () => {
     const results = await searchService.search('test');
     expect(results).toHaveLength(1);
     expect(results[0].domain).toBe('ok.com');
+  });
+
+  it('should forward configured engines to SearXNG', async () => {
+    vi.mocked(settingsCache.getSearXNGEngines).mockResolvedValue('brave,startpage,duckduckgo_web');
+    vi.mocked(axios.get).mockResolvedValue({ data: { results: [] } });
+
+    await searchService.search('laptop');
+
+    expect(axios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/search'),
+      expect.objectContaining({
+        params: {
+          q: 'laptop',
+          format: 'json',
+          engines: 'brave,startpage,duckduckgo_web'
+        }
+      })
+    );
+  });
+
+  it('should omit engines parameter when searxng_engines is empty or whitespace', async () => {
+    vi.mocked(settingsCache.getSearXNGEngines).mockResolvedValue('   ');
+    vi.mocked(axios.get).mockResolvedValue({ data: { results: [] } });
+
+    await searchService.search('laptop');
+
+    const callArgs = vi.mocked(axios.get).mock.calls[0];
+    expect(callArgs[1]?.params).toEqual({
+      q: 'laptop',
+      format: 'json'
+    });
+    expect(callArgs[1]?.params).not.toHaveProperty('engines');
+  });
+
+  it('should omit engines parameter when searxng_engines is unset/null', async () => {
+    vi.mocked(settingsCache.getSearXNGEngines).mockResolvedValue(null);
+    vi.mocked(axios.get).mockResolvedValue({ data: { results: [] } });
+
+    await searchService.search('laptop');
+
+    const callArgs = vi.mocked(axios.get).mock.calls[0];
+    expect(callArgs[1]?.params).toEqual({
+      q: 'laptop',
+      format: 'json'
+    });
   });
 });

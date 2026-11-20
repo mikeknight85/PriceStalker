@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Configurable SearXNG search engines in Admin -> Core System Settings. Defaults to inheriting the SearXNG instance's own `settings.yml` active engines without overriding query parameters. Administrators can optionally switch to custom engine selection with interactive tag chips, dynamic quick-add presets (`brave`, `startpage`, `duckduckgo_web`, `google`, `bing`, `qwant`, `mojeek`), and custom engine inputs (#287). Adds migration 030.
+
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added
