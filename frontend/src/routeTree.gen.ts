@@ -42,11 +42,16 @@ import { Route as AuthenticatedAdminDebugRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminAuthRouteImport } from './routes/_authenticated/admin/auth'
 import { Route as AuthenticatedAdminAiRouteImport } from './routes/_authenticated/admin/ai'
 import { Route as AuthenticatedProductsProductIdRouteRouteImport } from './routes/_authenticated/products/$productId/route'
+import { Route as AuthenticatedItemsItemIdRouteRouteImport } from './routes/_authenticated/items/$itemId/route'
 import { Route as AuthenticatedProductsProductIdIndexRouteImport } from './routes/_authenticated/products/$productId/index'
+import { Route as AuthenticatedItemsItemIdIndexRouteImport } from './routes/_authenticated/items/$itemId/index'
 import { Route as AuthenticatedProductsProductIdStockRouteImport } from './routes/_authenticated/products/$productId/stock'
 import { Route as AuthenticatedProductsProductIdSettingsRouteImport } from './routes/_authenticated/products/$productId/settings'
 import { Route as AuthenticatedProductsProductIdNotificationsRouteImport } from './routes/_authenticated/products/$productId/notifications'
 import { Route as AuthenticatedProductsProductIdHistoryRouteImport } from './routes/_authenticated/products/$productId/history'
+import { Route as AuthenticatedItemsItemIdStockRouteImport } from './routes/_authenticated/items/$itemId/stock'
+import { Route as AuthenticatedItemsItemIdNotificationsRouteImport } from './routes/_authenticated/items/$itemId/notifications'
+import { Route as AuthenticatedItemsItemIdHistoryRouteImport } from './routes/_authenticated/items/$itemId/history'
 
 const PublicRouteRoute = PublicRouteRouteImport.update({
   id: '/_public',
@@ -228,11 +233,23 @@ const AuthenticatedProductsProductIdRouteRoute =
     path: '/$productId',
     getParentRoute: () => AuthenticatedProductsRouteRoute,
   } as any)
+const AuthenticatedItemsItemIdRouteRoute =
+  AuthenticatedItemsItemIdRouteRouteImport.update({
+    id: '/items/$itemId',
+    path: '/items/$itemId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProductsProductIdIndexRoute =
   AuthenticatedProductsProductIdIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
+  } as any)
+const AuthenticatedItemsItemIdIndexRoute =
+  AuthenticatedItemsItemIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedItemsItemIdRouteRoute,
   } as any)
 const AuthenticatedProductsProductIdStockRoute =
   AuthenticatedProductsProductIdStockRouteImport.update({
@@ -258,6 +275,24 @@ const AuthenticatedProductsProductIdHistoryRoute =
     path: '/history',
     getParentRoute: () => AuthenticatedProductsProductIdRouteRoute,
   } as any)
+const AuthenticatedItemsItemIdStockRoute =
+  AuthenticatedItemsItemIdStockRouteImport.update({
+    id: '/stock',
+    path: '/stock',
+    getParentRoute: () => AuthenticatedItemsItemIdRouteRoute,
+  } as any)
+const AuthenticatedItemsItemIdNotificationsRoute =
+  AuthenticatedItemsItemIdNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedItemsItemIdRouteRoute,
+  } as any)
+const AuthenticatedItemsItemIdHistoryRoute =
+  AuthenticatedItemsItemIdHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedItemsItemIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -271,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof PublicRegisterRoute
   '/reset-password': typeof PublicResetPasswordRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
+  '/items/$itemId': typeof AuthenticatedItemsItemIdRouteRouteWithChildren
   '/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/auth': typeof AuthenticatedAdminAuthRoute
@@ -291,10 +327,14 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/products/': typeof AuthenticatedProductsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/items/$itemId/history': typeof AuthenticatedItemsItemIdHistoryRoute
+  '/items/$itemId/notifications': typeof AuthenticatedItemsItemIdNotificationsRoute
+  '/items/$itemId/stock': typeof AuthenticatedItemsItemIdStockRoute
   '/products/$productId/history': typeof AuthenticatedProductsProductIdHistoryRoute
   '/products/$productId/notifications': typeof AuthenticatedProductsProductIdNotificationsRoute
   '/products/$productId/settings': typeof AuthenticatedProductsProductIdSettingsRoute
   '/products/$productId/stock': typeof AuthenticatedProductsProductIdStockRoute
+  '/items/$itemId/': typeof AuthenticatedItemsItemIdIndexRoute
   '/products/$productId/': typeof AuthenticatedProductsProductIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -325,10 +365,14 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/products': typeof AuthenticatedProductsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/items/$itemId/history': typeof AuthenticatedItemsItemIdHistoryRoute
+  '/items/$itemId/notifications': typeof AuthenticatedItemsItemIdNotificationsRoute
+  '/items/$itemId/stock': typeof AuthenticatedItemsItemIdStockRoute
   '/products/$productId/history': typeof AuthenticatedProductsProductIdHistoryRoute
   '/products/$productId/notifications': typeof AuthenticatedProductsProductIdNotificationsRoute
   '/products/$productId/settings': typeof AuthenticatedProductsProductIdSettingsRoute
   '/products/$productId/stock': typeof AuthenticatedProductsProductIdStockRoute
+  '/items/$itemId': typeof AuthenticatedItemsItemIdIndexRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdIndexRoute
 }
 export interface FileRoutesById {
@@ -346,6 +390,7 @@ export interface FileRoutesById {
   '/_public/register': typeof PublicRegisterRoute
   '/_public/reset-password': typeof PublicResetPasswordRoute
   '/auth/sso-complete': typeof AuthSsoCompleteRoute
+  '/_authenticated/items/$itemId': typeof AuthenticatedItemsItemIdRouteRouteWithChildren
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRouteRouteWithChildren
   '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
   '/_authenticated/admin/auth': typeof AuthenticatedAdminAuthRoute
@@ -366,10 +411,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/items/$itemId/history': typeof AuthenticatedItemsItemIdHistoryRoute
+  '/_authenticated/items/$itemId/notifications': typeof AuthenticatedItemsItemIdNotificationsRoute
+  '/_authenticated/items/$itemId/stock': typeof AuthenticatedItemsItemIdStockRoute
   '/_authenticated/products/$productId/history': typeof AuthenticatedProductsProductIdHistoryRoute
   '/_authenticated/products/$productId/notifications': typeof AuthenticatedProductsProductIdNotificationsRoute
   '/_authenticated/products/$productId/settings': typeof AuthenticatedProductsProductIdSettingsRoute
   '/_authenticated/products/$productId/stock': typeof AuthenticatedProductsProductIdStockRoute
+  '/_authenticated/items/$itemId/': typeof AuthenticatedItemsItemIdIndexRoute
   '/_authenticated/products/$productId/': typeof AuthenticatedProductsProductIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -386,6 +435,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/auth/sso-complete'
+    | '/items/$itemId'
     | '/products/$productId'
     | '/admin/ai'
     | '/admin/auth'
@@ -406,10 +456,14 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/products/'
     | '/settings/'
+    | '/items/$itemId/history'
+    | '/items/$itemId/notifications'
+    | '/items/$itemId/stock'
     | '/products/$productId/history'
     | '/products/$productId/notifications'
     | '/products/$productId/settings'
     | '/products/$productId/stock'
+    | '/items/$itemId/'
     | '/products/$productId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -440,10 +494,14 @@ export interface FileRouteTypes {
     | '/admin'
     | '/products'
     | '/settings'
+    | '/items/$itemId/history'
+    | '/items/$itemId/notifications'
+    | '/items/$itemId/stock'
     | '/products/$productId/history'
     | '/products/$productId/notifications'
     | '/products/$productId/settings'
     | '/products/$productId/stock'
+    | '/items/$itemId'
     | '/products/$productId'
   id:
     | '__root__'
@@ -460,6 +518,7 @@ export interface FileRouteTypes {
     | '/_public/register'
     | '/_public/reset-password'
     | '/auth/sso-complete'
+    | '/_authenticated/items/$itemId'
     | '/_authenticated/products/$productId'
     | '/_authenticated/admin/ai'
     | '/_authenticated/admin/auth'
@@ -480,10 +539,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/products/'
     | '/_authenticated/settings/'
+    | '/_authenticated/items/$itemId/history'
+    | '/_authenticated/items/$itemId/notifications'
+    | '/_authenticated/items/$itemId/stock'
     | '/_authenticated/products/$productId/history'
     | '/_authenticated/products/$productId/notifications'
     | '/_authenticated/products/$productId/settings'
     | '/_authenticated/products/$productId/stock'
+    | '/_authenticated/items/$itemId/'
     | '/_authenticated/products/$productId/'
   fileRoutesById: FileRoutesById
 }
@@ -727,12 +790,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsProductIdRouteRouteImport
       parentRoute: typeof AuthenticatedProductsRouteRoute
     }
+    '/_authenticated/items/$itemId': {
+      id: '/_authenticated/items/$itemId'
+      path: '/items/$itemId'
+      fullPath: '/items/$itemId'
+      preLoaderRoute: typeof AuthenticatedItemsItemIdRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/products/$productId/': {
       id: '/_authenticated/products/$productId/'
       path: '/'
       fullPath: '/products/$productId/'
       preLoaderRoute: typeof AuthenticatedProductsProductIdIndexRouteImport
       parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
+    '/_authenticated/items/$itemId/': {
+      id: '/_authenticated/items/$itemId/'
+      path: '/'
+      fullPath: '/items/$itemId/'
+      preLoaderRoute: typeof AuthenticatedItemsItemIdIndexRouteImport
+      parentRoute: typeof AuthenticatedItemsItemIdRouteRoute
     }
     '/_authenticated/products/$productId/stock': {
       id: '/_authenticated/products/$productId/stock'
@@ -761,6 +838,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/products/$productId/history'
       preLoaderRoute: typeof AuthenticatedProductsProductIdHistoryRouteImport
       parentRoute: typeof AuthenticatedProductsProductIdRouteRoute
+    }
+    '/_authenticated/items/$itemId/stock': {
+      id: '/_authenticated/items/$itemId/stock'
+      path: '/stock'
+      fullPath: '/items/$itemId/stock'
+      preLoaderRoute: typeof AuthenticatedItemsItemIdStockRouteImport
+      parentRoute: typeof AuthenticatedItemsItemIdRouteRoute
+    }
+    '/_authenticated/items/$itemId/notifications': {
+      id: '/_authenticated/items/$itemId/notifications'
+      path: '/notifications'
+      fullPath: '/items/$itemId/notifications'
+      preLoaderRoute: typeof AuthenticatedItemsItemIdNotificationsRouteImport
+      parentRoute: typeof AuthenticatedItemsItemIdRouteRoute
+    }
+    '/_authenticated/items/$itemId/history': {
+      id: '/_authenticated/items/$itemId/history'
+      path: '/history'
+      fullPath: '/items/$itemId/history'
+      preLoaderRoute: typeof AuthenticatedItemsItemIdHistoryRouteImport
+      parentRoute: typeof AuthenticatedItemsItemIdRouteRoute
     }
   }
 }
@@ -870,12 +968,34 @@ const AuthenticatedSettingsRouteRouteWithChildren =
     AuthenticatedSettingsRouteRouteChildren,
   )
 
+interface AuthenticatedItemsItemIdRouteRouteChildren {
+  AuthenticatedItemsItemIdHistoryRoute: typeof AuthenticatedItemsItemIdHistoryRoute
+  AuthenticatedItemsItemIdNotificationsRoute: typeof AuthenticatedItemsItemIdNotificationsRoute
+  AuthenticatedItemsItemIdStockRoute: typeof AuthenticatedItemsItemIdStockRoute
+  AuthenticatedItemsItemIdIndexRoute: typeof AuthenticatedItemsItemIdIndexRoute
+}
+
+const AuthenticatedItemsItemIdRouteRouteChildren: AuthenticatedItemsItemIdRouteRouteChildren =
+  {
+    AuthenticatedItemsItemIdHistoryRoute: AuthenticatedItemsItemIdHistoryRoute,
+    AuthenticatedItemsItemIdNotificationsRoute:
+      AuthenticatedItemsItemIdNotificationsRoute,
+    AuthenticatedItemsItemIdStockRoute: AuthenticatedItemsItemIdStockRoute,
+    AuthenticatedItemsItemIdIndexRoute: AuthenticatedItemsItemIdIndexRoute,
+  }
+
+const AuthenticatedItemsItemIdRouteRouteWithChildren =
+  AuthenticatedItemsItemIdRouteRoute._addFileChildren(
+    AuthenticatedItemsItemIdRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedProductsRouteRoute: typeof AuthenticatedProductsRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedItemsItemIdRouteRoute: typeof AuthenticatedItemsItemIdRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -884,6 +1004,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedItemsItemIdRouteRoute:
+    AuthenticatedItemsItemIdRouteRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =

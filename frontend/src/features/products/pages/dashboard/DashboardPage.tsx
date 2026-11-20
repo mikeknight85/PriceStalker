@@ -73,7 +73,13 @@ const Dashboard: React.FC = () => {
   } = useDashboardState();
 
   const navigate = useNavigate();
-  const { tag } = productsRoute.useSearch();
+  const { tag, view: queryView } = productsRoute.useSearch();
+
+  useEffect(() => {
+    if (queryView && queryView !== view) {
+      changeView(queryView);
+    }
+  }, [queryView, view]);
 
   useEffect(() => {
     if (tag !== undefined && tag !== activeTag) {

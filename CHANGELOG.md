@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Combined Product View (`/items/$itemId`): dedicated canonical product page
+  showing side-by-side price aggregates, dashboard-styled store listing cards
+  with per-store sparklines and status badges, a multi-store price history
+  comparison chart with store toggling, a synchronized multi-store stock
+  availability swimlane timeline, a live store stock comparison matrix, and
+  item-level alert settings.
+- Direct "Track New Store" and "Link Existing Store" actions on the Combined
+  Product View to attach multiple retailer URLs to a canonical product.
+- Navigation from the dashboard's "By product" view directly to the Combined
+  Product View, preserving view state when returning to the dashboard, and
+  cross-links from single-store listing pages.
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added

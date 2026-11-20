@@ -16,7 +16,8 @@ export const productLifecycleRepository = {
     refreshInterval: number = 43200,
     stockStatus: StockStatus = 'unknown',
     aiStatus: AIStatus = null,
-    category: string | null = null
+    category: string | null = null,
+    existingItemId?: number
   ): Promise<Product> => {
     const jitter = getSmartJitter(refreshInterval);
     const initialDelaySeconds = Math.max(60, Math.floor(refreshInterval / 2) + jitter);
@@ -30,19 +31,35 @@ export const productLifecycleRepository = {
     try {
       await client.query('BEGIN');
 
-      const item = await itemRepository.create(
-        userId,
-        (name && name.trim()) || url,
-        imageUrl,
-        category,
-        client
-      );
+      let targetItemId: number;
+      let isPrimary = false;
+
+      if (existingItemId) {
+        const item = await itemRepository.findById(existingItemId, userId, client);
+        if (!item) {
+          const err = new Error('Item not found');
+          (err as any).statusCode = 404;
+          throw err;
+        }
+        targetItemId = item.id;
+        isPrimary = false;
+      } else {
+        const item = await itemRepository.create(
+          userId,
+          (name && name.trim()) || url,
+          imageUrl,
+          category,
+          client
+        );
+        targetItemId = item.id;
+        isPrimary = true;
+      }
 
       const result = await client.query(
         `INSERT INTO products (user_id, url, name, image_url, refresh_interval, stock_status, ai_status, next_check_at, category, item_id, is_primary)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP + ($8 || ' seconds')::interval, $9, $10, true)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP + ($8 || ' seconds')::interval, $9, $10, $11)
          RETURNING *`,
-        [userId, url, name, imageUrl, refreshInterval, stockStatus, aiStatus, initialDelaySeconds, category, item.id]
+        [userId, url, name, imageUrl, refreshInterval, stockStatus, aiStatus, initialDelaySeconds, category, targetItemId, isPrimary]
       );
 
       await client.query('COMMIT');

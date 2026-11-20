@@ -21,7 +21,12 @@ interface ItemCardProps {
 const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
   return (
     <div className="item-card">
-      <div className="item-card-head">
+      <Link
+        to="/items/$itemId"
+        params={{ itemId: String(item.id) }}
+        className="item-card-head item-card-head-link"
+        title="View combined product"
+      >
         {item.image_url ? (
           <img className="item-card-image" src={item.image_url} alt="" loading="lazy" />
         ) : (
@@ -68,7 +73,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
             <div className="item-card-price-absent">No price yet</div>
           )}
         </div>
-      </div>
+      </Link>
 
       {/*
         Said out loud rather than hidden: a card that silently compared 2 of 4

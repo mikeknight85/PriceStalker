@@ -29,7 +29,8 @@ export const ITEM_ALERT_COLUMNS = `
  */
 export const ITEM_DISPLAY_COLUMNS = `
               i.name      AS item_name,
-              i.image_url AS item_image_url`;
+              i.image_url AS item_image_url,
+              i.category  AS item_category`;
 
 /** The join those columns require. */
 export const ITEM_ALERT_JOIN = `LEFT JOIN items i ON i.id = p.item_id`;

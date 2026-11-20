@@ -15,6 +15,37 @@ export const ProductService = {
   getAll: (options?: RequestOptions) => api.get<Product[]>('/products', options),
   /** The same listings, grouped into items (issue #143). */
   getItems: (options?: RequestOptions) => api.get<ItemWithListings[]>('/products/items', options),
+  getItemById: (id: number, options?: RequestOptions) => api.get<ItemWithListings>(`/products/items/${id}`, options),
+  updateItem: (id: number, data: Partial<ItemWithListings>) => api.put<ItemWithListings>(`/products/items/${id}`, data),
+  getItemPriceHistory: (id: number, days?: number, options?: RequestOptions) =>
+    api.get<{
+      item: ItemWithListings;
+      series: Array<{
+        productId: number;
+        retailerName: string;
+        url: string;
+        currency: string;
+        prices: PriceHistory[];
+      }>;
+    }>(`/products/items/${id}/history`, {
+      ...options,
+      params: { ...options?.params, ...(days ? { days } : {}) },
+    }),
+  getItemStockHistory: (id: number, days?: number, options?: RequestOptions) =>
+    api.get<{
+      item: ItemWithListings;
+      series: Array<{
+        productId: number;
+        retailerName: string;
+        url: string;
+        stockStatus: string;
+        history: ProductSourceHistory[];
+        stats: StockStatusStats;
+      }>;
+    }>(`/products/items/${id}/stock`, {
+      ...options,
+      params: { ...options?.params, ...(days ? { days } : {}) },
+    }),
 
   /**
    * Links a store you already track to another product -- "these two are the
@@ -51,7 +82,8 @@ export const ProductService = {
     imageUrl?: string | null,
     stockStatus?: string | null,
     html?: string | null,
-    selector?: string | null
+    selector?: string | null,
+    itemId?: number
   }) => api.post<CreateProductResponse>('/products', {
     url: data.url,
     refresh_interval: data.refreshInterval,
@@ -64,6 +96,7 @@ export const ProductService = {
     stockStatus: data.stockStatus,
     html: data.html,
     selector: data.selector,
+    itemId: data.itemId,
   }),
 
   scan: (id: number) => api.post<PriceReviewResponse>(`/products/${id}/scan`),

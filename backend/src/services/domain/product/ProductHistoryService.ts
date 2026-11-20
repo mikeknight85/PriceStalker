@@ -9,6 +9,7 @@ import {
 } from '../../../models';
 import { syncUserCategories } from './utils';
 import { groupIntoItems } from './utils/group-into-items';
+import { hostOf } from './repositories/store-context';
 import { logger } from '../../../utils/system/logger';
 
 export class ProductHistoryService {
@@ -29,6 +30,82 @@ export class ProductHistoryService {
       userRepository.findById(userId),
     ]);
     return groupIntoItems(products, user?.currency ?? null);
+  }
+
+  async getUserItem(itemId: number, userId: number): Promise<ItemWithListings | null> {
+    const items = await this.getUserItems(userId);
+    return items.find(item => item.id === itemId) ?? null;
+  }
+
+  async getItemPriceHistory(itemId: number, userId: number, days?: number) {
+    const item = await this.getUserItem(itemId, userId);
+    if (!item) return null;
+
+    const series = await Promise.all(
+      item.listings.map(async (listing) => {
+        const prices = await priceHistoryRepository.findByProductId(listing.id, days);
+        return {
+          productId: listing.id,
+          retailerName: listing.retailer_name || hostOf(listing.url) || 'Store',
+          url: listing.url,
+          currency: listing.currency || 'USD',
+          prices,
+        };
+      })
+    );
+
+    return { item, series };
+  }
+
+  async getItemStockHistory(itemId: number, userId: number, days: number = 30) {
+    const item = await this.getUserItem(itemId, userId);
+    if (!item) return null;
+
+    const series = await Promise.all(
+      item.listings.map(async (listing) => {
+        let history = await stockHistoryRepository.getByProductId(listing.id, days);
+        let stats = await stockHistoryRepository.getStats(listing.id, days);
+
+        if (history.length === 0 && listing.stock_status) {
+          const startOfPeriod = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+          const createdDate = listing.created_at ? new Date(listing.created_at) : startOfPeriod;
+
+          const syntheticEntry = {
+            id: 0,
+            product_id: listing.id,
+            status: listing.stock_status,
+            changed_at: createdDate.toISOString(),
+          };
+
+          history = [syntheticEntry as any];
+
+          const isAvailable = listing.stock_status === 'in_stock' ||
+                            listing.stock_status === 'pre_order' ||
+                            listing.stock_status === 'member_only';
+          const daysInStatus = Math.max(0, Math.floor((Date.now() - createdDate.getTime()) / (24 * 60 * 60 * 1000)));
+
+          stats = {
+            availability_percent: isAvailable ? 100 : 0,
+            outage_count: isAvailable ? 0 : 1,
+            avg_outage_days: null,
+            longest_outage_days: null,
+            current_status: listing.stock_status,
+            days_in_current_status: daysInStatus
+          };
+        }
+
+        return {
+          productId: listing.id,
+          retailerName: listing.retailer_name || hostOf(listing.url) || 'Store',
+          url: listing.url,
+          stockStatus: listing.stock_status,
+          history,
+          stats,
+        };
+      })
+    );
+
+    return { item, series };
   }
 
   async getProduct(productId: number, userId: number, asAdmin = false): Promise<ProductWithLatestPrice | null> {
