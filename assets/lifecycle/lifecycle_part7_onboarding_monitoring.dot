@@ -9,14 +9,16 @@ digraph LifecyclePart7 {
   Active [label="Create product\nstart scheduled monitoring", fillcolor="#059669", fontcolor="#ffffff"]
   Review [label="No product row yet\nreturn review candidates", fillcolor="#db2777", fontcolor="#ffffff"]
   Confirm [label="User confirms candidate\ncreate and persist product", fillcolor="#db2777", fontcolor="#ffffff"]
-  Monitor [label="Active monitoring\nnext_check_at due", fillcolor="#059669", fontcolor="#ffffff"]
+  Monitor [label="Active monitoring\nnext_check_at due\n(max 3 concurrent; 30s domain gap)", fillcolor="#059669", fontcolor="#ffffff"]
   OOS [label="Stock transitions\nin_stock / out_of_stock / pre_order / member_only"]
-  Gone [label="Page-gone result", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  Gone [label="Result classification", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
   Streak [label="Three consecutive page-gone results?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
-  Paused [label="not_available\nchecking_paused=true", fillcolor="#dc2626", fontcolor="#ffffff"]
-  Manual [label="Manual/forced refresh\nwhile paused", fillcolor="#92400e", fontcolor="#ffffff"]
-  Restored [label="Page available again\nunpause and resume monitoring", fillcolor="#059669", fontcolor="#ffffff"]
-  Unknown [label="Unknown/transient error\npreserve known state; next due check"]
+  Paused [label="not_available\nauto_paused=true\nchecking_paused=true", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Manual [label="Manual/forced refresh\nwhile auto-paused", fillcolor="#92400e", fontcolor="#ffffff"]
+  Restored [label="Page available again\nclear auto-pause, resume monitoring\nnotify product restored", fillcolor="#059669", fontcolor="#ffffff"]
+  TransientStreak [label="Six consecutive transport failures?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
+  TransientNotify [label="Notify retailer unreachable\n(preserves stock status; continues checks)", fillcolor="#92400e", fontcolor="#ffffff"]
+  Unknown [label="Transient error below threshold\npreserve known state; next due check"]
 
   URL -> Discovery -> Clear
   Clear -> Active [label="yes"]
@@ -25,13 +27,16 @@ digraph LifecyclePart7 {
   Active -> Monitor
   Monitor -> OOS
   OOS -> Gone
-  Gone -> Streak [label="not_available"]
-  Gone -> Unknown [label="network/unknown"]
-  Streak -> Monitor [label="below threshold"]
-  Streak -> Paused [label="threshold reached"]
+  Gone -> Streak [label="definitive 404/gone"]
+  Gone -> TransientStreak [label="transient transport error"]
+  Streak -> Monitor [label="below threshold (<3)"]
+  Streak -> Paused [label="threshold reached (3)"]
+  TransientStreak -> TransientNotify [label="threshold reached (6)"]
+  TransientStreak -> Unknown [label="below threshold (<6)"]
+  TransientNotify -> Monitor
+  Unknown -> Monitor
   Paused -> Manual
   Manual -> Restored [label="available"]
   Restored -> Monitor
   Manual -> Paused [label="still unavailable"]
-  Unknown -> Monitor
 }

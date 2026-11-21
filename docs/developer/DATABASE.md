@@ -13,11 +13,12 @@ PriceStalker uses **PostgreSQL** as its absolute source of truth. All domain con
 
 ```mermaid
 erDiagram
- users ||--o{ products : tracks
+ users ||--o{ items : tracks
  users ||--o{ user_memberships : has
+ items ||--o{ products : lists
+ items ||--o{ notification_history : triggers
  products ||--o{ price_history : logs
  products ||--o{ stock_status_history : logs
- products ||--o{ notification_history : triggers
  retailer_configs ||--|| user_memberships : resolves
 ```
 

@@ -1,7 +1,7 @@
 digraph PriceStalkerProductLifecycle {
     // Graph-level styling
     graph [
-        label="PriceStalker Scrape Engine & Product Monitoring Overview (v2.2.0-beta.1)",
+        label="PriceStalker Scrape Engine & Product Monitoring Overview (v2.2.0-beta.3)",
         labelloc="t",
         fontname="Segoe UI, Arial, sans-serif",
         fontsize=22,
@@ -178,65 +178,66 @@ digraph PriceStalkerProductLifecycle {
         style="dashed,rounded,filled";
         bgcolor="#1a0e08";
 
-        Run_Consensus [label="findPriceConsensus(candidates)\n(Stage A: method short-circuit → Stage B: weighted)"];
+        Run_Consensus [label="runConsensusPhase(options, result)\n(Secondary split → Preference → Priority → Weighted)"];
+        Secondary_Prices [label="Separate Member & Original Prices\n(memberPrice / originalPrice)\nNever standard price; RRP sanity checked"];
 
-        // Stage A
-        subgraph cluster_stageA {
-            label="Stage A — Method Short-Circuit";
+        // Selection & Priority
+        subgraph cluster_priority {
+            label="Selection & Strict Priority";
             color="#92400e";
             fontcolor="#fbbf24";
             style="rounded,filled";
             bgcolor="#1f1206";
 
-            Deal_Check    [label="≥2 deal-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-            Member_Check  [label="≥2 member-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-            Pre_Check     [label="≥2 pre-order-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-            Orig_Check    [label="≥2 original-price agree?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Pref_Check    [label="Saved Troubleshoot Price preference?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Deal_Check    [label="Any deal-price candidates?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Pre_Check     [label="Any pre-order candidates?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
         }
 
-        // Stage B
+        // Weighted fallback
         subgraph cluster_stageB {
-            label="Stage B — Weighted Arbitration (Fallback)";
+            label="Weighted Standard Arbitration (Fallback)";
             color="#92400e";
             fontcolor="#fbbf24";
             style="rounded,filled";
             bgcolor="#1f1206";
 
-            Weighted_Arb  [label="Group by (method + selector)\nAccumulate weight × count\nexpert-*=5.0  json-ld=2.0\ncustom-regex=1.6  custom-css=1.5\ngeneric-css=0.2"];
+            Weighted_Arb  [label="Group by (method + selector)\nAccumulate weight per distinct source:\nexpert-*=5.0  json-ld=2.0\ncustom-regex=1.6  custom-css=1.5\ngeneric-css=0.2"];
             Tie_Break     [label="Tie-break:\nhighest confidence → lowest price", fillcolor="#92400e", fontcolor="#fbbf24"];
         }
 
-        Has_Consensus  [label="Consensus Reached?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Has_Consensus  [label="Consensus Reached?\n(clear winner without tie)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Arb_Fallback   [label="Arbitration Fallback:\n1. AI arbitration\n2. Match anchor price\n3. Highest confidence candidate", fillcolor="#92400e", fontcolor="#ffffff"];
 
         // OOS Guardrails
         subgraph cluster_oos {
-            label="OOS Guardrails (if product out_of_stock)";
+            label="OOS Guardrails (if product out_of_stock / not_available)";
             color="#7c2d12";
             fontcolor="#fca5a5";
             style="rounded,filled";
             bgcolor="#1c0d0d";
 
-            OOS_Check     [label="Stock = out_of_stock?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            OOS_Check     [label="Stock = out_of_stock or not_available?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
             Solo_JSONLD   [label="Single JSON-LD, no corroboration?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-            Low_Conf      [label="Score < 0.85 & generic method?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-            Anchor_Drift  [label="Price < 50% of anchorPrice?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-            Nullify_Price [label="Nullify price → null\nneedsReview = true", fillcolor="#dc2626", fontcolor="#ffffff"];
+            Low_Conf      [label="Low-confidence generic method?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Anchor_Drift  [label="Price < 50% or > 250% of anchorPrice?", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+            Nullify_Price [label="Nullify price → null\nneedsReview = true (oos_guardrail)", fillcolor="#dc2626", fontcolor="#ffffff"];
         }
     }
 
-    Run_Consensus -> Deal_Check;
-    Deal_Check    -> Has_Consensus [label="Yes → deal wins"];
-    Deal_Check    -> Member_Check  [label="No"];
-    Member_Check  -> Has_Consensus [label="Yes → member wins"];
-    Member_Check  -> Pre_Check     [label="No"];
-    Pre_Check     -> Has_Consensus [label="Yes → pre-order wins"];
-    Pre_Check     -> Orig_Check    [label="No"];
-    Orig_Check    -> Has_Consensus [label="Yes → original wins"];
-    Orig_Check    -> Weighted_Arb  [label="No → weighted fallback"];
+    Run_Consensus -> Secondary_Prices -> Pref_Check;
+    Pref_Check    -> Has_Consensus [label="Matched → preference wins"];
+    Pref_Check    -> Deal_Check    [label="No match / none"];
+    Deal_Check    -> Has_Consensus [label="Yes → deal priority"];
+    Deal_Check    -> Pre_Check     [label="No"];
+    Pre_Check     -> Has_Consensus [label="Yes → pre-order priority"];
+    Pre_Check     -> Weighted_Arb  [label="No → weighted fallback"];
     Weighted_Arb  -> Tie_Break -> Has_Consensus;
 
     Has_Consensus -> OOS_Check     [label="Yes"];
-    Has_Consensus -> Set_Review    [label="No (tie/no candidates)"];
+    Has_Consensus -> Arb_Fallback  [label="No (tie/split)"];
+    Arb_Fallback  -> Set_Review    [label="needsReview = true"];
+    Arb_Fallback  -> OOS_Check     [label="price resolved"];
 
     OOS_Check     -> Solo_JSONLD   [label="Yes (OOS)"];
     OOS_Check     -> AI_Verify_Check [label="No (in_stock)"];
@@ -244,7 +245,7 @@ digraph PriceStalkerProductLifecycle {
     Solo_JSONLD   -> Low_Conf      [label="No"];
     Low_Conf      -> Nullify_Price [label="Yes"];
     Low_Conf      -> Anchor_Drift  [label="No"];
-    Anchor_Drift  -> Nullify_Price [label="Yes (>50% drift)"];
+    Anchor_Drift  -> Nullify_Price [label="Yes (>50% downward or >250% upward drift)"];
     Anchor_Drift  -> AI_Verify_Check [label="No (within range)"];
     Nullify_Price -> Set_Review;
 
@@ -318,14 +319,16 @@ digraph PriceStalkerProductLifecycle {
         style="dashed,rounded,filled";
         bgcolor="#041a0c";
 
-        Scheduler      [label="Scheduler\nDue by next_check_at\n(max 3 concurrent; jitter)", fillcolor="#059669", fontcolor="#ffffff"];
-        Compare_State  [label="Compare persisted result\n(price + stock transitions)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-        Notify_Events  [label="Notification events\n(price / target / stock / unavailable)", fillcolor="#059669", fontcolor="#ffffff"];
-        Page_Gone      [label="Page-gone result?\n(three consecutive threshold)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
-        Pause_Product  [label="checking_paused = true\nstock_status = not_available", fillcolor="#dc2626", fontcolor="#ffffff"];
-        Alert_User     [label="Unavailable notification\n(reason should identify failure)", fillcolor="#dc2626", fontcolor="#ffffff"];
-        Unknown_Result [label="Generic acquisition error\nPreserve known status; next due check", fillcolor="#92400e", fontcolor="#ffffff"];
-        Backoff        [label="Internal HTTP retry only\nNo product-level exponential backoff"];
+        Scheduler       [label="Scheduler\nDue by next_check_at\n(max 3 concurrent; 30s domain gap)", fillcolor="#059669", fontcolor="#ffffff"];
+        Compare_State   [label="Compare persisted result\n(price + stock transitions)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Notify_Events   [label="Notification events\n(price / target / stock / restored / unavailable)", fillcolor="#059669", fontcolor="#ffffff"];
+        Page_Gone       [label="Page-gone result?\n(three consecutive threshold)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Pause_Product   [label="checking_paused = true\nauto_paused = true\nstock_status = not_available", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Alert_User      [label="Unavailable notification\n(reason identifies failure)", fillcolor="#dc2626", fontcolor="#ffffff"];
+        Transport_Fail  [label="Transient transport error?\n(streak of six threshold)", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"];
+        Alert_Unreach   [label="Retailer unreachable alert\n(preserves stock status; continues checks)", fillcolor="#92400e", fontcolor="#ffffff"];
+        Unknown_Result  [label="Transient error below streak\nPreserve known status; next due check", fillcolor="#92400e", fontcolor="#ffffff"];
+        Backoff         [label="Internal HTTP retry only\nNo product-level exponential backoff"];
     }
 
     Active_Track   -> Scheduler;
@@ -333,10 +336,13 @@ digraph PriceStalkerProductLifecycle {
     Scheduler      -> Compare_State [label="Refresh result"];
     Compare_State  -> Notify_Events [label="Eligible transition"];
     Compare_State  -> Page_Gone [label="not_available"];
-    Page_Gone      -> Pause_Product [label="Threshold reached"];
-    Page_Gone      -> Active_Track [label="Below threshold; retain prior status"];
+    Page_Gone      -> Pause_Product [label="Streak = 3"];
+    Page_Gone      -> Active_Track [label="Streak < 3; retain status"];
     Pause_Product  -> Alert_User;
-    Compare_State  -> Unknown_Result [label="Generic error"];
+    Compare_State  -> Transport_Fail [label="Transport error"];
+    Transport_Fail -> Alert_Unreach [label="Streak = 6"];
+    Transport_Fail -> Unknown_Result [label="Streak < 6"];
+    Alert_Unreach  -> Backoff;
     Unknown_Result -> Backoff;
     Backoff        -> Scheduler [label="Next due check"];
 }
