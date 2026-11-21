@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Support Bearer token authentication in `NtfyProvider` when only an access token
+  is configured without a username (#258).
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added

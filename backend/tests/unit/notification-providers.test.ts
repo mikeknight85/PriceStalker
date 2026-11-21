@@ -493,3 +493,30 @@ describe('Telegram and product names containing markup characters', () => {
     expect((post.mock.calls[0][1] as any).parse_mode).toBe('HTML');
   });
 });
+
+describe('ntfy authentication', () => {
+  it('sends Basic auth when both username and password are provided', async () => {
+    await new NtfyProvider('topic', null, 'alice', 'secret', null).send(base);
+    const headers = post.mock.calls[0][2]?.headers;
+    const expectedAuth = `Basic ${Buffer.from('alice:secret').toString('base64')}`;
+    expect(headers?.Authorization).toBe(expectedAuth);
+  });
+
+  it('sends Bearer token when only password / access token is provided', async () => {
+    await new NtfyProvider('topic', null, null, 'tk_12345', null).send(base);
+    const headers = post.mock.calls[0][2]?.headers;
+    expect(headers?.Authorization).toBe('Bearer tk_12345');
+  });
+
+  it('sends Bearer token when username is an empty string', async () => {
+    await new NtfyProvider('topic', null, '   ', 'tk_12345', null).send(base);
+    const headers = post.mock.calls[0][2]?.headers;
+    expect(headers?.Authorization).toBe('Bearer tk_12345');
+  });
+
+  it('sends no Authorization header when neither username nor token is set', async () => {
+    await new NtfyProvider('topic', null, null, null, null).send(base);
+    const headers = post.mock.calls[0][2]?.headers;
+    expect(headers?.Authorization).toBeUndefined();
+  });
+});
