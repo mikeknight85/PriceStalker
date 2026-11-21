@@ -27,6 +27,12 @@ vi.mock('../../src/services/domain/product/utils', () => ({
   syncUserCategories: vi.fn(),
 }));
 
+vi.mock('../../src/services/domain/product/repositories/item.repository', () => ({
+  itemRepository: {
+    syncProductCategoryToItem: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 const OWNER = 7;
 const ADMIN = 9;
 const PRODUCT = { id: 1, user_id: OWNER, name: 'Owned' };
