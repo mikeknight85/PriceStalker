@@ -45,10 +45,13 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
   const storeName = listing.retailer_name || hostOf(listing.url);
 
   // Listing price in comparison currency (or native if no converted price)
-  const displayPrice = listing.converted_price !== null && listing.converted_price !== undefined
+  const hasConverted = listing.converted_price !== null && listing.converted_price !== undefined;
+  const displayPrice = hasConverted
     ? listing.converted_price
     : listing.current_price;
-  const displayCurrency = item.best_price_currency ?? listing.currency ?? 'USD';
+  const displayCurrency = hasConverted
+    ? (listing.converted_currency || item.best_price_currency || listing.currency || 'USD')
+    : (listing.currency || item.best_price_currency || 'USD');
 
   const isOutOfStock = listing.stock_status === 'out_of_stock';
   const isPreOrder = listing.stock_status === 'pre_order';

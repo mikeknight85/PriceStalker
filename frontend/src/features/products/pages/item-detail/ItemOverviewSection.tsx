@@ -123,6 +123,7 @@ export const ItemOverviewSection: React.FC<ItemOverviewSectionProps> = ({
         onClose={() => setIsAttachModalOpen(false)}
         itemId={item.id}
         itemName={item.name}
+        userLocale={userLocale}
         onAttach={onAttachStore}
       />
     </div>

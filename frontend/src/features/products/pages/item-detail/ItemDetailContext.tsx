@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { itemDetailQuery, itemPriceHistoryQuery, queryKeys } from '../../../../api/queries';
 import { queryClient } from '../../../../api/queryClient';
@@ -47,6 +48,7 @@ export const ItemDetailProvider: React.FC<{ itemId: number; children: React.Reac
   itemId,
   children,
 }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [historyDays, setHistoryDays] = useState<number | undefined>(30);
@@ -68,6 +70,7 @@ export const ItemDetailProvider: React.FC<{ itemId: number; children: React.Reac
     void queryClient.invalidateQueries({ queryKey: queryKeys.products.items });
     void queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
     void queryClient.invalidateQueries({ queryKey: queryKeys.products.itemPriceHistory(itemId) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.products.itemStockHistory(itemId) });
   };
 
   const handleRefreshListing = async (productId: number) => {
@@ -108,11 +111,18 @@ export const ItemDetailProvider: React.FC<{ itemId: number; children: React.Reac
 
   const handleConfirmDeleteListing = async () => {
     if (!listingToDelete) return;
+    const isLastListing = (item?.listings.length ?? 0) <= 1;
     try {
       await ProductService.delete(listingToDelete);
       showToast('Store removed from tracking.', 'success');
       setListingToDelete(null);
-      invalidateAll();
+      if (isLastListing) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.products.items });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+        navigate({ to: '/products', search: { view: 'items' } });
+      } else {
+        invalidateAll();
+      }
     } catch (err: any) {
       showToast(err?.response?.data?.error || 'Failed to delete store.', 'error');
     }

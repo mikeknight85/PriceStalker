@@ -12,6 +12,7 @@ interface AttachStoreModalProps {
   onClose: () => void;
   itemId: number;
   itemName: string;
+  userLocale?: string | null;
   onAttach: (sourceItemId: number) => Promise<void>;
 }
 
@@ -28,6 +29,7 @@ export const AttachStoreModal: React.FC<AttachStoreModalProps> = ({
   onClose,
   itemId,
   itemName,
+  userLocale,
   onAttach,
 }) => {
   const [search, setSearch] = useState('');
@@ -149,7 +151,7 @@ export const AttachStoreModal: React.FC<AttachStoreModalProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '0 0 auto' }}>
                     <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.95rem' }}>
                       {candidate.best_price !== null && candidate.best_price !== undefined
-                        ? formatPrice(candidate.best_price, candidate.best_price_currency)
+                        ? formatPrice(candidate.best_price, candidate.best_price_currency, userLocale)
                         : '—'}
                     </span>
                     <button

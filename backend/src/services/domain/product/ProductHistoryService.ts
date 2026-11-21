@@ -5,7 +5,8 @@ import {
   userRepository,
   ProductWithLatestPrice,
   ProductWithSparkline,
-  ItemWithListings
+  ItemWithListings,
+  StockStatusHistory
 } from '../../../models';
 import { itemRepository } from './repositories/item.repository';
 import { syncUserCategories } from './utils';
@@ -71,14 +72,14 @@ export class ProductHistoryService {
           const startOfPeriod = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
           const createdDate = listing.created_at ? new Date(listing.created_at) : startOfPeriod;
 
-          const syntheticEntry = {
+          const syntheticEntry: StockStatusHistory = {
             id: 0,
             product_id: listing.id,
             status: listing.stock_status,
-            changed_at: createdDate.toISOString(),
+            changed_at: createdDate,
           };
 
-          history = [syntheticEntry as any];
+          history = [syntheticEntry];
 
           const isAvailable = listing.stock_status === 'in_stock' ||
                             listing.stock_status === 'pre_order' ||

@@ -47,7 +47,7 @@ router.put('/items/:itemId', asyncHandler(async (req: AuthRequest, res: Response
     res.status(400).json({ error: 'Invalid product id' });
     return;
   }
-  const updates: any = {};
+  const updates: Parameters<typeof itemRepository.updateAlertSettings>[2] = {};
   if (req.body.target_price !== undefined) updates.target_price = req.body.target_price;
   if (req.body.price_drop_threshold !== undefined) updates.price_drop_threshold = req.body.price_drop_threshold;
   if (req.body.notify_back_in_stock !== undefined) updates.notify_back_in_stock = Boolean(req.body.notify_back_in_stock);

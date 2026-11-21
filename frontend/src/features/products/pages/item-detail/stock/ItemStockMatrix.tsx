@@ -42,8 +42,11 @@ export const ItemStockMatrix: React.FC<ItemStockMatrixProps> = ({
               const isStoreIn = isAvailableStatus(store.stockStatus);
               const listing = item?.listings.find(l => l.id === store.productId);
               const isLowest = listing && item?.best_price_listing_ids.includes(listing.id);
-              const price = listing?.converted_price ?? listing?.current_price;
-              const currency = item?.best_price_currency ?? listing?.currency ?? 'USD';
+              const hasConverted = listing?.converted_price !== null && listing?.converted_price !== undefined;
+              const price = hasConverted ? listing?.converted_price : listing?.current_price;
+              const currency = hasConverted
+                ? (listing?.converted_currency || item?.best_price_currency || listing?.currency || 'USD')
+                : (listing?.currency || item?.best_price_currency || 'USD');
 
               return (
                 <tr key={store.productId}>

@@ -43,6 +43,10 @@ export const productLifecycleRepository = {
         }
         targetItemId = item.id;
         isPrimary = false;
+        // Inherit parent item's category/tags if new listing didn't supply one
+        if (category === null || category === undefined) {
+          category = item.category;
+        }
       } else {
         const item = await itemRepository.create(
           userId,

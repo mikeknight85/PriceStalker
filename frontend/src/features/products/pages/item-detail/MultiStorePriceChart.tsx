@@ -117,7 +117,7 @@ export const MultiStorePriceChart: React.FC<MultiStorePriceChartProps> = ({
             <button
               key={r.label}
               type="button"
-              className={`item-chart-range-pill ${selectedRange === (r.val ?? 0) ? 'active' : ''}`}
+              className={`item-chart-range-pill ${selectedRange === r.val ? 'active' : ''}`}
               onClick={() => onRangeChange(r.val)}
             >
               {r.label}

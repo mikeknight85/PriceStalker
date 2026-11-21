@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from '@tanstack/react-router';
 import { ItemWithListings } from '../../../../../types/api';
 import { formatPrice } from '../../../../../utils/format';
 import Icon from '../../../../../components/Icon';
@@ -31,6 +32,14 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
   );
   const [isSavingTags, setIsSavingTags] = useState(false);
 
+  useEffect(() => {
+    setImageUrlInput(item.image_url || '');
+  }, [item.image_url]);
+
+  useEffect(() => {
+    setTags(item.category ? item.category.split(',').map(t => t.trim()).filter(Boolean) : []);
+  }, [item.category]);
+
   const handleImageSave = async () => {
     setIsSavingImage(true);
     try {
@@ -57,12 +66,22 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
   const handleTagsSave = async () => {
     setIsSavingTags(true);
     try {
-      await onSaveTags(tags);
+      const finalTags = [...tags];
+      const pending = tagInput.trim();
+      if (pending && !finalTags.includes(pending)) {
+        finalTags.push(pending);
+      }
+      await onSaveTags(finalTags);
+      setTagInput('');
       setIsEditingTags(false);
     } finally {
       setIsSavingTags(false);
     }
   };
+
+  const hasSpread = item.price_spread !== null && item.price_spread > 0;
+  const isTargetHit = item.target_price !== null && item.target_price !== undefined &&
+    item.best_price !== null && item.best_price <= item.target_price;
 
   return (
     <div className="item-overview-sidebar">
@@ -72,9 +91,7 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
           {item.image_url ? (
             <img src={item.image_url} alt={item.name} className="item-image-preview" />
           ) : (
-            <div className="item-image-empty-state">
-              <Icon name="package" size="3.5rem" />
-            </div>
+            <div className="item-image-empty-state"><Icon name="package" size="3.5rem" /></div>
           )}
 
           {isEditingImage ? (
@@ -88,32 +105,15 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
                 style={{ width: '100%', fontSize: '0.85rem', marginBottom: '0.5rem' }}
               />
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => setIsEditingImage(false)}
-                  disabled={isSavingImage}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={handleImageSave}
-                  disabled={isSavingImage}
-                >
-                  {isSavingImage ? 'Saving...' : 'Save'}
-                </button>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsEditingImage(false)} disabled={isSavingImage}>Cancel</button>
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleImageSave} disabled={isSavingImage}>{isSavingImage ? 'Saving...' : 'Save'}</button>
               </div>
             </div>
           ) : (
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={() => {
-                setImageUrlInput(item.image_url || '');
-                setIsEditingImage(true);
-              }}
+              onClick={() => { setImageUrlInput(item.image_url || ''); setIsEditingImage(true); }}
               style={{ fontSize: '0.8rem' }}
             >
               <Icon name="image" /> Edit Image
@@ -141,32 +141,28 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
 
           <div className="item-aggregate-row">
             <span className="item-aggregate-row-label">In Stock:</span>
-            <span className="item-aggregate-row-value">
-              {inStockCount} of {item.store_count}
-            </span>
+            <span className="item-aggregate-row-value">{inStockCount} of {item.store_count}</span>
           </div>
 
-          {item.price_spread !== null && item.price_spread > 0 && (
+          {hasSpread && (
             <div className="item-aggregate-row">
               <span className="item-aggregate-row-label">Price Spread:</span>
-              <span className="item-aggregate-row-value">
-                {formatPrice(item.price_spread, currency, userLocale)}
-              </span>
+              <span className="item-aggregate-row-value">{formatPrice(item.price_spread!, currency, userLocale)}</span>
             </div>
           )}
         </div>
 
-        {item.price_spread !== null && item.price_spread > 0 && (
+        {hasSpread && (
           <div className="item-savings-callout">
             <Icon name="trendingDown" />
-            Save up to {formatPrice(item.price_spread, currency, userLocale)} by choosing the cheapest store
+            Save up to {formatPrice(item.price_spread!, currency, userLocale)} by choosing the cheapest store
           </div>
         )}
 
         {item.target_price !== null && item.target_price !== undefined && (
-          <div className={`item-target-callout ${item.best_price !== null && item.best_price <= item.target_price ? 'hit' : 'waiting'}`}>
+          <div className={`item-target-callout ${isTargetHit ? 'hit' : 'waiting'}`}>
             <Icon name="target" />
-            {item.best_price !== null && item.best_price <= item.target_price
+            {isTargetHit
               ? `Target matched! Under target of ${formatPrice(item.target_price, currency, userLocale)}`
               : `Target: ${formatPrice(item.target_price, currency, userLocale)}`}
           </div>
@@ -268,8 +264,10 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
             {tags.map(t => (
-              <span
+              <Link
                 key={t}
+                to="/products"
+                search={{ tag: t, view: 'items' }}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -280,10 +278,12 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
                   padding: '0.25rem 0.65rem',
                   fontSize: '0.8rem',
                   color: 'var(--text)',
+                  textDecoration: 'none',
                 }}
+                title={`Filter products tagged "${t}"`}
               >
                 <Icon name="tag" size="0.75rem" /> {t}
-              </span>
+              </Link>
             ))}
           </div>
         )}
