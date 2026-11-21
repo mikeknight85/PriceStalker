@@ -42,6 +42,32 @@
   margin-bottom: 1rem;
 }
 
+@media (max-width: 768px) {
+  :where(:root:not([data-layout="desktop"])) .dashboard-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  :where(:root:not([data-layout="desktop"])) .search-container {
+    width: 100%;
+  }
+  :where(:root:not([data-layout="desktop"])) .sort-controls {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+:where(:root[data-layout="mobile"]) .dashboard-controls {
+  flex-direction: column;
+  align-items: stretch;
+}
+:where(:root[data-layout="mobile"]) .search-container {
+  width: 100%;
+}
+:where(:root[data-layout="mobile"]) .sort-controls {
+  width: 100%;
+  margin-left: 0;
+}
+
 .tag-row-container {
   overflow: hidden;
   position: relative;
@@ -98,9 +124,13 @@
 }
 
 @media (max-width: 768px) {
-  .products-list {
+  :where(:root:not([data-layout="desktop"])) .products-list {
     grid-template-columns: 1fr;
   }
+}
+
+:where(:root[data-layout="mobile"]) .products-list {
+  grid-template-columns: 1fr;
 }
 
 .search-container {
@@ -225,9 +255,13 @@
 }
 
 @media (max-width: 768px) {
-  .dashboard-summary {
+  :where(:root:not([data-layout="desktop"])) .dashboard-summary {
     grid-template-columns: 1fr;
   }
+}
+
+:where(:root[data-layout="mobile"]) .dashboard-summary {
+  grid-template-columns: 1fr;
 }
 
 .summary-card {
@@ -446,6 +480,30 @@
   font-weight: 600;
 }
 
+@media (max-width: 768px) {
+  :where(:root:not([data-layout="desktop"])) .dashboard-view-toggle {
+    display: flex;
+    width: 100%;
+  }
+  :where(:root:not([data-layout="desktop"])) .view-toggle-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+:where(:root[data-layout="mobile"]) .dashboard-view-toggle {
+  display: flex;
+  width: 100%;
+}
+:where(:root[data-layout="mobile"]) .view-toggle-btn {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+}
+
 /*
  * Item cards sit in the same intrinsic grid as product cards, so the two views
  * have the same rhythm and switching between them does not reflow the page.
@@ -454,4 +512,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
   gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  :where(:root:not([data-layout="desktop"])) .items-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+:where(:root[data-layout="mobile"]) .items-list {
+  grid-template-columns: 1fr;
 }

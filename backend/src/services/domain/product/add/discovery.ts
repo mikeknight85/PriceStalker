@@ -36,7 +36,7 @@ export class ProductDiscoveryService {
   /**
    * Handles the "Auto-Track" vs "Review Required" logic for a new product.
    */
-  async initiateProductDiscovery(userId: number, url: string, category: string | null, refreshInterval?: number) {
+  async initiateProductDiscovery(userId: number, url: string, category: string | null, refreshInterval?: number, existingItemId?: number) {
     // Any signed-in user reaches this with a URL of their choosing, and the
     // server then fetches it (issue #165). The lenient policy still allows a
     // shop on the user's own LAN -- a thing self-hosters legitimately track --
@@ -64,7 +64,8 @@ export class ProductDiscoveryService {
         refreshInterval || FALLBACK_REFRESH_INTERVAL_SECONDS,
         scrapedData.stockStatus as any,
         scrapedData.aiStatus || null,
-        category
+        category,
+        existingItemId
       );
 
       await productPersistenceService.saveScrapeResult(product.id, userId, scrapedData, 'manual-add');

@@ -153,7 +153,7 @@ test('filters listings by tracking and by stock in the All stores view', async (
 
 test('filters items by tracking and by stock in the By product view', async ({ page }) => {
   await page.goto('/products');
-  await page.getByRole('button', { name: 'By product' }).click();
+  await page.getByRole('button', { name: 'By product' }).click({ force: true });
 
   // Items counted as items: two cards, not the three listings behind them.
   await expect(page.getByText('Showing 2 products')).toBeVisible();

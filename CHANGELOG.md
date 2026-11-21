@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Combined Product View (`/items/$itemId`): dedicated canonical product page
+  showing side-by-side price aggregates, dashboard-styled store listing cards
+  with per-store sparklines and status badges, a multi-store price history
+  comparison chart with store toggling, a synchronized multi-store stock
+  availability swimlane timeline, a live store stock comparison matrix, and
+  item-level alert settings.
+- Direct "Track New Store" and "Link Existing Store" actions on the Combined
+  Product View to attach multiple retailer URLs to a canonical product.
+- Navigation from the dashboard's "By product" view directly to the Combined
+  Product View, preserving view state when returning to the dashboard, and
+  cross-links from single-store listing pages.
+- Bi-directional category/tag synchronization between parent items and child
+  product listings on merge, attach, and product update.
+- Application-wide mobile layout override support: the User Settings
+  Appearance layout mode (`auto`, `desktop`, `mobile`) now applies across the
+  entire application, including the Products Dashboard, Product Cards, Product
+  Detail, and Combined Item Detail.
+
+### Fixed
+
+- Modal overlay solid background styling in Combined Product View modals to
+  prevent transparent backdrop bleed-through.
+- Item detail overview mobile hierarchy: promoted product title and full-width
+  action buttons to the top on mobile viewports for immediate context.
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added

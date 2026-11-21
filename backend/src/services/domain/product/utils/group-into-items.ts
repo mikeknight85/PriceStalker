@@ -85,7 +85,7 @@ export function groupIntoItems(
       id: itemId,
       name: (primary as any).item_name || primary.name || primary.url,
       image_url: (primary as any).item_image_url ?? primary.image_url ?? null,
-      category: primary.category ?? null,
+      category: (primary as any).item_category ?? primary.category ?? null,
       user_id: primary.user_id,
       target_price: primary.target_price,
       price_drop_threshold: primary.price_drop_threshold,
