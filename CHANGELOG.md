@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Synchronised scraper lifecycle documentation and visual Graphviz flowcharts
+  with the current v2.2 codebase: clarified secondary price separation
+  (member and original prices never compete as standard price), added saved
+  extraction preference evaluation, updated bidirectional anchor drift guardrail
+  (<50% or >250%), documented per-domain scheduler pacing (30s gap + jitter),
+  added product restoration and unreachable site notifications, and added
+  a cross-release pipeline evolution history (#221, #159, #167, #67).
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added

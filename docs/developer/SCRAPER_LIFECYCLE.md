@@ -1,6 +1,6 @@
 # PriceStalker Product Scraper Lifecycle
 
-This document is the canonical reference for the scrape engine and its hand-off into product monitoring. It supersedes all older flow diagrams (see `old_docs/`). Product onboarding, scheduled monitoring, selector learning, and notifications are described as separate concerns below because they do not follow one linear path.
+This document is the canonical reference for the scrape engine and its hand-off into product monitoring. For the complete chronological history of changes to the scraping and monitoring pipeline, see [Version History & Pipeline Evolution](#version-history--pipeline-evolution) below and the project [CHANGELOG.md](../../CHANGELOG.md). Product onboarding, scheduled monitoring, selector learning, and notifications are described as separate concerns below because they do not follow one linear path.
 
 > For the visual end-to-end diagram, see [product_lifecycle_slides.md](product_lifecycle_slides.md). 
 
@@ -141,7 +141,7 @@ Triggers only when all of these are true:
 3. **Config Save** — Saves generated CSS selectors to `retailer_configs`.
 4. **Re-Scrape** — Full extraction re-runs with the new config.
 
-> The shell-config test should remain aligned with every selector category. At present, pre-order and original-price selector fields are not included in that test, so a config containing only those fields may still be treated as a shell configuration.
+> The shell-config test checks every selector category (issue #167). A retailer config is only considered a shell if standard, deal, member, pre-order, original price selectors, name, image, stock selectors, and the JSON-LD price key are all empty.
 
 ---
 
@@ -220,9 +220,11 @@ After `findPriceConsensus` resolves a price, additional checks apply **only when
 |-------|-----------|--------|
 | Single-source isolation | Only 1 JSON-LD candidate, no corroboration | Nullify price, `needsReview = true` |
 | Low-confidence generic | Score < 0.85 and method is generic | Nullify price, `needsReview = true` |
-| Anchor drift | Price < 50% of anchor (last known price) | Nullify price, `needsReview = true` |
+| Anchor drift | Price < 50% or > 250% of anchor (last known price) | Nullify price, `needsReview = true` |
 
-The current drift guard only detects extreme downward movement. Upward drift is not currently checked. Corroboration metadata is produced by the deterministic consensus phase and is not fully recalculated if AI or anchor arbitration selects a different candidate; see audit item **O-8**.
+The drift guard detects extreme movement in both directions (`price < anchor * 0.5` or `price > anchor * 2.5`). Corroboration metadata is produced by the deterministic consensus phase and is not fully recalculated if AI or anchor arbitration selects a different candidate; see audit item **O-8**.
+
+Additionally, an **RRP sanity guardrail** validates `originalPrice` against the resolved standard price: if `originalPrice < standardPrice` or `originalPrice > standardPrice * 10`, the original price is discarded to prevent generic strikethrough/was-price selectors from polluting price history (issue #55).
 
 `highConfidenceMethods` whitelist (retains an out-of-stock price) includes `json-ld`, `custom-css`, `custom-regex`, `deal-price`, `member-price`, `pre-order-price`, `expert-ai`, `ai-extraction`, `manual-selector`, and `ai`, plus any `expert-*` prefix.
 
@@ -278,12 +280,13 @@ This gives the frontend a unified candidate list for the modal's tab-based pill 
 
 **Files:** `backend/src/services/domain/product/ProductRefreshService.ts`, `backend/src/services/scheduler/tasks/PriceCheckTask.ts`
 
-- The scheduler finds products due by `next_check_at`, skips paused products, and refreshes up to three products concurrently. A small random delay is added after each refresh.
+- The scheduler finds products due by `next_check_at`, skips paused products, and refreshes up to three products concurrently (`pLimit(3)`).
+- **Per-retailer domain pacing (issue #67):** Requests are interleaved by retailer, and tasks to the same domain are serialised with a minimum 30s gap plus 0–15s jitter (`DOMAIN_GAP_MS = 30_000`, `DOMAIN_GAP_JITTER_MS = 15_000`). This spaces requests per retailer to avoid bot walls while allowing distinct retailers to run concurrently.
 - Each refresh calls `scrapeProductWithVoting()` and then `saveScrapeResult('refresh')`, which can update metadata, stock history, price history, selector learning, review state, and the next scheduled check.
-- Price notifications are evaluated after persistence. The current event types include price drops, target-price hits, price announcements for pre-orders, stock transitions, and product-unavailable alerts.
-- A `not_available` result is debounced using three consecutive page-gone results before the product is marked unavailable, paused, and notified. Before the threshold, the previous stock status is retained.
-- A paused product is not normally scheduled. If a later manual or forced refresh finds the page available, the refresh flow can clear the pause.
-- Generic network, timeout, proxy, and other acquisition errors are not currently represented by a product-level exponential backoff state. They normally preserve a known stock status and leave the product for its next scheduled check.
+- Price notifications are evaluated after persistence. The current event types include price drops, target-price hits, price announcements for pre-orders, back-in-stock transitions, product-unavailable alerts, and product restoration notices.
+- A `not_available` result is debounced using three consecutive page-gone results (`PAGE_GONE_THRESHOLD = 3`) before the product is marked unavailable, automatically paused (`checking_paused = true, auto_paused = true`), and notified. Before the threshold, the previous stock status is retained.
+- Transient transport failures (network timeouts, DNS errors, connection resets) do not pause the product; they are tracked separately and notify the user once if 6 consecutive failures occur (`SITE_FAILURE_NOTIFY_THRESHOLD = 6`).
+- An auto-paused product whose page becomes available again during a refresh is unpaused (`checking_paused = false, auto_paused = false`) and triggers a "product restored" notification. A user-initiated manual pause is preserved.
 - On `needsReview = true` from refresh, `products.needs_price_review = true` is written to the database so the product can surface in the review queue.
 
 ### Product state transitions
@@ -295,8 +298,9 @@ The scraper result and the product monitoring state are separate concerns:
 | `in_stock`, `out_of_stock`, `pre_order`, or `member_only` | Persist a stock transition if it differs from the previous status; evaluate relevant notifications. |
 | `unknown` | Preserve a previously known stock status rather than treating uncertainty as a real observation. |
 | `not_available` below the page-gone threshold | Increment the page-gone streak and retain the previous status. |
-| `not_available` at the threshold | Persist unavailable status, pause checking, and notify the user. |
-| Available result after a paused product is manually/forcibly refreshed | Clear the pause and resume monitoring. |
+| `not_available` at the threshold (3 consecutive) | Persist unavailable status, auto-pause checking, and notify the user. |
+| Transient transport error (streak of 6) | Retain stock status; notify user of unreachable retailer without pausing. |
+| Available result after an auto-paused product is refreshed | Clear the auto-pause, resume monitoring, and send a restored notification. (Manual pauses are kept.) |
 
 ---
 
@@ -319,7 +323,8 @@ The persistence service passes its active transaction client into this operation
 
 | Table | Purpose |
 |-------|---------|
-| `products` | Core product row: URL, `needs_price_review`, `checking_paused`, `ai_status` |
+| `items` | Canonical product tracked by the user: holds alert settings (`target_price`, `price_drop_threshold`, `notify_back_in_stock`) and user display fields |
+| `products` | Retailer listing row: URL, schedule, `needs_price_review`, `checking_paused`, `auto_paused`, `ai_status` |
 | `price_history` | Change-based history for standard, member, and original prices per product |
 | `stock_status_history` | Append-only log of all stock status changes |
 | `retailer_configs` | Domain-keyed scraping configs: selectors, `selector_metadata`, booleans |
@@ -340,15 +345,48 @@ Only the discovery and refresh paths automatically proceed into product persiste
 
 ## Notifications
 
-Notifications are side effects of persisted product state and price comparisons, not part of the extraction engine itself. The refresh service currently evaluates:
+Notifications are side effects of persisted product state and price comparisons, not part of the extraction engine itself. The refresh service evaluates six core lifecycle notification events:
 
-- price drops;
-- target-price hits;
-- back-in-stock transitions from `out_of_stock`, `pre_order`, or `not_available` to `in_stock` when enabled;
-- price announcements when a pre-order product receives its first price; and
-- page-unavailable events after the page-gone threshold.
+- price drops (when `price_drop_threshold` is exceeded);
+- target-price hits (when price drops to or below `target_price`);
+- back-in-stock transitions from `out_of_stock`, `pre_order`, `not_available`, or `member_only` to `in_stock` (when `notify_back_in_stock` is enabled);
+- price announcements when a pre-order product receives its first price;
+- product-unavailable alerts after three consecutive page-gone results (with automatic pause); and
+- product-restored alerts when an auto-paused product becomes available again and monitoring resumes.
+
+In addition, transient transport failures (network/DNS/timeout errors) alert after six consecutive failures (`SITE_FAILURE_NOTIFY_THRESHOLD = 6`) without pausing the product.
 
 The event payload, delivery-provider behaviour, and frontend presentation are documented separately because one persisted event can fan out to multiple notification channels.
+
+---
+
+## Version History & Pipeline Evolution
+
+PriceStalker's scrape engine and monitoring pipeline evolved across several major versions:
+
+* **[v2.2.0](../../CHANGELOG.md#220-beta1---2026-10-11)**:
+  - **Canonical Items Architecture**: Alert settings (`target_price`, `price_drop_threshold`, `notify_back_in_stock`) moved to `items`, decoupling user alerts from individual store listings on `products` (migration 020, issue #143).
+  - **Saved Extraction Preference**: Honoured on refresh via `preferred_extraction_method` to prevent repeated re-extraction drift (issue #159).
+  - **Retailer Rules Outranking Defaults**: Retailer-specific selectors take strict priority over global defaults per price type (issue #159).
+  - **Secondary Price Isolation**: Member and original price candidates are isolated as secondary metadata and barred from winning as standard price (issue #167).
+  - **Bounded Extraction**: Custom and generic CSS evaluations bounded to 40 candidates each to avoid flooding consensus (issue #169).
+  - **Bidirectional Drift Guard**: Out-of-stock drift check detects both extreme drops (<50%) and extreme spikes (>250%) against the anchor price.
+  - **Scheduler Retailer Pacing**: Requests to the same shop spaced by 30s + jitter (`DOMAIN_GAP_MS = 30_000`, issue #67) to prevent bot walls.
+  - **Restored Notifications**: Product restoration announced when an auto-paused product comes back online.
+
+* **[v2.1.0](../../CHANGELOG.md#210-beta1---2026-08-31)**:
+  - **Stealth Remote Browser**: Remote Puppeteer container (`use_browser_scraper`) added for JS-heavy sites and bot-protected retailers.
+  - **Voting Modal & Human Review**: Ambiguous or uncorroborated prices surface in the frontend `PriceSelectionModal` (`needsReview = true`).
+  - **Automated Selector Learning**: `runAutoRetailerConfig()` promotes winning selectors to index 0 with staleness scoring and eviction.
+  - **AI Auto-Mapping**: Phase 4 generates retailer selector configurations from DOM evidence for shell domains.
+  - **Lifecycle Diagrams**: Graphviz overview and 8 detailed stage flowcharts published.
+
+* **[v2.0.0](../../CHANGELOG.md#200---2026-08-31)**:
+  - Complete architectural rewrite from Python monolith to TypeScript/Node.js, Express, Cheerio, and PostgreSQL.
+  - Introduced the seven-phase scrape pipeline (Phases 0–6) and consensus weighting system.
+
+* **v1.x (Legacy)**:
+  - Monolithic single-pass scraper with SQLite storage; lacked consensus arbitration, browser scraper containers, and voting review.
 
 ---
 

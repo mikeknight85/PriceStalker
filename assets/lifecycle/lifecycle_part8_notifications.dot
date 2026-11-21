@@ -7,10 +7,12 @@ digraph LifecyclePart8 {
   Persist [label="Persist product, price, and stock state\nthen compare pre-refresh state"]
   Event [label="Classify eligible event", shape=diamond, fillcolor="#d97706", fontcolor="#ffffff"]
   Drop [label="Price drop\nthreshold eligible", fillcolor="#059669", fontcolor="#ffffff"]
-  Target [label="Target price reached", fillcolor="#059669", fontcolor="#ffffff"]
-  Back [label="Back in stock\nfrom OOS/pre-order/not_available\nwhen enabled", fillcolor="#059669", fontcolor="#ffffff"]
+  Target [label="Target price reached\n(price ≤ target)", fillcolor="#059669", fontcolor="#ffffff"]
+  Back [label="Back in stock\nfrom OOS/pre-order/not_available/member_only\nwhen enabled", fillcolor="#059669", fontcolor="#ffffff"]
   Announce [label="Pre-order price announced\nfirst recorded price", fillcolor="#059669", fontcolor="#ffffff"]
-  Unavailable [label="Product unavailable\npage-gone threshold reached", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Unavailable [label="Product unavailable\npage-gone threshold reached (3)", fillcolor="#dc2626", fontcolor="#ffffff"]
+  Restored [label="Product restored\nauto-pause cleared; checks resumed", fillcolor="#059669", fontcolor="#ffffff"]
+  Unreachable [label="Retailer unreachable\n6 consecutive transport failures", fillcolor="#dc2626", fontcolor="#ffffff"]
   None [label="No eligible event\ncontinue monitoring"]
   Payload [label="Build event payload\nproduct, price, old/new status, reason, action"]
   Channels [label="Check user preferences\nand configured providers"]
@@ -19,16 +21,20 @@ digraph LifecyclePart8 {
   UI [label="Toast / notification drawer / history page", fillcolor="#7c3aed", fontcolor="#ffffff"]
 
   Refresh -> Persist -> Event
-  Event -> Drop [label="price changed"]
+  Event -> Drop [label="price dropped"]
   Event -> Target [label="target crossed"]
   Event -> Back [label="stock transition"]
   Event -> Announce [label="pre-order price"]
-  Event -> Unavailable [label="page unavailable"]
+  Event -> Unavailable [label="page gone streak = 3"]
+  Event -> Restored [label="auto-pause cleared"]
+  Event -> Unreachable [label="transport failure streak = 6"]
   Event -> None [label="none"]
   Drop -> Payload
   Target -> Payload
   Back -> Payload
   Announce -> Payload
   Unavailable -> Payload
+  Restored -> Payload
+  Unreachable -> Payload
   Payload -> Channels -> Deliver -> History -> UI
 }
