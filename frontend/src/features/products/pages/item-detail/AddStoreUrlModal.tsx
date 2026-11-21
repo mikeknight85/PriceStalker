@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ProductService } from '../../services/ProductService';
 import { useToast } from '../../../../context/ToastContext';
+import './ItemDetail.css';
 
 interface AddStoreUrlModalProps {
   isOpen: boolean;
@@ -46,15 +47,15 @@ export const AddStoreUrlModal: React.FC<AddStoreUrlModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
-        <h2 className="modal-title" style={{ marginTop: 0 }}>Add Store to Product</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+      <div className="item-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+        <h2 className="item-modal-title">Add Store to Product</h2>
+        <p className="item-modal-subtitle">
           Paste a retailer URL selling <strong>{itemName}</strong> to compare its pricing and stock.
         </p>
 
         <form onSubmit={handleSubmit} className="item-modal-form">
           <div className="form-group">
-            <label htmlFor="store-url" style={{ fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>
+            <label htmlFor="store-url" style={{ fontWeight: 600, display: 'block', marginBottom: '0.4rem', color: 'var(--text)' }}>
               Store URL
             </label>
             <input

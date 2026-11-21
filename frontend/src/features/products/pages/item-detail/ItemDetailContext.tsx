@@ -118,13 +118,20 @@ export const ItemDetailProvider: React.FC<{ itemId: number; children: React.Reac
     }
   };
 
-  const handleAttachStore = async (productId: number) => {
+  const handleAttachStore = async (sourceItemId: number) => {
     try {
-      await ProductService.attachToItem(itemId, productId);
-      showToast('Store attached to product.', 'success');
+      const result = await ProductService.mergeItems(itemId, sourceItemId);
+      if (result.discardedAlertSettings) {
+        showToast(
+          `Merged ${result.movedCount} store(s). Alert settings on the merged product were replaced by this product's settings.`,
+          'info'
+        );
+      } else {
+        showToast(`Merged ${result.movedCount} store(s) into this product.`, 'success');
+      }
       invalidateAll();
     } catch (err: any) {
-      showToast(err?.response?.data?.error || 'Failed to attach store.', 'error');
+      showToast(err?.response?.data?.error || 'Failed to merge products.', 'error');
     }
   };
 

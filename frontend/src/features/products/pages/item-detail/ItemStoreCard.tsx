@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ItemWithListings, Product } from '../../../../types/api';
 import { formatPrice } from '../../../../utils/format';
@@ -6,6 +6,7 @@ import Icon from '../../../../components/Icon';
 import Sparkline from '../../components/Sparkline';
 import ProductBadges from '../../components/ProductBadges';
 import { ProductService } from '../../services/ProductService';
+import { useCheckProgress } from '../../hooks/useCheckProgress';
 import '../../components/ProductCard/ProductCard.css';
 import './ItemDetail.css';
 
@@ -39,9 +40,6 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPausing, setIsPausing] = useState(false);
   const [isDetaching, setIsDetaching] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
 
   const isLowest = item.best_price_listing_ids.includes(listing.id);
   const storeName = listing.retailer_name || hostOf(listing.url);
@@ -58,52 +56,11 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
   const isNotAvailable = listing.stock_status === 'not_available';
   const isPaused = listing.checking_paused;
 
-  useEffect(() => {
-    const calculateProgress = () => {
-      if (!listing.next_check_at || !listing.last_checked) {
-        setProgress(100);
-        setTimeRemaining('Soon');
-        return;
-      }
-
-      const lastChecked = new Date(listing.last_checked).getTime();
-      const nextCheck = new Date(listing.next_check_at).getTime();
-      const now = Date.now();
-      const totalDuration = nextCheck - lastChecked;
-      const elapsed = now - lastChecked;
-      const remaining = nextCheck - now;
-
-      const progressPercent = totalDuration > 0
-        ? Math.min((elapsed / totalDuration) * 100, 100)
-        : 100;
-      setProgress(progressPercent);
-
-      if (progressPercent >= 100 && !isComplete) {
-        setIsComplete(true);
-        setTimeout(() => setIsComplete(false), 1500);
-      }
-
-      if (remaining <= 0) {
-        setTimeRemaining('Soon');
-      } else {
-        const seconds = Math.floor(remaining / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-
-        if (hours > 0) {
-          setTimeRemaining(`${hours}h ${minutes % 60}m`);
-        } else if (minutes > 0) {
-          setTimeRemaining(`${minutes}m`);
-        } else {
-          setTimeRemaining('< 1m');
-        }
-      }
-    };
-
-    calculateProgress();
-    const interval = setInterval(calculateProgress, 1000);
-    return () => clearInterval(interval);
-  }, [listing.last_checked, listing.next_check_at, isComplete]);
+  const { progress, timeRemaining, isComplete } = useCheckProgress(
+    listing.last_checked,
+    listing.next_check_at,
+    isPaused
+  );
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -146,9 +103,12 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
     onDelete(listing.id);
   };
 
-  const sparklineData = (listing as any).sparkline_data || listing.sparkline || [
-    { price: listing.current_price || 0, recorded_at: new Date().toISOString() }
-  ];
+  const rawSparkline = (listing as any).sparkline_data || listing.sparkline;
+  const sparklineData = Array.isArray(rawSparkline) && rawSparkline.length > 0
+    ? rawSparkline
+    : listing.current_price !== null && listing.current_price !== undefined
+    ? [{ price: listing.current_price, recorded_at: new Date().toISOString() }]
+    : [];
 
   return (
     <div
@@ -216,6 +176,18 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
 
               <div className="pb-card-badges">
                 <ProductBadges product={listing} showPriceTypes={false} />
+                {onDetach && item.store_count > 1 && (
+                  <button
+                    type="button"
+                    className="item-store-detach-pill"
+                    onClick={handleDetach}
+                    disabled={isDetaching}
+                    title="Separate this store into its own standalone product"
+                  >
+                    <Icon name="ban" size="0.75rem" />
+                    <span>{isDetaching ? 'Separating...' : 'Separate store'}</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -281,18 +253,6 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
         >
           <Icon name="link" />
         </a>
-
-        {onDetach && item.store_count > 1 && (
-          <button
-            type="button"
-            className="pb-action-btn"
-            onClick={handleDetach}
-            disabled={isDetaching}
-            title="Separate this store into its own standalone product"
-          >
-            <Icon name="ban" />
-          </button>
-        )}
 
         <button
           type="button"

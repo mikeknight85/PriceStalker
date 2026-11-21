@@ -1,5 +1,6 @@
 import pool from '../../../../config/database';
 import { Item } from '../../../../models/types';
+import { syncUserCategories } from '../utils/category-sync';
 
 type Executor = { query: (text: string, values?: unknown[]) => Promise<{ rows: any[]; rowCount: number | null }> };
 
@@ -93,7 +94,35 @@ export const itemRepository = {
       `UPDATE items SET ${fields.join(', ')} WHERE id = $${i++} AND user_id = $${i} RETURNING *`,
       values
     );
+
+    // Propagate category updates to all attached store listings so filters stay unified
+    if (updates.category !== undefined) {
+      await executor.query(
+        `UPDATE products SET category = $1 WHERE item_id = $2 AND user_id = $3`,
+        [updates.category, id, userId]
+      );
+    }
+
     return result.rows[0] || null;
+  },
+
+  /**
+   * Propagates a category update from an individual product up to its parent
+   * item and across to all sibling store listings.
+   */
+  syncProductCategoryToItem: async (productId: number, userId: number, category: string | null): Promise<void> => {
+    const res = await pool.query(`SELECT item_id FROM products WHERE id = $1 AND user_id = $2`, [productId, userId]);
+    const itemId = res.rows[0]?.item_id;
+    if (itemId) {
+      await pool.query(
+        `UPDATE items SET category = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3`,
+        [category, itemId, userId]
+      );
+      await pool.query(
+        `UPDATE products SET category = $1 WHERE item_id = $2 AND user_id = $3`,
+        [category, itemId, userId]
+      );
+    }
   },
 
   /**
@@ -121,7 +150,7 @@ export const itemRepository = {
       // Both sides must belong to the caller. Checked in one place rather than
       // trusting the route, because an id from a request body is not a claim
       // about ownership.
-      const target = await client.query(`SELECT id FROM items WHERE id = $1 AND user_id = $2`, [itemId, userId]);
+      const target = await client.query(`SELECT id, category FROM items WHERE id = $1 AND user_id = $2`, [itemId, userId]);
       if (target.rowCount === 0) {
         const err = new Error('Item not found');
         (err as any).statusCode = 404;
@@ -129,7 +158,7 @@ export const itemRepository = {
       }
 
       const product = await client.query(
-        `SELECT p.id, p.item_id, i.target_price, i.price_drop_threshold, i.notify_back_in_stock
+        `SELECT p.id, p.item_id, p.category, i.target_price, i.price_drop_threshold, i.notify_back_in_stock
          FROM products p LEFT JOIN items i ON i.id = p.item_id
          WHERE p.id = $1 AND p.user_id = $2`,
         [productId, userId]
@@ -152,10 +181,36 @@ export const itemRepository = {
         [itemId, productId, userId]
       );
 
-      // The item it came from may now be empty. deleteIfEmpty re-checks rather
-      // than assuming this was its only listing.
+      // Union tags so neither the target item's tags nor the attached store's tags are lost
+      const targetTags = (target.rows[0].category || '').split(',').map((t: string) => t.trim()).filter(Boolean);
+      const productTags = (product.rows[0].category || '').split(',').map((t: string) => t.trim()).filter(Boolean);
+      const combinedTags = Array.from(new Set([...targetTags, ...productTags])).join(', ') || null;
+
+      if (combinedTags !== target.rows[0].category) {
+        await client.query(`UPDATE items SET category = $1 WHERE id = $2 AND user_id = $3`, [combinedTags, itemId, userId]);
+      }
+      const finalTags = combinedTags || target.rows[0].category || null;
+      await client.query(`UPDATE products SET category = $1 WHERE item_id = $2 AND user_id = $3`, [finalTags, itemId, userId]);
+      if (finalTags) {
+        await syncUserCategories(userId, finalTags);
+      }
+
+      // The item it came from may now be empty. If listings remain, ensure at
+      // least one is primary if the moved listing was primary.
       let discarded: Partial<Item> | null = null;
       if (previousItemId !== null) {
+        await client.query(
+          `UPDATE products
+           SET is_primary = true
+           WHERE id = (
+             SELECT id FROM products WHERE item_id = $1 ORDER BY id ASC LIMIT 1
+           )
+           AND NOT EXISTS (
+             SELECT 1 FROM products WHERE item_id = $1 AND is_primary = true
+           )`,
+          [previousItemId]
+        );
+
         const old = product.rows[0];
         const hadSettings = old.target_price !== null || old.price_drop_threshold !== null || old.notify_back_in_stock;
         const removed = await client.query(
@@ -228,8 +283,115 @@ export const itemRepository = {
         [created.rows[0].id, productId]
       );
 
+      // If the detached store was primary on its former item, ensure another sibling is promoted
+      await client.query(
+        `UPDATE products
+         SET is_primary = true
+         WHERE id = (
+           SELECT id FROM products WHERE item_id = $1 ORDER BY id ASC LIMIT 1
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM products WHERE item_id = $1 AND is_primary = true
+         )`,
+        [row.item_id]
+      );
+
       await client.query('COMMIT');
       return created.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
+
+  /**
+   * Merges all store listings from a source item into a target item.
+   *
+   * The source item is deleted once all its listings have been moved.
+   * Any alert settings on the source item that are not carried over are returned
+   * as discardedAlertSettings so the user can be notified.
+   */
+  mergeItems: async (
+    sourceItemId: number,
+    targetItemId: number,
+    userId: number
+  ): Promise<{ movedCount: number; discardedAlertSettings: Partial<Item> | null }> => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      if (sourceItemId === targetItemId) {
+        const err = new Error('Cannot merge an item into itself');
+        (err as any).statusCode = 409;
+        throw err;
+      }
+
+      const target = await client.query(`SELECT id, category FROM items WHERE id = $1 AND user_id = $2`, [targetItemId, userId]);
+      if (target.rowCount === 0) {
+        const err = new Error('Target item not found');
+        (err as any).statusCode = 404;
+        throw err;
+      }
+
+      const source = await client.query(
+        `SELECT id, category, target_price, price_drop_threshold, notify_back_in_stock
+         FROM items WHERE id = $1 AND user_id = $2`,
+        [sourceItemId, userId]
+      );
+      if (source.rowCount === 0) {
+        const err = new Error('Source item not found');
+        (err as any).statusCode = 404;
+        throw err;
+      }
+
+      const updateRes = await client.query(
+        `UPDATE products SET item_id = $1, is_primary = false WHERE item_id = $2 AND user_id = $3`,
+        [targetItemId, sourceItemId, userId]
+      );
+      const movedCount = updateRes.rowCount ?? 0;
+
+      // Union tags from both items so no organizational labels are lost
+      const targetTags = (target.rows[0].category || '').split(',').map((t: string) => t.trim()).filter(Boolean);
+      const sourceTags = (source.rows[0].category || '').split(',').map((t: string) => t.trim()).filter(Boolean);
+      const mergedTags = Array.from(new Set([...targetTags, ...sourceTags])).join(', ') || null;
+
+      if (mergedTags !== target.rows[0].category) {
+        await client.query(`UPDATE items SET category = $1 WHERE id = $2 AND user_id = $3`, [mergedTags, targetItemId, userId]);
+      }
+      const finalMergedTags = mergedTags || target.rows[0].category || null;
+      await client.query(`UPDATE products SET category = $1 WHERE item_id = $2 AND user_id = $3`, [finalMergedTags, targetItemId, userId]);
+      if (finalMergedTags) {
+        await syncUserCategories(userId, finalMergedTags);
+      }
+
+      // Ensure target has at least one primary listing
+      await client.query(
+        `UPDATE products
+         SET is_primary = true
+         WHERE id = (
+           SELECT id FROM products WHERE item_id = $1 ORDER BY id ASC LIMIT 1
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM products WHERE item_id = $1 AND is_primary = true
+         )`,
+        [targetItemId]
+      );
+
+      // Delete the empty source item
+      await client.query(`DELETE FROM items WHERE id = $1 AND user_id = $2`, [sourceItemId, userId]);
+
+      const old = source.rows[0];
+      const hadSettings = old.target_price !== null || old.price_drop_threshold !== null || old.notify_back_in_stock;
+      const discarded = hadSettings ? {
+        target_price: old.target_price,
+        price_drop_threshold: old.price_drop_threshold,
+        notify_back_in_stock: old.notify_back_in_stock,
+      } : null;
+
+      await client.query('COMMIT');
+      return { movedCount, discardedAlertSettings: discarded };
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

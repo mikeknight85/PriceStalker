@@ -13,9 +13,13 @@
 }
 
 @media (max-width: 768px) {
-  .summary-dashboard-grid-row {
+  :where(:root:not([data-layout="desktop"])) .summary-dashboard-grid-row {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+:where(:root[data-layout="mobile"]) .summary-dashboard-grid-row {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .metrics-grid-card {

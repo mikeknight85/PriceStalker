@@ -66,14 +66,6 @@ router.put('/items/:itemId', asyncHandler(async (req: AuthRequest, res: Response
     return;
   }
 
-  // Also propagate category to attached product listings so filters stay unified
-  if (updates.category !== undefined) {
-    await pool.query(
-      `UPDATE products SET category = $1 WHERE item_id = $2 AND user_id = $3`,
-      [updates.category, itemId, req.userId!]
-    );
-  }
-
   const item = await productHistoryService.getUserItem(itemId, req.userId!);
   res.json(item || updated);
 }, 'Product', 'Products', 'Failed to update product'));
@@ -129,6 +121,24 @@ router.post('/items/:itemId/listings', asyncHandler(async (req: AuthRequest, res
   const result = await itemRepository.attachListing(productId, itemId, req.userId!);
   res.json(result);
 }, 'Product', 'Products', 'Failed to link the store'));
+
+/**
+ * Merges all store listings from another item into this one.
+ */
+router.post('/items/:itemId/merge', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const targetItemId = parseIdParam(req, 'itemId');
+  if (targetItemId === null) {
+    res.status(400).json({ error: 'Invalid target product id' });
+    return;
+  }
+  const sourceItemId = Number(req.body?.sourceItemId);
+  if (!Number.isInteger(sourceItemId) || sourceItemId <= 0) {
+    res.status(400).json({ error: 'A valid sourceItemId is required' });
+    return;
+  }
+  const result = await itemRepository.mergeItems(sourceItemId, targetItemId, req.userId!);
+  res.json(result);
+}, 'Product', 'Products', 'Failed to merge products'));
 
 /** Undoes the above: gives a store its own product entry again. */
 router.post('/:id/detach', asyncHandler(async (req: AuthRequest, res: Response) => {

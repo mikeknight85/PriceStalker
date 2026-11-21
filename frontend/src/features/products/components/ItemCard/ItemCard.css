@@ -173,3 +173,6 @@ a.item-card-head-link:hover .item-card-name {
   .item-card-head { flex-wrap: wrap; }
   .item-card-price { text-align: left; width: 100%; }
 }
+
+:where(:root[data-layout="mobile"]) .item-card-head { flex-wrap: wrap; }
+:where(:root[data-layout="mobile"]) .item-card-price { text-align: left; width: 100%; }

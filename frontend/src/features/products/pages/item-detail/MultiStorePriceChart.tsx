@@ -45,7 +45,7 @@ export const MultiStorePriceChart: React.FC<MultiStorePriceChartProps> = ({
   currency,
   targetPrice,
   userLocale,
-  selectedRange = 30,
+  selectedRange,
   onRangeChange,
 }) => {
   const isDark = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark';

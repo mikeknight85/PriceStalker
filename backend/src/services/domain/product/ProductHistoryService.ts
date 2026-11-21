@@ -7,6 +7,7 @@ import {
   ProductWithSparkline,
   ItemWithListings
 } from '../../../models';
+import { itemRepository } from './repositories/item.repository';
 import { syncUserCategories } from './utils';
 import { groupIntoItems } from './utils/group-into-items';
 import { hostOf } from './repositories/store-context';
@@ -155,6 +156,11 @@ export class ProductHistoryService {
     // with somebody else's categories.
     if (updated && data.category) {
       await syncUserCategories(updated.user_id ?? userId, data.category);
+    }
+
+    // If this product belongs to an item, keep the parent item and sibling stores in sync
+    if (updated && data.category !== undefined) {
+      await itemRepository.syncProductCategoryToItem(productId, updated.user_id ?? userId, data.category);
     }
 
     const product = await productRepository.findById(productId, userId, { asAdmin });

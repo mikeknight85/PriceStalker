@@ -57,6 +57,14 @@ export const ProductService = {
       `/products/items/${itemId}/listings`, { productId }
     ),
 
+  /**
+   * Merges all store listings from another item into this target item.
+   */
+  mergeItems: (targetItemId: number, sourceItemId: number) =>
+    api.post<{ movedCount: number; discardedAlertSettings: { target_price: number | null; price_drop_threshold: number | null; notify_back_in_stock: boolean } | null }>(
+      `/products/items/${targetItemId}/merge`, { sourceItemId }
+    ),
+
   /** Undoes the above: gives this store its own product entry again. */
   detachFromItem: (productId: number) =>
     api.post<{ id: number; name: string }>(`/products/${productId}/detach`, {}),
