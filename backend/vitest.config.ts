@@ -6,6 +6,18 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./src/tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/tests/**',
+        'src/types/**',
+        'src/**/*.d.ts',
+        'src/scripts/**',
+        'src/migrations/**',
+      ],
+    },
     alias: {
       '@app': path.resolve(__dirname, './src/app'),
       '@routes': path.resolve(__dirname, './src/routes'),
