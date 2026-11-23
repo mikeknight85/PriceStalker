@@ -14,13 +14,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .item-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--border-hover, var(--border));
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  border-color: var(--border-hover, var(--border-strong, #94a3b8));
 }
 
 .item-card-head {

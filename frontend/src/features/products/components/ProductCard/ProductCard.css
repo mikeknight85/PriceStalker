@@ -10,14 +10,14 @@
   overflow: hidden;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   position: relative;
   min-height: 120px;
 }
 
 .pb-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--border-hover, var(--border-strong, #94a3b8));
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
 }
 
 .pb-card.selected {
