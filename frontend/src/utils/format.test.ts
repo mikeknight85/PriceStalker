@@ -28,11 +28,23 @@ describe('formatPrice', () => {
     expect(formattedStr).toBe('$49.99');
   });
 
-  it('survives null or undefined locale without throwing', () => {
-    // Repository Rule 2: Locale formatting must survive null
-    expect(() => formatPrice(19.99, 'USD', null)).not.toThrow();
-    expect(() => formatPrice(19.99, 'USD', undefined)).not.toThrow();
-    expect(formatPrice(19.99, 'USD', null)).toContain('19.99');
+  it('survives null or undefined locale without throwing or triggering fallback errors', () => {
+    // Repository Rule 2: Locale formatting must survive null.
+    // Intl.NumberFormat throws TypeError on null. formatPrice must normalise null
+    // to undefined BEFORE calling Intl, and must NOT trigger the catch fallback.
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    try {
+      expect(() => formatPrice(19.99, 'USD', null)).not.toThrow();
+      expect(formatPrice(19.99, 'USD', null)).toContain('19.99');
+      // console.error must NOT have been called (no catch-block fallback triggered)
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      expect(() => formatPrice(19.99, 'USD', undefined)).not.toThrow();
+      expect(consoleSpy).not.toHaveBeenCalled();
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 
   it('formats correctly with explicit currency and locale', () => {
@@ -125,7 +137,14 @@ describe('formatDateWithOptions', () => {
   it('survives null locale and returns N/A on invalid dates', () => {
     const opts: Intl.DateTimeFormatOptions = { month: 'short' };
     expect(formatDateWithOptions('bad-date', null, opts)).toBe('N/A');
-    expect(() => formatDateWithOptions('2026-01-01', null, opts)).not.toThrow();
+
+    const toLocaleSpy = vi.spyOn(Date.prototype, 'toLocaleDateString');
+    try {
+      expect(() => formatDateWithOptions('2026-01-01', null, opts)).not.toThrow();
+      expect(toLocaleSpy).toHaveBeenCalledWith(undefined, opts);
+    } finally {
+      toLocaleSpy.mockRestore();
+    }
   });
 });
 
@@ -136,10 +155,17 @@ describe('formatDate', () => {
     expect(formatDate('invalid')).toBe('N/A');
   });
 
-  it('survives null locale without throwing', () => {
-    // Repository Rule 2
-    expect(() => formatDate('2026-05-10T08:00:00.000Z', null)).not.toThrow();
-    expect(formatDate('2026-05-10T08:00:00.000Z', null)).toContain('2026');
+  it('survives null locale without passing raw null to toLocaleDateString', () => {
+    // Repository Rule 2: toLocaleDateString(null) throws TypeError.
+    // formatDate must normalise null to undefined so toLocaleDateString is never passed raw null.
+    const toLocaleSpy = vi.spyOn(Date.prototype, 'toLocaleDateString');
+    try {
+      expect(() => formatDate('2026-05-10T08:00:00.000Z', null)).not.toThrow();
+      expect(formatDate('2026-05-10T08:00:00.000Z', null)).toContain('2026');
+      expect(toLocaleSpy).toHaveBeenCalledWith(undefined, expect.any(Object));
+    } finally {
+      toLocaleSpy.mockRestore();
+    }
   });
 
   it('includes time when includeTime is true', () => {
