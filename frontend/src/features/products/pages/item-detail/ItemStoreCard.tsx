@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ItemWithListings, Product } from '../../../../types/api';
-import { formatPrice } from '../../../../utils/format';
+import { formatPrice, formatDateTime, formatRelativeDate } from '../../../../utils/format';
 import Icon from '../../../../components/Icon';
 import Sparkline from '../../components/Sparkline';
 import ProductBadges from '../../components/ProductBadges';
@@ -113,6 +113,10 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
     ? [{ price: listing.current_price, recorded_at: new Date().toISOString() }]
     : [];
 
+  const refreshTooltip = listing.next_check_at
+    ? `Next check: ${formatDateTime(listing.next_check_at, userLocale)} • Last checked: ${formatRelativeDate(listing.last_checked, userLocale)}`
+    : `Last checked: ${formatRelativeDate(listing.last_checked, userLocale)}`;
+
   return (
     <div
       className={`pb-card item-store-card ${isLowest ? 'is-lowest' : ''} ${isPaused ? 'paused' : ''} ${isOutOfStock ? 'out-of-stock' : ''} ${isPreOrder ? 'pre-order' : ''} ${isMemberOnly ? 'member-only' : ''} ${isNotAvailable ? 'not-available' : ''}`}
@@ -197,9 +201,14 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
             <div className="pb-card-chart">
               <Sparkline
                 data={sparklineData}
-                width={100}
-                height={40}
-                showTrend={false}
+                currentPrice={displayPrice}
+                currency={displayCurrency}
+                locale={userLocale}
+                priceChange7d={listing.price_change_7d}
+                width={85}
+                height={38}
+                showTrend={true}
+                showBounds={true}
               />
             </div>
           </div>
@@ -212,7 +221,9 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
           />
         )}
         {!isPaused && (
-          <span className="pb-time-remaining">{timeRemaining}</span>
+          <span className="pb-time-remaining" title={refreshTooltip}>
+            {timeRemaining}
+          </span>
         )}
       </div>
 
