@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Appearance layout mode (`auto`, `desktop`, `mobile`) now applies across the
   entire application, including the Products Dashboard, Product Cards, Product
   Detail, and Combined Item Detail.
+- Retail stepped sparkline for dashboard product cards. Prices are drawn as
+  discrete step-after curves scaled across the 7-day window with high/low
+  micro-bounds, interactive mouse scrubber with price/date hover pill, and
+  endpoint halo indicators.
+- Detailed schedule tooltip on dashboard cards showing exact next scheduled check
+  timestamp and relative time since last check, relocated to the card's
+  bottom-left for improved balance beside the sparkline.
+- 2px primary cadence bar replacing the bottom rainbow gradient.
 
 ### Fixed
 
@@ -33,6 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prevent transparent backdrop bleed-through.
 - Item detail overview mobile hierarchy: promoted product title and full-width
   action buttons to the top on mobile viewports for immediate context.
+- Dashboard sparkline query now joins a `prior_anchor` CTE to fetch the most
+  recent price recorded prior to the 7-day window. Products whose price changed
+  during the week previously showed a flat single-point line and missing trend
+  badge because their prior baseline was outside the 7-day boundary.
+- Unchanged/steady products in the 7-day window now accurately calculate 0%
+  change rather than `null` and render a subtle dotted baseline.
 
 ## [2.2.0-beta.3] - 2026-11-15
 

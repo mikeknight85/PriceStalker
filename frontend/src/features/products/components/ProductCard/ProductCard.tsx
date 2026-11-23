@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Product } from '../../../../types/api';
 import { useAuth } from '../../../auth';
-import { formatPrice, formatDate, truncateUrl } from '../../../../utils/format';
+import { formatPrice, formatDate, formatDateTime, formatRelativeDate, truncateUrl } from '../../../../utils/format';
 import Sparkline from '../Sparkline';
 import ProductBadges from '../ProductBadges';
 import './ProductCard.css';
@@ -132,6 +132,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const conversionDetails = product.conversion_rate_date
     ? `Converted using ${product.conversion_source || 'the reference exchange rate'} from ${formatDate(product.conversion_rate_date, user?.locale)}.`
     : 'Converted using the latest available reference exchange rate.';
+  const refreshTooltip = product.next_check_at
+    ? `Next check: ${formatDateTime(product.next_check_at, user?.locale)} • Last checked: ${formatRelativeDate(product.last_checked, user?.locale)}`
+    : `Last checked: ${formatRelativeDate(product.last_checked, user?.locale)}`;
 
   return (
     <div className={`pb-card ${isPaused ? 'paused' : ''} ${isOutOfStock ? 'out-of-stock' : ''} ${isPreOrder ? 'pre-order' : ''} ${isMemberOnly ? 'member-only' : ''} ${isNotAvailable ? 'not-available' : ''}`}>
@@ -207,13 +210,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
             <div className="pb-card-chart">
               <Sparkline
-                data={product.sparkline && product.sparkline.length > 0 
-                  ? product.sparkline 
-                  : [{ price: product.current_price || 0, recorded_at: new Date().toISOString() }]
-                }
-                width={100}
-                height={40}
-                showTrend={false}
+                data={product.sparkline || []}
+                currentPrice={product.current_price}
+                currency={product.currency}
+                locale={user?.locale}
+                priceChange7d={product.price_change_7d}
+                width={85}
+                height={38}
+                showTrend={true}
+                showBounds={true}
               />
             </div>
           </div>
@@ -223,7 +228,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <div className={`pb-progress-bar ${isComplete ? 'pb-complete' : ''}`} style={{ width: `${progress}%` }} />
         )}
         {!isPaused && (
-          <span className="pb-time-remaining">{timeRemaining}</span>
+          <span className="pb-time-remaining" title={refreshTooltip}>
+            {timeRemaining}
+          </span>
         )}
       </div>
 

@@ -31,7 +31,7 @@
   flex-direction: column;
   min-width: 0;
   position: relative;
-  padding-bottom: 3px; /* Space for progress bar */
+  padding-bottom: 2px; /* Space for progress bar */
 }
 
 .pb-card-content {
@@ -189,8 +189,8 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+  height: 2px;
+  background: var(--primary);
   transition: width 1s linear;
   z-index: 5;
 }
@@ -201,7 +201,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: var(--border);
   z-index: 4;
 }
@@ -209,16 +209,25 @@
 .pb-time-remaining {
   position: absolute;
   bottom: 8px;
-  right: 8px;
+  left: 1rem;
   font-size: 0.625rem;
   font-weight: 600;
   color: var(--text-muted);
   background: var(--surface);
-  padding: 1px 4px;
-  border-radius: 3px;
-  opacity: 0.8;
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  opacity: 0.85;
   z-index: 6;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: help;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.pb-time-remaining:hover {
+  opacity: 1;
+  color: var(--text);
+  border-color: var(--primary);
 }
 
 .pb-refreshing {
