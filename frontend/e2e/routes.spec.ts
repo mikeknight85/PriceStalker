@@ -567,7 +567,7 @@ test('renders currency and dates without throwing when user locale is null', asy
 
   await page.goto('/products');
   await expect(page.getByText('Acceptance Product')).toBeVisible();
-  await expect(page.getByText('$25.00')).toBeVisible();
+  await expect(page.locator('.pb-card-price', { hasText: '$25.00' })).toBeVisible();
 
   await page.goto('/products/1');
   await expect(page.getByRole('heading', { name: 'Acceptance Product' })).toBeVisible();

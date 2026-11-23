@@ -307,8 +307,6 @@ const Sparkline: React.FC<SparklineProps> = ({
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
-          <title>{tooltipText}</title>
-
           {minPrice === maxPrice || normalizedPoints.length < 2 ? (
             // Clean neutral baseline for steady prices
             <>
