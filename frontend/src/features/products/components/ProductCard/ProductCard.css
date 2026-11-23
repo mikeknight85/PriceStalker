@@ -249,6 +249,7 @@
   :where(:root:not([data-layout="desktop"])) .pb-card-image-wrapper { width: 60px; height: 60px; }
   :where(:root:not([data-layout="desktop"])) .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
   :where(:root:not([data-layout="desktop"])) .pb-card-price { font-size: 1.25rem; }
+  :where(:root:not([data-layout="desktop"])) .pb-time-remaining { left: 0.75rem; }
   :where(:root:not([data-layout="desktop"])) .pb-card-chart {
     display: flex;
     flex-basis: 100%;
@@ -263,6 +264,7 @@
 :where(:root[data-layout="mobile"]) .pb-card-image-wrapper { width: 60px; height: 60px; }
 :where(:root[data-layout="mobile"]) .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
 :where(:root[data-layout="mobile"]) .pb-card-price { font-size: 1.25rem; }
+:where(:root[data-layout="mobile"]) .pb-time-remaining { left: 0.75rem; }
 :where(:root[data-layout="mobile"]) .pb-card-chart {
   display: flex;
   flex-basis: 100%;
@@ -281,6 +283,7 @@
   .pb-card-image-wrapper { width: 60px; height: 60px; }
   .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
   .pb-card-price { font-size: 1.25rem; }
+  .pb-time-remaining { left: 0.75rem; }
   .pb-card-chart {
     display: flex;
     flex-basis: 100%;

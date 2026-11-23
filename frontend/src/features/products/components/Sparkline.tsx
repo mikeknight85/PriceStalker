@@ -53,13 +53,14 @@ const Sparkline: React.FC<SparklineProps> = ({
     const windowStart = now - windowMs;
 
     // Parse all valid points
-    const raw: { price: number; time: number }[] = [];
+    const raw: { price: number; time: number; effectiveTime: number }[] = [];
     if (Array.isArray(data)) {
       for (const d of data) {
         const p = typeof d.price === 'string' ? parseFloat(d.price) : d.price;
         if (!isNaN(p) && p !== null && p !== undefined) {
           const t = d.recorded_at ? new Date(d.recorded_at).getTime() : now;
-          raw.push({ price: p, time: isNaN(t) ? now : t });
+          const validT = isNaN(t) ? now : t;
+          raw.push({ price: p, time: validT, effectiveTime: validT });
         }
       }
     }
@@ -68,11 +69,11 @@ const Sparkline: React.FC<SparklineProps> = ({
     if (currentPrice !== undefined && currentPrice !== null && !isNaN(currentPrice)) {
       const numCur = typeof currentPrice === 'string' ? parseFloat(currentPrice) : currentPrice;
       if (raw.length === 0) {
-        raw.push({ price: numCur, time: now });
+        raw.push({ price: numCur, time: now, effectiveTime: now });
       } else {
         const last = raw[raw.length - 1];
         if (Math.abs(last.time - now) > 60_000) {
-          raw.push({ price: numCur, time: now });
+          raw.push({ price: numCur, time: now, effectiveTime: now });
         }
       }
     }
@@ -94,23 +95,24 @@ const Sparkline: React.FC<SparklineProps> = ({
     raw.sort((a, b) => a.time - b.time);
 
     // If only 1 point exists, span it across the 7-day window
-    let pts: { price: number; time: number }[] = [];
+    let pts: { price: number; time: number; effectiveTime: number }[] = [];
     if (raw.length === 1) {
       pts = [
-        { price: raw[0].price, time: windowStart },
-        { price: raw[0].price, time: now },
+        { price: raw[0].price, time: windowStart, effectiveTime: raw[0].effectiveTime },
+        { price: raw[0].price, time: now, effectiveTime: raw[0].effectiveTime },
       ];
     } else {
       // If the first point was before windowStart (prior anchor), clamp its visual time to windowStart
       pts = raw.map((p, idx) => {
         if (idx === 0 && p.time < windowStart) {
-          return { price: p.price, time: windowStart };
+          return { price: p.price, time: windowStart, effectiveTime: p.effectiveTime };
         }
         return p;
       });
-      // Ensure the line extends to now
+      // Ensure the line extends to now without falsely jumping the step's effective date to now
       if (pts[pts.length - 1].time < now) {
-        pts.push({ price: pts[pts.length - 1].price, time: now });
+        const lastPt = pts[pts.length - 1];
+        pts.push({ price: lastPt.price, time: now, effectiveTime: lastPt.effectiveTime });
       }
     }
 
@@ -215,7 +217,8 @@ const Sparkline: React.FC<SparklineProps> = ({
     (e: React.MouseEvent<SVGSVGElement>) => {
       if (normalizedPoints.length === 0) return;
       const rect = e.currentTarget.getBoundingClientRect();
-      const mouseX = Math.max(padding, Math.min(padding + chartWidth, e.clientX - rect.left));
+      const scaleX = rect.width > 0 ? width / rect.width : 1;
+      const mouseX = Math.max(padding, Math.min(padding + chartWidth, (e.clientX - rect.left) * scaleX));
       const timeFrac = (mouseX - padding) / chartWidth;
       const now = Date.now();
       const windowMs = 7 * 24 * 60 * 60 * 1000;
@@ -227,7 +230,7 @@ const Sparkline: React.FC<SparklineProps> = ({
           x: mouseX,
           y: padding + chartHeight / 2,
           price: minPrice,
-          time: hoverTime,
+          time: normalizedPoints[0]?.effectiveTime ?? hoverTime,
           deltaPct: 0,
         });
         return;
@@ -251,11 +254,11 @@ const Sparkline: React.FC<SparklineProps> = ({
         x: mouseX,
         y,
         price: active.price,
-        time: active.time,
+        time: active.effectiveTime ?? active.time,
         deltaPct,
       });
     },
-    [normalizedPoints, minPrice, maxPrice, firstPrice, padding, chartWidth, chartHeight, scaleMin, scaleDelta]
+    [normalizedPoints, minPrice, maxPrice, firstPrice, padding, chartWidth, chartHeight, scaleMin, scaleDelta, width]
   );
 
   const handleMouseLeave = useCallback(() => {

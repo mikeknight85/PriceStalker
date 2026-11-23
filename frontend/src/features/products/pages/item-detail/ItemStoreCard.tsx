@@ -201,8 +201,8 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
             <div className="pb-card-chart">
               <Sparkline
                 data={sparklineData}
-                currentPrice={displayPrice}
-                currency={displayCurrency}
+                currentPrice={listing.current_price}
+                currency={listing.currency}
                 locale={userLocale}
                 priceChange7d={listing.price_change_7d}
                 width={85}

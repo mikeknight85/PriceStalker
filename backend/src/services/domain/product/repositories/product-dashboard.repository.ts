@@ -143,9 +143,11 @@ export const productDashboardRepository = {
         if (firstPrice > 0) {
           priceChange7d = ((lastPrice - firstPrice) / firstPrice) * 100;
         }
-      } else if (sparkline.length === 1 && product.current_price !== null && product.current_price !== undefined) {
+      } else if (sparkline.length === 1) {
         const firstPrice = parseFloat(String(sparkline[0].price));
-        const currentPrice = parseFloat(String(product.current_price));
+        const currentPrice = product.current_price !== null && product.current_price !== undefined
+          ? parseFloat(String(product.current_price))
+          : firstPrice;
         if (firstPrice > 0 && Math.abs(currentPrice - firstPrice) < 0.001) {
           priceChange7d = 0;
         } else if (firstPrice > 0) {
