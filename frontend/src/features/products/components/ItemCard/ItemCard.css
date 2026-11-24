@@ -159,7 +159,17 @@ a.item-card-head-link:hover .item-card-name {
   white-space: nowrap;
 }
 
+.item-card-separator {
+  color: var(--text-muted);
+}
+
 .item-listing-price { font-variant-numeric: tabular-nums; }
+
+.item-listing-oos {
+  color: var(--text-muted);
+  opacity: 0.8;
+  font-weight: 400;
+}
 
 .item-listing-absent {
   color: var(--text-muted);

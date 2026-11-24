@@ -61,24 +61,34 @@ export function groupIntoItems(
     const priceOf = (l: ProductWithSparkline) => comparablePrice(l, preferredCurrency, currency);
 
     const comparable = listings.filter(l => priceOf(l) !== null);
-    const prices = comparable.map(l => priceOf(l) as number);
+    const availableComparable = comparable.filter(isListingAvailable);
+    const oosComparable = comparable.filter(l => !isListingAvailable(l));
 
-    const best = prices.length > 0 ? Math.min(...prices) : null;
-    const worst = prices.length > 0 ? Math.max(...prices) : null;
+    // Best price is chosen from stores where the user can actually buy the
+    // item. An out-of-stock store at a lower price is not an actionable deal;
+    // crowning it as the best price creates phantom savings and misleads the
+    // user. Only fall back to out-of-stock stores if every comparable store is
+    // out of stock.
+    const candidates = availableComparable.length > 0 ? availableComparable : comparable;
+    const candidatePrices = candidates.map(l => priceOf(l) as number);
 
-    // Every listing at the best price, not just the first one found. Two shops
+    const best = candidatePrices.length > 0 ? Math.min(...candidatePrices) : null;
+    const worst = candidatePrices.length > 0 ? Math.max(...candidatePrices) : null;
+
+    // Every listing at the best price among candidates. Two shops
     // at the same price are both the cheapest (issue #161).
-    const bestIds = best === null ? [] : comparable.filter(l => priceOf(l) === best).map(l => l.id);
+    const bestIds = best === null ? [] : candidates.filter(l => priceOf(l) === best).map(l => l.id);
 
-    const spread = prices.length >= 2 && worst !== null && best !== null ? round2(worst - best) : null;
+    const spread = candidatePrices.length >= 2 && worst !== null && best !== null ? round2(worst - best) : null;
 
-    // Ordered cheapest first, then the ones that could not be compared. The
-    // store a user acts on is the cheapest one, so it goes at the top; the rest
-    // still appear, because a listing left out of the comparison is not a
-    // listing the user has stopped tracking.
+    // Ordered cheapest available first, then out-of-stock comparable stores,
+    // then the ones that could not be compared. The store a user can act on
+    // at the cheapest price goes at the top.
+    const uncomparable = listings.filter(l => priceOf(l) === null);
     const ordered = [
-      ...comparable.slice().sort((a, b) => (priceOf(a) as number) - (priceOf(b) as number)),
-      ...listings.filter(l => priceOf(l) === null),
+      ...availableComparable.slice().sort((a, b) => (priceOf(a) as number) - (priceOf(b) as number)),
+      ...oosComparable.slice().sort((a, b) => (priceOf(a) as number) - (priceOf(b) as number)),
+      ...uncomparable,
     ];
 
     items.push({
@@ -104,13 +114,13 @@ export function groupIntoItems(
 
       // Every comparable store at the same price. Saying "best of 3" then would
       // claim a difference that does not exist.
-      all_tied: comparable.length > 1 && spread === 0,
+      all_tied: candidates.length > 1 && spread === 0,
 
       price_spread: spread,
-      comparable_count: comparable.length,
+      comparable_count: candidates.length,
       excluded_count: listings.length - comparable.length,
 
-      any_in_stock: listings.some(l => l.stock_status === 'in_stock'),
+      any_in_stock: listings.some(l => l.stock_status === 'in_stock' || l.stock_status === 'pre_order' || l.stock_status === 'member_only'),
     });
   }
 
@@ -164,4 +174,12 @@ function finiteOrNull(value: unknown): number | null {
 /** Currency arithmetic, kept to two places so a spread reads as money. */
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+/**
+ * A listing is available for purchase if it is not definitively out of stock
+ * or unavailable/delisted.
+ */
+function isListingAvailable(listing: ProductWithSparkline): boolean {
+  return listing.stock_status !== 'out_of_stock' && listing.stock_status !== 'not_available';
 }

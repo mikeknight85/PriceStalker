@@ -37,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Best price calculation across stores now prioritizes in-stock and purchasable
+  listings over cheaper out-of-stock stores, avoiding misleading lowest price badges
+  and phantom savings callouts.
 - Modal overlay solid background styling in Combined Product View modals to
   prevent transparent backdrop bleed-through.
 - Item detail overview mobile hierarchy: promoted product title and full-width

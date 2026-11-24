@@ -39,6 +39,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
             <span className={`item-card-stock ${item.any_in_stock ? 'in' : 'out'}`}>
               {item.any_in_stock ? 'In stock' : 'Not in stock'}
             </span>
+            <span className="item-card-separator">&middot;</span>
             <span className="item-card-stores">
               {item.store_count === 1 ? '1 store' : `${item.store_count} stores`}
             </span>
@@ -111,15 +112,29 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
               genuinely do. Suppressing it makes the user learn a special case,
               and asks them to notice an absence rather than read a mark.
             */
-            className={`item-listing ${item.best_price_listing_ids.includes(listing.id) ? 'is-best' : ''}`}
+            className={`item-listing ${
+              item.best_price_listing_ids.includes(listing.id) &&
+              listing.stock_status !== 'out_of_stock' &&
+              listing.stock_status !== 'not_available'
+                ? 'is-best'
+                : ''
+            }`}
           >
             <span className="item-listing-store">
               {listing.retailer_name || hostOf(listing.url)}
             </span>
             <span className="item-listing-price">
-              {listing.converted_price !== null && listing.converted_price !== undefined
-                ? formatPrice(listing.converted_price, item.best_price_currency ?? listing.currency, userLocale)
-                : <span className="item-listing-absent">not compared</span>}
+              {listing.stock_status === 'out_of_stock' || listing.stock_status === 'not_available' ? (
+                <span className="item-listing-oos">
+                  {listing.converted_price !== null && listing.converted_price !== undefined
+                    ? `${formatPrice(listing.converted_price, item.best_price_currency ?? listing.currency, userLocale)} (OOS)`
+                    : 'Out of stock'}
+                </span>
+              ) : listing.converted_price !== null && listing.converted_price !== undefined ? (
+                formatPrice(listing.converted_price, item.best_price_currency ?? listing.currency, userLocale)
+              ) : (
+                <span className="item-listing-absent">not compared</span>
+              )}
             </span>
           </Link>
         ))}

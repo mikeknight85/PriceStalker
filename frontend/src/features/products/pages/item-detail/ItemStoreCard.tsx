@@ -41,7 +41,13 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
   const [isPausing, setIsPausing] = useState(false);
   const [isDetaching, setIsDetaching] = useState(false);
 
-  const isLowest = item.best_price_listing_ids.includes(listing.id);
+  const isOutOfStock = listing.stock_status === 'out_of_stock';
+  const isPreOrder = listing.stock_status === 'pre_order';
+  const isMemberOnly = listing.stock_status === 'member_only';
+  const isNotAvailable = listing.stock_status === 'not_available';
+  const isPaused = listing.checking_paused;
+
+  const isLowest = item.best_price_listing_ids.includes(listing.id) && !isOutOfStock && !isNotAvailable;
   const storeName = listing.retailer_name || hostOf(listing.url);
 
   // Listing price in comparison currency (or native if no converted price)
@@ -52,12 +58,6 @@ export const ItemStoreCard: React.FC<ItemStoreCardProps> = ({
   const displayCurrency = hasConverted
     ? (listing.converted_currency || item.best_price_currency || listing.currency || 'USD')
     : (listing.currency || item.best_price_currency || 'USD');
-
-  const isOutOfStock = listing.stock_status === 'out_of_stock';
-  const isPreOrder = listing.stock_status === 'pre_order';
-  const isMemberOnly = listing.stock_status === 'member_only';
-  const isNotAvailable = listing.stock_status === 'not_available';
-  const isPaused = listing.checking_paused;
 
   const { progress, timeRemaining, isComplete } = useCheckProgress(
     listing.last_checked,
