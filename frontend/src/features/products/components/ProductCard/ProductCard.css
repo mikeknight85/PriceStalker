@@ -10,14 +10,14 @@
   overflow: hidden;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   position: relative;
   min-height: 120px;
 }
 
 .pb-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--border-hover, var(--border-strong, #94a3b8));
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
 }
 
 .pb-card.selected {
@@ -31,7 +31,7 @@
   flex-direction: column;
   min-width: 0;
   position: relative;
-  padding-bottom: 3px; /* Space for progress bar */
+  padding-bottom: 2px; /* Space for progress bar */
 }
 
 .pb-card-content {
@@ -189,8 +189,8 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+  height: 2px;
+  background: var(--primary);
   transition: width 1s linear;
   z-index: 5;
 }
@@ -201,7 +201,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: var(--border);
   z-index: 4;
 }
@@ -209,16 +209,25 @@
 .pb-time-remaining {
   position: absolute;
   bottom: 8px;
-  right: 8px;
+  left: 1rem;
   font-size: 0.625rem;
   font-weight: 600;
   color: var(--text-muted);
   background: var(--surface);
-  padding: 1px 4px;
-  border-radius: 3px;
-  opacity: 0.8;
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  opacity: 0.85;
   z-index: 6;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: help;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.pb-time-remaining:hover {
+  opacity: 1;
+  color: var(--text);
+  border-color: var(--primary);
 }
 
 .pb-refreshing {
@@ -236,18 +245,33 @@
 .pb-card.not-available .pb-card-image-wrapper { filter: grayscale(1) opacity(0.5); }
 
 @media (max-width: 480px) {
-  .pb-card-content { padding: 0.75rem; gap: 0.75rem; flex-wrap: wrap; }
-  .pb-card-image-wrapper { width: 60px; height: 60px; }
-  .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
-  .pb-card-price { font-size: 1.25rem; }
-  .pb-card-chart { 
+  :where(:root:not([data-layout="desktop"])) .pb-card-content { padding: 0.75rem; gap: 0.75rem; flex-wrap: wrap; }
+  :where(:root:not([data-layout="desktop"])) .pb-card-image-wrapper { width: 60px; height: 60px; }
+  :where(:root:not([data-layout="desktop"])) .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
+  :where(:root:not([data-layout="desktop"])) .pb-card-price { font-size: 1.25rem; }
+  :where(:root:not([data-layout="desktop"])) .pb-time-remaining { left: 0.75rem; }
+  :where(:root:not([data-layout="desktop"])) .pb-card-chart {
     display: flex;
-    flex-basis: 100%; 
-    justify-content: center; 
+    flex-basis: 100%;
+    justify-content: center;
     margin-left: 0;
     margin-top: 0.5rem;
     padding-right: 0;
   }
+}
+
+:where(:root[data-layout="mobile"]) .pb-card-content { padding: 0.75rem; gap: 0.75rem; flex-wrap: wrap; }
+:where(:root[data-layout="mobile"]) .pb-card-image-wrapper { width: 60px; height: 60px; }
+:where(:root[data-layout="mobile"]) .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
+:where(:root[data-layout="mobile"]) .pb-card-price { font-size: 1.25rem; }
+:where(:root[data-layout="mobile"]) .pb-time-remaining { left: 0.75rem; }
+:where(:root[data-layout="mobile"]) .pb-card-chart {
+  display: flex;
+  flex-basis: 100%;
+  justify-content: center;
+  margin-left: 0;
+  margin-top: 0.5rem;
+  padding-right: 0;
 }
 
 /* Same layout, keyed to the card rather than the window. This is what catches
@@ -259,6 +283,7 @@
   .pb-card-image-wrapper { width: 60px; height: 60px; }
   .pb-card-info { flex-basis: calc(100% - 60px - 0.75rem); }
   .pb-card-price { font-size: 1.25rem; }
+  .pb-time-remaining { left: 0.75rem; }
   .pb-card-chart {
     display: flex;
     flex-basis: 100%;

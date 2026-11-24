@@ -21,7 +21,12 @@ interface ItemCardProps {
 const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
   return (
     <div className="item-card">
-      <div className="item-card-head">
+      <Link
+        to="/items/$itemId"
+        params={{ itemId: String(item.id) }}
+        className="item-card-head item-card-head-link"
+        title="View combined product"
+      >
         {item.image_url ? (
           <img className="item-card-image" src={item.image_url} alt="" loading="lazy" />
         ) : (
@@ -34,6 +39,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
             <span className={`item-card-stock ${item.any_in_stock ? 'in' : 'out'}`}>
               {item.any_in_stock ? 'In stock' : 'Not in stock'}
             </span>
+            <span className="item-card-separator">&middot;</span>
             <span className="item-card-stores">
               {item.store_count === 1 ? '1 store' : `${item.store_count} stores`}
             </span>
@@ -54,13 +60,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
               {item.comparable_count > 1 && (
                 <div className="item-card-price-label">
                   {item.all_tied
-                    ? `same at all ${item.comparable_count}`
+                    ? `same at all ${item.comparable_count}${item.out_of_stock_count > 0 ? ' in stock' : ''}`
+                    : item.out_of_stock_count > 0
+                    ? `best of ${item.comparable_count} in stock`
                     : `best of ${item.comparable_count}`}
-                  {/*
-                    The label stays even though every store is now highlighted:
-                    the marks say which stores are cheapest, the label says there
-                    is nothing to choose between them.
-                  */}
                 </div>
               )}
             </>
@@ -68,7 +71,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
             <div className="item-card-price-absent">No price yet</div>
           )}
         </div>
-      </div>
+      </Link>
 
       {/*
         Said out loud rather than hidden: a card that silently compared 2 of 4
@@ -106,15 +109,29 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
               genuinely do. Suppressing it makes the user learn a special case,
               and asks them to notice an absence rather than read a mark.
             */
-            className={`item-listing ${item.best_price_listing_ids.includes(listing.id) ? 'is-best' : ''}`}
+            className={`item-listing ${
+              item.best_price_listing_ids.includes(listing.id) &&
+              listing.stock_status !== 'out_of_stock' &&
+              listing.stock_status !== 'not_available'
+                ? 'is-best'
+                : ''
+            }`}
           >
             <span className="item-listing-store">
               {listing.retailer_name || hostOf(listing.url)}
             </span>
             <span className="item-listing-price">
-              {listing.converted_price !== null && listing.converted_price !== undefined
-                ? formatPrice(listing.converted_price, item.best_price_currency ?? listing.currency, userLocale)
-                : <span className="item-listing-absent">not compared</span>}
+              {listing.stock_status === 'out_of_stock' || listing.stock_status === 'not_available' ? (
+                <span className="item-listing-oos">
+                  {listing.converted_price !== null && listing.converted_price !== undefined
+                    ? `${formatPrice(listing.converted_price, item.best_price_currency ?? listing.currency, userLocale)} (OOS)`
+                    : 'Out of stock'}
+                </span>
+              ) : listing.converted_price !== null && listing.converted_price !== undefined ? (
+                formatPrice(listing.converted_price, item.best_price_currency ?? listing.currency, userLocale)
+              ) : (
+                <span className="item-listing-absent">not compared</span>
+              )}
             </span>
           </Link>
         ))}

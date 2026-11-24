@@ -227,6 +227,82 @@ test('renders every settings section at its canonical path', async ({ page }) =>
   }
 });
 
+test('renders combined product view and sub-routes', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('token', 'acceptance-token');
+    localStorage.setItem('user', JSON.stringify(user));
+  }, authenticatedUser);
+
+  const mockItem = {
+    id: 42,
+    name: 'Acceptance Canonical Item',
+    image_url: null,
+    category: 'Electronics',
+    target_price: 200,
+    price_drop_threshold: 10,
+    notify_back_in_stock: true,
+    listings: [product],
+    store_count: 1,
+    best_price: 25,
+    best_price_listing_ids: [1],
+    all_tied: false,
+    best_price_currency: 'USD',
+    price_spread: null,
+    comparable_count: 1,
+    excluded_count: 0,
+    any_in_stock: true,
+  };
+
+  await page.route('**/api/products/items/42', async (route) => {
+    await route.fulfill({ json: mockItem });
+  });
+  await page.route('**/api/products/items/42/history**', async (route) => {
+    await route.fulfill({
+      json: {
+        item: mockItem,
+        series: [{
+          productId: 1,
+          retailerName: 'ExampleStore',
+          url: 'https://example.test/product',
+          currency: 'USD',
+          prices: [{ price: 25, recorded_at: '2026-01-01' }],
+        }],
+      },
+    });
+  });
+  await page.route('**/api/products/items/42/stock**', async (route) => {
+    await route.fulfill({
+      json: {
+        item: mockItem,
+        series: [{
+          productId: 1,
+          retailerName: 'ExampleStore',
+          url: 'https://example.test/product',
+          stockStatus: 'in_stock',
+          history: [{ status: 'in_stock', changed_at: '2026-01-01' }],
+          stats: { availability_percent: 100, outage_count: 0, days_in_current_status: 10 },
+        }],
+      },
+    });
+  });
+
+  await page.goto('/items/42');
+  await expect(page.getByRole('heading', { name: 'Acceptance Canonical Item' })).toBeVisible();
+  await expect(page.getByText('Current Lowest Price')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Combined Price History' }).click({ force: true });
+  await expect(page).toHaveURL(/\/items\/42\/history$/);
+  await expect(page.getByText('Price Movement by Store')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Stock Availability' }).click({ force: true });
+  await expect(page).toHaveURL(/\/items\/42\/stock$/);
+  await expect(page.getByText('Synchronized Availability Timeline')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Alerts & Notifications' }).click({ force: true });
+  await expect(page).toHaveURL(/\/items\/42\/notifications$/);
+  await expect(page.getByText('Product Alerts & Notifications')).toBeVisible();
+});
+
 test('allows admins into every admin section and exposes guarded debug', async ({ page }) => {
   await page.addInitScript((user) => {
     localStorage.setItem('token', 'acceptance-token');
@@ -491,7 +567,7 @@ test('renders currency and dates without throwing when user locale is null', asy
 
   await page.goto('/products');
   await expect(page.getByText('Acceptance Product')).toBeVisible();
-  await expect(page.getByText('$25.00')).toBeVisible();
+  await expect(page.locator('.pb-card-price', { hasText: '$25.00' })).toBeVisible();
 
   await page.goto('/products/1');
   await expect(page.getByRole('heading', { name: 'Acceptance Product' })).toBeVisible();

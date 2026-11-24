@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { ProductImage, ProductPriceStatus } from './ProductInfo';
 import ProductHeader from './ProductHeader';
 import ProductMetadata from './ProductMetadata';
@@ -75,6 +76,32 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
 
   return (
     <div className="product-detail-card">
+      {sharesProduct && owningItem && (
+        <div style={{
+          padding: '0.65rem 1.25rem',
+          background: 'var(--background)',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '0.85rem',
+          color: 'var(--text-muted)',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+        }}>
+          <div>
+            Part of product: <strong style={{ color: 'var(--text)' }}>{owningItem.name}</strong> ({owningItem.store_count} stores tracked)
+          </div>
+          <Link
+            to="/items/$itemId"
+            params={{ itemId: String(owningItem.id) }}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: '0.75rem', padding: '0.2rem 0.55rem' }}
+          >
+            View Combined Product →
+          </Link>
+        </div>
+      )}
       <div className="product-detail-content">
         <ProductImage 
           product={product}

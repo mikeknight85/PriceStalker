@@ -19,7 +19,14 @@ export const queryKeys = {
   adminUsers: ['admin', 'users'] as const,
   adminTokens: ['admin', 'system-tokens'] as const,
   adminRetailers: ['admin', 'retailers'] as const,
-  products: { all: ['products'] as const, items: ['products', 'items'] as const, detail: (id: number) => ['products', id] as const },
+  products: {
+    all: ['products'] as const,
+    items: ['products', 'items'] as const,
+    detail: (id: number) => ['products', id] as const,
+    itemDetail: (itemId: number) => ['products', 'items', itemId] as const,
+    itemPriceHistory: (itemId: number, days?: number) => ['products', 'items', itemId, 'history', days] as const,
+    itemStockHistory: (itemId: number, days?: number) => ['products', 'items', itemId, 'stock', days] as const,
+  },
   discoveryStatus: ['settings', 'discovery-status'] as const,
   profile: ['profile'] as const,
   currencies: ['settings', 'currencies'] as const,
@@ -59,6 +66,25 @@ export const itemListQuery = () => queryOptions({
   queryFn: ({ signal }) => ProductService.getItems({ signal }),
   staleTime: PRODUCT_POLL_INTERVAL,
   refetchInterval: PRODUCT_POLL_INTERVAL,
+});
+
+export const itemDetailQuery = (itemId: number) => queryOptions({
+  queryKey: queryKeys.products.itemDetail(itemId),
+  queryFn: ({ signal }) => ProductService.getItemById(itemId, { signal }),
+  staleTime: PRODUCT_DETAIL_POLL_INTERVAL,
+  refetchInterval: PRODUCT_DETAIL_POLL_INTERVAL,
+});
+
+export const itemPriceHistoryQuery = (itemId: number, days?: number) => queryOptions({
+  queryKey: queryKeys.products.itemPriceHistory(itemId, days),
+  queryFn: ({ signal }) => ProductService.getItemPriceHistory(itemId, days, { signal }),
+  staleTime: 60_000,
+});
+
+export const itemStockHistoryQuery = (itemId: number, days: number = 30) => queryOptions({
+  queryKey: queryKeys.products.itemStockHistory(itemId, days),
+  queryFn: ({ signal }) => ProductService.getItemStockHistory(itemId, days, { signal }),
+  staleTime: 60_000,
 });
 
 export const productDetailQuery = (id: number) => queryOptions({

@@ -39,6 +39,14 @@ const Dashboard: React.FC = () => {
   const changeView = (next: DashboardView) => {
     setView(next);
     try { localStorage.setItem(VIEW_STORAGE_KEY, next); } catch { /* preference is optional */ }
+    navigate({
+      to: '/products',
+      search: (prev: any) => ({
+        ...prev,
+        view: next === 'items' ? 'items' : undefined,
+      }),
+      replace: true,
+    });
   };
 
   const {
@@ -73,7 +81,14 @@ const Dashboard: React.FC = () => {
   } = useDashboardState();
 
   const navigate = useNavigate();
-  const { tag } = productsRoute.useSearch();
+  const { tag, view: queryView } = productsRoute.useSearch();
+
+  useEffect(() => {
+    if (queryView && queryView !== view) {
+      setView(queryView);
+      try { localStorage.setItem(VIEW_STORAGE_KEY, queryView); } catch {}
+    }
+  }, [queryView]);
 
   useEffect(() => {
     if (tag !== undefined && tag !== activeTag) {

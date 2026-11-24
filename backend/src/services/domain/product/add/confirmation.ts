@@ -36,7 +36,8 @@ export class ProductConfirmationService {
       refresh_interval || FALLBACK_REFRESH_INTERVAL_SECONDS,
       (stockStatus || 'unknown') as any,
       'confirmed',
-      category || null
+      category || null,
+      options.itemId ? Number(options.itemId) : undefined
     );
 
     await productPersistenceService.saveScrapeResult(

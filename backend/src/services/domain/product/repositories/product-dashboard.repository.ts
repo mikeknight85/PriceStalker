@@ -73,17 +73,35 @@ export const productDashboardRepository = {
     const products = productsResult.rows.map(withItemAlertSettings);
     if (products.length === 0) return [];
 
-    // Get sparkline data for all products (last 7 days)
+    // Get sparkline data for all products (last 7 days plus the prior anchor immediately before the 7-day cutoff)
     const productIds = products.map((p: Product) => p.id);
     const sparklineResult = await pool.query(
       // price_type must be filtered here. Without it a member-only or
       // struck-through original price is plotted as though it were a change in
       // the tracked price, and the sparkline shows drops that never happened.
-      `SELECT product_id, price, recorded_at
-       FROM price_history
-       WHERE product_id = ANY($1)
-       AND price_type = 'standard'
-       AND recorded_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+      //
+      // Using a CTE with prior_anchor ensures products that changed price once
+      // within the 7-day window retain their starting price at the 7-day boundary,
+      // rather than collapsing into a single point and hiding the price drop.
+      `WITH recent_history AS (
+         SELECT product_id, price, recorded_at
+         FROM price_history
+         WHERE product_id = ANY($1)
+           AND price_type = 'standard'
+           AND recorded_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+       ),
+       prior_anchor AS (
+         SELECT DISTINCT ON (product_id)
+           product_id, price, recorded_at
+         FROM price_history
+         WHERE product_id = ANY($1)
+           AND price_type = 'standard'
+           AND recorded_at < CURRENT_TIMESTAMP - INTERVAL '7 days'
+         ORDER BY product_id, recorded_at DESC
+       )
+       SELECT product_id, price, recorded_at FROM prior_anchor
+       UNION ALL
+       SELECT product_id, price, recorded_at FROM recent_history
        ORDER BY product_id, recorded_at ASC`,
       [productIds]
     );
@@ -124,6 +142,16 @@ export const productDashboardRepository = {
         const lastPrice = parseFloat(String(sparkline[sparkline.length - 1].price));
         if (firstPrice > 0) {
           priceChange7d = ((lastPrice - firstPrice) / firstPrice) * 100;
+        }
+      } else if (sparkline.length === 1) {
+        const firstPrice = parseFloat(String(sparkline[0].price));
+        const currentPrice = product.current_price !== null && product.current_price !== undefined
+          ? parseFloat(String(product.current_price))
+          : firstPrice;
+        if (firstPrice > 0 && Math.abs(currentPrice - firstPrice) < 0.001) {
+          priceChange7d = 0;
+        } else if (firstPrice > 0) {
+          priceChange7d = ((currentPrice - firstPrice) / firstPrice) * 100;
         }
       }
 

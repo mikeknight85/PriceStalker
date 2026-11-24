@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Combined Product View (`/items/$itemId`): dedicated canonical product page
+  showing side-by-side price aggregates, dashboard-styled store listing cards
+  with per-store sparklines and status badges, a multi-store price history
+  comparison chart with store toggling, a synchronized multi-store stock
+  availability swimlane timeline, a live store stock comparison matrix, and
+  item-level alert settings.
+- Direct "Track New Store" and "Link Existing Store" actions on the Combined
+  Product View to attach multiple retailer URLs to a canonical product.
+- Navigation from the dashboard's "By product" view directly to the Combined
+  Product View, preserving view state when returning to the dashboard, and
+  cross-links from single-store listing pages.
+- Bi-directional category/tag synchronization between parent items and child
+  product listings on merge, attach, and product update.
+- Application-wide mobile layout override support: the User Settings
+  Appearance layout mode (`auto`, `desktop`, `mobile`) now applies across the
+  entire application, including the Products Dashboard, Product Cards, Product
+  Detail, and Combined Item Detail.
+- Retail stepped sparkline for dashboard product cards. Prices are drawn as
+  discrete step-after curves scaled across the 7-day window with high/low
+  micro-bounds, interactive mouse scrubber with price/date hover pill, and
+  endpoint halo indicators.
+- Detailed schedule tooltip on dashboard cards showing exact next scheduled check
+  timestamp and relative time since last check, relocated to the card's
+  bottom-left for improved balance beside the sparkline.
+- 2px primary cadence bar replacing the bottom rainbow gradient.
+
+### Fixed
+
+- Best price calculation across stores now prioritizes in-stock and purchasable
+  listings over cheaper out-of-stock stores, avoiding misleading lowest price badges
+  and phantom savings callouts. Grouped dashboard cards now qualify comparisons as
+  "best of X in stock" when stores are unavailable, list out-of-stock stores with
+  muted "(OOS)" indicators at the bottom, and separate stock status with a middle dot.
+- Modal overlay solid background styling in Combined Product View modals to
+  prevent transparent backdrop bleed-through.
+- Item detail overview mobile hierarchy: promoted product title and full-width
+  action buttons to the top on mobile viewports for immediate context.
+- Dashboard sparkline query now joins a `prior_anchor` CTE to fetch the most
+  recent price recorded prior to the 7-day window. Products whose price changed
+  during the week previously showed a flat single-point line and missing trend
+  badge because their prior baseline was outside the 7-day boundary.
+- Unchanged/steady products in the 7-day window now accurately calculate 0%
+  change rather than `null` and render a subtle dotted baseline.
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added

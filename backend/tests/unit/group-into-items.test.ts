@@ -205,6 +205,56 @@ describe('stock', () => {
     ], 'CHF');
     expect(items[0].any_in_stock).toBe(false);
   });
+
+  it('prefers an in-stock store for best price even if an out-of-stock store is cheaper', () => {
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 279, stock_status: 'out_of_stock' }),
+      listing({ id: 2, is_primary: false, converted_price: 343.98, stock_status: 'in_stock' }),
+      listing({ id: 3, is_primary: false, converted_price: 379, stock_status: 'in_stock' }),
+    ], 'AUD');
+
+    // Amazon ($343.98) is the cheapest purchasable store
+    expect(items[0].best_price).toBe(343.98);
+    expect(items[0].best_price_listing_ids).toEqual([2]);
+    // Comparable count is the available stores compared
+    expect(items[0].comparable_count).toBe(2);
+    expect(items[0].out_of_stock_count).toBe(1);
+    // Spread is between available stores (379 - 343.98)
+    expect(items[0].price_spread).toBe(35.02);
+    // Available stores ordered first, OOS store last
+    expect(items[0].listings.map(l => l.id)).toEqual([2, 3, 1]);
+    expect(items[0].any_in_stock).toBe(true);
+  });
+
+  it('falls back to the lowest out-of-stock price when all stores are out of stock', () => {
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 279, stock_status: 'out_of_stock' }),
+      listing({ id: 2, is_primary: false, converted_price: 343.98, stock_status: 'out_of_stock' }),
+    ], 'AUD');
+
+    expect(items[0].best_price).toBe(279);
+    expect(items[0].best_price_listing_ids).toEqual([1]);
+    expect(items[0].comparable_count).toBe(2);
+    expect(items[0].out_of_stock_count).toBe(0);
+    expect(items[0].any_in_stock).toBe(false);
+    expect(items[0].listings.map(l => l.id)).toEqual([1, 2]);
+  });
+
+  it('treats pre_order and member_only as available stores', () => {
+    const items = groupIntoItems([
+      listing({ id: 1, converted_price: 150, stock_status: 'out_of_stock' }),
+      listing({ id: 2, is_primary: false, converted_price: 200, stock_status: 'pre_order' }),
+      listing({ id: 3, is_primary: false, converted_price: 250, stock_status: 'member_only' }),
+    ], 'AUD');
+
+    expect(items[0].best_price).toBe(200);
+    expect(items[0].best_price_listing_ids).toEqual([2]);
+    expect(items[0].comparable_count).toBe(2);
+    expect(items[0].out_of_stock_count).toBe(1);
+    // any_in_stock is strictly whether any store has stock_status === 'in_stock'
+    expect(items[0].any_in_stock).toBe(false);
+    expect(items[0].listings.map(l => l.id)).toEqual([2, 3, 1]);
+  });
 });
 
 describe('alert settings come from the item', () => {

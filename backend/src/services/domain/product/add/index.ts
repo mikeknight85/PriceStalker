@@ -37,7 +37,7 @@ export class ProductAddService {
       });
     } 
     
-    return productDiscoveryService.initiateProductDiscovery(userId, cleanedUrl, category, refreshInterval);
+    return productDiscoveryService.initiateProductDiscovery(userId, cleanedUrl, category, refreshInterval, options.itemId ? Number(options.itemId) : undefined);
   }
 
   async scanProduct(userId: number, productId: number): Promise<any> {

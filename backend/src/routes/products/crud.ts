@@ -1,7 +1,9 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { productAddService, productHistoryService } from '../../services/domain/product';
+import { syncUserCategories } from '../../services/domain/product/utils';
 import { itemRepository } from '../../models';
+import pool from '../../config/database';
 import { asyncHandler, parseIdParam, callerIsAdmin } from '../../utils/system/route-helpers';
 
 const router = Router();
@@ -25,6 +27,79 @@ router.get('/items', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json(items);
 }, 'Product', 'Products', 'Failed to fetch items'));
 
+router.get('/items/:itemId', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const itemId = parseIdParam(req, 'itemId');
+  if (itemId === null) {
+    res.status(400).json({ error: 'Invalid product id' });
+    return;
+  }
+  const item = await productHistoryService.getUserItem(itemId, req.userId!);
+  if (!item) {
+    res.status(404).json({ error: 'Product not found' });
+    return;
+  }
+  res.json(item);
+}, 'Product', 'Products', 'Failed to fetch product'));
+
+router.put('/items/:itemId', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const itemId = parseIdParam(req, 'itemId');
+  if (itemId === null) {
+    res.status(400).json({ error: 'Invalid product id' });
+    return;
+  }
+  const updates: Parameters<typeof itemRepository.updateAlertSettings>[2] = {};
+  if (req.body.target_price !== undefined) updates.target_price = req.body.target_price;
+  if (req.body.price_drop_threshold !== undefined) updates.price_drop_threshold = req.body.price_drop_threshold;
+  if (req.body.notify_back_in_stock !== undefined) updates.notify_back_in_stock = Boolean(req.body.notify_back_in_stock);
+  if (req.body.name !== undefined) updates.name = String(req.body.name).trim().slice(0, 255);
+  if (req.body.image_url !== undefined) updates.image_url = req.body.image_url;
+  if (req.body.category !== undefined) {
+    updates.category = req.body.category?.trim() || null;
+    if (updates.category) {
+      await syncUserCategories(req.userId!, updates.category);
+    }
+  }
+
+  const updated = await itemRepository.updateAlertSettings(itemId, req.userId!, updates);
+  if (!updated) {
+    res.status(404).json({ error: 'Product not found' });
+    return;
+  }
+
+  const item = await productHistoryService.getUserItem(itemId, req.userId!);
+  res.json(item || updated);
+}, 'Product', 'Products', 'Failed to update product'));
+
+router.get('/items/:itemId/history', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const itemId = parseIdParam(req, 'itemId');
+  if (itemId === null) {
+    res.status(400).json({ error: 'Invalid product id' });
+    return;
+  }
+  const daysParam = req.query.days ? parseInt(req.query.days as string, 10) : undefined;
+  const history = await productHistoryService.getItemPriceHistory(itemId, req.userId!, daysParam);
+  if (!history) {
+    res.status(404).json({ error: 'Product not found' });
+    return;
+  }
+  res.json(history);
+}, 'Product', 'Products', 'Failed to fetch price history'));
+
+router.get('/items/:itemId/stock', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const itemId = parseIdParam(req, 'itemId');
+  if (itemId === null) {
+    res.status(400).json({ error: 'Invalid product id' });
+    return;
+  }
+  const daysParam = req.query.days ? parseInt(req.query.days as string, 10) : 30;
+  const stock = await productHistoryService.getItemStockHistory(itemId, req.userId!, daysParam);
+  if (!stock) {
+    res.status(404).json({ error: 'Product not found' });
+    return;
+  }
+  res.json(stock);
+}, 'Product', 'Products', 'Failed to fetch stock history'));
+
 /**
  * Links a store you already track to another product -- "these two are the
  * same thing" (issue #143).
@@ -46,6 +121,24 @@ router.post('/items/:itemId/listings', asyncHandler(async (req: AuthRequest, res
   const result = await itemRepository.attachListing(productId, itemId, req.userId!);
   res.json(result);
 }, 'Product', 'Products', 'Failed to link the store'));
+
+/**
+ * Merges all store listings from another item into this one.
+ */
+router.post('/items/:itemId/merge', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const targetItemId = parseIdParam(req, 'itemId');
+  if (targetItemId === null) {
+    res.status(400).json({ error: 'Invalid target product id' });
+    return;
+  }
+  const sourceItemId = Number(req.body?.sourceItemId);
+  if (!Number.isInteger(sourceItemId) || sourceItemId <= 0) {
+    res.status(400).json({ error: 'A valid sourceItemId is required' });
+    return;
+  }
+  const result = await itemRepository.mergeItems(sourceItemId, targetItemId, req.userId!);
+  res.json(result);
+}, 'Product', 'Products', 'Failed to merge products'));
 
 /** Undoes the above: gives a store its own product entry again. */
 router.post('/:id/detach', asyncHandler(async (req: AuthRequest, res: Response) => {
