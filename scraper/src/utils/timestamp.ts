@@ -20,14 +20,24 @@ interface Formatter {
 }
 
 /**
- * Built once. `Intl.DateTimeFormat` is expensive to construct and this runs on
- * every log line, so building it per call would put a measurable cost on the
- * hottest path in the process.
+ * Cached formatter. Resolved dynamically against `process.env.TZ` so that
+ * setting `TZ` via `loadEnvironment()` (.env), container environments, or tests
+ * takes effect immediately without module import ordering hazards or restarts,
+ * while keeping the cost on the hot path down to a single string comparison.
  */
-const formatter: Formatter | null = buildFormatter();
+let cachedTz: string | undefined = undefined;
+let cachedFormatter: Formatter | null = null;
 
-function buildFormatter(): Formatter | null {
-  const tz = process.env.TZ?.trim();
+function getFormatter(): Formatter | null {
+  const currentTz = process.env.TZ?.trim();
+  if (currentTz !== cachedTz) {
+    cachedTz = currentTz;
+    cachedFormatter = buildFormatter(currentTz);
+  }
+  return cachedFormatter;
+}
+
+function buildFormatter(tz: string | undefined): Formatter | null {
   if (!tz || UTC_ALIASES.has(tz.toUpperCase())) return null;
 
   try {
@@ -48,7 +58,7 @@ function buildFormatter(): Formatter | null {
     // An unrecognised zone -- a typo like `Australia/Perht` -- must not take the
     // logger down with it. A process that cannot log is far worse than one
     // logging in the wrong timezone, so fall back silently to UTC. The warning
-    // is emitted by warnIfTimezoneInvalid() once, at startup, rather than from
+    // is emitted via invalidTimezone() once, at startup, rather than from
     // here: this module is imported by the logger, and logging from inside it
     // during construction risks recursion.
     return null;
@@ -81,6 +91,7 @@ function renderWith(intl: Intl.DateTimeFormat, date: Date): string | null {
  * broken; it must not become the thing that breaks.
  */
 export function formatLogTimestamp(date: Date = new Date()): string {
+  const formatter = getFormatter();
   if (!formatter) return date.toISOString();
   try {
     return formatter.format(date);
@@ -91,7 +102,7 @@ export function formatLogTimestamp(date: Date = new Date()): string {
 
 /** True when `TZ` was set to something usable and is being applied. */
 export function isTimezoneApplied(): boolean {
-  return formatter !== null;
+  return getFormatter() !== null;
 }
 
 /**
@@ -102,5 +113,5 @@ export function isTimezoneApplied(): boolean {
 export function invalidTimezone(): string | null {
   const tz = process.env.TZ?.trim();
   if (!tz || UTC_ALIASES.has(tz.toUpperCase())) return null;
-  return formatter === null ? tz : null;
+  return getFormatter() === null ? tz : null;
 }

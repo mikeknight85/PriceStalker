@@ -7,10 +7,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
  * `Australia/Perth`, so every install in the world read its scraper logs in
  * Perth time.
  *
- * The module reads `process.env.TZ` once at import and caches the formatter --
- * building an Intl.DateTimeFormat per log line would be a real cost on the
- * hottest path in the process. So each case here re-imports with a fresh
- * module registry.
+ * The module dynamically caches the formatter against `process.env.TZ` so that
+ * setting `TZ` via `dotenv`, container environments, or tests takes effect
+ * immediately without ordering hazards (issue #310). Building an
+ * Intl.DateTimeFormat per log line would be a real cost on the hottest path in
+ * the process, so it only rebuilds when `process.env.TZ` changes.
  */
 
 const FIXED = new Date('2026-09-04T17:18:02.834Z');
@@ -127,5 +128,27 @@ describe('the output is still a valid, parseable timestamp', () => {
     const { formatLogTimestamp } = await loadWith('Europe/Zurich');
     expect(formatLogTimestamp(new Date('2026-01-15T12:00:00.000Z'))).toContain('+01:00');
     expect(formatLogTimestamp(new Date('2026-07-15T12:00:00.000Z'))).toContain('+02:00');
+  });
+});
+
+describe('dynamic TZ resolution (issue #310)', () => {
+  it('updates dynamically when TZ is set after module load (e.g. dotenv loading)', async () => {
+    // Start with TZ unset
+    const mod = await loadWith(undefined);
+    expect(mod.isTimezoneApplied()).toBe(false);
+    expect(mod.invalidTimezone()).toBeNull();
+    expect(mod.formatLogTimestamp(FIXED)).toBe('2026-09-04T17:18:02.834Z');
+
+    // Simulate loadEnvironment() setting TZ after initial module import
+    process.env.TZ = 'Australia/Perth';
+    expect(mod.isTimezoneApplied()).toBe(true);
+    expect(mod.invalidTimezone()).toBeNull();
+    expect(mod.formatLogTimestamp(FIXED)).toBe('2026-09-05T01:18:02.834+08:00');
+
+    // Changing TZ again dynamically
+    process.env.TZ = 'America/New_York';
+    expect(mod.isTimezoneApplied()).toBe(true);
+    expect(mod.invalidTimezone()).toBeNull();
+    expect(mod.formatLogTimestamp(FIXED)).toBe('2026-09-04T13:18:02.834-04:00');
   });
 });

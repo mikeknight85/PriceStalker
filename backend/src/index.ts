@@ -1,9 +1,6 @@
+import './config/initEnv';
 import { startServer } from './app/server';
-import { loadEnvironment } from './config/environment';
 import { logger } from './utils/system/logger';
-
-// Load environment variables
-loadEnvironment();
 
 // Global error handlers to ensure crashes are logged
 process.on('uncaughtException', (err) => {

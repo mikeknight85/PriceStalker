@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Backend console and disk log timestamps now correctly honour `TZ` configured in
+  `.env`. Previously, static ES module imports in `backend/src/index.ts` evaluated
+  before `dotenv` loaded the environment, permanently freezing the formatter to
+  UTC and logging a false-positive warning that the timezone was unrecognised.
+  The timestamp formatter now resolves dynamically against `process.env.TZ` in
+  the backend, and the scraper's mirrored timestamp utility is kept in step (#310).
+
 ## [2.2.0-beta.3] - 2026-11-15
 
 ### Added
