@@ -55,6 +55,7 @@ function item(overrides: Partial<ItemWithListings> = {}): ItemWithListings {
     price_spread: null,
     comparable_count: listings.length,
     excluded_count: 0,
+    out_of_stock_count: 0,
     any_in_stock: true,
     ...overrides,
   };

@@ -505,6 +505,7 @@ export interface ItemWithListings {
   price_spread: number | null;
   comparable_count: number;
   excluded_count: number;
+  out_of_stock_count: number;
   any_in_stock: boolean;
 }
 

@@ -39,7 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Best price calculation across stores now prioritizes in-stock and purchasable
   listings over cheaper out-of-stock stores, avoiding misleading lowest price badges
-  and phantom savings callouts.
+  and phantom savings callouts. Grouped dashboard cards now qualify comparisons as
+  "best of X in stock" when stores are unavailable, list out-of-stock stores with
+  muted "(OOS)" indicators at the bottom, and separate stock status with a middle dot.
 - Modal overlay solid background styling in Combined Product View modals to
   prevent transparent backdrop bleed-through.
 - Item detail overview mobile hierarchy: promoted product title and full-width

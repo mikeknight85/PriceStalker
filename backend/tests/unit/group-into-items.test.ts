@@ -218,6 +218,7 @@ describe('stock', () => {
     expect(items[0].best_price_listing_ids).toEqual([2]);
     // Comparable count is the available stores compared
     expect(items[0].comparable_count).toBe(2);
+    expect(items[0].out_of_stock_count).toBe(1);
     // Spread is between available stores (379 - 343.98)
     expect(items[0].price_spread).toBe(35.02);
     // Available stores ordered first, OOS store last
@@ -233,6 +234,8 @@ describe('stock', () => {
 
     expect(items[0].best_price).toBe(279);
     expect(items[0].best_price_listing_ids).toEqual([1]);
+    expect(items[0].comparable_count).toBe(2);
+    expect(items[0].out_of_stock_count).toBe(0);
     expect(items[0].any_in_stock).toBe(false);
     expect(items[0].listings.map(l => l.id)).toEqual([1, 2]);
   });
@@ -246,7 +249,10 @@ describe('stock', () => {
 
     expect(items[0].best_price).toBe(200);
     expect(items[0].best_price_listing_ids).toEqual([2]);
-    expect(items[0].any_in_stock).toBe(true);
+    expect(items[0].comparable_count).toBe(2);
+    expect(items[0].out_of_stock_count).toBe(1);
+    // any_in_stock is strictly whether any store has stock_status === 'in_stock'
+    expect(items[0].any_in_stock).toBe(false);
     expect(items[0].listings.map(l => l.id)).toEqual([2, 3, 1]);
   });
 });

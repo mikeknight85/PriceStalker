@@ -73,6 +73,7 @@ function item(overrides: Partial<ItemWithListings> = {}): ItemWithListings {
     price_spread: null,
     comparable_count: listings.length,
     excluded_count: 0,
+    out_of_stock_count: 0,
     // The card's own badge: derived, so a fixture cannot claim one thing while
     // its listings say another.
     any_in_stock: listings.some(l => l.stock_status === 'in_stock'),

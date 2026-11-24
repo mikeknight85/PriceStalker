@@ -19,9 +19,11 @@ export interface ItemWithListings extends Item {
   /**
    * The lowest price across stores, in the user's own currency.
    *
-   * Null when no store has a comparable price -- see `excluded_count`. Never a
-   * raw figure from a currency we could not convert: comparing 49.99 EUR with
-   * 49.99 CHF and declaring a winner is worse than declining to.
+   * Prefers purchasable/in-stock stores; falls back to out-of-stock listings
+   * only if every store is out of stock. Null when no store has a comparable
+   * price -- see `excluded_count`. Never a raw figure from a currency we could
+   * not convert: comparing 49.99 EUR with 49.99 CHF and declaring a winner is
+   * worse than declining to.
    */
   best_price: number | null;
   /**
@@ -54,7 +56,11 @@ export interface ItemWithListings extends Item {
    */
   price_spread: number | null;
 
-  /** How many listings had a price that could be converted and compared. */
+  /**
+   * How many active listings took part in the comparison. When in-stock stores
+   * exist, this counts only available stores; when all are out of stock, it
+   * counts the out-of-stock stores.
+   */
   comparable_count: number;
   /**
    * How many were left out of the comparison -- no price scraped yet, or a
@@ -62,7 +68,12 @@ export interface ItemWithListings extends Item {
    * of 2 of your 4 stores" is honest, "cheapest" alone is not.
    */
   excluded_count: number;
+  /**
+   * How many comparable stores were excluded from the active comparison
+   * because they are out of stock.
+   */
+  out_of_stock_count: number;
 
-  /** True when at least one store has it. */
+  /** True when at least one store has it in stock (`stock_status === 'in_stock'`). */
   any_in_stock: boolean;
 }

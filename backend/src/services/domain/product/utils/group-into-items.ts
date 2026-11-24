@@ -118,9 +118,10 @@ export function groupIntoItems(
 
       price_spread: spread,
       comparable_count: candidates.length,
+      out_of_stock_count: availableComparable.length > 0 ? oosComparable.length : 0,
       excluded_count: listings.length - comparable.length,
 
-      any_in_stock: listings.some(l => l.stock_status === 'in_stock' || l.stock_status === 'pre_order' || l.stock_status === 'member_only'),
+      any_in_stock: listings.some(l => l.stock_status === 'in_stock'),
     });
   }
 

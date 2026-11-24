@@ -80,7 +80,12 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
   };
 
   const hasSpread = item.price_spread !== null && item.price_spread > 0;
-  const isTargetHit = inStockCount > 0 && item.target_price !== null && item.target_price !== undefined &&
+  const isBestPriceActive = item.listings.some(
+    l => item.best_price_listing_ids.includes(l.id) &&
+      l.stock_status !== 'out_of_stock' &&
+      l.stock_status !== 'not_available'
+  );
+  const isTargetHit = isBestPriceActive && item.target_price !== null && item.target_price !== undefined &&
     item.best_price !== null && item.best_price <= item.target_price;
 
   return (
@@ -128,7 +133,7 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
 
         <div className="item-aggregate-hero">
           <div className="item-aggregate-hero-label">
-            {inStockCount > 0 ? 'Current Lowest Price' : 'Lowest Tracked Price (Out of Stock)'}
+            {isBestPriceActive ? 'Current Lowest Price' : 'Lowest Tracked Price (Out of Stock)'}
           </div>
           <div className="item-aggregate-hero-value">
             {item.best_price !== null ? formatPrice(item.best_price, currency, userLocale) : '—'}
@@ -154,7 +159,7 @@ export const ItemOverviewSidebar: React.FC<ItemOverviewSidebarProps> = ({
           )}
         </div>
 
-        {hasSpread && inStockCount > 0 && (
+        {hasSpread && isBestPriceActive && (
           <div className="item-savings-callout">
             <Icon name="trendingDown" />
             Save up to {formatPrice(item.price_spread!, currency, userLocale)} by choosing the cheapest store

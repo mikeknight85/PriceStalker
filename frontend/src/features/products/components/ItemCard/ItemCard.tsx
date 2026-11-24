@@ -60,13 +60,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, userLocale }) => {
               {item.comparable_count > 1 && (
                 <div className="item-card-price-label">
                   {item.all_tied
-                    ? `same at all ${item.comparable_count}`
+                    ? `same at all ${item.comparable_count}${item.out_of_stock_count > 0 ? ' in stock' : ''}`
+                    : item.out_of_stock_count > 0
+                    ? `best of ${item.comparable_count} in stock`
                     : `best of ${item.comparable_count}`}
-                  {/*
-                    The label stays even though every store is now highlighted:
-                    the marks say which stores are cheapest, the label says there
-                    is nothing to choose between them.
-                  */}
                 </div>
               )}
             </>
